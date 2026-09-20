@@ -131,7 +131,7 @@
                     <div class="absolute -right-4 -bottom-4 text-8xl opacity-20 group-hover:scale-110 transition-transform">📖</div>
                     <div class="bg-white/20 rounded-2xl w-14 h-14 flex items-center justify-center text-3xl mb-4 font-bold">🔍</div>
                     <h3 class="text-2xl font-black mb-2">げんそずかん</h3>
-                    <p class="text-emerald-100 font-bold text-sm mb-4">げんその ひみつや どこで つかわれているか しらべよう！</p>
+                    <p class="text-emerald-100 font-bold text-sm mb-4">118この げんそ ぜんぶ！ひみつや つかいみちを しらべよう。</p>
                     <span class="inline-flex items-center gap-2 bg-white text-emerald-600 font-black px-4 py-2 rounded-full text-sm shadow">
                         ひらく <i class="fas fa-book-open text-xs"></i>
                     </span>
@@ -197,7 +197,8 @@
                     
                     <div class="my-6">
                         <p id="quiz-question-sub" class="text-sm font-bold text-slate-500 mb-1">この 元素（げんそ）の 記号（きごう）は なにかな？</p>
-                        <h2 id="quiz-question-title" class="text-4xl sm:text-6xl font-black text-slate-800 tracking-wide my-2">水素</h2>
+                        <h2 id="quiz-question-title" class="text-4xl sm:text-6xl font-black text-slate-800 tracking-wide mt-2">水素</h2>
+                        <p id="quiz-question-kana" class="text-sm sm:text-base font-bold text-slate-400 mb-2">すいそ</p>
                         <p id="quiz-question-desc" class="text-slate-600 font-bold text-sm sm:text-base mt-2 bg-amber-50 p-3 rounded-xl border border-amber-200 inline-block">
                             💡 たくさんあつめると 風船（ふうせん）が とぶよ！
                         </p>
@@ -250,12 +251,16 @@
                     <i class="fas fa-arrow-left"></i> もどる
                 </button>
                 <div class="flex gap-2 overflow-x-auto w-full sm:w-auto pb-1">
-                    <button onclick="filterBook('all')" class="filter-btn active bg-teal-500 text-white font-bold px-3 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap shadow-sm">すべて</button>
-                    <button onclick="filterBook('gas')" class="filter-btn bg-white border border-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap">きたい</button>
-                    <button onclick="filterBook('metal')" class="filter-btn bg-white border border-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap">きんぞく</button>
-                    <button onclick="filterBook('life')" class="filter-btn bg-white border border-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap">いのちのもと</button>
+                    <button onclick="filterBook('all', this)" class="filter-btn active bg-teal-500 text-white font-bold px-3 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap shadow-sm">すべて</button>
+                    <button onclick="filterBook('gas', this)" class="filter-btn bg-white border border-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap">きたい</button>
+                    <button onclick="filterBook('metal', this)" class="filter-btn bg-white border border-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap">きんぞく</button>
+                    <button onclick="filterBook('nonmetal', this)" class="filter-btn bg-white border border-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap">ひきんぞく</button>
+                    <button onclick="filterBook('life', this)" class="filter-btn bg-white border border-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap">いのちのもと</button>
+                    <button onclick="filterBook('manmade', this)" class="filter-btn bg-white border border-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap">じんこう</button>
                 </div>
             </div>
+
+            <p class="w-full text-left text-xs font-black text-slate-500 mb-2"><span id="book-count">118この げんそ</span>（1ばん〜118ばん ぜんぶ のっているよ！）</p>
 
             <!-- Element Cards Grid -->
             <div id="book-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 w-full">
@@ -322,27 +327,127 @@
     </footer>
 
     <script>
-        /* --- ELEMENT DATA --- */
+        /* --- ELEMENT DATA（1ばん〜118ばん ぜんぶ） ---
+           cats: きたい(gas) / きんぞく(metal) / ひきんぞく(nonmetal) / いのちのもと(life) / じんこう(manmade) */
         const ELEMENTS = [
-            { num: 1, symbol: 'H', name: '水素', kana: 'すいそ', category: 'gas', desc: 'うちゅうで いちばん たくさんある げんそ。もやすと おみずになるよ！', use: 'ロケットの ねんりょうや みらいの くるま', icon: '🎈', level: 'easy' },
-            { num: 2, symbol: 'He', name: 'ヘリウム', kana: 'へりうむ', category: 'gas', desc: '空気より とっても かるい きたい。すうと こえが たかくなるよ！', use: 'ふわふわ とぶ ふうせん', icon: '🎈', level: 'easy' },
-            { num: 6, symbol: 'C', name: '炭素', kana: 'たんそ', category: 'life', desc: 'えんぴつの しんや、かたい ダイヤモンドも これで できているよ！', use: 'えんぴつ、ダイヤモンド', icon: '✏️', level: 'easy' },
-            { num: 7, symbol: 'N', name: '窒素', kana: 'ちっそ', category: 'gas', desc: 'みんなが すっている くうきの 8わり（80%）は この げんそ！', use: 'スナックがしの ふくろの くうき', icon: '🥔', level: 'medium' },
-            { num: 8, symbol: 'O', name: '酸素', kana: 'さんそ', category: 'life', desc: 'いきを すうときに ひつような げんそ。これがないと いきていけない！', use: '息（いき）を すうこと', icon: '🫁', level: 'easy' },
-            { num: 11, symbol: 'Na', name: 'ナトリウム', kana: 'なとりうむ', category: 'metal', desc: 'しょくえん（しお）の なかに はいっている げんそだよ。', use: 'お料理（りょうり）につかう 塩（しお）', icon: '🧂', level: 'medium' },
-            { num: 12, symbol: 'Mg', name: 'マグネシウム', kana: 'まぐねしうむ', category: 'metal', desc: 'とっても かるくて たのもしい きんぞく。燃（も）やすと まぶしく ひかる！', use: 'スマホの なかの パーツ', icon: '📱', level: 'hard' },
-            { num: 13, symbol: 'Al', name: 'アルミニウム', kana: 'あるみにうむ', category: 'metal', desc: 'かるくて さびにくい きんぞく。アルミホイルで しられているね！', use: 'ジュースの カン、アルミホイル', icon: '🥤', level: 'easy' },
-            { num: 14, symbol: 'Si', name: 'ケイ素', kana: 'けいそ', category: 'metal', desc: 'ガラスや パソコンの なかの チップをつくる 材料（ざいりょう）になるよ！', use: 'ガラス、コンピュータの なかみ', icon: '💻', level: 'hard' },
-            { num: 15, symbol: 'P', name: 'リン', kana: 'りん', category: 'life', desc: 'ほねや はを つくるのに ひつような げんそ。マッチの あたまにも あるよ！', use: 'みんなの 骨（ほね）や 歯（は）', icon: '🦴', level: 'hard' },
-            { num: 16, symbol: 'S', name: '硫黄', kana: 'いおう', category: 'gas', desc: 'おんせんの ちかくで ツーンとする においがする もとだよ！', use: '温泉（おんせん）、マッチ', icon: '♨️', level: 'medium' },
-            { num: 17, symbol: 'Cl', name: '塩素', kana: 'えんそ', category: 'gas', desc: 'バイキンを やっつける ちからがあるよ。プールのお水の におい！', use: 'プールの しょうどく', icon: '🏊', level: 'medium' },
-            { num: 19, symbol: 'K', name: 'カリウム', kana: 'かりうむ', category: 'life', desc: 'バナナや やさいに たくさん はいっている 元気（げんき）のもと！', use: 'バナナ、からだの えいよう', icon: '🍌', level: 'medium' },
-            { num: 20, symbol: 'Ca', name: 'カルシウム', kana: 'かるしうむ', category: 'life', desc: '牛乳（ぎゅうにゅう）に たくさん はいっている！ほねを じょうぶにするよ。', use: '牛乳（ぎゅうにゅう）、骨（ほね）', icon: '🥛', level: 'easy' },
-            { num: 26, symbol: 'Fe', name: '鉄', kana: 'てつ', category: 'metal', desc: 'とても じょうぶな きんぞく。スプーンや フライパン、でんしゃになるよ！', use: 'でんしゃ、ビル、はさみ', icon: '🚃', level: 'easy' },
-            { num: 29, symbol: 'Cu', name: '銅', kana: 'どう', category: 'metal', desc: 'でんきを とおしやすい きんぞく。10円だまは これで できている！', use: '10円玉（えんだま）、でんせん', icon: '🪙', level: 'easy' },
-            { num: 30, symbol: 'Zn', name: '亜鉛', kana: 'あえん', category: 'metal', desc: 'からだの 調子（ちょうし）を ととのえる 栄養（えいよう）だよ。', use: 'サプリメント、電池（でんち）', icon: '🔋', level: 'hard' },
-            { num: 47, symbol: 'Ag', name: '銀', kana: 'ぎん', category: 'metal', desc: 'ピカピカ ひかる きれいな きんぞく。オリンピックの 2い メダル！', use: '銀メダル、アクセサリー', icon: '🥈', level: 'medium' },
-            { num: 79, symbol: 'Au', name: '金', kana: 'きん', category: 'metal', desc: 'とても かちがある ピカピカの きんぞく。さびることが ないよ！', use: '金メダル、おうかん', icon: '👑', level: 'easy' }
+            { num: 1, symbol: 'H', name: '水素', kana: 'すいそ', cats: ['gas', 'nonmetal', 'life'], desc: '宇宙（うちゅう）で いちばん かるくて、いちばん たくさん ある げんそ。', use: 'ロケットの 燃料（ねんりょう）、ふうせん', icon: '🎈', level: 'easy' },
+            { num: 2, symbol: 'He', name: 'ヘリウム', kana: 'へりうむ', cats: ['gas', 'nonmetal'], desc: '空気（くうき）より かるい きたい。すうと こえが たかく なるよ。', use: 'ふうせん、ひこうせん', icon: '🎈', level: 'easy' },
+            { num: 3, symbol: 'Li', name: 'リチウム', kana: 'りちうむ', cats: ['metal'], desc: 'いちばん かるい 金属（きんぞく）。水（みず）に うかぶよ。', use: 'スマホや くるまの 電池（でんち）', icon: '🔋', level: 'medium' },
+            { num: 4, symbol: 'Be', name: 'ベリリウム', kana: 'べりりうむ', cats: ['metal'], desc: 'かるくて とても かたい 金属（きんぞく）。', use: 'ロケット、ぼうえんきょうの 鏡（かがみ）', icon: '🔭', level: 'hard' },
+            { num: 5, symbol: 'B', name: 'ホウ素', kana: 'ほうそ', cats: ['nonmetal'], desc: '金属（きんぞく）と ひきんぞくの あいだの 半金属（はんきんぞく）。', use: 'たいねつガラス、じょきんざい', icon: '🧴', level: 'hard' },
+            { num: 6, symbol: 'C', name: '炭素', kana: 'たんそ', cats: ['nonmetal', 'life'], desc: 'えんぴつの しんも ダイヤモンドも、おなじ 炭素（たんそ）から できているよ。', use: 'えんぴつ、ダイヤモンド', icon: '✏️', level: 'easy' },
+            { num: 7, symbol: 'N', name: '窒素', kana: 'ちっそ', cats: ['gas', 'nonmetal', 'life'], desc: '空気（くうき）の 8わり（80%）を しめる きたい。', use: 'おかしの ふくろの ガス', icon: '🥔', level: 'easy' },
+            { num: 8, symbol: 'O', name: '酸素', kana: 'さんそ', cats: ['gas', 'nonmetal', 'life'], desc: 'いきを するのに ひつような きたい。ものが もえるのを たすけるよ。', use: '呼吸（こきゅう）、さんそボンベ', icon: '🫁', level: 'easy' },
+            { num: 9, symbol: 'F', name: 'フッ素', kana: 'ふっそ', cats: ['gas', 'nonmetal'], desc: '歯（は）を じょうぶに する げんそ。とても はんのうしやすいよ。', use: 'はみがきこ、フライパンの コーティング', icon: '🦷', level: 'medium' },
+            { num: 10, symbol: 'Ne', name: 'ネオン', kana: 'ねおん', cats: ['gas', 'nonmetal'], desc: '電気（でんき）を ながすと あかく ひかる きたい。', use: 'ネオンかんばん', icon: '🌃', level: 'medium' },
+            { num: 11, symbol: 'Na', name: 'ナトリウム', kana: 'なとりうむ', cats: ['metal', 'life'], desc: 'しおの なかに はいっている、やわらかい 金属（きんぞく）。', use: '食塩（しょくえん）、しょうゆ', icon: '🧂', level: 'easy' },
+            { num: 12, symbol: 'Mg', name: 'マグネシウム', kana: 'まぐねしうむ', cats: ['metal', 'life'], desc: 'かるい 金属（きんぞく）。もやすと まぶしく ひかるよ。', use: 'ノートパソコンの ケース、にがり', icon: '💻', level: 'easy' },
+            { num: 13, symbol: 'Al', name: 'アルミニウム', kana: 'あるみにうむ', cats: ['metal'], desc: 'かるくて さびにくい 金属（きんぞく）。', use: 'アルミかん、1円玉（いちえんだま）', icon: '🥤', level: 'easy' },
+            { num: 14, symbol: 'Si', name: 'ケイ素', kana: 'けいそ', cats: ['nonmetal'], desc: 'すなや 石（いし）に たくさん ふくまれる 半金属（はんきんぞく）。', use: 'ガラス、コンピュータの チップ', icon: '💻', level: 'easy' },
+            { num: 15, symbol: 'P', name: 'リン', kana: 'りん', cats: ['nonmetal', 'life'], desc: '骨（ほね）や 歯（は）を つくるのに ひつような げんそ。', use: 'マッチ、ひりょう', icon: '🦴', level: 'medium' },
+            { num: 16, symbol: 'S', name: '硫黄', kana: 'いおう', cats: ['nonmetal', 'life'], desc: '温泉（おんせん）で ツーンと においが する きいろい げんそ。', use: '温泉（おんせん）、ゴム', icon: '♨️', level: 'easy' },
+            { num: 17, symbol: 'Cl', name: '塩素', kana: 'えんそ', cats: ['gas', 'nonmetal', 'life'], desc: 'バイキンを やっつける ちからが つよい きたい。', use: 'プールの 消毒（しょうどく）、しお', icon: '🏊', level: 'easy' },
+            { num: 18, symbol: 'Ar', name: 'アルゴン', kana: 'あるごん', cats: ['gas', 'nonmetal'], desc: 'ほかの ものと ほとんど くっつかない、おとなしい きたい。', use: '電球（でんきゅう）の なか、ようせつ', icon: '💡', level: 'medium' },
+            { num: 19, symbol: 'K', name: 'カリウム', kana: 'かりうむ', cats: ['metal', 'life'], desc: 'バナナや やさいに おおい、げんきの もと。', use: 'バナナ、ひりょう', icon: '🍌', level: 'easy' },
+            { num: 20, symbol: 'Ca', name: 'カルシウム', kana: 'かるしうむ', cats: ['metal', 'life'], desc: '骨（ほね）や 歯（は）を じょうぶに する げんそ。', use: '牛乳（ぎゅうにゅう）、チョーク', icon: '🥛', level: 'easy' },
+            { num: 21, symbol: 'Sc', name: 'スカンジウム', kana: 'すかんじうむ', cats: ['metal'], desc: 'かるくて じょうぶな、めずらしい 金属（きんぞく）。', use: 'やきゅうの バット、じてんしゃ', icon: '⚾', level: 'hard' },
+            { num: 22, symbol: 'Ti', name: 'チタン', kana: 'ちたん', cats: ['metal'], desc: 'かるくて つよくて さびない 金属（きんぞく）。', use: 'めがねの フレーム、ひこうき', icon: '👓', level: 'medium' },
+            { num: 23, symbol: 'V', name: 'バナジウム', kana: 'ばなじうむ', cats: ['metal'], desc: '鉄（てつ）に まぜると とても つよく なる 金属（きんぞく）。', use: 'こうぐ、スパナ', icon: '🔧', level: 'hard' },
+            { num: 24, symbol: 'Cr', name: 'クロム', kana: 'くろむ', cats: ['metal', 'life'], desc: 'ピカピカに ひかる、さびにくい 金属（きんぞく）。', use: 'メッキ、ステンレス', icon: '✨', level: 'medium' },
+            { num: 25, symbol: 'Mn', name: 'マンガン', kana: 'まんがん', cats: ['metal', 'life'], desc: '鉄（てつ）を かたく する 金属（きんぞく）。', use: 'かんでんち、レール', icon: '🔋', level: 'medium' },
+            { num: 26, symbol: 'Fe', name: '鉄', kana: 'てつ', cats: ['metal', 'life'], desc: 'いちばん たくさん つかわれている、じょうぶな 金属（きんぞく）。', use: 'でんしゃ、ビル、血（ち）の なか', icon: '🚃', level: 'easy' },
+            { num: 27, symbol: 'Co', name: 'コバルト', kana: 'こばると', cats: ['metal', 'life'], desc: 'きれいな あおい 色（いろ）を つける 金属（きんぞく）。', use: 'あおい ガラス、電池（でんち）', icon: '🔵', level: 'medium' },
+            { num: 28, symbol: 'Ni', name: 'ニッケル', kana: 'にっける', cats: ['metal'], desc: 'さびにくくて メッキに つかう 金属（きんぞく）。', use: '50円玉（ごじゅうえんだま）、ステンレス', icon: '🪙', level: 'medium' },
+            { num: 29, symbol: 'Cu', name: '銅', kana: 'どう', cats: ['metal', 'life'], desc: '電気（でんき）を よく とおす、あかい 金属（きんぞく）。', use: '10円玉（じゅうえんだま）、でんせん', icon: '🪙', level: 'easy' },
+            { num: 30, symbol: 'Zn', name: '亜鉛', kana: 'あえん', cats: ['metal', 'life'], desc: '鉄（てつ）を さびから まもる 金属（きんぞく）。', use: 'トタンやね、かんでんち', icon: '🔋', level: 'medium' },
+            { num: 31, symbol: 'Ga', name: 'ガリウム', kana: 'がりうむ', cats: ['metal'], desc: '手（て）の うえで とけてしまう ふしぎな 金属（きんぞく）。', use: 'LED、はんどうたい', icon: '💡', level: 'hard' },
+            { num: 32, symbol: 'Ge', name: 'ゲルマニウム', kana: 'げるまにうむ', cats: ['nonmetal'], desc: '電気（でんき）を すこしだけ とおす 半金属（はんきんぞく）。', use: '赤外線（せきがいせん）カメラ、ひかりファイバー', icon: '📷', level: 'hard' },
+            { num: 33, symbol: 'As', name: 'ヒ素', kana: 'ひそ', cats: ['nonmetal'], desc: '毒（どく）が つよい 半金属（はんきんぞく）。', use: 'はんどうたい', icon: '☠️', level: 'medium' },
+            { num: 34, symbol: 'Se', name: 'セレン', kana: 'せれん', cats: ['nonmetal', 'life'], desc: 'すこしだけ からだに ひつような げんそ。', use: 'コピーき、ガラスの 色（いろ）づけ', icon: '🖨️', level: 'hard' },
+            { num: 35, symbol: 'Br', name: '臭素', kana: 'しゅうそ', cats: ['nonmetal'], desc: 'ふつうの 温度（おんど）で 液体（えきたい）の めずらしい げんそ。', use: 'しゃしんの フィルム、なんねんざい', icon: '🧪', level: 'medium' },
+            { num: 36, symbol: 'Kr', name: 'クリプトン', kana: 'くりぷとん', cats: ['gas', 'nonmetal'], desc: '空気（くうき）に ほんの すこしだけ ある きたい。', use: 'あかるい ライト', icon: '🔦', level: 'hard' },
+            { num: 37, symbol: 'Rb', name: 'ルビジウム', kana: 'るびじうむ', cats: ['metal'], desc: '水（みず）に いれると はげしく はんのうする 金属（きんぞく）。', use: '原子時計（げんしどけい）', icon: '⏰', level: 'hard' },
+            { num: 38, symbol: 'Sr', name: 'ストロンチウム', kana: 'すとろんちうむ', cats: ['metal'], desc: 'もやすと まっかに ひかる 金属（きんぞく）。', use: '花火（はなび）の あかい 色（いろ）', icon: '🎆', level: 'medium' },
+            { num: 39, symbol: 'Y', name: 'イットリウム', kana: 'いっとりうむ', cats: ['metal'], desc: 'ひかりを つよく する はたらきが ある 金属（きんぞく）。', use: 'LED、レーザー', icon: '🔦', level: 'hard' },
+            { num: 40, symbol: 'Zr', name: 'ジルコニウム', kana: 'じるこにうむ', cats: ['metal'], desc: '熱（ねつ）に つよく、ダイヤモンドに にた 石（いし）にも なる。', use: 'アクセサリー、原子炉（げんしろ）', icon: '💎', level: 'hard' },
+            { num: 41, symbol: 'Nb', name: 'ニオブ', kana: 'におぶ', cats: ['metal'], desc: 'とても つめたく すると、電気（でんき）を ていこうなしで ながす。', use: 'リニアモーターカーの じしゃく', icon: '🚄', level: 'hard' },
+            { num: 42, symbol: 'Mo', name: 'モリブデン', kana: 'もりぶでん', cats: ['metal', 'life'], desc: '鉄（てつ）を つよく する 金属（きんぞく）。', use: 'こうぐ、はもの', icon: '🔪', level: 'hard' },
+            { num: 43, symbol: 'Tc', name: 'テクネチウム', kana: 'てくねちうむ', cats: ['metal', 'manmade'], desc: 'はじめて 人（ひと）が つくった げんそ。', use: '病院（びょういん）の 検査（けんさ）', icon: '🏥', level: 'hard' },
+            { num: 44, symbol: 'Ru', name: 'ルテニウム', kana: 'るてにうむ', cats: ['metal'], desc: 'かたくて さびない、めずらしい 金属（きんぞく）。', use: 'まんねんひつの ペン先（さき）', icon: '🖊️', level: 'hard' },
+            { num: 45, symbol: 'Rh', name: 'ロジウム', kana: 'ろじうむ', cats: ['metal'], desc: 'ピカピカで とても ねだんが たかい 金属（きんぞく）。', use: 'くるまの はいガスそうち', icon: '🚗', level: 'hard' },
+            { num: 46, symbol: 'Pd', name: 'パラジウム', kana: 'ぱらじうむ', cats: ['metal'], desc: '水素（すいそ）を たくさん すいこむ ふしぎな 金属（きんぞく）。', use: '歯（は）の ちりょう、スマホ', icon: '🦷', level: 'hard' },
+            { num: 47, symbol: 'Ag', name: '銀', kana: 'ぎん', cats: ['metal'], desc: '電気（でんき）と 熱（ねつ）を いちばん よく とおす 金属（きんぞく）。', use: '銀（ぎん）メダル、アクセサリー', icon: '🥈', level: 'easy' },
+            { num: 48, symbol: 'Cd', name: 'カドミウム', kana: 'かどみうむ', cats: ['metal'], desc: 'きいろい えのぐの もとに なる 金属（きんぞく）。毒（どく）が あるよ。', use: '電池（でんち）、えのぐ', icon: '🎨', level: 'hard' },
+            { num: 49, symbol: 'In', name: 'インジウム', kana: 'いんじうむ', cats: ['metal'], desc: 'やわらかくて、とうめいな まくに なる 金属（きんぞく）。', use: 'スマホの タッチパネル', icon: '📱', level: 'hard' },
+            { num: 50, symbol: 'Sn', name: 'スズ', kana: 'すず', cats: ['metal'], desc: 'やわらかくて さびにくい 金属（きんぞく）。', use: 'かんづめの かん、はんだ', icon: '🥫', level: 'easy' },
+            { num: 51, symbol: 'Sb', name: 'アンチモン', kana: 'あんちもん', cats: ['nonmetal'], desc: 'もえにくく する はたらきが ある 半金属（はんきんぞく）。', use: 'ぼうかざい、電池（でんち）', icon: '🧯', level: 'hard' },
+            { num: 52, symbol: 'Te', name: 'テルル', kana: 'てるる', cats: ['nonmetal'], desc: 'とても めずらしい 半金属（はんきんぞく）。', use: '太陽電池（たいようでんち）、DVD', icon: '💿', level: 'hard' },
+            { num: 53, symbol: 'I', name: 'ヨウ素', kana: 'ようそ', cats: ['nonmetal', 'life'], desc: 'のどの けんこうに ひつような げんそ。', use: 'うがいぐすり、こんぶ', icon: '🧴', level: 'medium' },
+            { num: 54, symbol: 'Xe', name: 'キセノン', kana: 'きせのん', cats: ['gas', 'nonmetal'], desc: 'つよい ひかりを だす きたい。', use: 'くるまの ヘッドライト', icon: '🚗', level: 'hard' },
+            { num: 55, symbol: 'Cs', name: 'セシウム', kana: 'せしうむ', cats: ['metal'], desc: 'とても やわらかい 金属（きんぞく）。1びょうの ながさを きめるのに つかうよ。', use: '原子時計（げんしどけい）', icon: '⏱️', level: 'medium' },
+            { num: 56, symbol: 'Ba', name: 'バリウム', kana: 'ばりうむ', cats: ['metal'], desc: 'レントゲンで 胃（い）を うつすときに のむ げんそ。', use: '病院（びょういん）の 検査（けんさ）', icon: '🏥', level: 'medium' },
+            { num: 57, symbol: 'La', name: 'ランタン', kana: 'らんたん', cats: ['metal'], desc: 'ひかりを あつめる レンズに つかう 金属（きんぞく）。', use: 'カメラの レンズ', icon: '📷', level: 'hard' },
+            { num: 58, symbol: 'Ce', name: 'セリウム', kana: 'せりうむ', cats: ['metal'], desc: 'けずると 火花（ひばな）が でる 金属（きんぞく）。', use: 'ライターの 石（いし）、みがきこな', icon: '🔥', level: 'hard' },
+            { num: 59, symbol: 'Pr', name: 'プラセオジム', kana: 'ぷらせおじむ', cats: ['metal'], desc: 'みどりいろを つける 金属（きんぞく）。', use: 'ようせつめがね、じしゃく', icon: '🥽', level: 'hard' },
+            { num: 60, symbol: 'Nd', name: 'ネオジム', kana: 'ねおじむ', cats: ['metal'], desc: 'せかいで いちばん つよい じしゃくの もと。', use: 'じしゃく、モーター', icon: '🧲', level: 'medium' },
+            { num: 61, symbol: 'Pm', name: 'プロメチウム', kana: 'ぷろめちうむ', cats: ['metal', 'manmade'], desc: 'しぜんには ほとんど ない げんそ。', use: 'けいこうとりょう', icon: '✨', level: 'hard' },
+            { num: 62, symbol: 'Sm', name: 'サマリウム', kana: 'さまりうむ', cats: ['metal'], desc: '熱（ねつ）に つよい じしゃくに なる げんそ。', use: 'ヘッドホン、モーター', icon: '🎧', level: 'hard' },
+            { num: 63, symbol: 'Eu', name: 'ユウロピウム', kana: 'ゆうろぴうむ', cats: ['metal'], desc: 'あかく ひかる げんそ。', use: 'テレビの 画面（がめん）、おさつの ぎぞうぼうし', icon: '💴', level: 'hard' },
+            { num: 64, symbol: 'Gd', name: 'ガドリニウム', kana: 'がどりにうむ', cats: ['metal'], desc: 'じしゃくに よく つく 金属（きんぞく）。', use: 'MRIの 検査（けんさ）', icon: '🏥', level: 'hard' },
+            { num: 65, symbol: 'Tb', name: 'テルビウム', kana: 'てるびうむ', cats: ['metal'], desc: 'みどりに ひかる げんそ。', use: 'けいこうとう、スピーカー', icon: '🔊', level: 'hard' },
+            { num: 66, symbol: 'Dy', name: 'ジスプロシウム', kana: 'じすぷろしうむ', cats: ['metal'], desc: 'あつく なっても じしゃくの ちからを たもつ げんそ。', use: 'くるまの モーター', icon: '🚗', level: 'hard' },
+            { num: 67, symbol: 'Ho', name: 'ホルミウム', kana: 'ほるみうむ', cats: ['metal'], desc: 'いちばん つよい じせいを もつ げんそ。', use: 'レーザーの きかい', icon: '🔬', level: 'hard' },
+            { num: 68, symbol: 'Er', name: 'エルビウム', kana: 'えるびうむ', cats: ['metal'], desc: 'ひかりを つよく する げんそ。', use: 'ひかりファイバー', icon: '🌐', level: 'hard' },
+            { num: 69, symbol: 'Tm', name: 'ツリウム', kana: 'つりうむ', cats: ['metal'], desc: 'とても めずらしい 金属（きんぞく）。', use: 'もちはこべる レントゲン', icon: '🩻', level: 'hard' },
+            { num: 70, symbol: 'Yb', name: 'イッテルビウム', kana: 'いってるびうむ', cats: ['metal'], desc: 'とても せいかくな とけいに つかう げんそ。', use: '原子時計（げんしどけい）', icon: '⏰', level: 'hard' },
+            { num: 71, symbol: 'Lu', name: 'ルテチウム', kana: 'るてちうむ', cats: ['metal'], desc: 'レアアースの なかまで いちばん おもい げんそ。', use: '検査（けんさ）そうち', icon: '🔬', level: 'hard' },
+            { num: 72, symbol: 'Hf', name: 'ハフニウム', kana: 'はふにうむ', cats: ['metal'], desc: '熱（ねつ）に とても つよい 金属（きんぞく）。', use: '原子炉（げんしろ）、はんどうたい', icon: '⚙️', level: 'hard' },
+            { num: 73, symbol: 'Ta', name: 'タンタル', kana: 'たんたる', cats: ['metal'], desc: 'からだの なかでも さびない 金属（きんぞく）。', use: 'スマホの ぶひん、じんこうこっかく', icon: '📱', level: 'hard' },
+            { num: 74, symbol: 'W', name: 'タングステン', kana: 'たんぐすてん', cats: ['metal'], desc: 'いちばん とけにくい 金属（きんぞく）。3400どで やっと とけるよ。', use: '電球（でんきゅう）の なかの 線（せん）、ドリル', icon: '💡', level: 'medium' },
+            { num: 75, symbol: 'Re', name: 'レニウム', kana: 'れにうむ', cats: ['metal'], desc: 'とても めずらしくて 熱（ねつ）に つよい 金属（きんぞく）。', use: 'ジェットエンジン', icon: '✈️', level: 'hard' },
+            { num: 76, symbol: 'Os', name: 'オスミウム', kana: 'おすみうむ', cats: ['metal'], desc: 'おなじ 大（おお）きさなら せかいで いちばん おもい 金属（きんぞく）。', use: 'まんねんひつの ペン先（さき）', icon: '🖊️', level: 'hard' },
+            { num: 77, symbol: 'Ir', name: 'イリジウム', kana: 'いりじうむ', cats: ['metal'], desc: 'とても かたくて さびない。いん石（せき）に おおい げんそ。', use: 'てんかプラグ、ペン先（さき）', icon: '☄️', level: 'hard' },
+            { num: 78, symbol: 'Pt', name: '白金', kana: 'はっきん', cats: ['metal'], desc: 'プラチナとも よばれる、さびない きちょうな 金属（きんぞく）。', use: 'ゆびわ、くるまの はいガスそうち', icon: '💍', level: 'medium' },
+            { num: 79, symbol: 'Au', name: '金', kana: 'きん', cats: ['metal'], desc: 'ずっと ピカピカの まま さびない、きちょうな 金属（きんぞく）。', use: '金（きん）メダル、おうかん、スマホの ぶひん', icon: '👑', level: 'easy' },
+            { num: 80, symbol: 'Hg', name: '水銀', kana: 'すいぎん', cats: ['metal'], desc: 'ふつうの 温度（おんど）で 液体（えきたい）の めずらしい 金属（きんぞく）。', use: 'むかしの 体温計（たいおんけい）、けいこうとう', icon: '🌡️', level: 'easy' },
+            { num: 81, symbol: 'Tl', name: 'タリウム', kana: 'たりうむ', cats: ['metal'], desc: '毒（どく）が つよい 金属（きんぞく）。', use: '検査（けんさ）そうち', icon: '☠️', level: 'hard' },
+            { num: 82, symbol: 'Pb', name: '鉛', kana: 'なまり', cats: ['metal'], desc: 'おもくて やわらかい 金属（きんぞく）。', use: 'つりの おもり、ほうしゃせんを ふせぐ かべ', icon: '🎣', level: 'medium' },
+            { num: 83, symbol: 'Bi', name: 'ビスマス', kana: 'びすます', cats: ['metal'], desc: 'にじいろの しかくい けっしょうに なる 金属（きんぞく）。', use: 'い薬（ぐすり）、はんだ', icon: '🌈', level: 'hard' },
+            { num: 84, symbol: 'Po', name: 'ポロニウム', kana: 'ぽろにうむ', cats: ['metal'], desc: 'キュリー夫妻（ふさい）が みつけた ほうしゃせいの げんそ。', use: '研究（けんきゅう）', icon: '☢️', level: 'hard' },
+            { num: 85, symbol: 'At', name: 'アスタチン', kana: 'あすたちん', cats: ['nonmetal'], desc: '地球（ちきゅう）に ほんの わずかしか ない げんそ。', use: '研究（けんきゅう）', icon: '🔬', level: 'hard' },
+            { num: 86, symbol: 'Rn', name: 'ラドン', kana: 'らどん', cats: ['gas', 'nonmetal'], desc: '地面（じめん）から でてくる ほうしゃせいの きたい。', use: '温泉（おんせん）の せいぶん', icon: '♨️', level: 'hard' },
+            { num: 87, symbol: 'Fr', name: 'フランシウム', kana: 'ふらんしうむ', cats: ['metal'], desc: 'しぜんの なかで いちばん りょうが すくない げんそ。', use: '研究（けんきゅう）', icon: '🔬', level: 'hard' },
+            { num: 88, symbol: 'Ra', name: 'ラジウム', kana: 'らじうむ', cats: ['metal'], desc: 'キュリー夫妻（ふさい）が みつけた、ぼんやり ひかる げんそ。', use: '研究（けんきゅう）', icon: '☢️', level: 'medium' },
+            { num: 89, symbol: 'Ac', name: 'アクチニウム', kana: 'あくちにうむ', cats: ['metal'], desc: 'くらやみで あおく ひかる げんそ。', use: 'がんの ちりょうの 研究（けんきゅう）', icon: '🔵', level: 'hard' },
+            { num: 90, symbol: 'Th', name: 'トリウム', kana: 'とりうむ', cats: ['metal'], desc: '燃料（ねんりょう）に なる ちからを もつ ほうしゃせいの げんそ。', use: '研究（けんきゅう）、ランタンの しん', icon: '🔥', level: 'hard' },
+            { num: 91, symbol: 'Pa', name: 'プロトアクチニウム', kana: 'ぷろとあくちにうむ', cats: ['metal'], desc: 'とても りょうが すくない ほうしゃせいの げんそ。', use: '研究（けんきゅう）', icon: '🔬', level: 'hard' },
+            { num: 92, symbol: 'U', name: 'ウラン', kana: 'うらん', cats: ['metal'], desc: '原子力発電（げんしりょくはつでん）の 燃料（ねんりょう）に なる げんそ。', use: '原子力発電（げんしりょくはつでん）', icon: '⚡', level: 'medium' },
+            { num: 93, symbol: 'Np', name: 'ネプツニウム', kana: 'ねぷつにうむ', cats: ['metal', 'manmade'], desc: '海王星（かいおうせい）から なまえを もらった げんそ。', use: '研究（けんきゅう）', icon: '🪐', level: 'hard' },
+            { num: 94, symbol: 'Pu', name: 'プルトニウム', kana: 'ぷるとにうむ', cats: ['metal', 'manmade'], desc: '冥王星（めいおうせい）から なまえを もらった げんそ。', use: 'うちゅうたんさきの 電源（でんげん）', icon: '🚀', level: 'hard' },
+            { num: 95, symbol: 'Am', name: 'アメリシウム', kana: 'あめりしうむ', cats: ['metal', 'manmade'], desc: 'けむりを かんちする そうちに つかわれた げんそ。', use: '火災報知器（かさいほうちき）', icon: '🚨', level: 'hard' },
+            { num: 96, symbol: 'Cm', name: 'キュリウム', kana: 'きゅりうむ', cats: ['metal', 'manmade'], desc: 'キュリー夫妻（ふさい）の なまえが ついた げんそ。', use: 'うちゅうたんさきの 電源（でんげん）', icon: '🛰️', level: 'hard' },
+            { num: 97, symbol: 'Bk', name: 'バークリウム', kana: 'ばーくりうむ', cats: ['metal', 'manmade'], desc: 'アメリカの バークレーの まちから なまえが ついた げんそ。', use: '研究（けんきゅう）', icon: '🔬', level: 'hard' },
+            { num: 98, symbol: 'Cf', name: 'カリホルニウム', kana: 'かりほるにうむ', cats: ['metal', 'manmade'], desc: 'カリフォルニアから なまえが ついた げんそ。', use: 'きかいの 検査（けんさ）', icon: '🔬', level: 'hard' },
+            { num: 99, symbol: 'Es', name: 'アインスタイニウム', kana: 'あいんすたいにうむ', cats: ['metal', 'manmade'], desc: 'アインシュタインの なまえが ついた げんそ。', use: '研究（けんきゅう）', icon: '🧑‍🔬', level: 'hard' },
+            { num: 100, symbol: 'Fm', name: 'フェルミウム', kana: 'ふぇるみうむ', cats: ['metal', 'manmade'], desc: '科学者（かがくしゃ）フェルミの なまえが ついた げんそ。', use: '研究（けんきゅう）', icon: '🔬', level: 'hard' },
+            { num: 101, symbol: 'Md', name: 'メンデレビウム', kana: 'めんでれびうむ', cats: ['metal', 'manmade'], desc: '周期表（しゅうきひょう）を つくった メンデレーエフから。', use: '研究（けんきゅう）', icon: '📋', level: 'hard' },
+            { num: 102, symbol: 'No', name: 'ノーベリウム', kana: 'のーべりうむ', cats: ['metal', 'manmade'], desc: 'ノーベル賞（しょう）の ノーベルから なまえが ついた げんそ。', use: '研究（けんきゅう）', icon: '🏅', level: 'hard' },
+            { num: 103, symbol: 'Lr', name: 'ローレンシウム', kana: 'ろーれんしうむ', cats: ['metal', 'manmade'], desc: 'かそくきを つくった ローレンスから なまえが ついた げんそ。', use: '研究（けんきゅう）', icon: '⚛️', level: 'hard' },
+            { num: 104, symbol: 'Rf', name: 'ラザホージウム', kana: 'らざほーじうむ', cats: ['metal', 'manmade'], desc: '原子（げんし）を しらべた ラザフォードから。', use: '研究（けんきゅう）', icon: '⚛️', level: 'hard' },
+            { num: 105, symbol: 'Db', name: 'ドブニウム', kana: 'どぶにうむ', cats: ['metal', 'manmade'], desc: 'ロシアの ドゥブナの まちから なまえが ついた げんそ。', use: '研究（けんきゅう）', icon: '🏙️', level: 'hard' },
+            { num: 106, symbol: 'Sg', name: 'シーボーギウム', kana: 'しーぼーぎうむ', cats: ['metal', 'manmade'], desc: '科学者（かがくしゃ）シーボーグから なまえが ついた げんそ。', use: '研究（けんきゅう）', icon: '🔬', level: 'hard' },
+            { num: 107, symbol: 'Bh', name: 'ボーリウム', kana: 'ぼーりうむ', cats: ['metal', 'manmade'], desc: '科学者（かがくしゃ）ボーアから なまえが ついた げんそ。', use: '研究（けんきゅう）', icon: '🔬', level: 'hard' },
+            { num: 108, symbol: 'Hs', name: 'ハッシウム', kana: 'はっしうむ', cats: ['metal', 'manmade'], desc: 'ドイツの ヘッセンしゅうから なまえが ついた げんそ。', use: '研究（けんきゅう）', icon: '🏰', level: 'hard' },
+            { num: 109, symbol: 'Mt', name: 'マイトネリウム', kana: 'まいとねりうむ', cats: ['metal', 'manmade'], desc: '科学者（かがくしゃ）マイトナーから なまえが ついた げんそ。', use: '研究（けんきゅう）', icon: '👩‍🔬', level: 'hard' },
+            { num: 110, symbol: 'Ds', name: 'ダームスタチウム', kana: 'だーむすたちうむ', cats: ['metal', 'manmade'], desc: 'ドイツの ダルムシュタットの まちから。', use: '研究（けんきゅう）', icon: '🏙️', level: 'hard' },
+            { num: 111, symbol: 'Rg', name: 'レントゲニウム', kana: 'れんとげにうむ', cats: ['metal', 'manmade'], desc: 'レントゲンを はっけんした 人（ひと）から なまえが ついた げんそ。', use: '研究（けんきゅう）', icon: '🩻', level: 'hard' },
+            { num: 112, symbol: 'Cn', name: 'コペルニシウム', kana: 'こぺるにしうむ', cats: ['metal', 'manmade'], desc: '地球（ちきゅう）が まわっていると いった コペルニクスから。', use: '研究（けんきゅう）', icon: '🌍', level: 'hard' },
+            { num: 113, symbol: 'Nh', name: 'ニホニウム', kana: 'にほにうむ', cats: ['metal', 'manmade'], desc: '日本（にほん）で つくられた げんそ！なまえも 日本（にほん）から。', use: '研究（けんきゅう）', icon: '🗾', level: 'medium' },
+            { num: 114, symbol: 'Fl', name: 'フレロビウム', kana: 'ふれろびうむ', cats: ['metal', 'manmade'], desc: 'ロシアの 科学者（かがくしゃ）フリョロフから。', use: '研究（けんきゅう）', icon: '🔬', level: 'hard' },
+            { num: 115, symbol: 'Mc', name: 'モスコビウム', kana: 'もすこびうむ', cats: ['metal', 'manmade'], desc: 'ロシアの モスクワから なまえが ついた げんそ。', use: '研究（けんきゅう）', icon: '🏙️', level: 'hard' },
+            { num: 116, symbol: 'Lv', name: 'リバモリウム', kana: 'りばもりうむ', cats: ['metal', 'manmade'], desc: 'アメリカの リバモア研究所（けんきゅうじょ）から。', use: '研究（けんきゅう）', icon: '🔬', level: 'hard' },
+            { num: 117, symbol: 'Ts', name: 'テネシン', kana: 'てねしん', cats: ['nonmetal', 'manmade'], desc: 'アメリカの テネシーしゅうから なまえが ついた げんそ。', use: '研究（けんきゅう）', icon: '🎸', level: 'hard' },
+            { num: 118, symbol: 'Og', name: 'オガネソン', kana: 'おがねそん', cats: ['gas', 'nonmetal', 'manmade'], desc: 'いまの ところ いちばん おもい げんそ。人（ひと）が つくったよ。', use: '研究（けんきゅう）', icon: '🏁', level: 'hard' }
         ];
 
         const BADGES = [
@@ -525,6 +630,7 @@
             document.getElementById('quiz-q-num').innerText = `だい ${state.quiz.currentIndex + 1} / ${total} もん`;
 
             document.getElementById('quiz-question-title').innerText = q.name;
+            document.getElementById('quiz-question-kana').innerText = q.kana;
             document.getElementById('quiz-question-desc').innerText = `💡 ${q.desc}`;
 
             // Options: 1 correct + 3 wrong
@@ -601,13 +707,15 @@
             state.match.flipped = [];
             state.match.timer = 0;
 
-            const selectedElements = [...ELEMENTS].sort(() => 0.5 - Math.random()).slice(0, pairCount);
+            // カードは よく しられている げんそ（かんたん・ふつう）から えらぶ
+            const matchPool = ELEMENTS.filter(e => e.level !== 'hard');
+            const selectedElements = [...matchPool].sort(() => 0.5 - Math.random()).slice(0, pairCount);
 
             // Create 2 cards per element (1 symbol, 1 name)
             let cardDeck = [];
             selectedElements.forEach(e => {
-                cardDeck.push({ id: e.symbol, type: 'symbol', text: e.symbol, icon: e.icon, color: 'from-amber-400 to-orange-400' });
-                cardDeck.push({ id: e.symbol, type: 'name', text: e.name, icon: e.icon, color: 'from-sky-400 to-indigo-400' });
+                cardDeck.push({ id: e.symbol, type: 'symbol', text: e.symbol, kana: '', icon: e.icon, color: 'from-amber-400 to-orange-400' });
+                cardDeck.push({ id: e.symbol, type: 'name', text: e.name, kana: e.kana, icon: e.icon, color: 'from-sky-400 to-indigo-400' });
             });
 
             state.match.cards = cardDeck.sort(() => 0.5 - Math.random());
@@ -629,7 +737,8 @@
                         <!-- Back (Revealed Side) -->
                         <div class="rotate-y-180 backface-hidden absolute inset-0 bg-gradient-to-br ${card.color} text-white rounded-2xl border-2 border-white flex flex-col items-center justify-center p-2 text-center shadow-lg">
                             <span class="text-xs opacity-80 mb-0.5">${card.type === 'symbol' ? 'きごう' : 'なまえ'}</span>
-                            <span class="text-xl sm:text-2xl font-black">${card.text}</span>
+                            <span class="font-black leading-tight ${card.text.length > 5 ? 'text-base' : 'text-xl sm:text-2xl'}">${card.text}</span>
+                            ${card.kana ? `<span class="text-[10px] opacity-80 leading-tight">${card.kana}</span>` : ''}
                         </div>
                     </div>
                 </div>
@@ -697,10 +806,9 @@
         /* --- ELEMENT BOOK LOGIC --- */
         function renderBook(filter = 'all') {
             const container = document.getElementById('book-grid');
-            let filtered = ELEMENTS;
-            if (filter !== 'all') {
-                filtered = ELEMENTS.filter(e => e.category === filter);
-            }
+            const filtered = filter === 'all' ? ELEMENTS : ELEMENTS.filter(e => e.cats.includes(filter));
+
+            document.getElementById('book-count').innerText = `${filtered.length}この げんそ`;
 
             container.innerHTML = filtered.map(e => `
                 <div onclick="openModal(${e.num})" class="bg-white rounded-2xl p-4 border-2 border-slate-200 shadow-sm hover:shadow-md cursor-pointer bounce-hover flex flex-col items-center justify-between text-center relative overflow-hidden group">
@@ -708,7 +816,8 @@
                     <span class="text-2xl mt-2">${e.icon}</span>
                     <div class="my-2">
                         <h4 class="text-3xl font-black text-slate-800">${e.symbol}</h4>
-                        <p class="text-xs font-bold text-slate-600">${e.name}</p>
+                        <p class="text-xs font-bold text-slate-600 leading-tight">${e.name}</p>
+                        <p class="text-[10px] font-bold text-slate-400 leading-tight">${e.kana}</p>
                     </div>
                     <span class="text-[10px] bg-slate-100 text-slate-500 font-bold px-2 py-0.5 rounded-full group-hover:bg-teal-100 group-hover:text-teal-700 transition-colors">
                         くわしく <i class="fas fa-chevron-right text-[8px]"></i>
@@ -717,13 +826,14 @@
             `).join('');
         }
 
-        function filterBook(category) {
+        function filterBook(category, btn) {
             playSound('click');
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active', 'bg-teal-500', 'text-white');
-                btn.classList.add('bg-white', 'text-slate-700');
+            document.querySelectorAll('.filter-btn').forEach(el => {
+                el.classList.remove('active', 'bg-teal-500', 'text-white');
+                el.classList.add('bg-white', 'text-slate-700');
             });
-            event.target.classList.add('active', 'bg-teal-500', 'text-white');
+            btn.classList.remove('bg-white', 'text-slate-700');
+            btn.classList.add('active', 'bg-teal-500', 'text-white');
             renderBook(category);
         }
 
