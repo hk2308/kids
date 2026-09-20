@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>さんすうランド 1〜3年</title>
+    <meta name="description" content="くり上がりのたしざん、時計、分数、わり算、大きい数を、ブロックや絵で見ながら学べる小学1〜3年の算数アプリ。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums; }
+        .bounce-hover { transition: transform .15s cubic-bezier(.175,.885,.32,1.275); }
+        .bounce-hover:hover { transform: scale(1.04); }
+        .bounce-hover:active { transform: scale(.96); }
+        @keyframes pop { 0% { transform: scale(.3); opacity: 0 } 70% { transform: scale(1.15) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275); }
+        @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+        .shake { animation: shake .3s ease-in-out; }
+        svg text { font-family: inherit; }
+    </style>
+</head>
+<body class="bg-yellow-50 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-pink-500 via-rose-400 to-amber-400 text-white p-3 sm:p-4 shadow-lg sticky top-0 z-30">
+        <div class="max-w-5xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">🧮</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">さんすうランド</h1>
+                    <p class="text-xs text-rose-50 font-bold hidden sm:block">小学（しょうがく）1〜3年の さんすうを 目で見て れんしゅう</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[72px] z-20 bg-yellow-50/95 backdrop-blur border-b border-amber-200">
+        <div class="max-w-5xl mx-auto flex gap-2 p-3 overflow-x-auto">
+            <button data-tab="add" onclick="showTab('add')" class="tab-btn active bg-rose-500 text-white font-black px-4 py-2 rounded-full text-sm whitespace-nowrap">たしざん・ひきざん</button>
+            <button data-tab="clock" onclick="showTab('clock')" class="tab-btn bg-white border-2 border-rose-200 text-slate-600 font-black px-4 py-2 rounded-full text-sm whitespace-nowrap">とけい</button>
+            <button data-tab="frac" onclick="showTab('frac')" class="tab-btn bg-white border-2 border-rose-200 text-slate-600 font-black px-4 py-2 rounded-full text-sm whitespace-nowrap">分数</button>
+            <button data-tab="div" onclick="showTab('div')" class="tab-btn bg-white border-2 border-rose-200 text-slate-600 font-black px-4 py-2 rounded-full text-sm whitespace-nowrap">わり算</button>
+            <button data-tab="place" onclick="showTab('place')" class="tab-btn bg-white border-2 border-rose-200 text-slate-600 font-black px-4 py-2 rounded-full text-sm whitespace-nowrap">大きい数</button>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto w-full p-3 sm:p-6 flex-grow space-y-5">
+
+        <!-- ============ たしざん・ひきざん ============ -->
+        <section id="tab-add" class="tab-content space-y-4">
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-rose-100">
+                <h2 class="text-lg sm:text-xl font-black flex items-center gap-2"><span>🍒</span> 10の まとまりで 考（かんが）える</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">「さくらんぼ計算（けいさん）」を ブロックで 見てみよう。えらんで、こたえを タップ！</p>
+                <div id="add-modes" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-rose-100">
+                <div class="flex justify-between items-center">
+                    <span id="add-level" class="bg-rose-100 text-rose-700 font-black px-3 py-1 rounded-full text-xs">くり上がりの たしざん</span>
+                    <span id="add-score" class="num bg-amber-100 text-amber-700 font-black px-3 py-1 rounded-full text-xs">せいかい 0 / 0</span>
+                </div>
+
+                <p id="add-q" class="num text-4xl sm:text-5xl font-black text-center my-4">7 + 5 = ?</p>
+
+                <div id="add-visual" class="bg-slate-50 rounded-2xl border-2 border-slate-200 p-2"></div>
+
+                <p id="add-explain" class="text-center text-sm font-bold text-rose-600 mt-2 min-h-[1.5rem]"></p>
+
+                <div class="flex gap-2 mt-3">
+                    <button id="add-hint" onclick="addHint()" class="bg-amber-400 hover:bg-amber-500 text-slate-900 font-black px-4 py-2.5 rounded-xl border-b-4 border-amber-600 bounce-hover text-sm">💡 やりかたを 見る</button>
+                    <button onclick="newAddQuestion()" class="bg-white border-2 border-slate-200 text-slate-600 font-black px-4 py-2.5 rounded-xl bounce-hover text-sm">つぎの もんだい</button>
+                </div>
+
+                <div id="add-choices" class="grid grid-cols-4 gap-2 mt-4"></div>
+            </div>
+        </section>
+
+        <!-- ============ とけい ============ -->
+        <section id="tab-clock" class="tab-content hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-rose-100">
+                <h2 class="text-lg sm:text-xl font-black flex items-center gap-2"><span>🕐</span> とけいを よもう</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">みじかい針（はり）が「何時（なんじ）」、ながい針が「何分（なんぷん）」。</p>
+
+                <div class="mt-4 grid grid-cols-1 sm:grid-cols-[280px_1fr] gap-4 items-center">
+                    <div id="clock-face" class="bg-slate-50 rounded-2xl border-2 border-slate-200 p-2"></div>
+                    <div class="space-y-3">
+                        <div id="clock-quiz" class="space-y-3">
+                            <p class="text-sm font-bold text-slate-500">この とけいは 何時何分（なんじなんぷん）？</p>
+                            <div id="clock-choices" class="grid grid-cols-2 gap-2"></div>
+                            <p id="clock-msg" class="font-black min-h-[1.5rem]"></p>
+                            <button onclick="newClockQuestion()" class="bg-white border-2 border-slate-200 text-slate-600 font-black px-4 py-2 rounded-xl text-sm bounce-hover">つぎの もんだい</button>
+                        </div>
+                        <div class="border-t-2 border-dashed border-slate-200 pt-3">
+                            <p class="text-xs font-black text-slate-500">じぶんで 針を うごかす</p>
+                            <div class="flex items-center gap-2 mt-2">
+                                <span class="text-xs font-black text-slate-600 w-10">時</span>
+                                <button onclick="nudgeClock(-1,0)" class="bg-slate-100 font-black w-9 h-9 rounded-lg">−</button>
+                                <span id="clock-h" class="num font-black w-8 text-center">3</span>
+                                <button onclick="nudgeClock(1,0)" class="bg-slate-100 font-black w-9 h-9 rounded-lg">＋</button>
+                            </div>
+                            <div class="flex items-center gap-2 mt-2">
+                                <span class="text-xs font-black text-slate-600 w-10">分</span>
+                                <button onclick="nudgeClock(0,-5)" class="bg-slate-100 font-black w-9 h-9 rounded-lg">−</button>
+                                <span id="clock-m" class="num font-black w-8 text-center">20</span>
+                                <button onclick="nudgeClock(0,5)" class="bg-slate-100 font-black w-9 h-9 rounded-lg">＋</button>
+                            </div>
+                            <p id="clock-read" class="num font-black text-rose-600 mt-2">3時20分</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ 分数 ============ -->
+        <section id="tab-frac" class="tab-content hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-rose-100">
+                <h2 class="text-lg sm:text-xl font-black flex items-center gap-2"><span>🍕</span> 分数（ぶんすう）を 見てみよう</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">「1つを いくつに 分（わ）けて、そのうち いくつ分か」。スライダーで うごかしてみよう。</p>
+
+                <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                    <div id="frac-pizza" class="bg-slate-50 rounded-2xl border-2 border-slate-200 p-2"></div>
+                    <div class="space-y-3">
+                        <p id="frac-label" class="num text-center text-4xl font-black text-rose-600"></p>
+                        <div>
+                            <label class="text-xs font-black text-slate-600">いくつに 分ける（分母・ぶんぼ） = <span id="den-val" class="num">4</span></label>
+                            <input id="den-range" type="range" min="2" max="12" value="4" class="w-full mt-1">
+                        </div>
+                        <div>
+                            <label class="text-xs font-black text-slate-600">いくつ分 とる（分子・ぶんし） = <span id="numr-val" class="num">1</span></label>
+                            <input id="numr-range" type="range" min="0" max="4" value="1" class="w-full mt-1">
+                        </div>
+                        <div id="frac-bar" class="bg-slate-50 rounded-xl border-2 border-slate-200 p-2"></div>
+                        <p id="frac-note" class="text-xs font-bold text-slate-500 leading-relaxed"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-rose-100">
+                <h3 class="font-black flex items-center gap-2"><span>⚖️</span> どちらが 大きい？</h3>
+                <div id="frac-compare" class="grid grid-cols-2 gap-3 mt-3"></div>
+                <p id="frac-cmp-msg" class="text-center font-black mt-3 min-h-[1.5rem]"></p>
+                <button onclick="newFracCompare()" class="mt-2 mx-auto block bg-white border-2 border-slate-200 text-slate-600 font-bold px-4 py-1.5 rounded-full text-xs">つぎの もんだい</button>
+            </div>
+        </section>
+
+        <!-- ============ わり算 ============ -->
+        <section id="tab-div" class="tab-content hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-rose-100">
+                <h2 class="text-lg sm:text-xl font-black flex items-center gap-2"><span>🍪</span> おなじ数ずつ わけよう</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">クッキーを おさらに おなじ数ずつ わけると、1さらに いくつ？ のこりは いくつ？</p>
+
+                <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-xs font-black text-slate-600">クッキー = <span id="div-n-val" class="num">13</span>こ</label>
+                        <input id="div-n" type="range" min="1" max="30" value="13" class="w-full mt-1">
+                    </div>
+                    <div>
+                        <label class="text-xs font-black text-slate-600">おさら = <span id="div-d-val" class="num">4</span>まい</label>
+                        <input id="div-d" type="range" min="2" max="8" value="4" class="w-full mt-1">
+                    </div>
+                </div>
+
+                <div id="div-visual" class="mt-3 bg-slate-50 rounded-2xl border-2 border-slate-200 p-2"></div>
+                <p id="div-expr" class="num text-center text-2xl font-black text-rose-600 mt-3"></p>
+                <p id="div-note" class="text-center text-sm font-bold text-slate-500"></p>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-rose-100">
+                <h3 class="font-black flex items-center gap-2"><span>✏️</span> わり算クイズ</h3>
+                <p id="divq-q" class="num text-center text-3xl font-black my-3"></p>
+                <div id="divq-choices" class="grid grid-cols-2 gap-2"></div>
+                <p id="divq-msg" class="text-center font-black mt-3 min-h-[1.5rem]"></p>
+                <button onclick="newDivQuestion()" class="mt-2 mx-auto block bg-white border-2 border-slate-200 text-slate-600 font-bold px-4 py-1.5 rounded-full text-xs">つぎの もんだい</button>
+            </div>
+        </section>
+
+        <!-- ============ 大きい数 ============ -->
+        <section id="tab-place" class="tab-content hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-rose-100">
+                <h2 class="text-lg sm:text-xl font-black flex items-center gap-2"><span>🔢</span> 位（くらい）を 見てみよう</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">一（いち）・十（じゅう）・百（ひゃく）・千（せん）・一万（いちまん）。ボタンで ふやしてみよう。</p>
+
+                <p id="place-num" class="num text-center text-5xl font-black text-rose-600 my-4">0</p>
+                <p id="place-read" class="text-center text-sm font-bold text-slate-500 -mt-3 mb-3"></p>
+
+                <div id="place-visual" class="bg-slate-50 rounded-2xl border-2 border-slate-200 p-2"></div>
+
+                <div id="place-buttons" class="grid grid-cols-5 gap-2 mt-3"></div>
+                <button onclick="setPlaceNumber(0)" class="mt-2 mx-auto block bg-white border-2 border-slate-200 text-slate-600 font-bold px-4 py-1.5 rounded-full text-xs">0に もどす</button>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-rose-100">
+                <h3 class="font-black flex items-center gap-2"><span>❓</span> この 数（すう）は いくつ？</h3>
+                <div id="placeq-visual" class="mt-3 bg-slate-50 rounded-2xl border-2 border-slate-200 p-2"></div>
+                <div id="placeq-choices" class="grid grid-cols-2 gap-2 mt-3"></div>
+                <p id="placeq-msg" class="text-center font-black mt-3 min-h-[1.5rem]"></p>
+                <button onclick="newPlaceQuestion()" class="mt-2 mx-auto block bg-white border-2 border-slate-200 text-slate-600 font-bold px-4 py-1.5 rounded-full text-xs">つぎの もんだい</button>
+            </div>
+        </section>
+    </main>
+
+    <footer class="text-center py-3 text-xs text-slate-400 font-bold">さんすうランド © 2026</footer>
+
+    <script>
+        const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+        const shuffle = l => [...l].sort(() => 0.5 - Math.random());
+
+        /* ===================== ① たしざん・ひきざん ===================== */
+        const ADD_MODES = {
+            add10: { name: '10までの たしざん', grade: '1年', gen: () => { const a = rnd(1, 9); return { a, b: rnd(1, 10 - a), op: '+' }; } },
+            carry: { name: 'くり上がりの たしざん', grade: '1年', gen: () => { const a = rnd(2, 9); return { a, b: rnd(11 - a, 9), op: '+' }; } },
+            borrow: { name: 'くり下がりの ひきざん', grade: '1年', gen: () => { const a = rnd(11, 18); return { a, b: rnd(a - 9, 9), op: '-' }; } },
+            two: { name: '2けたの たしざん', grade: '2年', gen: () => ({ a: rnd(11, 89), b: rnd(11, 99 - 89 + 10), op: '+' }) }
+        };
+
+        const addState = { mode: 'carry', q: null, hint: 0, ok: 0, total: 0, locked: false };
+
+        function renderAddModes() {
+            document.getElementById('add-modes').innerHTML = Object.entries(ADD_MODES).map(([k, m]) => {
+                const on = addState.mode === k;
+                return `<button onclick="setAddMode('${k}')" data-m="${k}" class="${on ? 'bg-rose-500 text-white border-b-4 border-rose-700' : 'bg-white border-2 border-rose-200 text-slate-600'} font-black px-2 py-2.5 rounded-xl text-xs bounce-hover">
+                    ${m.name}<span class="block text-[10px] font-bold opacity-80">${m.grade}</span></button>`;
+            }).join('');
+        }
+
+        function setAddMode(k) {
+            addState.mode = k;
+            addState.ok = 0;
+            addState.total = 0;
+            renderAddModes();
+            newAddQuestion();
+        }
+
+        // 10のわく（ten frame）を かく
+        function tenFrameSVG(groups) {
+            // groups: [{count, color, label}]
+            const cell = 26, cols = 5, pad = 10;
+            let x = pad, maxX = pad;
+            let out = '';
+            groups.forEach(g => {
+                const rows = 2;
+                const w = cols * cell;
+                out += `<rect x="${x - 4}" y="${pad - 4}" width="${w + 8}" height="${rows * cell + 8}" rx="8" fill="#fff" stroke="${g.frame || '#cbd5e1'}" stroke-width="2.5" />`;
+                for (let i = 0; i < 10; i++) {
+                    const cx = x + (i % cols) * cell + cell / 2;
+                    const cy = pad + Math.floor(i / cols) * cell + cell / 2;
+                    const filled = i < g.count;
+                    out += `<circle cx="${cx}" cy="${cy}" r="${cell / 2 - 3.5}" fill="${filled ? g.color : '#f1f5f9'}" stroke="${filled ? g.color : '#e2e8f0'}" stroke-width="2" />`;
+                }
+                if (g.label) out += `<text x="${x + w / 2}" y="${pad + rows * cell + 20}" font-size="14" font-weight="900" fill="${g.color}" text-anchor="middle">${g.label}</text>`;
+                x += w + 26;
+                maxX = x;
+            });
+            return `<svg viewBox="0 0 ${maxX + pad} ${pad * 2 + 2 * cell + 28}" class="w-full h-auto" style="max-height:190px">${out}</svg>`;
+        }
+
+        // 2けた用: 10のたばと ばら
+        function bundleSVG(a, b) {
+            const out = [];
+            const drawNumber = (n, x0, color) => {
+                const tens = Math.floor(n / 10), ones = n % 10;
+                let s = '';
+                for (let i = 0; i < tens; i++) {
+                    s += `<rect x="${x0 + i * 13}" y="10" width="9" height="56" rx="3" fill="${color}" />`;
+                }
+                for (let i = 0; i < ones; i++) {
+                    s += `<rect x="${x0 + tens * 13 + (i % 5) * 11}" y="${10 + Math.floor(i / 5) * 12}" width="8" height="8" rx="2" fill="${color}" opacity=".7" />`;
+                }
+                return s;
+            };
+            out.push(drawNumber(a, 10, '#f43f5e'));
+            out.push(`<text x="160" y="44" font-size="20" font-weight="900" fill="#64748b" text-anchor="middle">＋</text>`);
+            out.push(drawNumber(b, 180, '#0ea5e9'));
+            return `<svg viewBox="0 0 340 80" class="w-full h-auto" style="max-height:130px">${out.join('')}</svg>`;
+        }
+
+        function newAddQuestion() {
+            const m = ADD_MODES[addState.mode];
+            addState.q = m.gen();
+            addState.hint = 0;
+            addState.locked = false;
+            document.getElementById('add-level').innerText = `${m.name}（${m.grade}）`;
+            document.getElementById('add-explain').innerText = '';
+            renderAdd();
+            renderAddChoices();
+        }
+
+        function answerOf(q) {
+            return q.op === '+' ? q.a + q.b : q.a - q.b;
+        }
+
+        function renderAdd() {
+            const q = addState.q;
+            document.getElementById('add-q').innerText = `${q.a} ${q.op === '+' ? '+' : '−'} ${q.b} = ?`;
+            const holder = document.getElementById('add-visual');
+            const ans = answerOf(q);
+
+            if (addState.mode === 'two') {
+                holder.innerHTML = bundleSVG(q.a, q.b);
+                return;
+            }
+
+            if (q.op === '+') {
+                if (addState.hint === 0) {
+                    holder.innerHTML = tenFrameSVG([
+                        { count: q.a, color: '#f43f5e', label: `${q.a}` },
+                        { count: q.b, color: '#0ea5e9', label: `${q.b}` }
+                    ]);
+                } else {
+                    // 10に するために いくつ 分ける？
+                    const need = Math.min(10 - q.a, q.b);
+                    const rest = q.b - need;
+                    holder.innerHTML = tenFrameSVG([
+                        { count: Math.min(10, q.a + need), color: '#f43f5e', frame: '#f59e0b', label: `10` },
+                        { count: rest, color: '#0ea5e9', label: `${rest}` }
+                    ]);
+                    document.getElementById('add-explain').innerText =
+                        `${q.b} を ${need} と ${rest} に わけて、${q.a} + ${need} = 10。10 + ${rest} = ${ans}`;
+                }
+            } else {
+                if (addState.hint === 0) {
+                    holder.innerHTML = tenFrameSVG([
+                        { count: 10, color: '#f43f5e', label: '10' },
+                        { count: q.a - 10, color: '#f43f5e', label: `${q.a - 10}` }
+                    ]);
+                } else {
+                    const fromTen = q.b - (q.a - 10);
+                    holder.innerHTML = tenFrameSVG([
+                        { count: 10 - fromTen, color: '#f43f5e', frame: '#f59e0b', label: `10 − ${fromTen} = ${10 - fromTen}` },
+                        { count: 0, color: '#0ea5e9', label: `${q.a - 10} は ぜんぶ つかう` }
+                    ]);
+                    document.getElementById('add-explain').innerText =
+                        `${q.b} を ${q.a - 10} と ${fromTen} に わけて、まず ばらの ${q.a - 10} を へらす。つぎに 10 − ${fromTen} = ${ans}`;
+                }
+            }
+        }
+
+        function addHint() {
+            addState.hint = 1;
+            renderAdd();
+        }
+
+        function renderAddChoices() {
+            const ans = answerOf(addState.q);
+            const set = new Set([ans]);
+            while (set.size < 4) {
+                const cand = ans + rnd(-3, 3) * (addState.mode === 'two' ? 10 : 1) + (addState.mode === 'two' ? rnd(-1, 1) : 0);
+                if (cand >= 0 && cand !== ans) set.add(cand);
+            }
+            document.getElementById('add-choices').innerHTML = shuffle([...set]).map(v => `
+                <button onclick="answerAdd(${v})" data-v="${v}" class="num bg-slate-100 hover:bg-rose-100 border-2 border-slate-200 hover:border-rose-400 rounded-2xl py-3 text-2xl font-black bounce-hover">${v}</button>`).join('');
+        }
+
+        function answerAdd(v) {
+            if (addState.locked) return;
+            const ans = answerOf(addState.q);
+            const btn = document.querySelector(`#add-choices button[data-v="${v}"]`);
+            addState.total++;
+            if (v === ans) {
+                addState.ok++;
+                addState.locked = true;
+                if (btn) btn.classList.add('bg-emerald-200', 'border-emerald-500');
+                document.getElementById('add-explain').innerHTML =
+                    `<span class="text-emerald-600">せいかい！ ${addState.q.a} ${addState.q.op === '+' ? '+' : '−'} ${addState.q.b} = ${ans}</span>`;
+                setTimeout(newAddQuestion, 1200);
+            } else {
+                if (btn) {
+                    btn.classList.add('shake', 'bg-rose-100', 'border-rose-400');
+                    setTimeout(() => btn.classList.remove('shake'), 320);
+                }
+                addHint();
+            }
+            document.getElementById('add-score').innerText = `せいかい ${addState.ok} / ${addState.total}`;
+        }
+
+        /* ===================== ② とけい ===================== */
+        const clock = { h: 3, m: 20, qh: 3, qm: 20, locked: false };
+
+        function clockSVG(h, m, opts = {}) {
+            const R = 120, cx = 130, cy = 130;
+            let out = `<circle cx="${cx}" cy="${cy}" r="${R}" fill="#fff" stroke="#334155" stroke-width="5" />`;
+            for (let i = 0; i < 60; i++) {
+                const a = (i / 60) * Math.PI * 2 - Math.PI / 2;
+                const big = i % 5 === 0;
+                const r1 = R - (big ? 14 : 7);
+                out += `<line x1="${cx + r1 * Math.cos(a)}" y1="${cy + r1 * Math.sin(a)}" x2="${cx + (R - 3) * Math.cos(a)}" y2="${cy + (R - 3) * Math.sin(a)}" stroke="${big ? '#334155' : '#cbd5e1'}" stroke-width="${big ? 3 : 1.6}" />`;
+            }
+            for (let i = 1; i <= 12; i++) {
+                const a = (i / 12) * Math.PI * 2 - Math.PI / 2;
+                const r = R - 34;
+                out += `<text x="${cx + r * Math.cos(a)}" y="${cy + r * Math.sin(a)}" font-size="24" font-weight="900" fill="#1e293b" text-anchor="middle" dominant-baseline="central">${i}</text>`;
+                // 分の めやす（5,10,15…）
+                const r2 = R - 58;
+                out += `<text x="${cx + r2 * Math.cos(a)}" y="${cy + r2 * Math.sin(a)}" font-size="12" font-weight="900" fill="#f59e0b" text-anchor="middle" dominant-baseline="central">${i * 5 === 60 ? 0 : i * 5}</text>`;
+            }
+            const ma = (m / 60) * Math.PI * 2 - Math.PI / 2;
+            const ha = ((h % 12) / 12 + m / 720) * Math.PI * 2 - Math.PI / 2;
+            out += `<line x1="${cx}" y1="${cy}" x2="${cx + (R - 55) * Math.cos(ha)}" y2="${cy + (R - 55) * Math.sin(ha)}" stroke="#e11d48" stroke-width="9" stroke-linecap="round" />`;
+            out += `<line x1="${cx}" y1="${cy}" x2="${cx + (R - 22) * Math.cos(ma)}" y2="${cy + (R - 22) * Math.sin(ma)}" stroke="#0ea5e9" stroke-width="6" stroke-linecap="round" />`;
+            out += `<circle cx="${cx}" cy="${cy}" r="7" fill="#334155" />`;
+            if (opts.legend) {
+                out += `<text x="${cx}" y="${cy + R + 26}" font-size="14" font-weight="900" fill="#e11d48" text-anchor="middle">みじかい針＝時</text>`;
+                out += `<text x="${cx}" y="${cy + R + 44}" font-size="14" font-weight="900" fill="#0284c7" text-anchor="middle">ながい針＝分</text>`;
+            }
+            return `<svg viewBox="0 0 260 ${opts.legend ? 310 : 266}" class="w-full h-auto" style="max-height:${opts.legend ? 330 : 280}px">${out}</svg>`;
+        }
+
+        function renderClock() {
+            document.getElementById('clock-face').innerHTML = clockSVG(clock.qh, clock.qm, { legend: true });
+            document.getElementById('clock-h').innerText = clock.h;
+            document.getElementById('clock-m').innerText = clock.m;
+            document.getElementById('clock-read').innerText = `${clock.h}時${clock.m}分`;
+        }
+
+        function nudgeClock(dh, dm) {
+            clock.h = ((clock.h - 1 + dh + 12) % 12) + 1;
+            clock.m = (clock.m + dm + 60) % 60;
+            clock.qh = clock.h;
+            clock.qm = clock.m;
+            renderClock();
+            document.getElementById('clock-msg').innerText = '';
+        }
+
+        function newClockQuestion() {
+            clock.qh = rnd(1, 12);
+            clock.qm = rnd(0, 11) * 5;
+            clock.h = clock.qh;
+            clock.m = clock.qm;
+            clock.locked = false;
+            renderClock();
+            document.getElementById('clock-msg').innerText = '';
+
+            const right = `${clock.qh}時${clock.qm}分`;
+            const set = new Set([right]);
+            while (set.size < 4) {
+                const h = Math.random() < 0.5 ? clock.qh : rnd(1, 12);
+                const m = Math.random() < 0.5 ? (clock.qm + rnd(1, 3) * 5) % 60 : rnd(0, 11) * 5;
+                set.add(`${h}時${m}分`);
+            }
+            document.getElementById('clock-choices').innerHTML = shuffle([...set]).map(t => `
+                <button onclick="answerClock('${t}')" data-t="${t}" class="num bg-slate-100 hover:bg-rose-100 border-2 border-slate-200 hover:border-rose-400 rounded-xl py-3 font-black bounce-hover">${t}</button>`).join('');
+        }
+
+        function answerClock(t) {
+            if (clock.locked) return;
+            const right = `${clock.qh}時${clock.qm}分`;
+            const msg = document.getElementById('clock-msg');
+            if (t === right) {
+                clock.locked = true;
+                msg.innerHTML = `<span class="text-emerald-600">せいかい！ ${right}</span>`;
+            } else {
+                const btn = document.querySelector(`#clock-choices button[data-t="${t}"]`);
+                if (btn) {
+                    btn.classList.add('shake', 'bg-rose-100');
+                    setTimeout(() => btn.classList.remove('shake'), 320);
+                }
+                msg.innerHTML = `<span class="text-rose-500">ちがうよ。ながい針が どの 数字を さしているか 見てみよう。</span>`;
+            }
+        }
+
+        /* ===================== ③ 分数 ===================== */
+        function pizzaSVG(numr, den) {
+            const cx = 110, cy = 110, R = 95;
+            let out = `<circle cx="${cx}" cy="${cy}" r="${R}" fill="#fff" stroke="#cbd5e1" stroke-width="3" />`;
+            for (let i = 0; i < den; i++) {
+                const a1 = (i / den) * Math.PI * 2 - Math.PI / 2;
+                const a2 = ((i + 1) / den) * Math.PI * 2 - Math.PI / 2;
+                const x1 = cx + R * Math.cos(a1), y1 = cy + R * Math.sin(a1);
+                const x2 = cx + R * Math.cos(a2), y2 = cy + R * Math.sin(a2);
+                const large = (a2 - a1) > Math.PI ? 1 : 0;
+                out += `<path d="M${cx},${cy} L${x1},${y1} A${R},${R} 0 ${large} 1 ${x2},${y2} Z" fill="${i < numr ? '#fb7185' : '#f8fafc'}" stroke="#fff" stroke-width="2.5" />`;
+            }
+            out += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#e11d48" stroke-width="3" />`;
+            return `<svg viewBox="0 0 220 220" class="w-full h-auto" style="max-height:230px">${out}</svg>`;
+        }
+
+        function barSVG(numr, den) {
+            const W = 260, H = 46, pad = 6;
+            const w = (W - pad * 2) / den;
+            let out = '';
+            for (let i = 0; i < den; i++) {
+                out += `<rect x="${pad + i * w}" y="${pad}" width="${w - 2}" height="${H - pad * 2}" rx="4" fill="${i < numr ? '#fb7185' : '#f1f5f9'}" stroke="#cbd5e1" stroke-width="1.5" />`;
+            }
+            return `<svg viewBox="0 0 ${W} ${H}" class="w-full h-auto" style="max-height:60px">${out}</svg>`;
+        }
+
+        function fracLabel(numr, den) {
+            return `<span style="display:inline-block;text-align:center;line-height:1">
+                <span style="display:block;border-bottom:4px solid currentColor;padding:0 8px">${numr}</span>
+                <span style="display:block;padding:0 8px">${den}</span></span>`;
+        }
+
+        function renderFrac() {
+            const den = +document.getElementById('den-range').value;
+            const numrEl = document.getElementById('numr-range');
+            numrEl.max = den;
+            const numr = Math.min(+numrEl.value, den);
+            numrEl.value = numr;
+
+            document.getElementById('den-val').innerText = den;
+            document.getElementById('numr-val').innerText = numr;
+            document.getElementById('frac-pizza').innerHTML = pizzaSVG(numr, den);
+            document.getElementById('frac-bar').innerHTML = barSVG(numr, den);
+            document.getElementById('frac-label').innerHTML = fracLabel(numr, den);
+
+            const g = gcd(numr, den);
+            let note = `1つを ${den}こに 分けた うちの ${numr}こぶん。「${den}分の${numr}」と 読むよ。`;
+            if (numr === den && numr > 0) note += ' ぜんぶ そろって 1と おなじ！';
+            else if (numr > 0 && g > 1) note += ` ${numr / g}／${den / g} と おなじ 大きさ。`;
+            document.getElementById('frac-note').innerText = note;
+        }
+
+        function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+
+        let fracCmp = null;
+        function newFracCompare() {
+            const mk = () => { const d = rnd(2, 8); return { n: rnd(1, d), d }; };
+            let a = mk(), b = mk();
+            let guard = 0;
+            while (Math.abs(a.n / a.d - b.n / b.d) < 1e-9 && guard++ < 20) b = mk();
+            fracCmp = { a, b };
+            document.getElementById('frac-cmp-msg').innerText = '';
+            document.getElementById('frac-compare').innerHTML = [['a', a], ['b', b]].map(([key, f]) => `
+                <button onclick="answerFracCompare('${key}')" data-k="${key}" class="bg-slate-50 hover:bg-rose-50 border-2 border-slate-200 hover:border-rose-400 rounded-2xl p-3 bounce-hover">
+                    <div class="num text-3xl font-black text-rose-600">${fracLabel(f.n, f.d)}</div>
+                    <div class="mt-2">${barSVG(f.n, f.d)}</div>
+                </button>`).join('');
+        }
+
+        function answerFracCompare(key) {
+            const { a, b } = fracCmp;
+            const va = a.n / a.d, vb = b.n / b.d;
+            const right = va > vb ? 'a' : 'b';
+            const msg = document.getElementById('frac-cmp-msg');
+            if (key === right) {
+                msg.innerHTML = `<span class="text-emerald-600">せいかい！ ${a.d}分の${a.n} と ${b.d}分の${b.n} では ${right === 'a' ? `${a.d}分の${a.n}` : `${b.d}分の${b.n}`} の ほうが 大きい。</span>`;
+            } else {
+                msg.innerHTML = `<span class="text-rose-500">ざんねん。色（いろ）の ついた 長さを くらべてみよう。</span>`;
+            }
+        }
+
+        /* ===================== ④ わり算 ===================== */
+        function renderDiv() {
+            const n = +document.getElementById('div-n').value;
+            const d = +document.getElementById('div-d').value;
+            document.getElementById('div-n-val').innerText = n;
+            document.getElementById('div-d-val').innerText = d;
+
+            const q = Math.floor(n / d), r = n % d;
+            const plateW = 92, plateH = 92, gap = 10;
+            const cols = Math.min(d, 4);
+            const rows = Math.ceil(d / cols);
+            let out = '';
+            for (let i = 0; i < d; i++) {
+                const px = 8 + (i % cols) * (plateW + gap);
+                const py = 8 + Math.floor(i / cols) * (plateH + gap + 6);
+                out += `<rect x="${px}" y="${py}" width="${plateW}" height="${plateH}" rx="14" fill="#fff" stroke="#cbd5e1" stroke-width="2.5" />`;
+                for (let k = 0; k < q; k++) {
+                    const cx2 = px + 18 + (k % 3) * 28;
+                    const cy2 = py + 18 + Math.floor(k / 3) * 26;
+                    if (cy2 < py + plateH - 6) {
+                        out += `<circle cx="${cx2}" cy="${cy2}" r="10" fill="#f59e0b" stroke="#b45309" stroke-width="2" />`;
+                    }
+                }
+                out += `<text x="${px + plateW / 2}" y="${py + plateH - 8}" font-size="12" font-weight="900" fill="#64748b" text-anchor="middle">${q}こ</text>`;
+            }
+            // のこり
+            const ry = 8 + rows * (plateH + gap + 6);
+            out += `<text x="10" y="${ry + 16}" font-size="14" font-weight="900" fill="#e11d48">のこり ${r}こ</text>`;
+            for (let k = 0; k < r; k++) {
+                out += `<circle cx="${96 + k * 26}" cy="${ry + 11}" r="10" fill="#fb7185" stroke="#be123c" stroke-width="2" />`;
+            }
+            const W = 8 + cols * (plateW + gap);
+            document.getElementById('div-visual').innerHTML =
+                `<svg viewBox="0 0 ${W} ${ry + 30}" class="w-full h-auto" style="max-height:320px">${out}</svg>`;
+
+            document.getElementById('div-expr').innerText =
+                r === 0 ? `${n} ÷ ${d} = ${q}` : `${n} ÷ ${d} = ${q} あまり ${r}`;
+            document.getElementById('div-note').innerText =
+                r === 0 ? `ちょうど おなじ数ずつ わけられた！` : `1さらに ${q}こずつ わけると、${r}こ のこるね。`;
+        }
+
+        let divQ = null;
+        function newDivQuestion() {
+            const d = rnd(2, 9);
+            const q = rnd(1, 9);
+            const r = rnd(0, d - 1);
+            const n = d * q + r;
+            divQ = { n, d, q, r };
+            document.getElementById('divq-q').innerText = `${n} ÷ ${d} = ?`;
+            document.getElementById('divq-msg').innerText = '';
+
+            const right = r === 0 ? `${q}` : `${q} あまり ${r}`;
+            const set = new Set([right]);
+            while (set.size < 4) {
+                const qq = Math.max(0, q + rnd(-2, 2));
+                const rr = rnd(0, d - 1);
+                set.add(rr === 0 ? `${qq}` : `${qq} あまり ${rr}`);
+            }
+            document.getElementById('divq-choices').innerHTML = shuffle([...set]).map(t => `
+                <button onclick="answerDivQ('${t}')" data-t="${t}" class="num bg-slate-100 hover:bg-rose-100 border-2 border-slate-200 hover:border-rose-400 rounded-xl py-3 font-black bounce-hover">${t}</button>`).join('');
+        }
+
+        function answerDivQ(t) {
+            const right = divQ.r === 0 ? `${divQ.q}` : `${divQ.q} あまり ${divQ.r}`;
+            const msg = document.getElementById('divq-msg');
+            if (t === right) {
+                msg.innerHTML = `<span class="text-emerald-600">せいかい！ ${divQ.n} ÷ ${divQ.d} = ${right}</span>`;
+            } else {
+                msg.innerHTML = `<span class="text-rose-500">もういちど！ ${divQ.d} のだんの 九九を 思（おも）い出してみよう。</span>`;
+            }
+        }
+
+        /* ===================== ⑤ 大きい数 ===================== */
+        const PLACES = [
+            { v: 10000, name: '一万', kana: 'いちまん', color: '#7c3aed' },
+            { v: 1000, name: '千', kana: 'せん', color: '#2563eb' },
+            { v: 100, name: '百', kana: 'ひゃく', color: '#059669' },
+            { v: 10, name: '十', kana: 'じゅう', color: '#d97706' },
+            { v: 1, name: '一', kana: 'いち', color: '#e11d48' }
+        ];
+        let placeNumber = 0;
+
+        function renderPlaceButtons() {
+            document.getElementById('place-buttons').innerHTML = PLACES.map(p => `
+                <button onclick="addPlace(${p.v})" class="text-white font-black py-3 rounded-xl bounce-hover text-sm" style="background:${p.color}">
+                    +${p.v.toLocaleString()}<span class="block text-[10px] font-bold opacity-90">${p.name}</span></button>`).join('');
+        }
+
+        function addPlace(v) {
+            setPlaceNumber(Math.min(99999, placeNumber + v));
+        }
+
+        function placeBlocksSVG(n) {
+            let out = '';
+            let x = 8;
+            const H = 120;
+            PLACES.forEach(p => {
+                const count = Math.floor(n / p.v) % 10;
+                if (count === 0) return;
+                // 位ごとに かたまりを かく
+                for (let i = 0; i < count; i++) {
+                    if (p.v === 10000) out += `<rect x="${x}" y="18" width="34" height="34" rx="4" fill="${p.color}" /><rect x="${x + 4}" y="22" width="26" height="26" rx="3" fill="#fff" opacity=".25" />`;
+                    else if (p.v === 1000) out += `<rect x="${x}" y="22" width="26" height="26" rx="3" fill="${p.color}" />`;
+                    else if (p.v === 100) out += `<rect x="${x}" y="26" width="18" height="18" rx="2" fill="${p.color}" />`;
+                    else if (p.v === 10) out += `<rect x="${x}" y="20" width="7" height="30" rx="2" fill="${p.color}" />`;
+                    else out += `<circle cx="${x + 5}" cy="35" r="5" fill="${p.color}" />`;
+                    x += p.v === 10000 ? 38 : p.v === 1000 ? 30 : p.v === 100 ? 22 : p.v === 10 ? 11 : 13;
+                }
+                out += `<text x="${x - 6}" y="70" font-size="11" font-weight="900" fill="${p.color}" text-anchor="end">${p.name}が${count}</text>`;
+                x += 14;
+            });
+            if (!out) out = `<text x="20" y="40" font-size="16" font-weight="900" fill="#94a3b8">ボタンで ふやしてみよう</text>`;
+            return `<svg viewBox="0 0 ${Math.max(340, x + 10)} 80" class="w-full h-auto" style="max-height:${H}px">${out}</svg>`;
+        }
+
+        function readNumber(n) {
+            if (n === 0) return 'ゼロ';
+            const man = Math.floor(n / 10000), rest = n % 10000;
+            const sen = Math.floor(rest / 1000), hya = Math.floor((rest % 1000) / 100);
+            const juu = Math.floor((rest % 100) / 10), ichi = rest % 10;
+            let s = '';
+            if (man) s += `${man}万`;
+            if (sen) s += `${sen}千`;
+            if (hya) s += `${hya}百`;
+            if (juu) s += `${juu}十`;
+            if (ichi) s += `${ichi}`;
+            return s;
+        }
+
+        function setPlaceNumber(n) {
+            placeNumber = n;
+            document.getElementById('place-num').innerText = n.toLocaleString();
+            document.getElementById('place-read').innerText = readNumber(n);
+            document.getElementById('place-visual').innerHTML = placeBlocksSVG(n);
+        }
+
+        let placeQ = null;
+        function newPlaceQuestion() {
+            // 位が わかりやすい 数（0が まざる）
+            const n = rnd(1, 9) * 1000 + rnd(0, 9) * 100 + rnd(0, 9) * 10 + rnd(0, 9);
+            placeQ = n;
+            document.getElementById('placeq-visual').innerHTML = placeBlocksSVG(n);
+            document.getElementById('placeq-msg').innerText = '';
+            const set = new Set([n]);
+            while (set.size < 4) {
+                const cand = n + rnd(-3, 3) * 100 + rnd(-3, 3) * 10;
+                if (cand > 0 && cand < 100000) set.add(cand);
+            }
+            document.getElementById('placeq-choices').innerHTML = shuffle([...set]).map(v => `
+                <button onclick="answerPlaceQ(${v})" data-v="${v}" class="num bg-slate-100 hover:bg-rose-100 border-2 border-slate-200 hover:border-rose-400 rounded-xl py-3 text-xl font-black bounce-hover">${v.toLocaleString()}</button>`).join('');
+        }
+
+        function answerPlaceQ(v) {
+            const msg = document.getElementById('placeq-msg');
+            if (v === placeQ) {
+                msg.innerHTML = `<span class="text-emerald-600">せいかい！ ${placeQ.toLocaleString()}（${readNumber(placeQ)}）</span>`;
+            } else {
+                msg.innerHTML = `<span class="text-rose-500">ちがうよ。位（くらい）ごとに 数えてみよう。</span>`;
+            }
+        }
+
+        /* ===================== タブ ===================== */
+        function showTab(name) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById('tab-' + name).classList.remove('hidden');
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                const on = btn.dataset.tab === name;
+                btn.classList.toggle('active', on);
+                btn.classList.toggle('bg-rose-500', on);
+                btn.classList.toggle('text-white', on);
+                btn.classList.toggle('bg-white', !on);
+                btn.classList.toggle('border-2', !on);
+                btn.classList.toggle('border-rose-200', !on);
+                btn.classList.toggle('text-slate-600', !on);
+            });
+        }
+
+        window.addEventListener('load', () => {
+            renderAddModes();
+            newAddQuestion();
+            newClockQuestion();
+            document.getElementById('den-range').addEventListener('input', renderFrac);
+            document.getElementById('numr-range').addEventListener('input', renderFrac);
+            renderFrac();
+            newFracCompare();
+            document.getElementById('div-n').addEventListener('input', renderDiv);
+            document.getElementById('div-d').addEventListener('input', renderDiv);
+            renderDiv();
+            newDivQuestion();
+            renderPlaceButtons();
+            setPlaceNumber(0);
+            newPlaceQuestion();
+        });
+    </script>
+</body>
+</html>
