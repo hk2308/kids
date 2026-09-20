@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>π・e・三角関数 ビジュアルラボ</title>
+    <meta name="description" content="円周率π、ネイピア数e、sin・cos・tan を 動かして 目で見て わかる ページ。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'M PLUS Rounded 1c', system-ui, sans-serif;
+            -webkit-text-size-adjust: 100%;
+        }
+        canvas { display: block; width: 100%; touch-action: pan-y; }
+
+        /* かず を ならべたときに ずれないように */
+        .num { font-variant-numeric: tabular-nums; }
+
+        .tab-btn { transition: all .15s ease; }
+        .tab-btn.active { color: #fff; box-shadow: 0 6px 16px rgba(30, 41, 59, .18); }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 10px;
+            border-radius: 999px;
+            background: #e2e8f0;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #6366f1;
+            border: 3px solid #fff;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, .3);
+            cursor: pointer;
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #6366f1;
+            border: 3px solid #fff;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, .3);
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-indigo-600 via-blue-500 to-cyan-500 text-white p-3 sm:p-4 shadow-lg sticky top-0 z-30">
+        <div class="max-w-5xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">📐</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">ビジュアル すうがくラボ</h1>
+                    <p class="text-xs text-cyan-100 font-bold hidden sm:block">π・e・三角関数（さんかくかんすう）を 目（め）で見て わかる</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur-sm p-2 rounded-full border border-white/30 text-lg transition-all w-10 h-10 flex items-center justify-center">
+                🏠
+            </a>
+        </div>
+    </header>
+
+    <!-- Tabs -->
+    <nav class="sticky top-[60px] sm:top-[72px] z-20 bg-slate-50/95 backdrop-blur border-b border-slate-200">
+        <div class="max-w-5xl mx-auto flex gap-2 p-3 overflow-x-auto">
+            <button data-tab="pi" onclick="showTab('pi')" class="tab-btn active bg-indigo-500 font-black px-4 py-2 rounded-full text-sm whitespace-nowrap">π 円周率</button>
+            <button data-tab="e" onclick="showTab('e')" class="tab-btn bg-white border-2 border-slate-200 text-slate-600 font-black px-4 py-2 rounded-full text-sm whitespace-nowrap">e ネイピア数</button>
+            <button data-tab="trig" onclick="showTab('trig')" class="tab-btn bg-white border-2 border-slate-200 text-slate-600 font-black px-4 py-2 rounded-full text-sm whitespace-nowrap">sin cos tan</button>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto w-full p-3 sm:p-6 flex-grow space-y-5">
+
+        <!-- ========== π ========== -->
+        <section id="tab-pi" class="tab-content space-y-5">
+
+            <!-- ころがす -->
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-indigo-100">
+                <div class="flex items-start gap-3 mb-1">
+                    <span class="text-3xl">🎡</span>
+                    <div>
+                        <h2 class="text-xl sm:text-2xl font-black text-slate-800">円（えん）を 1回（かい） ころがすと？</h2>
+                        <p class="text-sm font-bold text-slate-500 mt-1">すすんだ 長（なが）さは 直径（ちょっけい）の ちょうど <span class="text-indigo-600">3.14…こ ぶん</span>。この「3.14…」が 円周率（えんしゅうりつ）π だよ。</p>
+                    </div>
+                </div>
+
+                <div class="mt-3 rounded-2xl bg-slate-50 border-2 border-slate-200 overflow-hidden">
+                    <canvas id="roll-canvas" height="230"></canvas>
+                </div>
+
+                <div class="mt-3 flex flex-wrap items-center gap-2">
+                    <button id="roll-play" onclick="toggleRoll()" class="bg-indigo-500 hover:bg-indigo-600 text-white font-black px-5 py-2.5 rounded-xl shadow border-b-4 border-indigo-700 active:border-b-2">▶ ころがす</button>
+                    <button onclick="resetRoll()" class="bg-white hover:bg-slate-50 text-slate-600 font-black px-4 py-2.5 rounded-xl border-2 border-slate-200">↺ もどす</button>
+                    <div class="ml-auto text-right">
+                        <p class="text-xs font-bold text-slate-500">すすんだ長さ ÷ 直径</p>
+                        <p id="roll-ratio" class="num text-2xl sm:text-3xl font-black text-indigo-600">0.000</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 計算してみよう -->
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-indigo-100">
+                <h2 class="text-lg sm:text-xl font-black text-slate-800 flex items-center gap-2"><span>📏</span> 直径（ちょっけい）から 円周（えんしゅう）を もとめる</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">円周 ＝ 直径 × π。スライダーを うごかしてみよう。</p>
+
+                <div class="mt-4 flex flex-col sm:flex-row items-center gap-5">
+                    <canvas id="circle-canvas" height="170" class="sm:max-w-[200px]"></canvas>
+                    <div class="w-full">
+                        <label class="text-sm font-black text-slate-600">直径 = <span id="dia-val" class="num text-indigo-600">10</span> cm</label>
+                        <input id="dia-range" type="range" min="1" max="20" step="0.5" value="10" class="mt-2">
+                        <div class="mt-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl p-3 text-center">
+                            <p class="text-xs font-black text-indigo-500">円周</p>
+                            <p class="num text-2xl font-black text-indigo-700"><span id="circ-val">31.42</span> cm</p>
+                            <p class="num text-xs font-bold text-slate-500 mt-1"><span id="circ-expr">10 × 3.14159…</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- モンテカルロ -->
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-indigo-100">
+                <h2 class="text-lg sm:text-xl font-black text-slate-800 flex items-center gap-2"><span>🎯</span> てんを ばらまいて π を あてる</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">四角（しかく）の中に てんを ランダムに おとすと、円の中に はいる わりあいは <span class="text-indigo-600">π ÷ 4</span> に なるよ。</p>
+
+                <div class="mt-4 flex flex-col sm:flex-row gap-5 items-center">
+                    <canvas id="mc-canvas" class="max-w-[280px] rounded-2xl bg-slate-50 border-2 border-slate-200" height="280"></canvas>
+                    <div class="w-full space-y-3">
+                        <div class="grid grid-cols-2 gap-2 text-center">
+                            <div class="bg-slate-50 rounded-xl border-2 border-slate-200 p-2">
+                                <p class="text-[11px] font-black text-slate-500">ぜんぶの てん</p>
+                                <p id="mc-total" class="num text-xl font-black text-slate-700">0</p>
+                            </div>
+                            <div class="bg-rose-50 rounded-xl border-2 border-rose-200 p-2">
+                                <p class="text-[11px] font-black text-rose-500">円の中の てん</p>
+                                <p id="mc-inside" class="num text-xl font-black text-rose-600">0</p>
+                            </div>
+                        </div>
+                        <div class="bg-indigo-50 border-2 border-indigo-200 rounded-2xl p-3 text-center">
+                            <p class="text-xs font-black text-indigo-500">4 × 円の中 ÷ ぜんぶ ＝ π のよそう</p>
+                            <p id="mc-pi" class="num text-3xl font-black text-indigo-700">—</p>
+                            <p class="num text-xs font-bold text-slate-500">ほんとうの π = 3.14159265…</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="mc-play" onclick="toggleMonteCarlo()" class="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white font-black px-4 py-2.5 rounded-xl shadow border-b-4 border-indigo-700 active:border-b-2">▶ ばらまく</button>
+                            <button onclick="resetMonteCarlo()" class="bg-white hover:bg-slate-50 text-slate-600 font-black px-4 py-2.5 rounded-xl border-2 border-slate-200">↺ リセット</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== e ========== -->
+        <section id="tab-e" class="tab-content hidden space-y-5">
+
+            <!-- 複利 -->
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-violet-100">
+                <div class="flex items-start gap-3">
+                    <span class="text-3xl">🏦</span>
+                    <div>
+                        <h2 class="text-xl sm:text-2xl font-black text-slate-800">1年（ねん）で 100% ふえる ちょきん</h2>
+                        <p class="text-sm font-bold text-slate-500 mt-1">1年に 1回 まとめて ふえると 2倍（ばい）。では <span class="text-violet-600">こまかく 何回（なんかい）にも わけて</span> ふやすと？ どんどん ふえそうだけど…</p>
+                    </div>
+                </div>
+
+                <div class="mt-3 rounded-2xl bg-slate-50 border-2 border-slate-200 overflow-hidden">
+                    <canvas id="e-canvas" height="260"></canvas>
+                </div>
+
+                <div class="mt-4">
+                    <label class="text-sm font-black text-slate-600">1年を <span id="n-val" class="num text-violet-600">1</span>回（かい）に わける</label>
+                    <input id="n-range" type="range" min="1" max="365" step="1" value="1" class="mt-2">
+                    <div class="flex flex-wrap gap-2 mt-3">
+                        <button onclick="setN(1)" class="bg-white border-2 border-slate-200 hover:bg-slate-50 text-slate-600 font-bold px-3 py-1.5 rounded-full text-xs">1回（1年）</button>
+                        <button onclick="setN(2)" class="bg-white border-2 border-slate-200 hover:bg-slate-50 text-slate-600 font-bold px-3 py-1.5 rounded-full text-xs">2回（半年）</button>
+                        <button onclick="setN(4)" class="bg-white border-2 border-slate-200 hover:bg-slate-50 text-slate-600 font-bold px-3 py-1.5 rounded-full text-xs">4回（3か月）</button>
+                        <button onclick="setN(12)" class="bg-white border-2 border-slate-200 hover:bg-slate-50 text-slate-600 font-bold px-3 py-1.5 rounded-full text-xs">12回（毎月）</button>
+                        <button onclick="setN(365)" class="bg-white border-2 border-slate-200 hover:bg-slate-50 text-slate-600 font-bold px-3 py-1.5 rounded-full text-xs">365回（毎日）</button>
+                    </div>
+                </div>
+
+                <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="bg-violet-50 border-2 border-violet-200 rounded-2xl p-3 text-center">
+                        <p class="num text-xs font-black text-violet-500">(1 + 1/<span id="n-echo">1</span>)<sup><span id="n-echo2">1</span></sup> ＝ 1年後の ばいすう</p>
+                        <p id="e-approx" class="num text-3xl font-black text-violet-700">2.00000</p>
+                        <p class="num text-xs font-bold text-slate-500 mt-1">100円 → <span id="e-yen">200.00</span>円</p>
+                    </div>
+                    <div class="bg-slate-800 rounded-2xl p-3 text-center text-white flex flex-col justify-center">
+                        <p class="text-xs font-black text-cyan-300">いくら こまかくしても これを こえない</p>
+                        <p class="num text-3xl font-black">e = 2.71828…</p>
+                        <p class="text-[11px] font-bold text-slate-300 mt-1">これが ネイピア数（すう）e</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- e^x の傾き -->
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-violet-100">
+                <h2 class="text-lg sm:text-xl font-black text-slate-800 flex items-center gap-2"><span>📈</span> e のすごい ところ：傾（かたむ）き ＝ 高（たか）さ</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">y = e<sup>x</sup> の グラフは、どの てんでも <span class="text-violet-600">せっせんの 傾き</span> が <span class="text-rose-500">その てんの 高さ</span> と おなじ。</p>
+
+                <div class="mt-3 rounded-2xl bg-slate-50 border-2 border-slate-200 overflow-hidden">
+                    <canvas id="exp-canvas" height="280"></canvas>
+                </div>
+
+                <div class="mt-4">
+                    <label class="text-sm font-black text-slate-600">x = <span id="x0-val" class="num text-violet-600">0.0</span></label>
+                    <input id="x0-range" type="range" min="-2" max="2" step="0.05" value="0" class="mt-2">
+                    <div class="mt-3 grid grid-cols-2 gap-3 text-center">
+                        <div class="bg-rose-50 border-2 border-rose-200 rounded-2xl p-3">
+                            <p class="text-xs font-black text-rose-500">高さ e<sup>x</sup></p>
+                            <p id="exp-height" class="num text-2xl font-black text-rose-600">1.000</p>
+                        </div>
+                        <div class="bg-violet-50 border-2 border-violet-200 rounded-2xl p-3">
+                            <p class="text-xs font-black text-violet-500">せっせんの 傾き</p>
+                            <p id="exp-slope" class="num text-2xl font-black text-violet-700">1.000</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== 三角関数 ========== -->
+        <section id="tab-trig" class="tab-content hidden space-y-5">
+
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-cyan-100">
+                <div class="flex items-start gap-3">
+                    <span class="text-3xl">🎠</span>
+                    <div>
+                        <h2 class="text-xl sm:text-2xl font-black text-slate-800">円（えん）を まわると 波（なみ）が できる</h2>
+                        <p class="text-sm font-bold text-slate-500 mt-1">半径（はんけい）1の 円を まわる てんの <span class="text-rose-500">たての 長さが sin</span>、<span class="text-emerald-600">よこの 長さが cos</span>。たての 長さを よこに ならべると 波に なるよ。</p>
+                    </div>
+                </div>
+
+                <div class="mt-3 grid grid-cols-1 sm:grid-cols-[260px_1fr] gap-3">
+                    <div class="rounded-2xl bg-slate-50 border-2 border-slate-200 overflow-hidden">
+                        <canvas id="circle-trig" height="260"></canvas>
+                    </div>
+                    <div class="rounded-2xl bg-slate-50 border-2 border-slate-200 overflow-hidden">
+                        <canvas id="wave-canvas" height="260"></canvas>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <label class="text-sm font-black text-slate-600">角度（かくど） = <span id="deg-val" class="num text-cyan-600">30</span>°</label>
+                    <input id="deg-range" type="range" min="0" max="720" step="1" value="30" class="mt-2">
+
+                    <div class="flex flex-wrap items-center gap-2 mt-3">
+                        <button id="trig-play" onclick="toggleSpin()" class="bg-cyan-500 hover:bg-cyan-600 text-white font-black px-5 py-2.5 rounded-xl shadow border-b-4 border-cyan-700 active:border-b-2">▶ まわす</button>
+                        <label class="flex items-center gap-1.5 bg-rose-50 border-2 border-rose-200 rounded-full px-3 py-1.5 text-xs font-black text-rose-600 cursor-pointer">
+                            <input type="checkbox" id="show-sin" checked class="accent-rose-500"> sin
+                        </label>
+                        <label class="flex items-center gap-1.5 bg-emerald-50 border-2 border-emerald-200 rounded-full px-3 py-1.5 text-xs font-black text-emerald-600 cursor-pointer">
+                            <input type="checkbox" id="show-cos" checked class="accent-emerald-500"> cos
+                        </label>
+                        <label class="flex items-center gap-1.5 bg-amber-50 border-2 border-amber-200 rounded-full px-3 py-1.5 text-xs font-black text-amber-600 cursor-pointer">
+                            <input type="checkbox" id="show-tan" class="accent-amber-500"> tan
+                        </label>
+                    </div>
+
+                    <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                        <div class="bg-slate-50 rounded-xl border-2 border-slate-200 p-2">
+                            <p class="text-[11px] font-black text-slate-500">ラジアン</p>
+                            <p id="rad-out" class="num text-lg font-black text-slate-700">0.52</p>
+                        </div>
+                        <div class="bg-rose-50 rounded-xl border-2 border-rose-200 p-2">
+                            <p class="text-[11px] font-black text-rose-500">sin</p>
+                            <p id="sin-out" class="num text-lg font-black text-rose-600">0.500</p>
+                        </div>
+                        <div class="bg-emerald-50 rounded-xl border-2 border-emerald-200 p-2">
+                            <p class="text-[11px] font-black text-emerald-500">cos</p>
+                            <p id="cos-out" class="num text-lg font-black text-emerald-600">0.866</p>
+                        </div>
+                        <div class="bg-amber-50 rounded-xl border-2 border-amber-200 p-2">
+                            <p class="text-[11px] font-black text-amber-600">tan</p>
+                            <p id="tan-out" class="num text-lg font-black text-amber-600">0.577</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- よく でる 角度 -->
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-cyan-100">
+                <h2 class="text-lg sm:text-xl font-black text-slate-800 flex items-center gap-2"><span>⭐</span> よく でてくる 角度</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">タップすると その 角度に うごくよ。</p>
+                <div id="angle-table" class="mt-3 grid grid-cols-2 sm:grid-cols-5 gap-2"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center py-4 text-xs text-slate-400 font-bold">
+        π・e・三角関数 ビジュアルラボ © 2026
+    </footer>
+
+    <script>
+        /* ============ キャンバスの じゅんび ============ */
+        // 画面（がめん）の こまかさに あわせて にじまないように する
+        function fitCanvas(canvas) {
+            const dpr = window.devicePixelRatio || 1;
+            const cssWidth = canvas.clientWidth;
+            // height 属性は canvas.height = ... で うわがきされるので、
+            // さいしょの ねうちを おぼえておく（はからないと 2ばい 4ばいに ふくらむ）
+            if (!canvas.dataset.cssHeight) {
+                canvas.dataset.cssHeight = canvas.getAttribute('height') || canvas.clientHeight || 200;
+            }
+            const cssHeight = parseInt(canvas.dataset.cssHeight, 10);
+            canvas.style.height = cssHeight + 'px';
+            canvas.width = Math.max(1, Math.round(cssWidth * dpr));
+            canvas.height = Math.round(cssHeight * dpr);
+            const ctx = canvas.getContext('2d');
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            return { ctx, w: cssWidth, h: cssHeight };
+        }
+
+        const FIGURES = {};
+        // かくれている タブの キャンバスは 幅が 0。見えるように なったら はかりなおす
+        function fig(id) {
+            const canvas = document.getElementById(id);
+            const cached = FIGURES[id];
+            if (!cached || cached.w !== canvas.clientWidth) {
+                FIGURES[id] = Object.assign({ canvas }, fitCanvas(canvas));
+            }
+            return FIGURES[id];
+        }
+        // 幅が 0 のまま えがくと 半径が マイナスに なって エラーに なる
+        function tooSmall(f) {
+            return f.w < 60 || f.h < 60;
+        }
+
+        /* ============ タブ ============ */
+        let activeTab = 'pi';
+        function showTab(name) {
+            activeTab = name;
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${name}`).classList.remove('hidden');
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                const on = btn.dataset.tab === name;
+                btn.classList.toggle('active', on);
+                btn.classList.toggle('bg-white', !on);
+                btn.classList.toggle('border-2', !on);
+                btn.classList.toggle('border-slate-200', !on);
+                btn.classList.toggle('text-slate-600', !on);
+                btn.classList.toggle('bg-indigo-500', on && name === 'pi');
+                btn.classList.toggle('bg-violet-500', on && name === 'e');
+                btn.classList.toggle('bg-cyan-500', on && name === 'trig');
+            });
+            drawActiveTab();
+        }
+
+        // うごかない図（e のタブ など）は タブを ひらいた ときに かきなおす
+        function drawActiveTab() {
+            if (activeTab === 'pi') {
+                drawRoll();
+                drawCircleSize();
+                drawMonteCarloBase();
+                mc.total = 0;
+                mc.inside = 0;
+                updateMonteCarloText();
+            } else if (activeTab === 'e') {
+                drawE();
+                drawExp();
+            } else {
+                drawTrig();
+            }
+        }
+
+        /* ============ えがく ための どうぐ ============ */
+        function line(ctx, x1, y1, x2, y2, color, width = 2, dash = null) {
+            ctx.save();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = width;
+            ctx.lineCap = 'round';
+            if (dash) ctx.setLineDash(dash);
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+            ctx.restore();
+        }
+        function dot(ctx, x, y, r, color) {
+            ctx.save();
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.restore();
+        }
+        function label(ctx, text, x, y, color, size = 13, align = 'center') {
+            ctx.save();
+            ctx.fillStyle = color;
+            ctx.font = `900 ${size}px 'M PLUS Rounded 1c', sans-serif`;
+            ctx.textAlign = align;
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, x, y);
+            ctx.restore();
+        }
+
+        /* ============ ① 円を ころがす ============ */
+        let rollAngle = 0;          // ころがした かくど（ラジアン）
+        let rollPlaying = false;
+        const ROLL_TURNS = 1;       // 1かいてん だけ
+
+        function toggleRoll() {
+            if (rollAngle >= Math.PI * 2 * ROLL_TURNS) rollAngle = 0;
+            rollPlaying = !rollPlaying;
+            document.getElementById('roll-play').innerText = rollPlaying ? '⏸ とめる' : '▶ ころがす';
+        }
+        function resetRoll() {
+            rollAngle = 0;
+            rollPlaying = false;
+            document.getElementById('roll-play').innerText = '▶ ころがす';
+        }
+
+        function drawRoll() {
+            const f = fig('roll-canvas');
+            if (tooSmall(f)) return;
+            const { ctx, w, h } = f;
+            ctx.clearRect(0, 0, w, h);
+
+            const baseY = h - 52;
+            // 円の 大きさは 高さと 幅の どちらにも おさまるように きめる
+            const r = Math.min(58, (h - 96) / 2, (w - 52) / (Math.PI * 2 + 2));
+            const d = r * 2;
+            // ころがる みちのり（2πr）＋ りょうはしの 円を まんなかに おく
+            const marginL = Math.max(26, (w - (Math.PI * 2 * r + d)) / 2);
+            const s = r * rollAngle;                 // ころがった ながさ
+            const cx = marginL + r + s;
+            const cy = baseY - r;
+
+            // じめん
+            line(ctx, marginL, baseY, w - marginL, baseY, '#cbd5e1', 3);
+
+            // ころがった あと（直径 いくつぶんか を しきりで みせる）
+            line(ctx, marginL + r, baseY, marginL + r + s, baseY, '#6366f1', 7);
+            const fullDiameters = Math.floor(s / d);
+            for (let i = 1; i <= fullDiameters; i++) {
+                const x = marginL + r + d * i;
+                line(ctx, x, baseY - 11, x, baseY + 11, '#312e81', 3);
+            }
+            for (let i = 0; i < fullDiameters; i++) {
+                label(ctx, `${i + 1}`, marginL + r + d * i + d / 2, baseY + 24, '#4338ca', 13);
+            }
+            if (s / d - fullDiameters > 0.06) {
+                label(ctx, `${(s / d - fullDiameters).toFixed(2)}`, marginL + r + d * fullDiameters + (s - d * fullDiameters) / 2, baseY + 24, '#818cf8', 12);
+            }
+
+            // ころがる 円
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(rollAngle);
+            ctx.beginPath();
+            ctx.arc(0, 0, r, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(99, 102, 241, .12)';
+            ctx.fill();
+            ctx.strokeStyle = '#4f46e5';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+            // 直径の せん（まわっているのが わかる）
+            line(ctx, -r, 0, r, 0, '#4f46e5', 2.5);
+            dot(ctx, 0, r, 5, '#f43f5e');   // 地面に つく めじるし
+            ctx.restore();
+            dot(ctx, cx, cy, 4, '#4f46e5');
+
+            label(ctx, '直径', cx, cy - 16, '#4f46e5', 12);
+
+            // せつめい
+            const ratio = s / d;
+            label(ctx, `すすんだ長さ = 直径 × ${ratio.toFixed(3)}`, marginL, 22, '#334155', 14, 'left');
+            if (rollAngle >= Math.PI * 2 * ROLL_TURNS - 1e-9) {
+                label(ctx, '1回転 = 直径 × π', w - marginL, 22, '#4f46e5', 14, 'right');
+            }
+            document.getElementById('roll-ratio').innerText = ratio.toFixed(3);
+        }
+
+        /* ============ ② 直径と円周 ============ */
+        function drawCircleSize() {
+            const f = fig('circle-canvas');
+            if (tooSmall(f)) return;
+            const { ctx, w, h } = f;
+            ctx.clearRect(0, 0, w, h);
+
+            const d = parseFloat(document.getElementById('dia-range').value);
+            const r = (d / 20) * (Math.min(w, h) / 2 - 14);
+            const cx = w / 2;
+            const cy = h / 2;
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(cx, cy, Math.max(r, 3), 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(99, 102, 241, .1)';
+            ctx.fill();
+            ctx.strokeStyle = '#4f46e5';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+            ctx.restore();
+
+            line(ctx, cx - r, cy, cx + r, cy, '#312e81', 2.5, [5, 4]);
+            dot(ctx, cx, cy, 3.5, '#312e81');
+            label(ctx, `${d} cm`, cx, cy - 13, '#312e81', 12);
+
+            document.getElementById('dia-val').innerText = d;
+            document.getElementById('circ-val').innerText = (d * Math.PI).toFixed(2);
+            document.getElementById('circ-expr').innerText = `${d} × 3.14159…`;
+        }
+
+        /* ============ ③ モンテカルロ ============ */
+        const mc = { total: 0, inside: 0, playing: false };
+
+        function toggleMonteCarlo() {
+            mc.playing = !mc.playing;
+            document.getElementById('mc-play').innerText = mc.playing ? '⏸ とめる' : '▶ ばらまく';
+        }
+        function resetMonteCarlo() {
+            mc.total = 0;
+            mc.inside = 0;
+            mc.playing = false;
+            document.getElementById('mc-play').innerText = '▶ ばらまく';
+            drawMonteCarloBase();
+            updateMonteCarloText();
+        }
+        function updateMonteCarloText() {
+            document.getElementById('mc-total').innerText = mc.total.toLocaleString();
+            document.getElementById('mc-inside').innerText = mc.inside.toLocaleString();
+            document.getElementById('mc-pi').innerText =
+                mc.total === 0 ? '—' : (4 * mc.inside / mc.total).toFixed(5);
+        }
+
+        // てんは 消さずに かさねて いくので、わくは 1かいだけ かく
+        function drawMonteCarloBase() {
+            const f = fig('mc-canvas');
+            if (tooSmall(f)) return;
+            const { ctx, w, h } = f;
+            ctx.clearRect(0, 0, w, h);
+            const size = Math.min(w, h) - 16;
+            const x0 = (w - size) / 2;
+            const y0 = (h - size) / 2;
+
+            ctx.save();
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x0, y0, size, size);
+            // 四分の一円（しぶんのいちえん）
+            ctx.beginPath();
+            ctx.arc(x0, y0 + size, size, -Math.PI / 2, 0);
+            ctx.strokeStyle = '#f43f5e';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            ctx.restore();
+
+            mc.box = { x0, y0, size };
+        }
+
+        function scatterPoints(count) {
+            const f = fig('mc-canvas');
+            if (tooSmall(f) || !mc.box) return;
+            const ctx = f.ctx;
+            const { x0, y0, size } = mc.box;
+            for (let i = 0; i < count; i++) {
+                const x = Math.random();
+                const y = Math.random();
+                const isIn = x * x + y * y <= 1;
+                mc.total++;
+                if (isIn) mc.inside++;
+                ctx.fillStyle = isIn ? 'rgba(244, 63, 94, .75)' : 'rgba(100, 116, 139, .5)';
+                ctx.beginPath();
+                ctx.arc(x0 + x * size, y0 + size - y * size, 1.8, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            updateMonteCarloText();
+        }
+
+        /* ============ ④ 複利と e ============ */
+        function setN(n) {
+            document.getElementById('n-range').value = n;
+            drawE();
+        }
+
+        function drawE() {
+            const f = fig('e-canvas');
+            if (tooSmall(f)) return;
+            const { ctx, w, h } = f;
+            ctx.clearRect(0, 0, w, h);
+
+            const n = parseInt(document.getElementById('n-range').value, 10);
+            const padL = 44, padR = 16, padT = 18, padB = 34;
+            const gw = w - padL - padR;
+            const gh = h - padT - padB;
+            const yMin = 1, yMax = 2.9;
+            const X = t => padL + t * gw;                                  // t: 0〜1年
+            const Y = v => padT + gh - ((v - yMin) / (yMax - yMin)) * gh;
+
+            // めもり
+            for (let v = 1; v <= 2.75; v += 0.25) {
+                const y = Y(v);
+                line(ctx, padL, y, padL + gw, y, '#e2e8f0', 1);
+                label(ctx, `${v.toFixed(2)}`, padL - 7, y, '#94a3b8', 10, 'right');
+            }
+            line(ctx, padL, Y(yMin), padL + gw, Y(yMin), '#cbd5e1', 2);
+            label(ctx, '0年', padL, h - 14, '#94a3b8', 11);
+            label(ctx, '1年後', padL + gw, h - 14, '#94a3b8', 11);
+
+            // e のライン
+            line(ctx, padL, Y(Math.E), padL + gw, Y(Math.E), '#0f172a', 2, [6, 5]);
+            label(ctx, 'e = 2.71828…', padL + gw, Y(Math.E) - 12, '#0f172a', 12, 'right');
+
+            // なめらかな れんぞく複利（さんこう）
+            ctx.save();
+            ctx.strokeStyle = 'rgba(15, 23, 42, .25)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([3, 4]);
+            ctx.beginPath();
+            for (let i = 0; i <= 120; i++) {
+                const t = i / 120;
+                const v = Math.exp(t);
+                i === 0 ? ctx.moveTo(X(t), Y(v)) : ctx.lineTo(X(t), Y(v));
+            }
+            ctx.stroke();
+            ctx.restore();
+
+            // n回に わけた かいだん
+            const step = 1 + 1 / n;
+            ctx.save();
+            ctx.strokeStyle = '#7c3aed';
+            ctx.lineWidth = 3;
+            ctx.lineJoin = 'round';
+            ctx.beginPath();
+            ctx.moveTo(X(0), Y(1));
+            for (let k = 1; k <= n; k++) {
+                const before = Math.min(Math.pow(step, k - 1), yMax);
+                const after = Math.min(Math.pow(step, k), yMax);
+                // ふえる までは よこ ばい、ふえる しゅんかんに たてに ジャンプ
+                ctx.lineTo(X(k / n), Y(before));
+                ctx.lineTo(X(k / n), Y(after));
+            }
+            ctx.stroke();
+            ctx.restore();
+
+            const total = Math.pow(step, n);
+            dot(ctx, X(1), Y(Math.min(total, yMax)), 6, '#7c3aed');
+
+            document.getElementById('n-val').innerText = n;
+            document.getElementById('n-echo').innerText = n;
+            document.getElementById('n-echo2').innerText = n;
+            document.getElementById('e-approx').innerText = total.toFixed(5);
+            document.getElementById('e-yen').innerText = (total * 100).toFixed(2);
+        }
+
+        /* ============ ⑤ e^x の 傾き ============ */
+        function drawExp() {
+            const f = fig('exp-canvas');
+            if (tooSmall(f)) return;
+            const { ctx, w, h } = f;
+            ctx.clearRect(0, 0, w, h);
+
+            const x0 = parseFloat(document.getElementById('x0-range').value);
+            const padL = 40, padR = 16, padT = 16, padB = 30;
+            const gw = w - padL - padR;
+            const gh = h - padT - padB;
+            const xMin = -2.4, xMax = 2.4, yMin = 0, yMax = 8;
+            const X = x => padL + ((x - xMin) / (xMax - xMin)) * gw;
+            const Y = y => padT + gh - ((y - yMin) / (yMax - yMin)) * gh;
+
+            // めもり
+            for (let y = 0; y <= 8; y += 2) {
+                line(ctx, padL, Y(y), padL + gw, Y(y), '#e2e8f0', 1);
+                label(ctx, `${y}`, padL - 7, Y(y), '#94a3b8', 10, 'right');
+            }
+            for (let x = -2; x <= 2; x++) {
+                line(ctx, X(x), padT, X(x), Y(0), '#f1f5f9', 1);
+                label(ctx, `${x}`, X(x), h - 13, '#94a3b8', 10);
+            }
+            line(ctx, padL, Y(0), padL + gw, Y(0), '#cbd5e1', 2);
+
+            // y = e^x
+            ctx.save();
+            ctx.strokeStyle = '#7c3aed';
+            ctx.lineWidth = 3.5;
+            ctx.beginPath();
+            for (let i = 0; i <= 200; i++) {
+                const x = xMin + (xMax - xMin) * (i / 200);
+                const y = Math.exp(x);
+                if (y > yMax) continue;
+                i === 0 ? ctx.moveTo(X(x), Y(y)) : ctx.lineTo(X(x), Y(y));
+            }
+            ctx.stroke();
+            ctx.restore();
+
+            const y0 = Math.exp(x0);
+
+            // せっせん（傾き = y0）
+            const tx1 = xMin, tx2 = xMax;
+            line(ctx, X(tx1), Y(y0 + y0 * (tx1 - x0)), X(tx2), Y(y0 + y0 * (tx2 - x0)), '#f59e0b', 2.5, [7, 5]);
+
+            // 高さ（たかさ）
+            line(ctx, X(x0), Y(0), X(x0), Y(y0), '#f43f5e', 3);
+            label(ctx, `高さ ${y0.toFixed(2)}`, X(x0) + 6, Y(y0 / 2), '#e11d48', 12, 'left');
+
+            // よこ1・たて y0 の さんかく（傾きが わかる）
+            if (x0 + 1 <= xMax && y0 * 2 <= yMax) {
+                line(ctx, X(x0), Y(y0), X(x0 + 1), Y(y0), '#0f172a', 2);
+                line(ctx, X(x0 + 1), Y(y0), X(x0 + 1), Y(y0 * 2), '#0f172a', 2);
+                label(ctx, 'よこ 1', X(x0 + 0.5), Y(y0) + 13, '#0f172a', 11);
+                label(ctx, `たて ${y0.toFixed(2)}`, X(x0 + 1) + 5, Y(y0 * 1.5), '#0f172a', 11, 'left');
+            }
+
+            dot(ctx, X(x0), Y(y0), 6, '#7c3aed');
+            label(ctx, 'y = e^x', padL + gw - 4, padT + 10, '#7c3aed', 13, 'right');
+
+            document.getElementById('x0-val').innerText = x0.toFixed(2);
+            document.getElementById('exp-height').innerText = y0.toFixed(3);
+            document.getElementById('exp-slope').innerText = y0.toFixed(3);
+        }
+
+        /* ============ ⑥ 単位円と 波 ============ */
+        let spinning = false;
+        function toggleSpin() {
+            spinning = !spinning;
+            document.getElementById('trig-play').innerText = spinning ? '⏸ とめる' : '▶ まわす';
+        }
+        function currentDeg() {
+            return parseFloat(document.getElementById('deg-range').value);
+        }
+
+        function drawTrig() {
+            const deg = currentDeg();
+            const rad = deg * Math.PI / 180;
+            const sin = Math.sin(rad);
+            const cos = Math.cos(rad);
+            const tan = Math.tan(rad);
+            const showSin = document.getElementById('show-sin').checked;
+            const showCos = document.getElementById('show-cos').checked;
+            const showTan = document.getElementById('show-tan').checked;
+
+            /* --- 単位円 --- */
+            const c = fig('circle-trig');
+            const g = fig('wave-canvas');
+            if (tooSmall(c) || tooSmall(g)) return;
+            c.ctx.clearRect(0, 0, c.w, c.h);
+            const cx = c.w / 2, cy = c.h / 2;
+            const R = Math.min(c.w, c.h) / 2 - 34;
+
+            // じく
+            line(c.ctx, cx - R - 14, cy, cx + R + 14, cy, '#cbd5e1', 2);
+            line(c.ctx, cx, cy - R - 14, cx, cy + R + 14, '#cbd5e1', 2);
+            // 円
+            c.ctx.save();
+            c.ctx.strokeStyle = '#94a3b8';
+            c.ctx.lineWidth = 2.5;
+            c.ctx.beginPath();
+            c.ctx.arc(cx, cy, R, 0, Math.PI * 2);
+            c.ctx.stroke();
+            c.ctx.restore();
+
+            const px = cx + cos * R;
+            const py = cy - sin * R;
+
+            // 角度の あつかい（0〜360に そろえて 弧を かく）
+            c.ctx.save();
+            c.ctx.strokeStyle = 'rgba(8, 145, 178, .5)';
+            c.ctx.fillStyle = 'rgba(6, 182, 212, .13)';
+            c.ctx.lineWidth = 2;
+            c.ctx.beginPath();
+            c.ctx.moveTo(cx, cy);
+            c.ctx.arc(cx, cy, R * 0.34, 0, -((rad % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2), true);
+            c.ctx.closePath();
+            c.ctx.fill();
+            c.ctx.stroke();
+            c.ctx.restore();
+
+            if (showTan) {
+                // x = 1 の たてせん と tan
+                line(c.ctx, cx + R, cy - R - 10, cx + R, cy + R + 10, '#fcd34d', 2, [4, 4]);
+                const tanPix = Math.max(-R * 1.6, Math.min(R * 1.6, tan * R));
+                line(c.ctx, cx + R, cy, cx + R, cy - tanPix, '#f59e0b', 5);
+                label(c.ctx, 'tan', cx + R + 16, cy - tanPix / 2, '#d97706', 12, 'left');
+            }
+            if (showCos) {
+                line(c.ctx, cx, cy, px, cy, '#10b981', 6);
+                label(c.ctx, 'cos', cx + (cos * R) / 2, cy + (sin >= 0 ? 15 : -15), '#047857', 12);
+            }
+            if (showSin) {
+                line(c.ctx, px, cy, px, py, '#f43f5e', 6);
+                label(c.ctx, 'sin', px + (cos >= 0 ? 17 : -17), cy - (sin * R) / 2, '#e11d48', 12);
+            }
+            // はんけい
+            line(c.ctx, cx, cy, px, py, '#0891b2', 3);
+            dot(c.ctx, px, py, 7, '#0891b2');
+            label(c.ctx, `${Math.round(deg)}°`, cx + R * 0.46 * Math.cos(rad / 2), cy - R * 0.46 * Math.sin(rad / 2), '#0e7490', 12);
+            label(c.ctx, '1', cx + (cos * R) / 2 - 8 * sin, cy - (sin * R) / 2 - 10, '#0e7490', 11);
+
+            /* --- 波 --- */
+            g.ctx.clearRect(0, 0, g.w, g.h);
+            const padL = 30, padR = 12, padT = 16, padB = 26;
+            const gw = g.w - padL - padR;
+            const gh = g.h - padT - padB;
+            const midY = padT + gh / 2;
+            const amp = gh / 2 - 8;
+            const X = dd => padL + (dd / 720) * gw;
+            const Y = v => midY - v * amp;
+
+            // めもり
+            line(g.ctx, padL, midY, padL + gw, midY, '#cbd5e1', 2);
+            line(g.ctx, padL, Y(1), padL + gw, Y(1), '#e2e8f0', 1);
+            line(g.ctx, padL, Y(-1), padL + gw, Y(-1), '#e2e8f0', 1);
+            label(g.ctx, '1', padL - 8, Y(1), '#94a3b8', 10, 'right');
+            label(g.ctx, '0', padL - 8, midY, '#94a3b8', 10, 'right');
+            label(g.ctx, '-1', padL - 8, Y(-1), '#94a3b8', 10, 'right');
+            [0, 180, 360, 540, 720].forEach(dd => {
+                line(g.ctx, X(dd), padT, X(dd), padT + gh, '#f1f5f9', 1);
+                label(g.ctx, `${dd}°`, X(dd), g.h - 12, '#94a3b8', 10);
+            });
+
+            function wave(fn, color, width, upto) {
+                g.ctx.save();
+                g.ctx.strokeStyle = color;
+                g.ctx.lineWidth = width;
+                g.ctx.beginPath();
+                for (let dd = 0; dd <= upto; dd += 2) {
+                    const v = fn(dd * Math.PI / 180);
+                    dd === 0 ? g.ctx.moveTo(X(dd), Y(v)) : g.ctx.lineTo(X(dd), Y(v));
+                }
+                g.ctx.stroke();
+                g.ctx.restore();
+            }
+
+            if (showCos) {
+                wave(Math.cos, 'rgba(16, 185, 129, .2)', 2, 720);
+                wave(Math.cos, '#10b981', 3, deg);
+            }
+            if (showSin) {
+                wave(Math.sin, 'rgba(244, 63, 94, .2)', 2, 720);
+                wave(Math.sin, '#f43f5e', 3.5, deg);
+            }
+
+            // いまの ばしょ
+            line(g.ctx, X(deg), padT, X(deg), padT + gh, '#94a3b8', 1.5, [4, 4]);
+            if (showSin) {
+                line(g.ctx, padL, Y(sin), X(deg), Y(sin), 'rgba(244, 63, 94, .45)', 2, [5, 4]);
+                dot(g.ctx, X(deg), Y(sin), 6, '#f43f5e');
+            }
+            if (showCos) dot(g.ctx, X(deg), Y(cos), 6, '#10b981');
+
+            /* --- すうじ --- */
+            document.getElementById('deg-val').innerText = Math.round(deg);
+            document.getElementById('rad-out').innerText = rad.toFixed(2);
+            document.getElementById('sin-out').innerText = sin.toFixed(3);
+            document.getElementById('cos-out').innerText = cos.toFixed(3);
+            document.getElementById('tan-out').innerText =
+                Math.abs(cos) < 1e-9 ? '∞' : tan.toFixed(3);
+        }
+
+        /* よく でる 角度 */
+        const FAMOUS = [
+            { deg: 0, sin: '0', cos: '1', tan: '0' },
+            { deg: 30, sin: '1/2', cos: '√3/2', tan: '1/√3' },
+            { deg: 45, sin: '√2/2', cos: '√2/2', tan: '1' },
+            { deg: 60, sin: '√3/2', cos: '1/2', tan: '√3' },
+            { deg: 90, sin: '1', cos: '0', tan: 'なし' }
+        ];
+        function renderAngleTable() {
+            document.getElementById('angle-table').innerHTML = FAMOUS.map(a => `
+                <button onclick="jumpAngle(${a.deg})" class="bg-slate-50 hover:bg-cyan-50 border-2 border-slate-200 hover:border-cyan-300 rounded-2xl p-3 text-center transition-all">
+                    <p class="text-lg font-black text-slate-800">${a.deg}°</p>
+                    <p class="num text-[11px] font-bold text-rose-500">sin ${a.sin}</p>
+                    <p class="num text-[11px] font-bold text-emerald-600">cos ${a.cos}</p>
+                    <p class="num text-[11px] font-bold text-amber-600">tan ${a.tan}</p>
+                </button>`).join('');
+        }
+        function jumpAngle(deg) {
+            spinning = false;
+            document.getElementById('trig-play').innerText = '▶ まわす';
+            document.getElementById('deg-range').value = deg;
+            drawTrig();
+        }
+
+        /* ============ アニメーションの ループ ============ */
+        let lastTime = 0;
+        function loop(now) {
+            const dt = Math.min(0.05, (now - lastTime) / 1000 || 0);
+            lastTime = now;
+
+            if (activeTab === 'pi') {
+                if (rollPlaying) {
+                    rollAngle = Math.min(Math.PI * 2 * ROLL_TURNS, rollAngle + dt * 1.1);
+                    if (rollAngle >= Math.PI * 2 * ROLL_TURNS) {
+                        rollPlaying = false;
+                        document.getElementById('roll-play').innerText = '▶ もういちど';
+                    }
+                }
+                drawRoll();
+                if (mc.playing) scatterPoints(30);
+            } else if (activeTab === 'trig') {
+                if (spinning) {
+                    const next = (currentDeg() + dt * 90) % 720;
+                    document.getElementById('deg-range').value = next;
+                }
+                drawTrig();
+            }
+            requestAnimationFrame(loop);
+        }
+
+        /* ============ スタート ============ */
+        window.addEventListener('load', () => {
+            ['dia-range'].forEach(id => document.getElementById(id).addEventListener('input', drawCircleSize));
+            document.getElementById('n-range').addEventListener('input', drawE);
+            document.getElementById('x0-range').addEventListener('input', drawExp);
+            document.getElementById('deg-range').addEventListener('input', () => {
+                spinning = false;
+                document.getElementById('trig-play').innerText = '▶ まわす';
+                drawTrig();
+            });
+            ['show-sin', 'show-cos', 'show-tan'].forEach(id =>
+                document.getElementById(id).addEventListener('change', drawTrig));
+
+            renderAngleTable();
+            drawRoll();
+            drawCircleSize();
+            drawMonteCarloBase();
+            updateMonteCarloText();
+            drawE();
+            drawExp();
+            drawTrig();
+
+            // 幅が かわると キャンバスは まっしろに なるので かきなおす
+            window.addEventListener('resize', drawActiveTab);
+
+            requestAnimationFrame(loop);
+        });
+    </script>
+</body>
+</html>
