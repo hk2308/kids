@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>元素記号キッズマスター！</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+        
+        .bounce-hover {
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .bounce-hover:hover {
+            transform: scale(1.05);
+        }
+        .bounce-hover:active {
+            transform: scale(0.95);
+        }
+
+        /* Card flip effect */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .transform-style-3d {
+            transform-style: preserve-3d;
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        @keyframes pulse-subtle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+        .animate-pulse-subtle {
+            animation: pulse-subtle 2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-amber-50 min-h-screen text-slate-800 flex flex-col justify-between selection:bg-amber-200">
+
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-teal-400 via-sky-400 to-indigo-400 text-white p-3 sm:p-4 shadow-lg sticky top-0 z-30">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2 cursor-pointer" onclick="showTab('menu')">
+                <span class="text-3xl sm:text-4xl animate-bounce">🧪</span>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-black tracking-wide drop-shadow-md">元素キッズマスター</h1>
+                    <p class="text-xs text-sky-100 font-bold hidden sm:block">たのしくおぼえるかがくのきごう</p>
+                </div>
+            </div>
+
+            <!-- Header Stats -->
+            <div class="flex items-center gap-3">
+                <div class="bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1.5 border border-white/30">
+                    <span class="text-yellow-300 text-lg sm:text-xl">⭐</span>
+                    <span id="global-stars" class="font-extrabold text-base sm:text-lg">0</span>
+                </div>
+                <button id="sound-btn" onclick="toggleSound()" class="bg-white/20 hover:bg-white/30 backdrop-blur-sm p-2 rounded-full border border-white/30 text-lg transition-all w-10 h-10 flex items-center justify-center">
+                    🔊
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="max-w-5xl mx-auto w-full p-3 sm:p-6 flex-grow">
+
+        <!-- MENU TAB -->
+        <section id="tab-menu" class="tab-content flex flex-col items-center justify-center py-4 sm:py-8">
+            <div class="text-center mb-6 sm:mb-10">
+                <span class="inline-block bg-amber-100 text-amber-800 font-extrabold px-4 py-1.5 rounded-full text-sm mb-3 shadow-sm border border-amber-200">わくわく かがくの せかいへ ようこそ！</span>
+                <h2 class="text-3xl sm:text-5xl font-black text-slate-800 tracking-wide mb-2">あそびかたを えらぼう！</h2>
+                <p class="text-slate-600 font-bold text-sm sm:text-base">めざせ！げんそはかせ👑</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
+                <!-- Quiz Card -->
+                <div onclick="startQuiz()" class="bg-gradient-to-br from-rose-400 to-pink-500 rounded-3xl p-6 text-white shadow-xl hover:shadow-2xl transition-all cursor-pointer bounce-hover relative overflow-hidden group border-4 border-white">
+                    <div class="absolute -right-4 -bottom-4 text-8xl opacity-20 group-hover:scale-110 transition-transform">❓</div>
+                    <div class="bg-white/20 rounded-2xl w-14 h-14 flex items-center justify-center text-3xl mb-4 font-bold">🎯</div>
+                    <h3 class="text-2xl font-black mb-2">クイズモード</h3>
+                    <p class="text-rose-100 font-bold text-sm mb-4">なまえから きごうを あてよう！3つの レベルが あるよ。</p>
+                    <span class="inline-flex items-center gap-2 bg-white text-rose-500 font-black px-4 py-2 rounded-full text-sm shadow">
+                        スタート <i class="fas fa-play text-xs"></i>
+                    </span>
+                </div>
+
+                <!-- Match Card -->
+                <div onclick="startMatch()" class="bg-gradient-to-br from-amber-400 to-orange-500 rounded-3xl p-6 text-white shadow-xl hover:shadow-2xl transition-all cursor-pointer bounce-hover relative overflow-hidden group border-4 border-white">
+                    <div class="absolute -right-4 -bottom-4 text-8xl opacity-20 group-hover:scale-110 transition-transform">🃏</div>
+                    <div class="bg-white/20 rounded-2xl w-14 h-14 flex items-center justify-center text-3xl mb-4 font-bold">🧩</div>
+                    <h3 class="text-2xl font-black mb-2">しんけいすいじゃく</h3>
+                    <p class="text-amber-100 font-bold text-sm mb-4">カードを めくって なまえと きごうの ペアを つくろう！</p>
+                    <span class="inline-flex items-center gap-2 bg-white text-amber-600 font-black px-4 py-2 rounded-full text-sm shadow">
+                        スタート <i class="fas fa-play text-xs"></i>
+                    </span>
+                </div>
+
+                <!-- Book Card -->
+                <div onclick="showTab('book')" class="bg-gradient-to-br from-emerald-400 to-teal-600 rounded-3xl p-6 text-white shadow-xl hover:shadow-2xl transition-all cursor-pointer bounce-hover relative overflow-hidden group border-4 border-white">
+                    <div class="absolute -right-4 -bottom-4 text-8xl opacity-20 group-hover:scale-110 transition-transform">📖</div>
+                    <div class="bg-white/20 rounded-2xl w-14 h-14 flex items-center justify-center text-3xl mb-4 font-bold">🔍</div>
+                    <h3 class="text-2xl font-black mb-2">げんそずかん</h3>
+                    <p class="text-emerald-100 font-bold text-sm mb-4">げんその ひみつや どこで つかわれているか しらべよう！</p>
+                    <span class="inline-flex items-center gap-2 bg-white text-emerald-600 font-black px-4 py-2 rounded-full text-sm shadow">
+                        ひらく <i class="fas fa-book-open text-xs"></i>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Stats/Badges Banner -->
+            <div class="mt-10 bg-white rounded-3xl p-6 shadow-md border-2 border-slate-200 w-full max-w-4xl">
+                <h4 class="text-lg font-black text-slate-700 mb-4 flex items-center gap-2">
+                    <span>🏆</span> あつめたバッジ
+                </h4>
+                <div id="badge-container" class="flex flex-wrap gap-4 justify-center sm:justify-start">
+                    <!-- Badges injected via JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- QUIZ TAB -->
+        <section id="tab-quiz" class="tab-content hidden flex flex-col items-center">
+            <!-- Quiz Nav Header -->
+            <div class="w-full max-w-2xl flex justify-between items-center mb-4">
+                <button onclick="showTab('menu')" class="bg-white border-2 border-slate-200 text-slate-700 font-bold px-4 py-2 rounded-full hover:bg-slate-50 transition-all flex items-center gap-2">
+                    <i class="fas fa-arrow-left"></i> もどる
+                </button>
+                <div class="flex items-center gap-3">
+                    <span id="quiz-combo" class="text-amber-500 font-black text-lg sm:text-xl hidden animate-bounce">🔥 3コンボ!</span>
+                    <span id="quiz-score" class="bg-rose-100 text-rose-700 font-extrabold px-4 py-1.5 rounded-full text-sm sm:text-base">スコア: 0</span>
+                </div>
+            </div>
+
+            <!-- Level Selector -->
+            <div id="quiz-level-select" class="w-full max-w-2xl bg-white rounded-3xl p-6 sm:p-8 shadow-xl border-4 border-rose-200 text-center">
+                <h3 class="text-2xl sm:text-3xl font-black text-slate-800 mb-4">むずかしさを えらんでね！</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-2">
+                    <button onclick="startQuizGame('easy')" class="p-5 bg-emerald-100 hover:bg-emerald-200 border-2 border-emerald-400 rounded-2xl text-emerald-800 font-extrabold text-lg bounce-hover flex flex-col items-center">
+                        <span class="text-3xl mb-1">🌱</span>
+                        かんたん
+                        <span class="text-xs font-normal text-emerald-700 mt-1">よくしられているげんそ</span>
+                    </button>
+                    <button onclick="startQuizGame('medium')" class="p-5 bg-sky-100 hover:bg-sky-200 border-2 border-sky-400 rounded-2xl text-sky-800 font-extrabold text-lg bounce-hover flex flex-col items-center">
+                        <span class="text-3xl mb-1">🚀</span>
+                        ふつう
+                        <span class="text-xs font-normal text-sky-700 mt-1">ちょっとくわしくなる</span>
+                    </button>
+                    <button onclick="startQuizGame('hard')" class="p-5 bg-purple-100 hover:bg-purple-200 border-2 border-purple-400 rounded-2xl text-purple-800 font-extrabold text-lg bounce-hover flex flex-col items-center">
+                        <span class="text-3xl mb-1">👑</span>
+                        むずかしい
+                        <span class="text-xs font-normal text-purple-700 mt-1">めざせ！かがくはかせ</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Quiz Area -->
+            <div id="quiz-play-area" class="w-full max-w-2xl hidden">
+                <!-- Progress bar -->
+                <div class="w-full bg-slate-200 rounded-full h-3 mb-4 overflow-hidden">
+                    <div id="quiz-progress" class="bg-rose-500 h-full w-0 transition-all duration-300"></div>
+                </div>
+
+                <!-- Question Card -->
+                <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border-4 border-rose-200 text-center relative overflow-hidden mb-6">
+                    <span id="quiz-q-num" class="text-xs font-black text-rose-400 bg-rose-50 px-3 py-1 rounded-full border border-rose-200">だい 1 もん</span>
+                    
+                    <div class="my-6">
+                        <p id="quiz-question-sub" class="text-sm font-bold text-slate-500 mb-1">この 元素（げんそ）の 記号（きごう）は なにかな？</p>
+                        <h2 id="quiz-question-title" class="text-4xl sm:text-6xl font-black text-slate-800 tracking-wide my-2">水素</h2>
+                        <p id="quiz-question-desc" class="text-slate-600 font-bold text-sm sm:text-base mt-2 bg-amber-50 p-3 rounded-xl border border-amber-200 inline-block">
+                            💡 たくさんあつめると 風船（ふうせん）が とぶよ！
+                        </p>
+                    </div>
+
+                    <!-- Answer Options Grid -->
+                    <div id="quiz-options" class="grid grid-cols-2 gap-3 sm:gap-4 mt-6">
+                        <!-- Dynamic Buttons -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MATCHING GAME TAB -->
+        <section id="tab-match" class="tab-content hidden flex flex-col items-center">
+            <div class="w-full max-w-3xl flex justify-between items-center mb-4">
+                <button onclick="showTab('menu')" class="bg-white border-2 border-slate-200 text-slate-700 font-bold px-4 py-2 rounded-full hover:bg-slate-50 transition-all flex items-center gap-2">
+                    <i class="fas fa-arrow-left"></i> もどる
+                </button>
+                <div class="flex items-center gap-4">
+                    <span id="match-timer" class="bg-amber-100 text-amber-800 font-extrabold px-3 py-1 rounded-full text-sm">⏱️ 0秒</span>
+                    <span id="match-pairs" class="bg-amber-500 text-white font-extrabold px-3 py-1 rounded-full text-sm">ペア: 0 / 6</span>
+                </div>
+            </div>
+
+            <!-- Match Start Banner / Controls -->
+            <div id="match-start-screen" class="w-full max-w-xl bg-white rounded-3xl p-6 text-center shadow-xl border-4 border-amber-200">
+                <h3 class="text-2xl font-black text-slate-800 mb-2">カードの ペアを みつけよう！</h3>
+                <p class="text-slate-600 font-bold text-sm mb-6">「元素のなまえ」と「元素きごう」を あわせてね。</p>
+                <div class="flex justify-center gap-3">
+                    <button onclick="startMatchGame(6)" class="bg-amber-400 hover:bg-amber-500 text-slate-900 font-black px-6 py-3 rounded-2xl shadow-md bounce-hover border-b-4 border-amber-600">
+                        かんたん (12まい)
+                    </button>
+                    <button onclick="startMatchGame(8)" class="bg-orange-500 hover:bg-orange-600 text-white font-black px-6 py-3 rounded-2xl shadow-md bounce-hover border-b-4 border-orange-700">
+                        むずかしい (16まい)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Cards Grid Container -->
+            <div id="match-grid" class="w-full max-w-3xl grid grid-cols-3 sm:grid-cols-4 gap-3 sm:gap-4 my-4 hidden">
+                <!-- Cards dynamically created -->
+            </div>
+        </section>
+
+        <!-- ELEMENT BOOK TAB -->
+        <section id="tab-book" class="tab-content hidden flex flex-col items-center">
+            <div class="w-full flex flex-col sm:flex-row justify-between items-center mb-6 gap-3">
+                <button onclick="showTab('menu')" class="self-start sm:self-auto bg-white border-2 border-slate-200 text-slate-700 font-bold px-4 py-2 rounded-full hover:bg-slate-50 transition-all flex items-center gap-2">
+                    <i class="fas fa-arrow-left"></i> もどる
+                </button>
+                <div class="flex gap-2 overflow-x-auto w-full sm:w-auto pb-1">
+                    <button onclick="filterBook('all')" class="filter-btn active bg-teal-500 text-white font-bold px-3 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap shadow-sm">すべて</button>
+                    <button onclick="filterBook('gas')" class="filter-btn bg-white border border-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap">きたい</button>
+                    <button onclick="filterBook('metal')" class="filter-btn bg-white border border-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap">きんぞく</button>
+                    <button onclick="filterBook('life')" class="filter-btn bg-white border border-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap">いのちのもと</button>
+                </div>
+            </div>
+
+            <!-- Element Cards Grid -->
+            <div id="book-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 w-full">
+                <!-- Injected via JS -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal Dialog for Element Detail -->
+    <div id="element-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border-4 border-teal-300 relative animate-pulse-subtle">
+            <button onclick="closeModal()" class="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full w-8 h-8 flex items-center justify-center font-bold">✕</button>
+            
+            <div class="text-center">
+                <span id="modal-num" class="bg-teal-100 text-teal-800 font-black px-3 py-1 rounded-full text-xs">原子番号: 1</span>
+                <div id="modal-symbol-bg" class="my-4 p-6 rounded-2xl bg-gradient-to-br from-teal-400 to-emerald-500 text-white shadow-inner">
+                    <h2 id="modal-symbol" class="text-6xl font-black tracking-wider">H</h2>
+                    <p id="modal-name-kana" class="text-xs font-bold opacity-80 mt-1">すいそ</p>
+                    <p id="modal-name" class="text-2xl font-black">水素</p>
+                </div>
+
+                <div class="text-left space-y-3 text-slate-700 text-sm">
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                        <p class="font-extrabold text-teal-600 text-xs mb-1">💡 どんな 元素？</p>
+                        <p id="modal-desc" class="font-bold leading-relaxed">宇宙で一番たくさんある元素。燃やすとお水になるよ！</p>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                        <p class="font-extrabold text-amber-600 text-xs mb-1">🎈 どこで かつやくしている？</p>
+                        <p id="modal-use" class="font-bold leading-relaxed">ロケットの 燃料や、未来のエコカー（燃料電池）</p>
+                    </div>
+                </div>
+
+                <button onclick="speakElement()" class="mt-5 w-full bg-teal-500 hover:bg-teal-600 text-white font-extrabold py-3 rounded-2xl shadow-md bounce-hover flex items-center justify-center gap-2">
+                    <span>🔊</span> なまえを きく
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Win / Result Modal -->
+    <div id="result-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border-4 border-yellow-300">
+            <div class="text-6xl mb-2">🎉</div>
+            <h2 class="text-3xl font-black text-slate-800 mb-1">すごーい！</h2>
+            <p id="result-sub" class="text-slate-600 font-bold text-sm mb-4">クリアおめでとう！</p>
+            
+            <div class="bg-amber-50 p-4 rounded-2xl border border-amber-200 mb-6 space-y-2">
+                <div class="flex justify-between font-bold text-slate-700">
+                    <span>かくとく⭐:</span>
+                    <span id="result-stars" class="text-amber-500 font-black">+3</span>
+                </div>
+                <div id="result-extra-info" class="text-xs text-slate-500 font-bold"></div>
+            </div>
+
+            <button onclick="closeResultModal()" class="w-full bg-gradient-to-r from-amber-400 to-orange-500 text-white font-black py-3 rounded-2xl shadow-lg bounce-hover border-b-4 border-orange-600 text-lg">
+                もういちど あそぶ
+            </button>
+        </div>
+    </div>
+
+    <footer class="text-center py-3 text-xs text-slate-400 font-bold">
+        かがくの だいいっぽ！ 元素記号キッズマスター © 2026
+    </footer>
+
+    <script>
+        /* --- ELEMENT DATA --- */
+        const ELEMENTS = [
+            { num: 1, symbol: 'H', name: '水素', kana: 'すいそ', category: 'gas', desc: 'うちゅうで いちばん たくさんある げんそ。もやすと おみずになるよ！', use: 'ロケットの たきぎや みらいの くるま', icon: '🎈', level: 'easy' },
+            { num: 2, symbol: 'He', name: 'ヘリウム', kana: 'へりうむ', category: 'gas', desc: '空気より とっても かるい きたい。すうと こえが たかくなるよ！', use: 'ふわふわ とぶ ふうせん', icon: '🎈', level: 'easy' },
+            { num: 6, symbol: 'C', name: '炭素', kana: 'たんそ', category: 'life', desc: 'えんぴつの しんや、かたい ダイヤモンドも これで できているよ！', use: 'えんぴつ、ダイヤモンド', icon: '✏️', level: 'easy' },
+            { num: 7, symbol: 'N', name: '窒素', kana: 'ちっそ', category: 'gas', desc: 'みんなが すっている くうきの 8わり（80%）は この げんそ！', use: 'スナックがしの ふくろの くうき', icon: '🥔', level: 'medium' },
+            { num: 8, symbol: 'O', name: '酸素', kana: 'さんそ', category: 'life', desc: 'いきを すうときに ひつような げんそ。これがないと いきていけない！', use: '息（いき）を すうこと', icon: '🫁', level: 'easy' },
+            { num: 11, symbol: 'Na', name: 'ナトリウム', kana: 'なとりうむ', category: 'metal', desc: 'しょくえん（しお）の なかに はいている げnそだよ。', use: 'お料理（りょうり）につかう 塩（しお）', icon: '🧂', level: 'medium' },
+            { num: 12, symbol: 'Mg', name: 'マグネシウム', kana: 'まぐねしうむ', category: 'metal', desc: 'とっても かるくて たのもしい きんぞく。燃（も）やすと まぶしく ひかる！', use: 'スマホの なかの パーツ', icon: '📱', level: 'hard' },
+            { num: 13, symbol: 'Al', name: 'アルミニウム', kana: 'あるみにうむ', category: 'metal', desc: 'かるくて さびにくい きんぞく。アルミホイルで しられているね！', use: 'ジュースの カン、アルミホイル', icon: '🥤', level: 'easy' },
+            { num: 14, symbol: 'Si', name: 'ケイ素', kana: 'けいそ', category: 'metal', desc: 'ガラスや パソコンの なかの チップをつくる 材料（ざいりょう）になるよ！', use: 'ガラス、コンピュータの なかみ', icon: '💻', level: 'hard' },
+            { num: 15, symbol: 'P', name: 'リン', kana: 'りん', category: 'life', desc: 'ほねや はを つくるのに ひつような げんそ。マッチの あたまにも あるよ！', use: 'みんなの 骨（ほね）や 歯（は）', icon: '🦴', level: 'hard' },
+            { num: 16, symbol: 'S', name: '硫黄', kana: 'いおう', category: 'gas', desc: 'おんせんの ちかくで ツーンとする においがする もとだよ！', use: '温泉（おんせん）、マッチ', icon: '♨️', level: 'medium' },
+            { num: 17, symbol: 'Cl', name: '塩素', kana: 'えんそ', category: 'gas', desc: 'バイキンを やっつける ちからがあるよ。プールのお水の におい！', use: 'プールの しょうどく', icon: '🏊', level: 'medium' },
+            { num: 19, symbol: 'K', name: 'カリウム', kana: 'かりうむ', category: 'life', desc: 'バナナや やさいに たくさん はいている 元気（げんき）のもと！', use: 'バナナ、からだの えいよう', icon: '🍌', level: 'medium' },
+            { num: 20, symbol: 'Ca', name: 'カルシウム', kana: 'かるしうむ', category: 'life', desc: '牛乳（ぎゅうにゅう）に たくさん はいている！ほねを じょうぶにするよ。', use: '牛乳（ぎゅうにゅう）、骨（ほね）', icon: '🥛', level: 'easy' },
+            { num: 26, symbol: 'Fe', name: '鉄', kana: 'てつ', category: 'metal', desc: 'とても じょうぶな きんぞく。スプーンや フライパン、でんしゃになるよ！', use: 'でんしゃ、ビル、はさみ', icon: '🚃', level: 'easy' },
+            { num: 29, symbol: 'Cu', name: '銅', kana: 'どう', category: 'metal', desc: 'でんきを とおしやすい きんぞく。10円だまは これで できている！', use: '10円玉（えんだま）、でんせん', icon: '🪙', level: 'easy' },
+            { num: 30, symbol: 'Zn', name: '亜鉛', kana: 'あえん', category: 'metal', desc: 'からだの 調子（ちょうし）を ととのえる 栄養（えいよう）だよ。', use: 'サプリメント、電池（でんち）', icon: '🔋', level: 'hard' },
+            { num: 47, symbol: 'Ag', name: '銀', kana: 'ぎん', category: 'metal', desc: 'ピカピカ ひかる きれいな きんぞく。オリンピックの 2い メダル！', use: '銀メダル、アクセサリー', icon: '🥈', level: 'medium' },
+            { num: 79, symbol: 'Au', name: '金', kana: 'きん', category: 'metal', desc: 'とても かちがある ピカピカの きんぞく。さびることが ないよ！', use: '金メダル、おうかん', icon: '👑', level: 'easy' }
+        ];
+
+        const BADGES = [
+            { id: 'first_quiz', name: 'クイズデビュー', icon: '🐣', desc: 'クイズを1回クリアした' },
+            { id: 'first_match', name: 'ペアマスター', icon: '🧩', desc: 'しんけいすいじゃくをクリアした' },
+            { id: 'star_10', name: 'ほしあつめ', icon: '⭐', desc: 'ほしを10こ あつめた' },
+            { id: 'quiz_master', name: 'かがくの はかせ', icon: '🎓', desc: 'むずかしいクイズをクリアした' }
+        ];
+
+        /* --- GLOBAL STATE --- */
+        let state = {
+            stars: parseInt(localStorage.getItem('elem_stars') || '0'),
+            soundEnabled: true,
+            unlockedBadges: JSON.parse(localStorage.getItem('elem_badges') || '[]'),
+            // Quiz State
+            quiz: {
+                level: 'easy',
+                questions: [],
+                currentIndex: 0,
+                score: 0,
+                combo: 0
+            },
+            // Match State
+            match: {
+                cards: [],
+                flipped: [],
+                matchedPairs: 0,
+                totalPairs: 0,
+                timer: 0,
+                interval: null
+            }
+        };
+
+        /* --- AUDIO SYNTHESIS (Web Audio API) --- */
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function playSound(type) {
+            if (!state.soundEnabled) return;
+            try {
+                if (!audioCtx) audioCtx = new AudioCtx();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+
+                if (type === 'correct') {
+                    // Happy High Chime
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.15); // A5
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'wrong') {
+                    // Low Buzz
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.linearRampToValueAtTime(100, now + 0.2);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'click') {
+                    // Soft Click
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(400, now);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                } else if (type === 'fanfare') {
+                    // Multi-note cheer
+                    [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.connect(g);
+                        g.connect(audioCtx.destination);
+                        o.frequency.value = freq;
+                        g.gain.setValueAtTime(0.15, now + idx * 0.08);
+                        g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.3);
+                        o.start(now + idx * 0.08);
+                        o.stop(now + idx * 0.08 + 0.3);
+                    });
+                }
+            } catch(e) {
+                console.log('Audio error:', e);
+            }
+        }
+
+        function toggleSound() {
+            state.soundEnabled = !state.soundEnabled;
+            document.getElementById('sound-btn').innerText = state.soundEnabled ? '🔊' : '🔇';
+        }
+
+        /* --- UI NAVIGATION --- */
+        function showTab(tabName) {
+            playSound('click');
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+
+            if (tabName === 'menu') {
+                renderBadges();
+            } else if (tabName === 'book') {
+                renderBook('all');
+            }
+        }
+
+        function updateStars(count) {
+            state.stars += count;
+            localStorage.setItem('elem_stars', state.stars);
+            document.getElementById('global-stars').innerText = state.stars;
+
+            if (state.stars >= 10) unlockBadge('star_10');
+        }
+
+        function unlockBadge(badgeId) {
+            if (!state.unlockedBadges.includes(badgeId)) {
+                state.unlockedBadges.push(badgeId);
+                localStorage.setItem('elem_badges', JSON.stringify(state.unlockedBadges));
+            }
+        }
+
+        function renderBadges() {
+            const container = document.getElementById('badge-container');
+            container.innerHTML = BADGES.map(b => {
+                const unlocked = state.unlockedBadges.includes(b.id);
+                return `
+                    <div class="flex items-center gap-2 p-2 px-3 rounded-2xl border ${unlocked ? 'bg-amber-50 border-amber-300 text-slate-800' : 'bg-slate-100 border-slate-200 text-slate-400 opacity-60'}">
+                        <span class="text-2xl">${unlocked ? b.icon : '🔒'}</span>
+                        <div>
+                            <p class="text-xs font-black">${b.name}</p>
+                            <p class="text-[10px] ${unlocked ? 'text-amber-700' : 'text-slate-400'}">${b.desc}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        /* --- QUIZ GAME LOGIC --- */
+        function startQuiz() {
+            showTab('quiz');
+            document.getElementById('quiz-level-select').classList.remove('hidden');
+            document.getElementById('quiz-play-area').classList.add('hidden');
+        }
+
+        function startQuizGame(level) {
+            playSound('click');
+            state.quiz.level = level;
+            state.quiz.currentIndex = 0;
+            state.quiz.score = 0;
+            state.quiz.combo = 0;
+
+            // Filter elements by level or fallback
+            let pool = ELEMENTS;
+            if (level === 'easy') pool = ELEMENTS.filter(e => e.level === 'easy');
+            else if (level === 'medium') pool = ELEMENTS.filter(e => e.level === 'easy' || e.level === 'medium');
+
+            // Shuffle & take 5 questions
+            state.quiz.questions = [...pool].sort(() => 0.5 - Math.random()).slice(0, 5);
+
+            document.getElementById('quiz-level-select').classList.add('hidden');
+            document.getElementById('quiz-play-area').classList.remove('hidden');
+            document.getElementById('quiz-score').innerText = `スコア: 0`;
+
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const q = state.quiz.questions[state.quiz.currentIndex];
+            const total = state.quiz.questions.length;
+
+            // Progress bar
+            document.getElementById('quiz-progress').style.width = `${((state.quiz.currentIndex) / total) * 100}%`;
+            document.getElementById('quiz-q-num').innerText = `だい ${state.quiz.currentIndex + 1} / ${total} もん`;
+
+            document.getElementById('quiz-question-title').innerText = q.name;
+            document.getElementById('quiz-question-desc').innerText = `💡 ${q.desc}`;
+
+            // Options: 1 correct + 3 wrong
+            let wrongPool = ELEMENTS.filter(e => e.symbol !== q.symbol);
+            wrongPool = wrongPool.sort(() => 0.5 - Math.random()).slice(0, 3);
+
+            const options = [...wrongPool, q].sort(() => 0.5 - Math.random());
+
+            const container = document.getElementById('quiz-options');
+            container.innerHTML = options.map(opt => `
+                <button onclick="handleAnswer('${opt.symbol}', '${q.symbol}')" class="p-4 bg-slate-100 hover:bg-rose-100 border-2 border-slate-200 hover:border-rose-400 rounded-2xl text-2xl sm:text-3xl font-black text-slate-800 bounce-hover shadow-sm">
+                    ${opt.symbol}
+                </button>
+            `).join('');
+        }
+
+        function handleAnswer(selectedSymbol, correctSymbol) {
+            if (selectedSymbol === correctSymbol) {
+                playSound('correct');
+                state.quiz.score += 100 + (state.quiz.combo * 20);
+                state.quiz.combo++;
+                
+                // Show Combo UI
+                const comboEl = document.getElementById('quiz-combo');
+                if (state.quiz.combo > 1) {
+                    comboEl.innerText = `🔥 ${state.quiz.combo}コンボ!`;
+                    comboEl.classList.remove('hidden');
+                }
+
+            } else {
+                playSound('wrong');
+                state.quiz.combo = 0;
+                document.getElementById('quiz-combo').classList.add('hidden');
+            }
+
+            document.getElementById('quiz-score').innerText = `スコア: ${state.quiz.score}`;
+
+            state.quiz.currentIndex++;
+            if (state.quiz.currentIndex < state.quiz.questions.length) {
+                setTimeout(renderQuestion, 400);
+            } else {
+                setTimeout(finishQuiz, 500);
+            }
+        }
+
+        function finishQuiz() {
+            playSound('fanfare');
+            confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+
+            unlockBadge('first_quiz');
+            if (state.quiz.level === 'hard') unlockBadge('quiz_master');
+
+            const earnedStars = Math.floor(state.quiz.score / 100) + 2;
+            updateStars(earnedStars);
+
+            document.getElementById('result-sub').innerText = `クイズをしゅうりょうしたよ！`;
+            document.getElementById('result-stars').innerText = `+${earnedStars}`;
+            document.getElementById('result-extra-info').innerText = `スコア: ${state.quiz.score}てん`;
+            document.getElementById('result-modal').classList.remove('hidden');
+        }
+
+        /* --- MATCHING GAME LOGIC --- */
+        function startMatch() {
+            showTab('match');
+            document.getElementById('match-start-screen').classList.remove('hidden');
+            document.getElementById('match-grid').classList.add('hidden');
+            clearInterval(state.match.interval);
+        }
+
+        function startMatchGame(pairCount) {
+            playSound('click');
+            state.match.matchedPairs = 0;
+            state.match.totalPairs = pairCount;
+            state.match.flipped = [];
+            state.match.timer = 0;
+
+            const selectedElements = [...ELEMENTS].sort(() => 0.5 - Math.random()).slice(0, pairCount);
+
+            // Create 2 cards per element (1 symbol, 1 name)
+            let cardDeck = [];
+            selectedElements.forEach(e => {
+                cardDeck.push({ id: e.symbol, type: 'symbol', text: e.symbol, icon: e.icon, color: 'from-amber-400 to-orange-400' });
+                cardDeck.push({ id: e.symbol, type: 'name', text: e.name, icon: e.icon, color: 'from-sky-400 to-indigo-400' });
+            });
+
+            state.match.cards = cardDeck.sort(() => 0.5 - Math.random());
+
+            // Render UI
+            document.getElementById('match-start-screen').classList.add('hidden');
+            const grid = document.getElementById('match-grid');
+            grid.classList.remove('hidden');
+            document.getElementById('match-pairs').innerText = `ペア: 0 / ${pairCount}`;
+            document.getElementById('match-timer').innerText = `⏱️ 0秒`;
+
+            grid.innerHTML = state.match.cards.map((card, idx) => `
+                <div onclick="flipCard(${idx})" class="perspective-1000 h-24 sm:h-28 cursor-pointer bounce-hover">
+                    <div id="card-inner-${idx}" class="transform-style-3d transition-transform duration-500 w-full h-full relative rounded-2xl shadow-md">
+                        <!-- Front (Hidden Side) -->
+                        <div class="backface-hidden absolute inset-0 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-2xl border-2 border-white flex items-center justify-center text-3xl text-white font-bold shadow-inner">
+                            ❓
+                        </div>
+                        <!-- Back (Revealed Side) -->
+                        <div class="rotate-y-180 backface-hidden absolute inset-0 bg-gradient-to-br ${card.color} text-white rounded-2xl border-2 border-white flex flex-col items-center justify-center p-2 text-center shadow-lg">
+                            <span class="text-xs opacity-80 mb-0.5">${card.type === 'symbol' ? 'きごう' : 'なまえ'}</span>
+                            <span class="text-xl sm:text-2xl font-black">${card.text}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Start Timer
+            clearInterval(state.match.interval);
+            state.match.interval = setInterval(() => {
+                state.match.timer++;
+                document.getElementById('match-timer').innerText = `⏱️ ${state.match.timer}秒`;
+            }, 1000);
+        }
+
+        function flipCard(index) {
+            if (state.match.flipped.length >= 2) return; // limit 2 cards at a time
+            if (state.match.flipped.includes(index)) return; // already flipped
+
+            playSound('click');
+            const cardEl = document.getElementById(`card-inner-${index}`);
+            cardEl.classList.add('rotate-y-180');
+            state.match.flipped.push(index);
+
+            if (state.match.flipped.length === 2) {
+                const [idx1, idx2] = state.match.flipped;
+                const card1 = state.match.cards[idx1];
+                const card2 = state.match.cards[idx2];
+
+                if (card1.id === card2.id && card1.type !== card2.type) {
+                    // Match!
+                    playSound('correct');
+                    state.match.matchedPairs++;
+                    document.getElementById('match-pairs').innerText = `ペア: ${state.match.matchedPairs} / ${state.match.totalPairs}`;
+                    state.match.flipped = [];
+
+                    if (state.match.matchedPairs === state.match.totalPairs) {
+                        clearInterval(state.match.interval);
+                        setTimeout(finishMatch, 600);
+                    }
+                } else {
+                    // Mismatch - flip back
+                    playSound('wrong');
+                    setTimeout(() => {
+                        document.getElementById(`card-inner-${idx1}`).classList.remove('rotate-y-180');
+                        document.getElementById(`card-inner-${idx2}`).classList.remove('rotate-y-180');
+                        state.match.flipped = [];
+                    }, 1000);
+                }
+            }
+        }
+
+        function finishMatch() {
+            playSound('fanfare');
+            confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 } });
+
+            unlockBadge('first_match');
+            const earnedStars = 3;
+            updateStars(earnedStars);
+
+            document.getElementById('result-sub').innerText = `ぜんぶの ペアを みつけたよ！`;
+            document.getElementById('result-stars').innerText = `+${earnedStars}`;
+            document.getElementById('result-extra-info').innerText = `かかったじかん: ${state.match.timer}びょう`;
+            document.getElementById('result-modal').classList.remove('hidden');
+        }
+
+        /* --- ELEMENT BOOK LOGIC --- */
+        function renderBook(filter = 'all') {
+            const container = document.getElementById('book-grid');
+            let filtered = ELEMENTS;
+            if (filter !== 'all') {
+                filtered = ELEMENTS.filter(e => e.category === filter);
+            }
+
+            container.innerHTML = filtered.map(e => `
+                <div onclick="openModal(${e.num})" class="bg-white rounded-2xl p-4 border-2 border-slate-200 shadow-sm hover:shadow-md cursor-pointer bounce-hover flex flex-col items-center justify-between text-center relative overflow-hidden group">
+                    <span class="absolute top-2 left-2 text-[10px] font-black text-slate-400">№ ${e.num}</span>
+                    <span class="text-2xl mt-2">${e.icon}</span>
+                    <div class="my-2">
+                        <h4 class="text-3xl font-black text-slate-800">${e.symbol}</h4>
+                        <p class="text-xs font-bold text-slate-600">${e.name}</p>
+                    </div>
+                    <span class="text-[10px] bg-slate-100 text-slate-500 font-bold px-2 py-0.5 rounded-full group-hover:bg-teal-100 group-hover:text-teal-700 transition-colors">
+                        くわしく <i class="fas fa-chevron-right text-[8px]"></i>
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        function filterBook(category) {
+            playSound('click');
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-teal-500', 'text-white');
+                btn.classList.add('bg-white', 'text-slate-700');
+            });
+            event.target.classList.add('active', 'bg-teal-500', 'text-white');
+            renderBook(category);
+        }
+
+        /* --- MODAL DIALOGS --- */
+        let activeModalElement = null;
+
+        function openModal(num) {
+            playSound('click');
+            const elem = ELEMENTS.find(e => e.num === num);
+            if (!elem) return;
+
+            activeModalElement = elem;
+            document.getElementById('modal-num').innerText = `原子番号（げんしばんごう）: ${elem.num}`;
+            document.getElementById('modal-symbol').innerText = elem.symbol;
+            document.getElementById('modal-name-kana').innerText = elem.kana;
+            document.getElementById('modal-name').innerText = elem.name;
+            document.getElementById('modal-desc').innerText = elem.desc;
+            document.getElementById('modal-use').innerText = elem.use;
+
+            document.getElementById('element-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            playSound('click');
+            document.getElementById('element-modal').classList.add('hidden');
+        }
+
+        function closeResultModal() {
+            playSound('click');
+            document.getElementById('result-modal').classList.add('hidden');
+            showTab('menu');
+        }
+
+        /* Speech Synthesis for Pronunciation */
+        function speakElement() {
+            if (!activeModalElement) return;
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(activeModalElement.name);
+                utterance.lang = 'ja-JP';
+                utterance.rate = 0.9;
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert('お使いのブラウザは 音声読み上げに 対応していません');
+            }
+        }
+
+        /* --- INITIALIZATION --- */
+        window.onload = function() {
+            document.getElementById('global-stars').innerText = state.stars;
+            renderBadges();
+        };
+    </script>
+</body>
+</html>
