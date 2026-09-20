@@ -7,21 +7,28 @@
 ## 構成
 
 ```
+index.html       ← アプリ一覧（トップページ / 自動生成・編集しない）
 apps/
   elements/
     index.html   ← アプリ本体
     app.json     ← トップページのカード設定（任意）
-scripts/build.py ← apps/ を集めて _site/ を組み立てる
+  molecules/
+    index.html
+    app.json
+scripts/build.py ← index.html を生成し、_site/ を組み立てる
 .github/workflows/pages.yml ← main への push で自動デプロイ
 ```
 
-トップページ (`index.html`) は `apps/` の中身から**自動生成**される。手で編集する必要はない。
+トップページ `index.html` は `apps/` の中身から**自動生成**される。
+手で編集せず、`python3 scripts/build.py` を実行して作りなおすこと
+（ブラウザでそのまま開いても動作確認できる）。
 
 ## 新しい HTML を追加する
 
 1. `apps/<なまえ>/index.html` を置く（画像やCSSも同じフォルダに置ける）
    - 1ファイルだけなら `apps/<なまえ>.html` でもよい
-2. 必要なら `apps/<なまえ>/app.json` でカードの見た目を指定する
+2. `python3 scripts/build.py` を実行して `index.html` を作りなおす
+3. 必要なら `apps/<なまえ>/app.json` でカードの見た目を指定する
 
    ```json
    {
@@ -34,12 +41,13 @@ scripts/build.py ← apps/ を集めて _site/ を組み立てる
 
    省略した場合は HTML の `<title>` と `<meta name="description">` から自動で拾う。
    `order` は小さいほど前に並ぶ（省略時は 999）。
-3. `main` に push する → GitHub Actions が自動で公開する
+4. `main` に push する → GitHub Actions が自動で公開する
+   （push 前に build.py を忘れても、デプロイ時に作りなおされる）
 
 ## ローカルで確認する
 
 ```sh
-python3 scripts/build.py      # _site/ を生成
+python3 scripts/build.py      # index.html と _site/ を生成
 python3 -m http.server -d _site 8000
 # http://localhost:8000 を開く
 ```

@@ -24,6 +24,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 APPS_DIR = ROOT / "apps"
 OUT_DIR = ROOT / "_site"
+INDEX_FILE = ROOT / "index.html"
 
 SITE_TITLE = "キッズ がくしゅうアプリ"
 SITE_SUBTITLE = "あそびながら まなべる ミニアプリ あつめ"
@@ -123,6 +124,11 @@ def render_index(apps: list[dict]) -> str:
   }}
   header h1 {{ margin: 0 0 8px; font-size: clamp(1.8rem, 6vw, 3rem); font-weight: 900; letter-spacing: .04em; }}
   header p {{ margin: 0; font-weight: 700; opacity: .92; font-size: clamp(.85rem, 3vw, 1rem); }}
+  header .count {{
+    display: inline-block; margin-top: 14px; padding: 5px 16px;
+    background: rgba(255, 255, 255, .22); border: 1px solid rgba(255, 255, 255, .4);
+    border-radius: 999px; font-size: .8rem;
+  }}
   main {{ flex: 1; width: 100%; max-width: 960px; margin: -28px auto 0; padding: 0 16px 48px; }}
   .grid {{ display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }}
   .card {{
@@ -163,6 +169,7 @@ def render_index(apps: list[dict]) -> str:
 <header>
   <h1>🎒 {html.escape(SITE_TITLE)}</h1>
   <p>{html.escape(SITE_SUBTITLE)}</p>
+  <p class="count">ぜんぶで {len(apps)}こ の アプリ</p>
 </header>
 <main>
   <div class="grid">
@@ -193,6 +200,10 @@ def render_card(app: dict, index: int) -> str:
 def main() -> None:
     apps = collect_apps()
 
+    # トップページは リポジトリ直下に おく（そのまま ひらいて かくにんできる）
+    INDEX_FILE.write_text(render_index(apps), encoding="utf-8")
+
+    # 公開用の _site/ を くみたてる
     if OUT_DIR.exists():
         shutil.rmtree(OUT_DIR)
     OUT_DIR.mkdir(parents=True)
@@ -200,10 +211,10 @@ def main() -> None:
     if APPS_DIR.is_dir():
         shutil.copytree(APPS_DIR, OUT_DIR / "apps")
 
-    (OUT_DIR / "index.html").write_text(render_index(apps), encoding="utf-8")
+    shutil.copy2(INDEX_FILE, OUT_DIR / "index.html")
     (OUT_DIR / ".nojekyll").write_text("", encoding="utf-8")
 
-    print(f"built {len(apps)} app(s) -> {OUT_DIR.relative_to(ROOT)}/")
+    print(f"built {len(apps)} app(s) -> index.html, {OUT_DIR.relative_to(ROOT)}/")
     for app in apps:
         print(f"  - {app['title']}  ({app['href']})")
 
