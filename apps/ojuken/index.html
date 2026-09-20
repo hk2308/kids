@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>おうけん チャレンジ 小学校受験のれんしゅう</title>
+    <meta name="description" content="小学校受験のペーパー6分野（数量・図形・言語・推理・記憶・常識）を、絵とゲームでれんしゅうできるアプリ。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums; }
+        .bounce-hover { transition: transform .15s cubic-bezier(.175,.885,.32,1.275); }
+        .bounce-hover:hover { transform: scale(1.04); }
+        .bounce-hover:active { transform: scale(.96); }
+        @keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.12) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275); }
+        @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+        .shake { animation: shake .3s ease-in-out; }
+        svg text { font-family: inherit; }
+        .cellbtn { cursor: pointer; }
+    </style>
+</head>
+<body class="bg-indigo-50 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-indigo-600 via-violet-500 to-fuchsia-500 text-white p-3 sm:p-4 shadow-lg sticky top-0 z-30">
+        <div class="max-w-5xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">🎓</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">おうけん チャレンジ</h1>
+                    <p class="text-xs text-indigo-100 font-bold hidden sm:block">小学校受験の ペーパー6分野を あそびながら</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[72px] z-20 bg-indigo-50/95 backdrop-blur border-b border-indigo-200">
+        <div class="max-w-5xl mx-auto flex gap-2 p-3 overflow-x-auto" id="field-nav"></div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto w-full p-3 sm:p-6 flex-grow space-y-5">
+
+        <!-- 分野の せつめい -->
+        <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+            <div class="flex items-start gap-3">
+                <span id="field-emoji" class="text-4xl">🔢</span>
+                <div class="flex-1">
+                    <h2 id="field-name" class="text-xl font-black">すうりょう（数量）</h2>
+                    <p id="field-desc" class="text-sm font-bold text-slate-500 mt-1"></p>
+                </div>
+            </div>
+            <div id="type-buttons" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3"></div>
+        </div>
+
+        <!-- もんだい -->
+        <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-indigo-100">
+            <div class="flex justify-between items-center gap-2">
+                <span id="q-type" class="bg-indigo-100 text-indigo-700 font-black px-3 py-1 rounded-full text-xs"></span>
+                <span id="q-score" class="num bg-amber-100 text-amber-700 font-black px-3 py-1 rounded-full text-xs">せいかい 0 / 0</span>
+            </div>
+
+            <p id="q-prompt" class="text-lg sm:text-xl font-black text-center mt-4"></p>
+
+            <div id="q-stage" class="mt-3 bg-slate-50 rounded-2xl border-2 border-slate-200 p-3"></div>
+
+            <div id="q-choices" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4"></div>
+
+            <p id="q-msg" class="text-center font-black mt-3 min-h-[2.5rem]"></p>
+
+            <div class="flex gap-2 mt-2">
+                <button id="q-next" onclick="nextQuestion()" class="flex-1 bg-gradient-to-r from-indigo-500 to-violet-600 text-white font-black py-3 rounded-2xl border-b-4 border-indigo-700 bounce-hover text-lg">つぎの もんだい →</button>
+            </div>
+        </div>
+
+        <!-- おうちの方へ -->
+        <details class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+            <summary class="font-black cursor-pointer">📋 おうちの方へ：出題分野について</summary>
+            <div class="text-sm font-bold text-slate-600 mt-3 space-y-2 leading-relaxed">
+                <p>小学校受験のペーパーテストは、一般に <span class="text-indigo-700">数量・図形・言語・推理（思考）・記憶・常識</span> の6分野から出題されます。
+                   数字や文字を使わず「絵を見て考える」形式が中心で、問題は口頭で読み上げられます。</p>
+                <p>このアプリは各分野の代表的な単元（一対多対応、同図形発見、回転・鏡・重ね図形、積み木の数、系列、シーソー、四方からの観察、しりとり、同頭音、音の数、季節、仲間はずれ、絵の記憶）を
+                   自動で出題します。答えは毎回作りなおされるので、くり返し練習できます。</p>
+                <p class="text-slate-500">※ 実際の入試には行動観察・巧緻性・運動・面接などもあり、ペーパーだけで対策が完結するわけではありません。</p>
+            </div>
+        </details>
+    </main>
+
+    <footer class="text-center py-3 text-xs text-slate-400 font-bold">おうけん チャレンジ © 2026</footer>
+
+    <script>
+        const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+        const pick = l => l[Math.floor(Math.random() * l.length)];
+        const shuffle = l => [...l].sort(() => 0.5 - Math.random());
+        const uniq = l => [...new Set(l)];
+
+        /* ===================== ことばの データ ===================== */
+        // [ことば, よみ, えもじ]  ※ 拗音（ゃゅょ）は 前の 字と あわせて 1音 とかぞえる
+        const WORDS = [
+            ['りんご', 'りんご', '🍎'], ['ごりら', 'ごりら', '🦍'], ['らくだ', 'らくだ', '🐫'],
+            ['だいこん', 'だいこん', '🥬'], ['こま', 'こま', '🪀'], ['まくら', 'まくら', '🛏️'],
+            ['くるま', 'くるま', '🚗'], ['すいか', 'すいか', '🍉'], ['かさ', 'かさ', '☂️'],
+            ['さかな', 'さかな', '🐟'], ['なす', 'なす', '🍆'], ['すべりだい', 'すべりだい', '🛝'],
+            ['めがね', 'めがね', '👓'], ['ねこ', 'ねこ', '🐈'], ['こおり', 'こおり', '🧊'],
+            ['りす', 'りす', '🐿️'], ['すいとう', 'すいとう', '🧃'], ['うさぎ', 'うさぎ', '🐇'],
+            ['ぎゅうにゅう', 'ぎゅうにゅう', '🥛'], ['たいこ', 'たいこ', '🥁'], ['こいのぼり', 'こいのぼり', '🎏'],
+            ['ひまわり', 'ひまわり', '🌻'], ['とけい', 'とけい', '🕐'], ['いちご', 'いちご', '🍓'],
+            ['かぶとむし', 'かぶとむし', '🪲'], ['しまうま', 'しまうま', '🦓'], ['つくえ', 'つくえ', '🪑'],
+            ['えんぴつ', 'えんぴつ', '✏️'], ['つみき', 'つみき', '🧱'], ['きりん', 'きりん', '🦒'],
+            ['はさみ', 'はさみ', '✂️'], ['みかん', 'みかん', '🍊'], ['たまご', 'たまご', '🥚'],
+            ['ごはん', 'ごはん', '🍚'], ['ぞう', 'ぞう', '🐘'], ['うま', 'うま', '🐴'],
+            ['くつ', 'くつ', '👟'], ['つき', 'つき', '🌙'], ['ふね', 'ふね', '⛵'],
+            ['ほし', 'ほし', '⭐'], ['とり', 'とり', '🐦'], ['かめ', 'かめ', '🐢'],
+            ['さる', 'さる', '🐵'], ['たこ', 'たこ', '🐙'], ['ぶどう', 'ぶどう', '🍇'],
+            ['ばなな', 'ばなな', '🍌'], ['とまと', 'とまと', '🍅'], ['にんじん', 'にんじん', '🥕']
+        ];
+        const SMALL = 'ゃゅょぁぃぅぇぉ';
+        // 「ぎゅうにゅう」→ ぎゅ・う・にゅ・う のように、拗音を まとめて 1音に する
+        const moraList = yomi => {
+            const out = [];
+            for (const c of yomi) {
+                if (SMALL.includes(c) && out.length) out[out.length - 1] += c;
+                else out.push(c);
+            }
+            return out;
+        };
+        const moraCount = yomi => moraList(yomi).length;
+        const firstMora = yomi => moraList(yomi)[0];
+        // しりとりは のばす音（ー）を のぞいた さいごの音でつなぐ
+        const lastMora = yomi => {
+            const l = moraList(yomi.replace(/ー+$/, ''));
+            return l[l.length - 1];
+        };
+
+        /* 常識: なかま */
+        const GROUPS = {
+            のりもの: ['🚗 くるま', '🚌 バス', '🚕 タクシー', '🚲 じてんしゃ', '✈️ ひこうき', '🚢 ふね', '🚑 きゅうきゅうしゃ'],
+            たべもの: ['🍎 りんご', '🍞 パン', '🍙 おにぎり', '🍰 ケーキ', '🍜 ラーメン', '🍇 ぶどう', '🥕 にんじん'],
+            どうぶつ: ['🐕 いぬ', '🐈 ねこ', '🐘 ぞう', '🦒 きりん', '🐇 うさぎ', '🐴 うま', '🐵 さる'],
+            むし: ['🦋 ちょう', '🪲 かぶとむし', '🐞 てんとうむし', '🦗 こおろぎ', '🐜 あり', '🐝 はち'],
+            ぶんぼうぐ: ['✏️ えんぴつ', '✂️ はさみ', '📏 ものさし', '🖍️ クレヨン', '📒 ノート', '🩹 のり'],
+            はな: ['🌸 さくら', '🌻 ひまわり', '🌷 チューリップ', '🌼 コスモス', '🌺 あさがお'],
+            たてもの: ['🏫 がっこう', '🏥 びょういん', '🏪 コンビニ', '⛩️ じんじゃ', '🏤 ゆうびんきょく']
+        };
+
+        /* 常識: 季節 */
+        const SEASON_ITEMS = [
+            ['🎎 ひなまつり', '春'], ['🌸 さくら', '春'], ['🎏 こいのぼり', '春'], ['🐝 ちょうちょ', '春'],
+            ['🎋 たなばた', '夏'], ['🍉 すいか', '夏'], ['🌻 ひまわり', '夏'], ['🪲 かぶとむし', '夏'],
+            ['🌕 おつきみ', '秋'], ['🍁 もみじ', '秋'], ['🍠 さつまいも', '秋'], ['🌰 くり', '秋'],
+            ['⛄ ゆきだるま', '冬'], ['👹 せつぶん', '冬'], ['🎍 おしょうがつ', '冬'], ['🍊 みかん', '冬']
+        ];
+
+        /* 常識: くみあわせ（これと つかう ものは？） */
+        const PAIRS = [
+            ['✂️ はさみ', '📄 かみ'], ['☂️ かさ', '🌧️ あめ'], ['🖍️ クレヨン', '📒 ノート'],
+            ['🦷 はブラシ', '🪥 はみがきこ'], ['🍚 ごはん', '🥢 おはし'], ['🧦 くつした', '👟 くつ'],
+            ['🔑 かぎ', '🚪 ドア'], ['🪡 はり', '🧵 いと'], ['🧹 ほうき', '🗑️ ちりとり']
+        ];
+
+        /* ===================== 図形の どうぐ ===================== */
+        // 3x3 の ますに 色を ぬった もようを つくる
+        function randGrid(n = 3, fillCount = 4) {
+            const cells = Array(n * n).fill(0);
+            shuffle([...Array(n * n).keys()]).slice(0, fillCount).forEach(i => cells[i] = 1);
+            return cells;
+        }
+        const rotateGrid = (g, n = 3) => {
+            const out = Array(n * n).fill(0);
+            for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) out[c * n + (n - 1 - r)] = g[r * n + c];
+            return out;
+        };
+        const mirrorGrid = (g, n = 3) => {
+            const out = Array(n * n).fill(0);
+            for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) out[r * n + (n - 1 - c)] = g[r * n + c];
+            return out;
+        };
+        const sameGrid = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
+
+        function gridSVG(g, n = 3, opts = {}) {
+            const cell = opts.cell || 26, pad = 6;
+            const size = pad * 2 + n * cell;
+            let out = `<rect x="0" y="0" width="${size}" height="${size}" rx="8" fill="#fff" stroke="#cbd5e1" stroke-width="2" />`;
+            for (let r = 0; r < n; r++) {
+                for (let c = 0; c < n; c++) {
+                    const x = pad + c * cell, y = pad + r * cell;
+                    out += `<rect x="${x + 1.5}" y="${y + 1.5}" width="${cell - 3}" height="${cell - 3}" rx="4"
+                        fill="${g[r * n + c] ? (opts.color || '#6366f1') : '#f1f5f9'}" stroke="#e2e8f0" stroke-width="1" />`;
+                }
+            }
+            return `<svg viewBox="0 0 ${size} ${size}" class="w-full h-auto" style="max-height:${opts.max || 120}px">${out}</svg>`;
+        }
+
+        // つみ木（アイソメトリック）
+        function blocksSVG(heights, opts = {}) {
+            // heights: 3x3 の 高さ（0〜3）
+            const n = 3, w = 26, h = 15, bh = 22;   // ひし形の 半分の 幅・高さ、ブロックの 高さ
+            // 高く つんでも 上が 切れないよう、いちばん 高い ところに あわせて 下げる
+            const maxZ = Math.max(1, ...heights);
+            const ox = 150, oy = 8 + maxZ * bh;
+            const top = (x, y, z) => [ox + (x - y) * w, oy + (x + y) * h - z * bh];
+            let cubes = [];
+            for (let y = 0; y < n; y++) {
+                for (let x = 0; x < n; x++) {
+                    const hh = heights[y * n + x];
+                    for (let z = 0; z < hh; z++) cubes.push([x, y, z]);
+                }
+            }
+            // おくから 手前へ かく（上に つんだ ぶんも 手前あつかい）
+            const depth = c => c[0] + c[1] + (2 * h / bh) * c[2];
+            cubes.sort((a, b) => depth(a) - depth(b));
+            let out = '';
+            cubes.forEach(([x, y, z]) => {
+                const t = top(x, y, z + 1);
+                const p = (dx, dy) => `${t[0] + dx},${t[1] + dy}`;
+                out += `<polygon points="${p(0, 0)} ${p(w, h)} ${p(0, 2 * h)} ${p(-w, h)}" fill="#a5b4fc" stroke="#4338ca" stroke-width="1.5" />`;
+                out += `<polygon points="${p(-w, h)} ${p(0, 2 * h)} ${p(0, 2 * h + bh)} ${p(-w, h + bh)}" fill="#6366f1" stroke="#4338ca" stroke-width="1.5" />`;
+                out += `<polygon points="${p(0, 2 * h)} ${p(w, h)} ${p(w, h + bh)} ${p(0, 2 * h + bh)}" fill="#4f46e5" stroke="#4338ca" stroke-width="1.5" />`;
+            });
+            return `<svg viewBox="0 0 300 ${oy + 98}" class="w-full h-auto" style="max-height:${opts.max || 250}px">${out}</svg>`;
+        }
+
+        // つみ木の かたまりを つくる。
+        // 手前ほど ひくい「かいだん」に すると、うしろの つみ木が かくれて 数えられない ことが なくなる。
+        function randStack(minTotal, maxTotal, maxH) {
+            for (let t = 0; t < 300; t++) {
+                const h = Array(9).fill(0);
+                for (let y = 0; y < 3; y++) {
+                    for (let x = 0; x < 3; x++) {
+                        const back = y ? h[(y - 1) * 3 + x] : maxH;
+                        const left = x ? h[y * 3 + x - 1] : maxH;
+                        const lim = Math.min(back, left);
+                        h[y * 3 + x] = lim === 0 ? 0 : rnd(Math.max(0, lim - 1), lim);
+                    }
+                }
+                const total = h.reduce((a, b) => a + b, 0);
+                const cells = h.filter(Boolean).length;
+                if (total >= minTotal && total <= maxTotal && cells >= 3 && cells <= 8) return h;
+            }
+            return [3, 2, 1, 2, 1, 0, 1, 0, 0];
+        }
+
+        function emojiRowSVG(emoji, count, opts = {}) {
+            const per = opts.per || 5;
+            let out = '';
+            for (let i = 0; i < count; i++) {
+                out += `<span class="text-3xl sm:text-4xl">${emoji}</span>`;
+            }
+            return `<div class="flex flex-wrap justify-center gap-1 mx-auto" style="max-width:${per * 46}px">${out}</div>`;
+        }
+
+        /* ===================== 分野と 出題タイプ ===================== */
+        const FIELDS = {
+            suryo: {
+                name: 'すうりょう（数量）', emoji: '🔢',
+                desc: '数字を つかわずに、絵を 見て かずを くらべたり 分けたり する 問題。',
+                types: {
+                    compare: { name: 'どちらが おおい', gen: genCompare },
+                    diff: { name: 'いくつ おおい', gen: genDiff },
+                    perN: { name: '一対多対応（1人に◯こずつ）', gen: genPerN },
+                    split: { name: 'あわせて いくつ', gen: genSplit }
+                }
+            },
+            zukei: {
+                name: 'ずけい（図形）', emoji: '🔷',
+                desc: '同じ形（かたち）さがし、まわした形、鏡（かがみ）の形、重ねた形、つみ木の数。',
+                types: {
+                    same: { name: '同図形（おなじ形）', gen: genSameFigure },
+                    rotate: { name: '回転（まわす）', gen: genRotate },
+                    mirror: { name: '鏡（かがみ）', gen: genMirror },
+                    overlay: { name: '重ね図形', gen: genOverlay },
+                    blocks: { name: 'つみ木の かず', gen: genBlockCount }
+                }
+            },
+            suiri: {
+                name: 'すいり（推理・思考）', emoji: '🧩',
+                desc: 'ならびの きまり（系列）、シーソーの 重さくらべ、上から 見た 形。',
+                types: {
+                    series: { name: '系列（ならびの つづき）', gen: genSeries },
+                    seesaw: { name: 'シーソー（重さくらべ）', gen: genSeesaw },
+                    topview: { name: '四方観察（上から 見る）', gen: genTopView }
+                }
+            },
+            kotoba: {
+                name: 'ことば（言語）', emoji: '🗣️',
+                desc: 'しりとり、おなじ音（おん）で はじまる ことば、音の かず。',
+                types: {
+                    shiritori: { name: 'しりとり', gen: genShiritori },
+                    head: { name: '同頭音（おなじ音で はじまる）', gen: genHeadSound },
+                    mora: { name: '音（おん）の かず', gen: genMora }
+                }
+            },
+            joshiki: {
+                name: 'じょうしき（常識）', emoji: '🌏',
+                desc: '季節（きせつ）、なかまはずれ、いっしょに つかう もの。',
+                types: {
+                    season: { name: 'きせつ', gen: genSeason },
+                    odd: { name: 'なかまはずれ', gen: genOddOne },
+                    pair: { name: 'いっしょに つかう もの', gen: genPair }
+                }
+            },
+            kioku: {
+                name: 'きおく（記憶）', emoji: '🧠',
+                desc: '絵を おぼえて、かくれた あとに 答える 問題。よく 見て おぼえよう。',
+                types: {
+                    what: { name: 'あったのは どれ？', gen: genMemoryWhat },
+                    where: { name: 'どこに あった？', gen: genMemoryWhere }
+                }
+            }
+        };
+
+        /* ===================== 出題ジェネレーター ===================== */
+        // それぞれ { prompt, stage(html), choices:[{html, ok}], explain } を かえす
+
+        function genCompare() {
+            const [a, b] = shuffle(WORDS).slice(0, 2);
+            let na = rnd(3, 9), nb = rnd(3, 9);
+            while (na === nb) nb = rnd(3, 9);
+            return {
+                prompt: 'どちらが おおい？',
+                stage: `<div class="grid grid-cols-2 gap-3">
+                    <div class="bg-white rounded-xl border-2 border-slate-200 p-2 text-center"><p class="text-xs font-black text-slate-400 mb-1">ひだり</p>${emojiRowSVG(a[2], na)}</div>
+                    <div class="bg-white rounded-xl border-2 border-slate-200 p-2 text-center"><p class="text-xs font-black text-slate-400 mb-1">みぎ</p>${emojiRowSVG(b[2], nb)}</div></div>`,
+                choices: [
+                    { html: `⬅️ ひだりの ${a[2]}`, ok: na > nb },
+                    { html: `➡️ みぎの ${b[2]}`, ok: nb > na }
+                ],
+                explain: `ひだりは ${na}こ、みぎは ${nb}こ。`
+            };
+        }
+
+        function genDiff() {
+            const [a, b] = shuffle(WORDS).slice(0, 2);
+            const na = rnd(4, 9), nb = rnd(1, na - 1);
+            const d = na - nb;
+            const set = uniq([d, d + 1, Math.max(1, d - 1), d + 2]).slice(0, 4);
+            return {
+                prompt: `${a[2]} は ${b[2]} より いくつ おおい？`,
+                stage: `<div class="space-y-2">
+                    <div class="bg-white rounded-xl border-2 border-slate-200 p-2">${emojiRowSVG(a[2], na)}</div>
+                    <div class="bg-white rounded-xl border-2 border-slate-200 p-2">${emojiRowSVG(b[2], nb)}</div></div>`,
+                choices: shuffle(set).map(v => ({ html: `<span class="num text-3xl">${v}</span>こ`, ok: v === d })),
+                explain: `${na}こ と ${nb}こ の ちがいは ${d}こ。`
+            };
+        }
+
+        function genPerN() {
+            const item = pick(WORDS);
+            const per = rnd(2, 4), people = rnd(2, 4);
+            const total = per * people;
+            const set = uniq([total, total + per, Math.max(1, total - per), total + 1]).slice(0, 4);
+            return {
+                prompt: `${'🧒'.repeat(people)} ${people}人に ${item[2]} を ${per}こずつ あげます。ぜんぶで いくつ いる？`,
+                stage: `<div class="flex flex-wrap justify-center gap-4">${Array(people).fill(0).map(() =>
+                    `<div class="bg-white rounded-xl border-2 border-slate-200 p-2 text-center">
+                        <p class="text-3xl">🧒</p><p class="text-xl">${item[2].repeat(per)}</p></div>`).join('')}</div>`,
+                choices: shuffle(set).map(v => ({ html: `<span class="num text-3xl">${v}</span>こ`, ok: v === total })),
+                explain: `${per}こずつ ${people}人ぶん だから ${per}＋${per}${people > 2 ? '＋…' : ''} ＝ ${total}こ。`
+            };
+        }
+
+        function genSplit() {
+            const target = pick([5, 8, 10]);
+            const have = rnd(1, target - 1);
+            const need = target - have;
+            const set = uniq([need, need + 1, Math.max(0, need - 1), need + 2]).slice(0, 4);
+            const item = pick(WORDS);
+            return {
+                prompt: `あわせて ${target}こに するには、あと いくつ？`,
+                stage: `<div class="bg-white rounded-xl border-2 border-slate-200 p-3">${emojiRowSVG(item[2], have)}
+                    <p class="text-center text-sm font-black text-slate-500 mt-2">いま ${have}こ あるよ</p></div>`,
+                choices: shuffle(set).map(v => ({ html: `<span class="num text-3xl">${v}</span>こ`, ok: v === need })),
+                explain: `${have}こ に ${need}こ たすと ${target}こ。`
+            };
+        }
+
+        function genSameFigure() {
+            const target = randGrid(3, rnd(3, 5));
+            const others = [];
+            let guard = 0;
+            while (others.length < 3 && guard++ < 60) {
+                const g = randGrid(3, target.filter(Boolean).length);
+                if (!sameGrid(g, target) && !others.some(o => sameGrid(o, g))) others.push(g);
+            }
+            return {
+                prompt: 'うえの 形と おなじ ものは どれ？',
+                stage: `<div class="flex justify-center">${gridSVG(target, 3, { max: 140 })}</div>`,
+                choices: shuffle([{ g: target, ok: true }, ...others.map(g => ({ g, ok: false }))])
+                    .map(o => ({ html: gridSVG(o.g, 3, { max: 90, color: '#6366f1' }), ok: o.ok })),
+                explain: 'ますの ばしょを 1つずつ たしかめると わかるよ。'
+            };
+        }
+
+        function genRotate() {
+            // まわしても 形が かわらない もようは 出さない（答えが 見分けられないため）
+            let base, guard = 0;
+            do { base = randGrid(3, rnd(3, 4)); } while (sameGrid(rotateGrid(base), base) && guard++ < 50);
+            const ans = rotateGrid(base);
+            const cands = [ans, base, rotateGrid(ans), rotateGrid(rotateGrid(ans))];
+            const uniqCands = [];
+            cands.forEach(c => { if (!uniqCands.some(u => sameGrid(u, c))) uniqCands.push(c); });
+            let g2 = 0;
+            while (uniqCands.length < 4 && g2++ < 60) {
+                const g = randGrid(3, base.filter(Boolean).length);
+                if (!uniqCands.some(u => sameGrid(u, g))) uniqCands.push(g);
+            }
+            return {
+                prompt: 'うえの 形を 右（みぎ）に 1回 まわすと どれに なる？',
+                stage: `<div class="flex justify-center items-center gap-3">${gridSVG(base, 3, { max: 140 })}<span class="text-3xl">↻</span></div>`,
+                choices: shuffle(uniqCands.slice(0, 4)).map(g => ({ html: gridSVG(g, 3, { max: 90, color: '#8b5cf6' }), ok: sameGrid(g, ans) })),
+                explain: '右に まわすと、上の れつが 右の れつに 行くよ。'
+            };
+        }
+
+        function genMirror() {
+            // 左右対称（さゆうたいしょう）の もようは 出さない
+            let base, guard = 0;
+            do { base = randGrid(3, rnd(3, 4)); } while (sameGrid(mirrorGrid(base), base) && guard++ < 50);
+            const ans = mirrorGrid(base);
+            const cands = [ans, base, rotateGrid(base), rotateGrid(ans)];
+            const uniqCands = [];
+            cands.forEach(c => { if (!uniqCands.some(u => sameGrid(u, c))) uniqCands.push(c); });
+            let g2 = 0;
+            while (uniqCands.length < 4 && g2++ < 60) {
+                const g = randGrid(3, base.filter(Boolean).length);
+                if (!uniqCands.some(u => sameGrid(u, g))) uniqCands.push(g);
+            }
+            return {
+                prompt: 'うえの 形を かがみに うつすと どれに なる？',
+                stage: `<div class="flex justify-center items-center gap-3">${gridSVG(base, 3, { max: 140 })}<span class="text-3xl">🪞</span></div>`,
+                choices: shuffle(uniqCands.slice(0, 4)).map(g => ({ html: gridSVG(g, 3, { max: 90, color: '#0ea5e9' }), ok: sameGrid(g, ans) })),
+                explain: 'かがみでは 左右（さゆう）が ぎゃくに なるよ。'
+            };
+        }
+
+        function genOverlay() {
+            const a = randGrid(3, 3), b = randGrid(3, 3);
+            const ans = a.map((v, i) => (v || b[i]) ? 1 : 0);
+            const wrongs = [
+                a.map((v, i) => (v && b[i]) ? 1 : 0),
+                a.map((v, i) => (v && !b[i]) ? 1 : 0),
+                randGrid(3, ans.filter(Boolean).length)
+            ];
+            const cands = [ans];
+            wrongs.forEach(w => { if (!cands.some(c => sameGrid(c, w))) cands.push(w); });
+            while (cands.length < 4) {
+                const g = randGrid(3, rnd(3, 5));
+                if (!cands.some(c => sameGrid(c, g))) cands.push(g);
+            }
+            return {
+                prompt: '2まいの 紙（かみ）を そのまま かさねると どれに なる？',
+                stage: `<div class="flex justify-center items-center gap-2">
+                    ${gridSVG(a, 3, { max: 110, color: '#f43f5e' })}<span class="text-2xl">＋</span>${gridSVG(b, 3, { max: 110, color: '#0ea5e9' })}</div>`,
+                choices: shuffle(cands.slice(0, 4)).map(g => ({ html: gridSVG(g, 3, { max: 90, color: '#7c3aed' }), ok: sameGrid(g, ans) })),
+                explain: 'どちらかに 色が ある ますは、かさねると 色が つくよ。'
+            };
+        }
+
+        function genBlockCount() {
+            const heights = randStack(4, 11, 3);
+            const total = heights.reduce((a, b) => a + b, 0);
+            const set = uniq([total, total + 1, Math.max(1, total - 1), total + 2]).slice(0, 4);
+            return {
+                prompt: 'つみ木は ぜんぶで なんこ？（見えない ところにも あるよ）',
+                stage: `<div class="flex justify-center">${blocksSVG(heights)}</div>`,
+                choices: shuffle(set).map(v => ({ html: `<span class="num text-3xl">${v}</span>こ`, ok: v === total })),
+                explain: `上から 見て、たての 数を たすと ${total}こ。`
+            };
+        }
+
+        function genSeries() {
+            const items = shuffle(WORDS).slice(0, rnd(2, 3)).map(w => w[2]);
+            const len = 8;
+            const seq = Array(len).fill(0).map((_, i) => items[i % items.length]);
+            const hide = rnd(3, len - 1);
+            const set = uniq([seq[hide], ...shuffle(WORDS).slice(0, 3).map(w => w[2])]).slice(0, 4);
+            return {
+                prompt: '？に 入るのは どれ？（ならびかたの きまりを 見つけよう）',
+                stage: `<div class="flex flex-wrap justify-center gap-1">${seq.map((e, i) =>
+                    `<span class="text-3xl sm:text-4xl ${i === hide ? 'bg-amber-200 rounded-lg px-1' : ''}">${i === hide ? '？' : e}</span>`).join('')}</div>`,
+                choices: shuffle(set).map(e => ({ html: `<span class="text-4xl">${e}</span>`, ok: e === seq[hide] })),
+                explain: `${items.join('→')} の くりかえしに なっているよ。`
+            };
+        }
+
+        function genSeesaw() {
+            const [a, b, c] = shuffle(WORDS).slice(0, 3).map(w => w[2]);
+            // おもい じゅん: a > b > c
+            const askHeavy = Math.random() < 0.5;
+            const seesaw = (l, r, leftHeavy) => {
+                // 板の まん中（＝支点 y=55）で つりあうように、下がる がわを 下げる
+                const ly = leftHeavy ? 74 : 36, ry = leftHeavy ? 36 : 74;
+                return `<svg viewBox="0 0 200 120" class="w-full h-auto" style="max-height:130px">
+                    <line x1="18" y1="110" x2="182" y2="110" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round" />
+                    <path d="M100,55 L82,108 L118,108 Z" fill="#94a3b8" />
+                    <line x1="26" y1="${ly}" x2="174" y2="${ry}" stroke="#64748b" stroke-width="8" stroke-linecap="round" />
+                    <circle cx="100" cy="55" r="6" fill="#475569" />
+                    <text x="26" y="${ly - 8}" font-size="30" text-anchor="middle">${l}</text>
+                    <text x="174" y="${ry - 8}" font-size="30" text-anchor="middle">${r}</text>
+                </svg>`;
+            };
+            return {
+                prompt: askHeavy ? 'いちばん おもいのは どれ？' : 'いちばん かるいのは どれ？',
+                stage: `<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div class="bg-white rounded-xl border-2 border-slate-200 p-1">${seesaw(a, b, true)}</div>
+                    <div class="bg-white rounded-xl border-2 border-slate-200 p-1">${seesaw(b, c, true)}</div></div>`,
+                choices: shuffle([a, b, c]).map(e => ({ html: `<span class="text-4xl">${e}</span>`, ok: e === (askHeavy ? a : c) })),
+                explain: `${a} ＞ ${b}、${b} ＞ ${c} だから ${a} ＞ ${b} ＞ ${c}。`
+            };
+        }
+
+        function genTopView() {
+            // 上から 見た 形を あてる もんだいなので、あまり 高く つまない
+            const heights = randStack(4, 10, 2);
+            const foot = heights.map(h => h > 0 ? 1 : 0);
+            const cands = [foot];
+            let g2 = 0;
+            while (cands.length < 4 && g2++ < 60) {
+                const g = randGrid(3, foot.filter(Boolean).length);
+                if (!cands.some(c => sameGrid(c, g))) cands.push(g);
+            }
+            return {
+                prompt: 'この つみ木を 上（うえ）から 見ると どれに なる？',
+                stage: `<div class="flex justify-center">${blocksSVG(heights)}</div>`,
+                choices: shuffle(cands).map(g => ({ html: gridSVG(g, 3, { max: 90, color: '#10b981' }), ok: sameGrid(g, foot) })),
+                explain: '高さは かんけいなく、つみ木が ある ところが ぬりつぶしに なるよ。'
+            };
+        }
+
+        function genShiritori() {
+            let base = null, ok = null, guard = 0;
+            while (guard++ < 200) {
+                base = pick(WORDS);
+                const tail = lastMora(base[1]);
+                if (tail === 'ん') continue;
+                const cands = WORDS.filter(w => firstMora(w[1]) === tail && w[0] !== base[0]);
+                if (cands.length) { ok = pick(cands); break; }
+            }
+            if (!ok) { base = WORDS.find(w => w[0] === 'りんご'); ok = WORDS.find(w => w[0] === 'ごりら'); }
+            const tail = lastMora(base[1]);
+            const wrongs = shuffle(WORDS.filter(w => firstMora(w[1]) !== tail && w[0] !== base[0])).slice(0, 3);
+            return {
+                prompt: `「${base[0]}」に しりとりで つづく ものは どれ？`,
+                stage: `<div class="text-center"><p class="text-7xl">${base[2]}</p><p class="text-2xl font-black mt-1">${base[0]}</p>
+                    <p class="text-sm font-black text-indigo-600 mt-1">さいごの 音は 「${tail}」</p></div>`,
+                choices: shuffle([ok, ...wrongs]).map(w => ({
+                    html: `<span class="text-4xl block">${w[2]}</span><span class="text-sm font-black">${w[0]}</span>`, ok: w[0] === ok[0]
+                })),
+                explain: `${base[0]} → ${ok[0]}。さいごの「${tail}」で はじまる ことばを えらぶよ。`
+            };
+        }
+
+        function genHeadSound() {
+            let base = null, ok = null, guard = 0;
+            while (guard++ < 200) {
+                base = pick(WORDS);
+                const head = firstMora(base[1]);
+                const cands = WORDS.filter(w => firstMora(w[1]) === head && w[0] !== base[0]);
+                if (cands.length) { ok = pick(cands); break; }
+            }
+            if (!ok) { base = WORDS.find(w => w[0] === 'すいか'); ok = WORDS.find(w => w[0] === 'すずめ'); }
+            const head = firstMora(base[1]);
+            const wrongs = shuffle(WORDS.filter(w => firstMora(w[1]) !== head && w[0] !== base[0])).slice(0, 3);
+            return {
+                prompt: `「${base[0]}」と おなじ 音（おん）で はじまるのは どれ？`,
+                stage: `<div class="text-center"><p class="text-7xl">${base[2]}</p><p class="text-2xl font-black mt-1">${base[0]}</p>
+                    <p class="text-sm font-black text-indigo-600 mt-1">はじめの 音は 「${head}」</p></div>`,
+                choices: shuffle([ok, ...wrongs]).map(w => ({
+                    html: `<span class="text-4xl block">${w[2]}</span><span class="text-sm font-black">${w[0]}</span>`, ok: w[0] === ok[0]
+                })),
+                explain: `${base[0]} も ${ok[0]} も 「${head}」で はじまるね。`
+            };
+        }
+
+        function genMora() {
+            const w = pick(WORDS);
+            const n = moraCount(w[1]);
+            const set = uniq([n, n + 1, Math.max(1, n - 1), n + 2]).slice(0, 4);
+            return {
+                prompt: `「${w[0]}」は 音（おん）が いくつ？`,
+                stage: `<div class="text-center"><p class="text-7xl">${w[2]}</p>
+                    <p class="text-3xl font-black mt-2">${moraList(w[1]).map(m =>
+                        `<span class="inline-block bg-indigo-100 rounded-lg px-2 mx-0.5">${m}</span>`).join('')}</p>
+                    <p class="text-xs font-bold text-slate-400 mt-1">手（て）を たたきながら かぞえてみよう</p></div>`,
+                choices: shuffle(set).map(v => ({ html: `<span class="num text-3xl">${v}</span>つ`, ok: v === n })),
+                explain: `${moraList(w[1]).join('・')} で ${n}つ。`
+            };
+        }
+
+        function genSeason() {
+            const [item, season] = pick(SEASON_ITEMS);
+            return {
+                prompt: 'これは どの きせつの もの？',
+                stage: `<div class="text-center"><p class="text-7xl">${item.split(' ')[0]}</p><p class="text-2xl font-black mt-1">${item.split(' ')[1]}</p></div>`,
+                choices: ['春', '夏', '秋', '冬'].map(s => ({ html: `<span class="text-2xl font-black">${s}</span>`, ok: s === season })),
+                explain: `${item.split(' ')[1]} は ${season} の ものだよ。`
+            };
+        }
+
+        function genOddOne() {
+            const keys = shuffle(Object.keys(GROUPS));
+            const main = keys[0], other = keys[1];
+            const three = shuffle(GROUPS[main]).slice(0, 3);
+            const odd = pick(GROUPS[other]);
+            return {
+                prompt: 'なかまはずれは どれ？',
+                stage: `<p class="text-center text-sm font-black text-slate-500">3つは おなじ なかまだよ</p>`,
+                choices: shuffle([...three, odd]).map(t => ({
+                    html: `<span class="text-4xl block">${t.split(' ')[0]}</span><span class="text-xs font-black">${t.split(' ')[1]}</span>`,
+                    ok: t === odd
+                })),
+                explain: `ほかの 3つは 「${main}」の なかま。${odd.split(' ')[1]} は 「${other}」だね。`
+            };
+        }
+
+        function genPair() {
+            const [a, b] = pick(PAIRS);
+            const wrongs = shuffle(PAIRS.filter(p => p[0] !== a)).slice(0, 3).map(p => p[1]);
+            return {
+                prompt: `${a.split(' ')[1]} と いっしょに つかう ものは どれ？`,
+                stage: `<div class="text-center"><p class="text-7xl">${a.split(' ')[0]}</p><p class="text-2xl font-black mt-1">${a.split(' ')[1]}</p></div>`,
+                choices: shuffle([b, ...wrongs]).map(t => ({
+                    html: `<span class="text-4xl block">${t.split(' ')[0]}</span><span class="text-xs font-black">${t.split(' ')[1]}</span>`,
+                    ok: t === b
+                })),
+                explain: `${a.split(' ')[1]} は ${b.split(' ')[1]} と いっしょに つかうね。`
+            };
+        }
+
+        /* 記憶: いったん 見せてから かくす */
+        function genMemoryWhat() {
+            const shown = shuffle(WORDS).slice(0, 4);
+            const hidden = shuffle(WORDS.filter(w => !shown.some(s => s[0] === w[0]))).slice(0, 3);
+            const ansWord = pick(shown);
+            return {
+                memorize: `<div class="text-center"><p class="text-sm font-black text-slate-500 mb-2">よく 見て おぼえてね</p>
+                    <div class="flex flex-wrap justify-center gap-4">${shown.map(w => `<span class="text-6xl">${w[2]}</span>`).join('')}</div></div>`,
+                prompt: 'さっき あったのは どれ？',
+                stage: `<p class="text-center text-3xl">🙈 かくれちゃった</p>`,
+                choices: shuffle([ansWord, ...hidden]).map(w => ({
+                    html: `<span class="text-4xl block">${w[2]}</span><span class="text-xs font-black">${w[0]}</span>`, ok: w[0] === ansWord[0]
+                })),
+                explain: `あったのは ${shown.map(w => w[0]).join('・')} だよ。`
+            };
+        }
+
+        function genMemoryWhere() {
+            const items = shuffle(WORDS).slice(0, 3);
+            const spots = shuffle([...Array(9).keys()]).slice(0, 3);
+            const target = rnd(0, 2);
+            const gridHTML = (reveal) => `<div class="grid grid-cols-3 gap-1.5 max-w-[240px] mx-auto">
+                ${[...Array(9).keys()].map(i => {
+                    const idx = spots.indexOf(i);
+                    return `<div class="aspect-square rounded-xl border-2 border-slate-200 bg-white flex items-center justify-center text-4xl">${reveal && idx >= 0 ? items[idx][2] : ''}</div>`;
+                }).join('')}</div>`;
+            return {
+                memorize: `<div class="text-center"><p class="text-sm font-black text-slate-500 mb-2">どこに あるか おぼえてね</p>${gridHTML(true)}</div>`,
+                prompt: `${items[target][2]} ${items[target][0]} は どこに あった？`,
+                stage: gridHTML(false),
+                buildChoices: () => {
+                    const wrong = shuffle([...Array(9).keys()].filter(i => i !== spots[target])).slice(0, 3);
+                    const label = i => `${['うえ', 'まんなか', 'した'][Math.floor(i / 3)]}の ${['ひだり', 'まんなか', 'みぎ'][i % 3]}`;
+                    return shuffle([spots[target], ...wrong]).map(i => ({ html: `<span class="text-sm font-black">${label(i)}</span>`, ok: i === spots[target] }));
+                },
+                explain: `${items.map((w, i) => `${w[0]}は ${['うえ', 'まんなか', 'した'][Math.floor(spots[i] / 3)]}の ${['ひだり', 'まんなか', 'みぎ'][spots[i] % 3]}`).join('、')}。`
+            };
+        }
+
+        /* ===================== 出題の ながれ ===================== */
+        const state = { field: 'suryo', type: 'compare', q: null, ok: 0, total: 0, locked: false, timer: null };
+
+        function renderNav() {
+            document.getElementById('field-nav').innerHTML = Object.entries(FIELDS).map(([k, f]) => {
+                const on = state.field === k;
+                return `<button onclick="setField('${k}')" data-f="${k}" class="${on ? 'bg-indigo-600 text-white' : 'bg-white border-2 border-indigo-200 text-slate-600'} font-black px-4 py-2 rounded-full text-sm whitespace-nowrap">${f.emoji} ${f.name.split('（')[0]}</button>`;
+            }).join('');
+        }
+
+        function renderTypes() {
+            const f = FIELDS[state.field];
+            document.getElementById('field-emoji').innerText = f.emoji;
+            document.getElementById('field-name').innerText = f.name;
+            document.getElementById('field-desc').innerText = f.desc;
+            document.getElementById('type-buttons').innerHTML = Object.entries(f.types).map(([k, t]) => {
+                const on = state.type === k;
+                return `<button onclick="setType('${k}')" data-t="${k}" class="${on ? 'bg-violet-600 text-white border-b-4 border-violet-800' : 'bg-white border-2 border-violet-200 text-slate-600'} font-black px-2 py-2.5 rounded-xl text-xs bounce-hover">${t.name}</button>`;
+            }).join('');
+        }
+
+        function setField(k) {
+            state.field = k;
+            state.type = Object.keys(FIELDS[k].types)[0];
+            state.ok = 0;
+            state.total = 0;
+            renderNav();
+            renderTypes();
+            newQuestion();
+        }
+
+        function setType(k) {
+            state.type = k;
+            renderTypes();
+            newQuestion();
+        }
+
+        function newQuestion() {
+            if (state.timer) { clearTimeout(state.timer); state.timer = null; }
+            const t = FIELDS[state.field].types[state.type];
+            const q = t.gen();
+            if (q.buildChoices) q.choices = q.buildChoices();
+            state.q = q;
+            state.locked = false;
+
+            document.getElementById('q-type').innerText = `${FIELDS[state.field].emoji} ${t.name}`;
+            document.getElementById('q-score').innerText = `せいかい ${state.ok} / ${state.total}`;
+            document.getElementById('q-msg').innerText = '';
+
+            if (q.memorize) {
+                // 5びょう 見せてから かくす
+                document.getElementById('q-prompt').innerText = '⏳ おぼえて！（5びょう）';
+                document.getElementById('q-stage').innerHTML = q.memorize;
+                document.getElementById('q-choices').innerHTML = '';
+                let left = 5;
+                const tick = () => {
+                    left--;
+                    if (left > 0) {
+                        document.getElementById('q-prompt').innerText = `⏳ おぼえて！（${left}びょう）`;
+                        state.timer = setTimeout(tick, 1000);
+                    } else {
+                        showQuestionBody(q);
+                    }
+                };
+                state.timer = setTimeout(tick, 1000);
+            } else {
+                showQuestionBody(q);
+            }
+        }
+
+        function showQuestionBody(q) {
+            document.getElementById('q-prompt').innerHTML = q.prompt;
+            document.getElementById('q-stage').innerHTML = q.stage;
+            document.getElementById('q-choices').innerHTML = q.choices.map((c, i) => `
+                <button onclick="answer(${i})" data-i="${i}" class="bg-slate-100 hover:bg-indigo-100 border-2 border-slate-200 hover:border-indigo-400 rounded-2xl py-3 px-2 font-black bounce-hover">${c.html}</button>`).join('');
+        }
+
+        function answer(i) {
+            if (state.locked) return;
+            const q = state.q;
+            const c = q.choices[i];
+            state.total++;
+            if (c.ok) {
+                state.locked = true;
+                state.ok++;
+                document.getElementById('q-msg').innerHTML = `<span class="text-emerald-600">せいかい！ ${q.explain}</span>`;
+                document.querySelectorAll('#q-choices button').forEach((b, j) => {
+                    if (q.choices[j].ok) b.classList.add('bg-emerald-200', 'border-emerald-500');
+                });
+            } else {
+                const btn = document.querySelector(`#q-choices button[data-i="${i}"]`);
+                if (btn) {
+                    btn.classList.add('shake', 'bg-rose-100', 'border-rose-400');
+                    setTimeout(() => btn.classList.remove('shake'), 320);
+                }
+                document.getElementById('q-msg').innerHTML = `<span class="text-rose-500">もういちど 考えてみよう。</span>`;
+            }
+            document.getElementById('q-score').innerText = `せいかい ${state.ok} / ${state.total}`;
+        }
+
+        function nextQuestion() { newQuestion(); }
+
+        window.addEventListener('load', () => {
+            renderNav();
+            renderTypes();
+            newQuestion();
+        });
+    </script>
+</body>
+</html>
