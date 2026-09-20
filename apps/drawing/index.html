@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>おえかき教室 かきかたと いろぬり</title>
+    <meta name="description" content="丸や三角から描くステップお手本、じっさいに塗れるぬりえ、色のえらび方や影のつけ方のコツを学べるお絵かきアプリ。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums; }
+        .bounce-hover { transition: transform .15s cubic-bezier(.175,.885,.32,1.275); }
+        .bounce-hover:hover { transform: scale(1.05); }
+        .bounce-hover:active { transform: scale(.95); }
+        @keyframes draw-in { from { opacity: 0; transform: scale(.9) } to { opacity: 1; transform: scale(1) } }
+        .step-new { animation: draw-in .35s ease-out; transform-origin: center; transform-box: fill-box; }
+        .paintable { cursor: pointer; transition: fill .12s; }
+        .paintable:hover { opacity: .85; }
+        .swatch { transition: transform .12s, box-shadow .12s; }
+        .swatch.active { transform: scale(1.18); box-shadow: 0 0 0 3px #0f172a; z-index: 1; }
+        canvas, svg { touch-action: manipulation; }
+    </style>
+</head>
+<body class="bg-rose-50 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-rose-400 via-amber-400 to-sky-400 text-white p-3 sm:p-4 shadow-lg sticky top-0 z-30">
+        <div class="max-w-5xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">🎨</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">おえかき教室</h1>
+                    <p class="text-xs text-white/90 font-bold hidden sm:block">かきかたの コツと、いろぬりの お手本</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/25 hover:bg-white/40 backdrop-blur p-2 rounded-full border border-white/40 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[72px] z-20 bg-rose-50/95 backdrop-blur border-b border-rose-200">
+        <div class="max-w-5xl mx-auto flex gap-2 p-3 overflow-x-auto">
+            <button data-tab="steps" onclick="showTab('steps')" class="tab-btn active bg-rose-500 text-white font-black px-4 py-2 rounded-full text-sm whitespace-nowrap">かきかた</button>
+            <button data-tab="color" onclick="showTab('color')" class="tab-btn bg-white border-2 border-rose-200 text-slate-600 font-black px-4 py-2 rounded-full text-sm whitespace-nowrap">ぬりえ</button>
+            <button data-tab="tips" onclick="showTab('tips')" class="tab-btn bg-white border-2 border-rose-200 text-slate-600 font-black px-4 py-2 rounded-full text-sm whitespace-nowrap">いろの コツ</button>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto w-full p-3 sm:p-6 flex-grow space-y-5">
+
+        <!-- ============ かきかた ============ -->
+        <section id="tab-steps" class="tab-content space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-rose-100">
+                <h2 class="text-lg sm:text-xl font-black flex items-center gap-2"><span>✏️</span> まる・さんかく・しかく から かこう</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">むずかしい 絵も、かんたんな 形（かたち）を くみあわせれば かける！ かくものを えらんでね。</p>
+                <div id="subject-buttons" class="grid grid-cols-4 sm:grid-cols-8 gap-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-rose-100">
+                <div class="flex justify-between items-center">
+                    <h3 id="step-title" class="text-xl font-black"></h3>
+                    <span id="step-count" class="num bg-rose-100 text-rose-700 font-black px-3 py-1 rounded-full text-sm">1 / 5</span>
+                </div>
+
+                <div id="step-canvas" class="mt-3 bg-slate-50 rounded-2xl border-2 border-slate-200 p-2"></div>
+
+                <div class="mt-3 bg-amber-50 border-2 border-amber-200 rounded-2xl p-3">
+                    <p class="text-xs font-black text-amber-700">いまの ステップ</p>
+                    <p id="step-tip" class="font-black text-slate-800"></p>
+                </div>
+
+                <div class="flex flex-wrap gap-2 mt-3">
+                    <button onclick="stepBack()" class="bg-white border-2 border-slate-200 text-slate-600 font-black px-4 py-2.5 rounded-xl bounce-hover">← もどる</button>
+                    <button id="step-next" onclick="stepNext()" class="flex-1 bg-gradient-to-r from-rose-500 to-pink-600 text-white font-black py-3 rounded-2xl border-b-4 border-rose-700 bounce-hover text-lg">つぎの せん →</button>
+                    <button onclick="stepReset()" class="bg-white border-2 border-slate-200 text-slate-600 font-black px-4 py-2.5 rounded-xl bounce-hover">↺ さいしょから</button>
+                    <button id="step-auto" onclick="toggleAuto()" class="bg-amber-400 hover:bg-amber-500 text-slate-900 font-black px-4 py-2.5 rounded-xl border-b-4 border-amber-600 bounce-hover">▶ じどうで 見る</button>
+                </div>
+                <p class="text-xs font-bold text-slate-400 mt-2">赤（あか）い線が 「いま かく ところ」。グレーの線は もう かいた ところだよ。</p>
+            </div>
+        </section>
+
+        <!-- ============ ぬりえ ============ -->
+        <section id="tab-color" class="tab-content hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-rose-100">
+                <h2 class="text-lg sm:text-xl font-black flex items-center gap-2"><span>🖍️</span> ぬりえ（タップで ぬれるよ）</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">色を えらんで、ぬりたい ところを タップ！ 「お手本」を 見ると じょうずな 色の えらび方が わかるよ。</p>
+                <div id="page-buttons" class="grid grid-cols-4 gap-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-rose-100">
+                <div id="paint-canvas" class="bg-slate-50 rounded-2xl border-2 border-slate-200 p-2"></div>
+
+                <p class="text-xs font-black text-slate-500 mt-3 mb-1">いろ えんぴつ</p>
+                <div id="palette" class="grid grid-cols-9 sm:grid-cols-12 gap-1.5"></div>
+
+                <div class="flex flex-wrap gap-2 mt-3">
+                    <button id="sample-btn" onclick="toggleSample()" class="bg-sky-500 hover:bg-sky-600 text-white font-black px-4 py-2.5 rounded-xl border-b-4 border-sky-700 bounce-hover text-sm">👀 お手本を 見る</button>
+                    <button onclick="clearPaint()" class="bg-white border-2 border-slate-200 text-slate-600 font-black px-4 py-2.5 rounded-xl bounce-hover text-sm">🧽 ぜんぶ けす</button>
+                </div>
+                <p id="paint-tip" class="text-sm font-bold text-sky-700 mt-3 bg-sky-50 border-2 border-sky-200 rounded-2xl p-3"></p>
+            </div>
+        </section>
+
+        <!-- ============ いろのコツ ============ -->
+        <section id="tab-tips" class="tab-content hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-rose-100">
+                <h2 class="text-lg sm:text-xl font-black flex items-center gap-2"><span>🌈</span> 色（いろ）の わ ＝ 色相環（しきそうかん）</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">色を わっかに ならべた もの。<span class="text-rose-600">となり</span>の 色は なかよし、<span class="text-sky-600">むかい</span>の 色は めだつ 組み合わせ。</p>
+                <div class="mt-3 grid grid-cols-1 sm:grid-cols-[300px_1fr] gap-4 items-center">
+                    <div id="wheel" class="bg-slate-50 rounded-2xl border-2 border-slate-200 p-2"></div>
+                    <div id="wheel-info" class="space-y-3"></div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-rose-100">
+                <h2 class="text-lg sm:text-xl font-black flex items-center gap-2"><span>🔆</span> 光（ひかり）と かげで 立体（りったい）に 見える</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">光が くる ほうを 明るく、はんたいがわを 暗（くら）く ぬると まるく 見える。スライダーで 光を うごかしてみよう。</p>
+                <div id="shade-demo" class="mt-3 bg-slate-50 rounded-2xl border-2 border-slate-200 p-2"></div>
+                <label class="block text-xs font-black text-slate-600 mt-3">光の むき = <span id="light-val" class="num">135</span>°</label>
+                <input id="light-range" type="range" min="0" max="360" value="135" class="w-full mt-1">
+                <div id="shade-steps" class="mt-3"></div>
+                <p class="text-sm font-bold text-slate-600 mt-2">おなじ 色でも <span class="text-rose-600">明るい→ふつう→暗い</span> の 3だんかいを つかうと、ぐっと じょうずに 見えるよ。</p>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-rose-100">
+                <h2 class="text-lg sm:text-xl font-black flex items-center gap-2"><span>💡</span> ぬりかたの コツ</h2>
+                <div id="tip-cards" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="text-center py-3 text-xs text-slate-400 font-bold">おえかき教室 © 2026</footer>
+
+    <script>
+        /* =====================================================
+           ① かきかた（ステップ）
+           それぞれの ステップで あたらしく かく 形（かたち）を ならべる
+           ===================================================== */
+        const SUBJECTS = {
+            cat: {
+                name: 'ねこ', emoji: '🐱', view: [200, 200],
+                steps: [
+                    { tip: 'あたまは 大きな まる。', els: ['<circle cx="100" cy="72" r="42" />'] },
+                    { tip: 'みみは さんかく 2つ。まるの 上に のせる。', els: ['<path d="M68,42 L62,10 L96,30 Z" />', '<path d="M132,42 L138,10 L104,30 Z" />'] },
+                    { tip: 'からだは たてなが たまご。', els: ['<ellipse cx="100" cy="150" rx="40" ry="40" />'] },
+                    { tip: 'しっぽは くねっと した せん。', els: ['<path d="M138,160 C175,155 178,120 160,112" fill="none" />'] },
+                    { tip: 'かおを かこう。目は まんなかより 少し 下。', els: ['<circle cx="84" cy="72" r="5" fill="#334155" />', '<circle cx="116" cy="72" r="5" fill="#334155" />', '<path d="M94,88 L100,93 L106,88" fill="none" />', '<path d="M100,93 L100,99" fill="none" />'] },
+                    { tip: 'ひげと あしを たして できあがり！', els: ['<path d="M62,84 L40,80 M62,90 L40,94" fill="none" />', '<path d="M138,84 L160,80 M138,90 L160,94" fill="none" />', '<ellipse cx="82" cy="186" rx="13" ry="8" />', '<ellipse cx="118" cy="186" rx="13" ry="8" />'] }
+                ]
+            },
+            fish: {
+                name: 'さかな', emoji: '🐟', view: [220, 160],
+                steps: [
+                    { tip: 'からだは よこなが たまご。', els: ['<ellipse cx="105" cy="80" rx="62" ry="38" />'] },
+                    { tip: 'しっぽは さんかく。', els: ['<path d="M167,80 L205,50 L205,110 Z" />'] },
+                    { tip: '上と 下に ひれ。', els: ['<path d="M95,42 L110,14 L130,44" fill="none" />', '<path d="M95,118 L108,144 L128,116" fill="none" />'] },
+                    { tip: '目と 口を かく。', els: ['<circle cx="62" cy="70" r="7" fill="#334155" />', '<path d="M46,92 C54,98 62,98 68,92" fill="none" />'] },
+                    { tip: 'うろこは 弧（こ）を ならべる。あわも たそう。', els: ['<path d="M92,52 C104,66 104,94 92,108" fill="none" />', '<path d="M116,52 C128,66 128,94 116,108" fill="none" />', '<path d="M140,56 C150,68 150,92 140,104" fill="none" />', '<circle cx="34" cy="40" r="7" fill="none" />', '<circle cx="20" cy="22" r="5" fill="none" />'] }
+                ]
+            },
+            house: {
+                name: 'いえ', emoji: '🏠', view: [200, 180],
+                steps: [
+                    { tip: 'まず 大きな しかく（かべ）。', els: ['<rect x="40" y="70" width="120" height="90" />'] },
+                    { tip: 'その 上に さんかく（やね）。', els: ['<path d="M28,70 L100,20 L172,70 Z" />'] },
+                    { tip: 'ドアは たてなが しかく。', els: ['<rect x="86" y="108" width="30" height="52" rx="2" />', '<circle cx="110" cy="136" r="3" fill="#334155" />'] },
+                    { tip: 'まどは しかくを 4つに わける。', els: ['<rect x="52" y="86" width="26" height="26" />', '<path d="M65,86 L65,112 M52,99 L78,99" fill="none" />', '<rect x="126" y="86" width="26" height="26" />', '<path d="M139,86 L139,112 M126,99 L152,99" fill="none" />'] },
+                    { tip: 'えんとつと けむり、地面（じめん）を たして できあがり！', els: ['<rect x="130" y="34" width="16" height="26" />', '<path d="M138,28 C130,20 146,14 138,6" fill="none" />', '<path d="M10,160 L190,160" fill="none" />'] }
+                ]
+            },
+            tree: {
+                name: 'き', emoji: '🌳', view: [180, 190],
+                steps: [
+                    { tip: 'みきは ほそながい しかく。', els: ['<path d="M78,180 L78,110 L102,110 L102,180 Z" />'] },
+                    { tip: '大きな まるを 1つ。', els: ['<circle cx="90" cy="76" r="46" />'] },
+                    { tip: 'まわりに まるを たして もこもこに。', els: ['<circle cx="52" cy="92" r="28" />', '<circle cx="128" cy="92" r="28" />', '<circle cx="90" cy="38" r="26" />'] },
+                    { tip: 'えだを かく。', els: ['<path d="M80,128 L58,110" fill="none" />', '<path d="M100,124 L124,106" fill="none" />'] },
+                    { tip: 'くだものと 草を たして できあがり！', els: ['<circle cx="64" cy="70" r="7" fill="#f43f5e" />', '<circle cx="112" cy="58" r="7" fill="#f43f5e" />', '<circle cx="96" cy="100" r="7" fill="#f43f5e" />', '<path d="M20,180 L160,180" fill="none" />', '<path d="M40,180 L44,168 L48,180" fill="none" />', '<path d="M130,180 L134,168 L138,180" fill="none" />'] }
+                ]
+            },
+            face: {
+                name: 'かお', emoji: '🙂', view: [180, 190],
+                steps: [
+                    { tip: 'たまご形（がた）の まる。', els: ['<ellipse cx="90" cy="92" rx="56" ry="64" />'] },
+                    { tip: 'うすく じゅうじの ガイド線。目は よこ線の 上！（さいごに けす）', guide: true, els: ['<path d="M90,28 L90,156" stroke-dasharray="5 5" fill="none" />', '<path d="M34,92 L146,92" stroke-dasharray="5 5" fill="none" />'] },
+                    { tip: '目は よこ線の うえに 2つ。目と 目の あいだは 目 1つぶん。', els: ['<ellipse cx="66" cy="90" rx="9" ry="11" fill="#334155" />', '<ellipse cx="114" cy="90" rx="9" ry="11" fill="#334155" />'] },
+                    { tip: 'はなは たて線の まんなか 下。口は そのまた 下。', els: ['<path d="M90,100 L84,118 L94,118" fill="none" />', '<path d="M72,134 C82,144 98,144 108,134" fill="none" />'] },
+                    { tip: 'まゆ・みみ・かみの毛を たして できあがり！', els: ['<path d="M54,72 C60,66 74,66 78,71" fill="none" />', '<path d="M102,71 C108,66 120,66 126,72" fill="none" />', '<path d="M34,86 C22,86 22,106 34,104" fill="none" />', '<path d="M146,86 C158,86 158,106 146,104" fill="none" />', '<path d="M34,60 C44,18 136,18 146,60" fill="none" />'] }
+                ]
+            },
+            bird: {
+                name: 'とり', emoji: '🐦', view: [200, 170],
+                steps: [
+                    { tip: 'まる（あたま）と たまご（からだ）。', els: ['<circle cx="64" cy="58" r="28" />', '<ellipse cx="116" cy="94" rx="50" ry="38" />'] },
+                    { tip: 'くちばしは さんかく。', els: ['<path d="M38,58 L10,66 L38,72 Z" fill="#f59e0b" />'] },
+                    { tip: '目を 1つ。', els: ['<circle cx="56" cy="50" r="4.5" fill="#334155" />'] },
+                    { tip: 'はねは 大きな しずく形。', els: ['<path d="M110,78 C140,64 158,84 132,106 C118,116 104,98 110,78 Z" fill="none" />'] },
+                    { tip: 'しっぽと あしを たして できあがり！', els: ['<path d="M164,88 L196,74 L192,104 Z" />', '<path d="M104,130 L100,152 M92,152 L108,152 M126,130 L130,152 M122,152 L138,152" fill="none" />'] }
+                ]
+            },
+            butterfly: {
+                name: 'ちょう', emoji: '🦋', view: [200, 170],
+                steps: [
+                    { tip: 'まんなかに ほそながい からだ。', els: ['<ellipse cx="100" cy="88" rx="8" ry="44" />', '<circle cx="100" cy="40" r="10" />'] },
+                    { tip: 'しょっかくは くるんと 2本。', els: ['<path d="M94,32 C84,14 72,12 68,18" fill="none" />', '<path d="M106,32 C116,14 128,12 132,18" fill="none" />'] },
+                    { tip: '上の はねは 大きな まる 2つ。', els: ['<path d="M92,62 C60,28 22,40 30,74 C36,98 74,94 92,80 Z" fill="none" />', '<path d="M108,62 C140,28 178,40 170,74 C164,98 126,94 108,80 Z" fill="none" />'] },
+                    { tip: '下の はねは 小さめ 2つ。', els: ['<path d="M94,96 C70,100 44,112 56,136 C66,154 92,132 94,112 Z" fill="none" />', '<path d="M106,96 C130,100 156,112 144,136 C134,154 108,132 106,112 Z" fill="none" />'] },
+                    { tip: 'もようを つけて できあがり！ 左右（さゆう）を おなじに するのが コツ。', els: ['<circle cx="58" cy="64" r="9" fill="#f59e0b" />', '<circle cx="142" cy="64" r="9" fill="#f59e0b" />', '<circle cx="74" cy="122" r="6" fill="#38bdf8" />', '<circle cx="126" cy="122" r="6" fill="#38bdf8" />'] }
+                ]
+            },
+            car: {
+                name: 'くるま', emoji: '🚗', view: [220, 150],
+                steps: [
+                    { tip: '下に よこながの しかく。', els: ['<rect x="20" y="74" width="180" height="38" rx="8" />'] },
+                    { tip: '上に すこし 小さい 台形（だいけい）。', els: ['<path d="M60,74 L82,38 L150,38 L172,74 Z" />'] },
+                    { tip: 'タイヤは まる 2つ。', els: ['<circle cx="64" cy="114" r="20" />', '<circle cx="158" cy="114" r="20" />', '<circle cx="64" cy="114" r="8" fill="#334155" />', '<circle cx="158" cy="114" r="8" fill="#334155" />'] },
+                    { tip: 'まどを 2つに わける。', els: ['<path d="M88,44 L112,44 L112,70 L70,70 Z" fill="none" />', '<path d="M120,44 L146,44 L164,70 L120,70 Z" fill="none" />'] },
+                    { tip: 'ライトと ドアを たして できあがり！', els: ['<circle cx="196" cy="88" r="6" fill="#fbbf24" />', '<circle cx="24" cy="88" r="6" fill="#f87171" />', '<path d="M112,74 L112,112" fill="none" />', '<path d="M104,90 L96,90" fill="none" />'] }
+                ]
+            }
+        };
+
+        const stepState = { key: 'cat', shown: 1, timer: null };
+
+        function renderSubjects() {
+            document.getElementById('subject-buttons').innerHTML = Object.entries(SUBJECTS).map(([k, s]) => {
+                const on = stepState.key === k;
+                return `<button onclick="setSubject('${k}')" data-s="${k}" class="${on ? 'bg-rose-500 text-white border-b-4 border-rose-700' : 'bg-white border-2 border-rose-200 text-slate-600'} font-black py-2 rounded-xl bounce-hover">
+                    <span class="block text-2xl">${s.emoji}</span><span class="text-[11px]">${s.name}</span></button>`;
+            }).join('');
+        }
+
+        function setSubject(k) {
+            stopAuto();
+            stepState.key = k;
+            stepState.shown = 1;
+            renderSubjects();
+            renderStep();
+        }
+
+        function renderStep() {
+            const s = SUBJECTS[stepState.key];
+            const [w, h] = s.view;
+            let out = '';
+            const done = stepState.shown >= s.steps.length;
+            s.steps.slice(0, stepState.shown).forEach((st, i) => {
+                // ガイド線は できあがりでは けす
+                if (st.guide && done) return;
+                const isNew = i === stepState.shown - 1;
+                out += `<g class="${isNew ? 'step-new' : ''}" stroke="${isNew ? '#e11d48' : '#94a3b8'}" stroke-width="${isNew ? 5 : 3}"
+                        fill="${isNew ? 'rgba(244,63,94,.07)' : 'rgba(148,163,184,.10)'}" stroke-linecap="round" stroke-linejoin="round">${st.els.join('')}</g>`;
+            });
+            document.getElementById('step-canvas').innerHTML =
+                `<svg viewBox="0 0 ${w} ${h}" class="w-full h-auto" style="max-height:320px">${out}</svg>`;
+            document.getElementById('step-title').innerText = `${s.emoji} ${s.name}の かきかた`;
+            document.getElementById('step-count').innerText = `${stepState.shown} / ${s.steps.length}`;
+            document.getElementById('step-tip').innerText = s.steps[stepState.shown - 1].tip;
+            document.getElementById('step-next').innerText =
+                stepState.shown >= s.steps.length ? '✅ できあがり！（さいしょから）' : 'つぎの せん →';
+        }
+
+        function stepNext() {
+            const s = SUBJECTS[stepState.key];
+            stepState.shown = stepState.shown >= s.steps.length ? 1 : stepState.shown + 1;
+            renderStep();
+        }
+        function stepBack() {
+            if (stepState.shown > 1) stepState.shown--;
+            renderStep();
+        }
+        function stepReset() { stopAuto(); stepState.shown = 1; renderStep(); }
+
+        function toggleAuto() {
+            if (stepState.timer) { stopAuto(); return; }
+            document.getElementById('step-auto').innerText = '⏸ とめる';
+            stepState.shown = 0;
+            stepState.timer = setInterval(() => {
+                const s = SUBJECTS[stepState.key];
+                stepState.shown++;
+                if (stepState.shown > s.steps.length) { stepState.shown = s.steps.length; stopAuto(); return; }
+                renderStep();
+            }, 1300);
+        }
+        function stopAuto() {
+            if (stepState.timer) clearInterval(stepState.timer);
+            stepState.timer = null;
+            const btn = document.getElementById('step-auto');
+            if (btn) btn.innerText = '▶ じどうで 見る';
+        }
+
+        /* =====================================================
+           ② ぬりえ
+           ===================================================== */
+        const PALETTE = [
+            '#ffffff', '#fecaca', '#f87171', '#dc2626', '#fdba74', '#f97316',
+            '#fde047', '#facc15', '#bbf7d0', '#4ade80', '#16a34a', '#a5f3fc',
+            '#38bdf8', '#2563eb', '#c4b5fd', '#8b5cf6', '#f9a8d4', '#ec4899',
+            '#d6d3d1', '#78716c', '#a16207', '#334155', '#000000', '#fef3c7'
+        ];
+
+        const PAGES = {
+            apple: {
+                name: 'りんご', emoji: '🍎', view: [200, 200],
+                tip: 'くだものは「明るい色 → こい色」で ぬると おいしそうに 見えるよ。光が あたる ところは 白（しろ）を のこすのも コツ。',
+                shapes: [
+                    { id: 'body', d: 'M100,52 C140,42 168,74 164,112 C160,152 128,178 100,178 C72,178 40,152 36,112 C32,74 60,42 100,52 Z', sample: '#dc2626' },
+                    { id: 'shine', d: 'M74,80 C84,66 98,64 104,70 C96,74 86,84 82,96 C76,96 70,88 74,80 Z', sample: '#fecaca' },
+                    { id: 'stem', d: 'M97,52 C95,34 99,24 108,18 C112,26 108,42 105,52 Z', sample: '#a16207' },
+                    { id: 'leaf', d: 'M108,36 C130,18 156,26 156,40 C156,54 128,58 108,36 Z', sample: '#16a34a' }
+                ]
+            },
+            fish: {
+                name: 'さかな', emoji: '🐟', view: [220, 160],
+                tip: 'からだと ひれの 色を 少し かえると、はっきり 見える。うみの 色（青）は さかなの 色と はんたいの 色に すると めだつよ。',
+                shapes: [
+                    { id: 'body', d: 'M105,42 C140,42 167,60 167,80 C167,100 140,118 105,118 C70,118 43,100 43,80 C43,60 70,42 105,42 Z', sample: '#38bdf8' },
+                    { id: 'tail', d: 'M167,80 L205,50 L205,110 Z', sample: '#2563eb' },
+                    { id: 'finTop', d: 'M95,44 L112,14 L132,46 Z', sample: '#2563eb' },
+                    { id: 'finBottom', d: 'M95,116 L110,146 L130,114 Z', sample: '#2563eb' },
+                    { id: 'eye', d: 'M62,70 m-8,0 a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0', sample: '#334155' },
+                    { id: 'bubble1', d: 'M34,40 m-9,0 a9,9 0 1,0 18,0 a9,9 0 1,0 -18,0', sample: '#a5f3fc' },
+                    { id: 'bubble2', d: 'M18,20 m-6,0 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0', sample: '#a5f3fc' }
+                ]
+            },
+            flower: {
+                name: 'はな', emoji: '🌷', view: [200, 210],
+                tip: '花びらは ぜんぶ 同じ 色でも、1まいだけ 少し こい色に すると 立体（りったい）に 見える。',
+                shapes: [
+                    ...[0, 1, 2, 3, 4, 5].map(i => {
+                        const a = (i / 6) * Math.PI * 2 - Math.PI / 2;
+                        const cx = 100 + 38 * Math.cos(a), cy = 70 + 38 * Math.sin(a);
+                        return { id: 'petal' + i, d: `M${cx},${cy} m-26,0 a26,26 0 1,0 52,0 a26,26 0 1,0 -52,0`, sample: i === 2 ? '#ec4899' : '#f9a8d4' };
+                    }),
+                    { id: 'center', d: 'M100,70 m-20,0 a20,20 0 1,0 40,0 a20,20 0 1,0 -40,0', sample: '#facc15' },
+                    { id: 'stem', d: 'M94,112 L106,112 L106,196 L94,196 Z', sample: '#16a34a' },
+                    { id: 'leafL', d: 'M94,150 C60,132 40,150 44,166 C50,184 84,174 94,150 Z', sample: '#4ade80' },
+                    { id: 'leafR', d: 'M106,168 C140,150 160,168 156,184 C150,202 116,192 106,168 Z', sample: '#16a34a' }
+                ]
+            },
+            house: {
+                name: 'いえ', emoji: '🏠', view: [200, 190],
+                tip: 'やねと かべの 色は はっきり かえよう。空（そら）は うすい色で ひろく ぬると 絵が まとまるよ。',
+                shapes: [
+                    { id: 'sky', d: 'M0,0 L200,0 L200,160 L0,160 Z', sample: '#a5f3fc' },
+                    { id: 'ground', d: 'M0,160 L200,160 L200,190 L0,190 Z', sample: '#bbf7d0' },
+                    { id: 'wall', d: 'M40,72 L160,72 L160,160 L40,160 Z', sample: '#fef3c7' },
+                    { id: 'roof', d: 'M26,72 L100,20 L174,72 Z', sample: '#dc2626' },
+                    { id: 'door', d: 'M86,110 L116,110 L116,160 L86,160 Z', sample: '#a16207' },
+                    { id: 'window1', d: 'M52,86 L78,86 L78,112 L52,112 Z', sample: '#38bdf8' },
+                    { id: 'window2', d: 'M126,86 L152,86 L152,112 L126,112 Z', sample: '#38bdf8' },
+                    { id: 'sun', d: 'M170,28 m-16,0 a16,16 0 1,0 32,0 a16,16 0 1,0 -32,0', sample: '#facc15' }
+                ]
+            }
+        };
+
+        const paint = { page: 'apple', color: '#f87171', fills: {}, sample: false };
+
+        function renderPageButtons() {
+            document.getElementById('page-buttons').innerHTML = Object.entries(PAGES).map(([k, pg]) => {
+                const on = paint.page === k;
+                return `<button onclick="setPage('${k}')" data-p="${k}" class="${on ? 'bg-rose-500 text-white border-b-4 border-rose-700' : 'bg-white border-2 border-rose-200 text-slate-600'} font-black py-2 rounded-xl bounce-hover">
+                    <span class="block text-2xl">${pg.emoji}</span><span class="text-[11px]">${pg.name}</span></button>`;
+            }).join('');
+        }
+
+        function setPage(k) {
+            paint.page = k;
+            paint.fills = {};
+            paint.sample = false;
+            document.getElementById('sample-btn').innerText = '👀 お手本を 見る';
+            renderPaint();
+        }
+
+        function renderPalette() {
+            document.getElementById('palette').innerHTML = PALETTE.map(c => `
+                <button onclick="setColor('${c}')" data-c="${c}" title="${c}"
+                    class="swatch ${paint.color === c ? 'active' : ''} w-full aspect-square rounded-lg border-2 border-slate-300"
+                    style="background:${c}"></button>`).join('');
+        }
+
+        function setColor(c) {
+            paint.color = c;
+            renderPalette();
+        }
+
+        function renderPaint() {
+            const pg = PAGES[paint.page];
+            const [w, h] = pg.view;
+            const shapes = pg.shapes.map(s => {
+                const fill = paint.sample ? s.sample : (paint.fills[s.id] || '#ffffff');
+                return `<path class="paintable" data-id="${s.id}" d="${s.d}" fill="${fill}" stroke="#334155" stroke-width="3" stroke-linejoin="round" />`;
+            }).join('');
+            document.getElementById('paint-canvas').innerHTML =
+                `<svg viewBox="0 0 ${w} ${h}" class="w-full h-auto" style="max-height:360px">${shapes}</svg>`;
+            document.querySelectorAll('#paint-canvas .paintable').forEach(el => {
+                el.addEventListener('click', () => fillShape(el.dataset.id));
+            });
+            document.getElementById('paint-tip').innerText = pg.tip;
+        }
+
+        function fillShape(id) {
+            if (paint.sample) {          // お手本を 見ている ときは じぶんの 絵に もどす
+                paint.sample = false;
+                document.getElementById('sample-btn').innerText = '👀 お手本を 見る';
+            }
+            paint.fills[id] = paint.color;
+            renderPaint();
+        }
+
+        function toggleSample() {
+            paint.sample = !paint.sample;
+            document.getElementById('sample-btn').innerText = paint.sample ? '✏️ じぶんの 絵に もどす' : '👀 お手本を 見る';
+            renderPaint();
+        }
+
+        function clearPaint() {
+            paint.fills = {};
+            paint.sample = false;
+            document.getElementById('sample-btn').innerText = '👀 お手本を 見る';
+            renderPaint();
+        }
+
+        /* =====================================================
+           ③ いろの コツ
+           ===================================================== */
+        const HUES = [
+            { name: 'あか', h: 0 }, { name: 'だいだい', h: 30 }, { name: 'きだいだい', h: 45 },
+            { name: 'きいろ', h: 60 }, { name: 'きみどり', h: 90 }, { name: 'みどり', h: 130 },
+            { name: 'あおみどり', h: 165 }, { name: 'みずいろ', h: 195 }, { name: 'あお', h: 225 },
+            { name: 'あおむらさき', h: 255 }, { name: 'むらさき', h: 285 }, { name: 'ももいろ', h: 330 }
+        ];
+        const hsl = (h, s = 75, l = 55) => `hsl(${h} ${s}% ${l}%)`;
+        let wheelPick = 0;
+
+        function renderWheel() {
+            const cx = 130, cy = 130, rOut = 110, rIn = 58;
+            const n = HUES.length;
+            let out = '';
+            HUES.forEach((c, i) => {
+                const a1 = (i / n) * Math.PI * 2 - Math.PI / 2;
+                const a2 = ((i + 1) / n) * Math.PI * 2 - Math.PI / 2;
+                const p = (r, a) => `${cx + r * Math.cos(a)},${cy + r * Math.sin(a)}`;
+                const on = wheelPick === i;
+                out += `<path class="paintable" data-i="${i}" d="M${p(rIn, a1)} L${p(rOut, a1)} A${rOut},${rOut} 0 0 1 ${p(rOut, a2)} L${p(rIn, a2)} A${rIn},${rIn} 0 0 0 ${p(rIn, a1)} Z"
+                        fill="${hsl(c.h)}" stroke="${on ? '#0f172a' : '#fff'}" stroke-width="${on ? 5 : 2}" />`;
+            });
+            const opp = (wheelPick + 6) % n;
+            const aMid = i => ((i + 0.5) / n) * Math.PI * 2 - Math.PI / 2;
+            out += `<line x1="${cx + 40 * Math.cos(aMid(wheelPick))}" y1="${cy + 40 * Math.sin(aMid(wheelPick))}"
+                          x2="${cx + 40 * Math.cos(aMid(opp))}" y2="${cy + 40 * Math.sin(aMid(opp))}"
+                          stroke="#0f172a" stroke-width="3" stroke-dasharray="6 4" />`;
+            out += `<circle cx="${cx}" cy="${cy}" r="${rIn - 6}" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2" />`;
+            out += `<text x="${cx}" y="${cy - 8}" font-size="16" font-weight="900" fill="#334155" text-anchor="middle" font-family="inherit">${HUES[wheelPick].name}</text>`;
+            out += `<text x="${cx}" y="${cy + 14}" font-size="12" font-weight="900" fill="#94a3b8" text-anchor="middle" font-family="inherit">⇔ ${HUES[opp].name}</text>`;
+            document.getElementById('wheel').innerHTML = `<svg viewBox="0 0 260 260" class="w-full h-auto" style="max-height:300px">${out}</svg>`;
+            document.querySelectorAll('#wheel .paintable').forEach(el => {
+                el.addEventListener('click', () => { wheelPick = +el.dataset.i; renderWheel(); });
+            });
+
+            const n1 = HUES[(wheelPick + 1) % n], n2 = HUES[(wheelPick + n - 1) % n], o = HUES[opp];
+            const chip = c => `<span class="inline-block w-8 h-8 rounded-lg border-2 border-white shadow" style="background:${hsl(c.h)}"></span>`;
+            document.getElementById('wheel-info').innerHTML = `
+                <div class="bg-rose-50 border-2 border-rose-200 rounded-2xl p-3">
+                    <p class="text-xs font-black text-rose-600">となりの 色（るいじ色）— やさしく まとまる</p>
+                    <p class="flex items-center gap-2 mt-1">${chip(n2)} ${chip(HUES[wheelPick])} ${chip(n1)}
+                        <span class="font-bold text-sm">${n2.name}・${HUES[wheelPick].name}・${n1.name}</span></p>
+                </div>
+                <div class="bg-sky-50 border-2 border-sky-200 rounded-2xl p-3">
+                    <p class="text-xs font-black text-sky-600">むかいの 色（はんたい色）— めだつ・元気に 見える</p>
+                    <p class="flex items-center gap-2 mt-1">${chip(HUES[wheelPick])} ${chip(o)}
+                        <span class="font-bold text-sm">${HUES[wheelPick].name} ⇔ ${o.name}</span></p>
+                </div>
+                <div class="bg-slate-50 border-2 border-slate-200 rounded-2xl p-3">
+                    <p class="text-xs font-black text-slate-500">明るさを かえると…</p>
+                    <div class="flex gap-1 mt-1">
+                        ${[85, 72, 58, 44, 30].map(l => `<span class="flex-1 h-8 rounded-lg" style="background:${hsl(HUES[wheelPick].h, 70, l)}"></span>`).join('')}
+                    </div>
+                    <p class="text-[11px] font-bold text-slate-500 mt-1">おなじ 色でも 明るい〜暗いで こんなに ちがう。</p>
+                </div>`;
+        }
+
+        function renderShade() {
+            const deg = +document.getElementById('light-range').value;
+            document.getElementById('light-val').innerText = deg;
+            const a = (deg - 90) * Math.PI / 180;
+            const cx = 110, cy = 100, R = 58;
+            const lx = cx + 0.45 * R * Math.cos(a), ly = cy + 0.45 * R * Math.sin(a);
+            const sx = cx - 0.5 * R * Math.cos(a), sy = 172;
+            const out = `
+                <defs>
+                    <radialGradient id="ball" cx="${(lx - (cx - R)) / (2 * R) * 100}%" cy="${(ly - (cy - R)) / (2 * R) * 100}%" r="75%">
+                        <stop offset="0%" stop-color="#fca5a5" />
+                        <stop offset="55%" stop-color="#ef4444" />
+                        <stop offset="100%" stop-color="#7f1d1d" />
+                    </radialGradient>
+                </defs>
+                <ellipse cx="${sx}" cy="${sy}" rx="${R * 0.9}" ry="14" fill="rgba(15,23,42,.22)" />
+                <circle cx="${cx}" cy="${cy}" r="${R}" fill="url(#ball)" />
+                <circle cx="${cx + R * 0.95 * Math.cos(a)}" cy="${cy + R * 0.95 * Math.sin(a)}" r="9" fill="#fde047" stroke="#f59e0b" stroke-width="2" />
+                <text x="${cx + R * 1.5 * Math.cos(a)}" y="${cy + R * 1.5 * Math.sin(a)}" font-size="20" text-anchor="middle" dominant-baseline="central">☀️</text>
+                <text x="110" y="196" font-size="13" font-weight="900" fill="#64748b" text-anchor="middle" font-family="inherit">かげは 光の はんたいがわに できる</text>`;
+            document.getElementById('shade-demo').innerHTML =
+                `<svg viewBox="0 0 220 210" class="w-full h-auto" style="max-height:260px">${out}</svg>`;
+
+            document.getElementById('shade-steps').innerHTML = `
+                <p class="text-xs font-black text-slate-500 mb-1">3だんかいの ぬり方（あかい ボールの ばあい）</p>
+                <div class="flex gap-2">
+                    ${[['明るい（光が あたる）', '#fca5a5'], ['ふつう（じぶんの色）', '#ef4444'], ['暗い（かげ）', '#7f1d1d']].map(([t, c]) => `
+                        <div class="flex-1 text-center">
+                            <div class="h-10 rounded-xl border-2 border-white shadow" style="background:${c}"></div>
+                            <p class="text-[10px] font-bold text-slate-500 mt-1">${t}</p>
+                        </div>`).join('')}
+                </div>`;
+        }
+
+        const TIPS = [
+            ['🖍️', 'うすい色から ぬる', 'こい色を 先に ぬると あとから 直（なお）せない。うすい色 → こい色の じゅんばんで。'],
+            ['✏️', 'ふちを 先に なぞる', 'まわりを ゆっくり なぞってから 中を ぬると、はみ出しにくい。'],
+            ['↔️', '同じ むきに うごかす', 'ぐるぐるでは なく、たて（か よこ）に そろえて ぬると きれいに 見える。'],
+            ['🎨', 'となりは ちがう色に', 'となりあう ところを ちがう色に すると、形（かたち）が はっきりする。'],
+            ['⚪', '白（しろ）を のこす', '光が あたる ところを 少し 白く のこすと、つやつやに 見える。'],
+            ['🌑', 'かげは こい色で', '黒（くろ）だけで ぬらずに、その ものの 色の こい バージョンを つかうと きれい。']
+        ];
+
+        function renderTips() {
+            document.getElementById('tip-cards').innerHTML = TIPS.map(([e, t, d]) => `
+                <div class="bg-slate-50 border-2 border-slate-200 rounded-2xl p-3 flex gap-3">
+                    <span class="text-3xl">${e}</span>
+                    <div><p class="font-black">${t}</p><p class="text-sm font-bold text-slate-500 leading-relaxed">${d}</p></div>
+                </div>`).join('');
+        }
+
+        /* ===== タブ ===== */
+        function showTab(name) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById('tab-' + name).classList.remove('hidden');
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                const on = btn.dataset.tab === name;
+                btn.classList.toggle('active', on);
+                btn.classList.toggle('bg-rose-500', on);
+                btn.classList.toggle('text-white', on);
+                btn.classList.toggle('bg-white', !on);
+                btn.classList.toggle('border-2', !on);
+                btn.classList.toggle('border-rose-200', !on);
+                btn.classList.toggle('text-slate-600', !on);
+            });
+            if (name !== 'steps') stopAuto();
+        }
+
+        window.addEventListener('load', () => {
+            renderSubjects();
+            renderStep();
+            renderPageButtons();
+            renderPalette();
+            renderPaint();
+            renderWheel();
+            document.getElementById('light-range').addEventListener('input', renderShade);
+            renderShade();
+            renderTips();
+        });
+    </script>
+</body>
+</html>
