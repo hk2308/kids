@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>とくしゅ算ラボ 中学受験の算数を図で</title>
+    <meta name="description" content="つるかめ算・和差算・植木算・旅人算・過不足算・平均算を、面積図や線分図でしくみから理解できる中学受験の算数アプリ。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums; }
+        .bounce-hover { transition: transform .15s cubic-bezier(.175,.885,.32,1.275); }
+        .bounce-hover:hover { transform: scale(1.03); }
+        .bounce-hover:active { transform: scale(.97); }
+        @keyframes pop { 0% { transform: scale(.5); opacity: 0 } 70% { transform: scale(1.08) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275); }
+        @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+        .shake { animation: shake .3s ease-in-out; }
+        svg text { font-family: inherit; }
+        input[type=range] { accent-color: #0d9488; }
+        .step { animation: pop .25s ease-out both; }
+        rt { font-size: .5em; font-weight: 700; color: #0f766e; }
+    </style>
+</head>
+<body class="bg-emerald-50 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-teal-600 via-emerald-500 to-lime-500 text-white p-3 sm:p-4 shadow-lg sticky top-0 z-30">
+        <div class="max-w-5xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">🧮</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">とくしゅ算ラボ</h1>
+                    <p class="text-xs text-emerald-50 font-bold hidden sm:block">中学受験の算数を「図」でとく</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[72px] z-20 bg-emerald-50/95 backdrop-blur border-b border-emerald-200">
+        <div class="max-w-5xl mx-auto flex gap-2 p-3 overflow-x-auto" id="topic-nav"></div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto w-full p-3 sm:p-6 flex-grow space-y-5">
+
+        <!-- かんがえかた -->
+        <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-md border-2 border-emerald-100">
+            <div class="flex items-start gap-3">
+                <span id="t-emoji" class="text-4xl">🦢</span>
+                <div class="flex-1">
+                    <h2 id="t-name" class="text-xl font-black"></h2>
+                    <p id="t-sub" class="text-sm font-bold text-slate-500 mt-0.5"></p>
+                </div>
+            </div>
+            <div id="t-idea" class="mt-3 bg-emerald-50 rounded-2xl p-3 text-sm font-bold leading-relaxed border-2 border-emerald-100"></div>
+        </div>
+
+        <!-- じぶんで うごかす（つるかめ算だけ） -->
+        <div id="playground" class="bg-white rounded-3xl p-4 sm:p-5 shadow-md border-2 border-teal-100 hidden">
+            <h3 class="font-black text-lg">🎚️ うごかして たしかめる</h3>
+            <p class="text-sm font-bold text-slate-500 mt-1" id="pg-desc"></p>
+            <div id="pg-body" class="mt-3"></div>
+        </div>
+
+        <!-- 問題 -->
+        <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-emerald-100">
+            <div class="flex justify-between items-center gap-2">
+                <span id="q-tag" class="bg-teal-100 text-teal-700 font-black px-3 py-1 rounded-full text-xs"></span>
+                <span id="q-score" class="num bg-amber-100 text-amber-700 font-black px-3 py-1 rounded-full text-xs">せいかい 0 / 0</span>
+            </div>
+
+            <p id="q-story" class="text-base sm:text-lg font-black mt-4 leading-relaxed"></p>
+            <p id="q-ask" class="text-lg sm:text-xl font-black text-teal-700 mt-2"></p>
+
+            <div id="q-fig" class="mt-3 bg-slate-50 rounded-2xl border-2 border-slate-200 p-2 sm:p-3"></div>
+
+            <div id="q-choices" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4"></div>
+            <p id="q-msg" class="text-center font-black mt-3 min-h-[2rem]"></p>
+
+            <div id="q-steps" class="mt-2 space-y-2"></div>
+
+            <div class="flex gap-2 mt-4">
+                <button id="q-show" onclick="showSteps()" class="flex-1 bg-white border-2 border-teal-300 text-teal-700 font-black py-3 rounded-2xl bounce-hover">💡 とき方を 見る</button>
+                <button id="q-next" onclick="newQuestion()" class="flex-1 bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-black py-3 rounded-2xl border-b-4 border-teal-700 bounce-hover text-lg">つぎの もんだい →</button>
+            </div>
+        </div>
+
+        <details class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+            <summary class="font-black cursor-pointer">📋 おうちの方へ：とくしゅ算について</summary>
+            <div class="text-sm font-bold text-slate-600 mt-3 space-y-2 leading-relaxed">
+                <p>中学受験の算数では、方程式を使わずに解く「特殊算（とくしゅざん）」がよく出ます。
+                   このアプリでは代表的な6つ（つるかめ算・和差算・植木算・旅人算・過不足算・平均算）を、
+                   <span class="text-teal-700">面積図・線分図</span>などの図とセットで練習します。</p>
+                <p>答えの選択肢には「木の数を＋1し忘れる」「大きいほうと小さいほうを取りちがえる」といった
+                   よくあるまちがいを混ぜてあります。まちがえたときは「とき方を 見る」で図に戻って確かめてください。</p>
+                <p class="text-slate-500">※ 数値は毎回作りなおされ、答えはすべて整数になるようにしています。</p>
+            </div>
+        </details>
+    </main>
+
+    <footer class="text-center py-3 text-xs text-slate-400 font-bold">とくしゅ算ラボ © 2026</footer>
+
+    <script>
+        const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+        const pick = l => l[Math.floor(Math.random() * l.length)];
+        const shuffle = l => [...l].sort(() => 0.5 - Math.random());
+
+        /* ===================== 図の どうぐ ===================== */
+        const SVG = (w, h, body, maxH) =>
+            `<svg viewBox="0 0 ${w} ${h}" class="w-full h-auto mx-auto" style="max-height:${maxH || 240}px">${body}</svg>`;
+        const txt = (x, y, s, o = {}) =>
+            `<text x="${x}" y="${y}" font-size="${o.size || 13}" font-weight="${o.weight || 800}" fill="${o.fill || '#334155'}" text-anchor="${o.anchor || 'middle'}">${s}</text>`;
+        const rect = (x, y, w, h, o = {}) =>
+            `<rect x="${x}" y="${y}" width="${Math.max(0, w)}" height="${Math.max(0, h)}" rx="${o.r || 3}" fill="${o.fill || '#a7f3d0'}" stroke="${o.stroke || '#0f766e'}" stroke-width="${o.sw || 2}" ${o.dash ? `stroke-dasharray="${o.dash}"` : ''} />`;
+        const line = (x1, y1, x2, y2, o = {}) =>
+            `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${o.stroke || '#64748b'}" stroke-width="${o.sw || 2}" ${o.dash ? `stroke-dasharray="${o.dash}"` : ''} stroke-linecap="round" />`;
+        // 「ここからここまで」を しめす かぎかっこ
+        const span = (x1, x2, y, label, o = {}) => {
+            const c = o.color || '#0f766e', d = o.below ? 1 : -1;
+            return line(x1, y, x2, y, { stroke: c, sw: 2 }) +
+                line(x1, y - 5 * d, x1, y + 5 * d, { stroke: c, sw: 2 }) +
+                line(x2, y - 5 * d, x2, y + 5 * d, { stroke: c, sw: 2 }) +
+                txt((x1 + x2) / 2, y + (o.below ? 17 : -8), label, { fill: c, size: o.size || 13 });
+        };
+
+        /* ===================== つるかめ算 ===================== */
+        const TK_CTX = [
+            { a: ['つる', '🦢', 2], b: ['かめ', '🐢', 4], cnt: 'ひき', part: 'あし', unit: '本' },
+            { a: ['じてんしゃ', '🚲', 2], b: ['じどうしゃ', '🚗', 4], cnt: '台', part: 'タイヤ', unit: 'こ' },
+            { a: ['10円玉', '🪙', 10], b: ['50円玉', '💰', 50], cnt: 'まい', part: 'きんがく', unit: '円' }
+        ];
+
+        // 面積図：よこ＝数、たて＝1つぶんの 大きさ
+        function areaFig(ctx, total, nb, sum, reveal) {
+            const W = 330, H = 200, ox = 52, oy = 24, w = 236, h = 120;
+            const la = ctx.a[2], lb = ctx.b[2];
+            const sy = h / lb, bottom = oy + h;
+            const wb = reveal ? (nb / total) * w : w * 0.38;   // 答えの ぶぶんは かくす
+            const xb = ox + w - wb;
+            let s = '';
+            // ぜんぶ a だったとき の 四角
+            s += rect(ox, bottom - la * sy, w, la * sy, { fill: '#bae6fd', stroke: '#0284c7' });
+            s += txt(ox + w / 2, bottom - la * sy / 2 + 5, `${la * total}${ctx.unit}`, { fill: '#075985', size: 14 });
+            // ふえた ぶん
+            if (wb > 0) {
+                s += rect(xb, bottom - lb * sy, wb, (lb - la) * sy, { fill: '#fed7aa', stroke: '#ea580c' });
+                s += txt(xb + wb / 2, bottom - la * sy - (lb - la) * sy / 2 + 5, `${sum - la * total}${ctx.unit}`, { fill: '#9a3412', size: 14 });
+            }
+            // たてじく
+            s += line(ox, oy, ox, bottom, { stroke: '#94a3b8' });
+            s += line(ox, bottom, ox + w, bottom, { stroke: '#94a3b8' });
+            s += txt(ox - 6, bottom - la * sy + 5, `${la}`, { anchor: 'end', fill: '#0284c7' });
+            s += txt(ox - 6, bottom - lb * sy + 5, `${lb}`, { anchor: 'end', fill: '#ea580c' });
+            s += txt(2, oy + h / 2, '1つぶん', { anchor: 'start', size: 10, fill: '#64748b' });
+            // よこじく
+            s += span(ox, ox + w, bottom + 20, `ぜんぶで ${total}${ctx.cnt}`, { below: true });
+            s += txt(xb + wb / 2, bottom + 14, reveal ? `${ctx.b[0]} ${nb}${ctx.cnt}` : `${ctx.b[0]} ？${ctx.cnt}`,
+                { fill: '#9a3412', size: 12 });
+            s += txt(ox + (w - wb) / 2, bottom + 14, reveal ? `${ctx.a[0]} ${total - nb}${ctx.cnt}` : `${ctx.a[0]}`,
+                { fill: '#075985', size: 12 });
+            s += txt(ox + w / 2, 14, `ぜんぶで ${sum}${ctx.unit}`, { size: 13, fill: '#334155' });
+            return SVG(W, H, s, 230);
+        }
+
+        function genTsurukame() {
+            const ctx = pick(TK_CTX);
+            const total = rnd(7, 14);
+            const nb = rnd(2, total - 2);
+            const na = total - nb;
+            const sum = na * ctx.a[2] + nb * ctx.b[2];
+            const allA = ctx.a[2] * total;
+            const gap = ctx.b[2] - ctx.a[2];
+            return {
+                story: `${ctx.a[1]}${ctx.a[0]} と ${ctx.b[1]}${ctx.b[0]} が あわせて <b class="text-teal-700">${total}${ctx.cnt}</b>。` +
+                    `${ctx.part}は ぜんぶで <b class="text-teal-700">${sum}${ctx.unit}</b> です。`,
+                ask: `${ctx.b[0]}は なん${ctx.cnt}？`,
+                fig: () => areaFig(ctx, total, nb, sum, false),
+                figAnswer: () => areaFig(ctx, total, nb, sum, true),
+                answer: nb, unit: ctx.cnt,
+                wrongs: [na, Math.max(1, nb + 1), Math.max(1, nb - 1)],   // ← よくある まちがい：もう片方を 答える
+                steps: [
+                    `もし ぜんぶ ${ctx.a[0]} だとすると　${ctx.a[2]} × ${total} ＝ <b>${allA}${ctx.unit}</b>`,
+                    `じっさいは ${sum}${ctx.unit} なので　${sum} − ${allA} ＝ <b>${sum - allA}${ctx.unit}</b> 多い`,
+                    `${ctx.a[0]}を 1${ctx.cnt} ${ctx.b[0]}に かえると ${ctx.part}は ${gap}${ctx.unit} ふえる`,
+                    `${sum - allA} ÷ ${gap} ＝ <b class="text-teal-700">${nb}${ctx.cnt}</b>（${ctx.b[0]}の 数）`,
+                    `${ctx.a[0]}は ${total} − ${nb} ＝ ${na}${ctx.cnt}`
+                ]
+            };
+        }
+
+        /* ===================== 和差算 ===================== */
+        function barFig(big, small, showValues) {
+            const W = 330, H = 152, ox = 36, w = 206;
+            const sx = w / big;
+            const y1 = 40, y2 = 82, bh = 26;
+            let s = '';
+            s += rect(ox, y1, big * sx, bh, { fill: '#a7f3d0', stroke: '#0f766e' });
+            s += rect(ox, y2, small * sx, bh, { fill: '#bfdbfe', stroke: '#1d4ed8' });
+            s += txt(ox - 6, y1 + 18, '大', { anchor: 'end', fill: '#0f766e' });
+            s += txt(ox - 6, y2 + 18, '小', { anchor: 'end', fill: '#1d4ed8' });
+            s += txt(ox + small * sx / 2, y1 + 18, showValues ? `${small}` : '？', { size: 14 });
+            s += txt(ox + small * sx / 2, y2 + 18, showValues ? `${small}` : '？', { size: 14 });
+            // 大きいほうの はみ出た ぶん ＝ ちがい
+            s += rect(ox + small * sx, y1, (big - small) * sx, bh, { fill: '#fed7aa', stroke: '#ea580c', dash: '4 3' });
+            s += span(ox + small * sx, ox + big * sx, y1 - 10, `ちがい ${big - small}`, { color: '#ea580c', size: 12 });
+            // 2本 あわせて 和（たてに はさむ）
+            const bx = ox + big * sx + 12;
+            s += line(bx, y1, bx, y2 + bh, { stroke: '#334155' });
+            s += line(bx - 5, y1, bx + 5, y1, { stroke: '#334155' });
+            s += line(bx - 5, y2 + bh, bx + 5, y2 + bh, { stroke: '#334155' });
+            s += txt(bx + 8, (y1 + y2 + bh) / 2 - 4, 'あわせて', { anchor: 'start', size: 11 });
+            s += txt(bx + 8, (y1 + y2 + bh) / 2 + 12, `${big + small}`, { anchor: 'start', size: 14 });
+            if (showValues) {
+                s += txt(165, H - 22, `小 ＝（${big + small} − ${big - small}）÷ 2 ＝ ${small}`, { size: 12, fill: '#1d4ed8' });
+                s += txt(165, H - 6, `大 ＝ ${small} ＋ ${big - small} ＝ ${big}`, { size: 12, fill: '#0f766e' });
+            } else {
+                s += txt(165, H - 10, 'ちがいを 切りとると 同じ 長さが 2本に なる', { size: 11, fill: '#64748b' });
+            }
+            return SVG(W, H, s, 175);
+        }
+
+        function genWasa() {
+            // [多いほう, 少ないほう, たんい, はじめの 文, ぜんぶを あらわす ことば]
+            const names = pick([
+                ['おにいさん', 'いもうと', 'まい', 'おにいさん と いもうと が カードを もっています。', '2人'],
+                ['あかい はこ', 'あおい はこ', 'こ', 'あかい はこ と あおい はこ に ビー玉が 入っています。', 'ふたつ'],
+                ['おとうさん', 'ぼく', 'さつ', 'おとうさん と ぼく が 本を もっています。', '2人'],
+                ['大きい バケツ', '小さい バケツ', 'dL', '大きい バケツ と 小さい バケツ に 水が 入っています。', 'ふたつ']
+            ]);
+            let sum = rnd(20, 90), diff = rnd(2, Math.floor(sum / 2) - 1);
+            if ((sum - diff) % 2) diff += 1;
+            const big = (sum + diff) / 2, small = (sum - diff) / 2;
+            const askBig = Math.random() < 0.5;
+            return {
+                story: `${names[3]}${names[4]} あわせて <b class="text-teal-700">${sum}${names[2]}</b>、` +
+                    `${names[0]}の ほうが <b class="text-teal-700">${diff}${names[2]}</b> 多いです。`,
+                ask: `${askBig ? names[0] : names[1]}は なん${names[2]}？`,
+                fig: () => barFig(big, small, false),
+                figAnswer: () => barFig(big, small, true),
+                answer: askBig ? big : small, unit: names[2],
+                wrongs: [askBig ? small : big, sum - diff, Math.round(sum / 2)],
+                steps: askBig ? [
+                    `少ないほうに そろえると　${sum} − ${diff} ＝ <b>${sum - diff}</b>`,
+                    `それは 小さいほうの 2つぶん　${sum - diff} ÷ 2 ＝ <b>${small}</b>（${names[1]}）`,
+                    `${names[0]}は ${small} ＋ ${diff} ＝ <b class="text-teal-700">${big}${names[2]}</b>`
+                ] : [
+                    `多いほうに そろえると　${sum} ＋ ${diff} ＝ <b>${sum + diff}</b>`,
+                    `それは 大きいほうの 2つぶん　${sum + diff} ÷ 2 ＝ <b>${big}</b>（${names[0]}）`,
+                    `${names[1]}は ${big} − ${diff} ＝ <b class="text-teal-700">${small}${names[2]}</b>`
+                ]
+            };
+        }
+
+        /* ===================== 植木算 ===================== */
+        function treeFig(kind, n, d, L) {
+            const W = 330, H = kind === 'circle' ? 200 : 140;
+            let s = '';
+            if (kind === 'circle') {
+                const cx = 165, cy = 100, r = 66;
+                s += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#dbeafe" stroke="#0ea5e9" stroke-width="3" />`;
+                s += txt(cx, cy + 5, `まわり ${L}m`, { size: 12, fill: '#0369a1' });
+                for (let i = 0; i < n; i++) {
+                    const a = -Math.PI / 2 + i * 2 * Math.PI / n;
+                    s += `<text class="tree" x="${cx + Math.cos(a) * r}" y="${cy + Math.sin(a) * r + 7}" font-size="20" text-anchor="middle">🌳</text>`;
+                }
+            } else {
+                const ox = 28, w = 274, y = 78;
+                s += line(ox, y, ox + w, y, { stroke: '#a16207', sw: 5 });
+                const gaps = kind === 'both' ? n - 1 : (kind === 'none' ? n + 1 : n);
+                for (let i = 0; i <= gaps; i++) {
+                    const x = ox + w * i / gaps;
+                    const isTree = kind === 'both' ? true : (kind === 'none' ? (i > 0 && i < gaps) : i > 0);
+                    if (isTree) s += `<text class="tree" x="${x}" y="${y - 6}" font-size="22" text-anchor="middle">🌳</text>`;
+                    else s += `<text class="flag" x="${x}" y="${y - 6}" font-size="18" text-anchor="middle">🚩</text>`;
+                    if (i < gaps) s += span(x, ox + w * (i + 1) / gaps, y + 20, gaps <= 8 ? `${d}m` : '', { below: true, color: '#64748b', size: 10 });
+                }
+                s += span(ox, ox + w, 30, `ぜんたいで ${L}m`);
+                s += txt(165, H - 8, kind === 'both' ? '🌳 りょうはし に 木を うえる' :
+                    kind === 'none' ? '🚩 りょうはし は たてもの（木を うえない）' : '🚩 かたほう だけ 木を うえない',
+                    { size: 11, fill: '#64748b' });
+            }
+            return SVG(W, H, s, kind === 'circle' ? 220 : 160);
+        }
+
+        function genUeki() {
+            const kind = pick(['both', 'none', 'circle', 'one']);
+            const d = pick([2, 3, 4, 5, 6]);
+            const gaps = rnd(4, 9);
+            const L = d * gaps;
+            const n = kind === 'both' ? gaps + 1 : kind === 'none' ? gaps - 1 : gaps;
+            const story = {
+                both: `まっすぐな 道の はしから はしまで <b class="text-teal-700">${L}m</b> あります。` +
+                    `<b class="text-teal-700">${d}m</b> おきに、りょうはし にも 木を うえます。`,
+                none: `たてものと たてものの あいだが <b class="text-teal-700">${L}m</b> あります。` +
+                    `その あいだに <b class="text-teal-700">${d}m</b> おきに 木を うえます（たてものの ところには うえません）。`,
+                circle: `まるい 池の まわりが <b class="text-teal-700">${L}m</b> あります。` +
+                    `まわりに <b class="text-teal-700">${d}m</b> おきに 木を うえます。`,
+                one: `まっすぐな 道が <b class="text-teal-700">${L}m</b> あります。` +
+                    `<b class="text-teal-700">${d}m</b> おきに 木を うえますが、スタートの ところには うえません。`
+            }[kind];
+            const rule = {
+                both: ['木の 数 ＝ 間の 数 ＋ 1', `${gaps} ＋ 1 ＝ <b class="text-teal-700">${n}本</b>`],
+                none: ['木の 数 ＝ 間の 数 − 1', `${gaps} − 1 ＝ <b class="text-teal-700">${n}本</b>`],
+                circle: ['まるい ときは　木の 数 ＝ 間の 数', `そのまま <b class="text-teal-700">${n}本</b>`],
+                one: ['かたはし だけ うえない ときは　木の 数 ＝ 間の 数', `そのまま <b class="text-teal-700">${n}本</b>`]
+            }[kind];
+            return {
+                story, ask: '木は なん本 いる？',
+                fig: () => treeFig(kind, n, d, L),
+                figAnswer: () => treeFig(kind, n, d, L),
+                answer: n, unit: '本',
+                wrongs: [gaps, gaps + 1, gaps - 1, gaps + 2],   // ← ＋1 のし忘れ・し過ぎ
+                steps: [
+                    `間（あいだ）の 数を 先に 出す　${L} ÷ ${d} ＝ <b>${gaps}こ</b>`,
+                    rule[0], rule[1]
+                ]
+            };
+        }
+
+        /* ===================== 旅人算 ===================== */
+        function roadFig(kind, D, va, vb, t, reveal) {
+            const W = 330, H = 150, ox = 30, w = 270, y = 82;
+            let s = line(ox, y, ox + w, y, { stroke: '#94a3b8', sw: 4 });
+            if (kind === 'meet') {
+                s += `<text x="${ox}" y="${y - 8}" font-size="22" text-anchor="middle">🚶</text>`;
+                s += `<text x="${ox + w}" y="${y - 8}" font-size="22" text-anchor="middle">🚶‍♀️</text>`;
+                s += txt(ox, y + 20, `${va}m/分`, { size: 11, fill: '#0f766e' });
+                s += txt(ox + w, y + 20, `${vb}m/分`, { size: 11, fill: '#1d4ed8' });
+                s += txt(ox + 34, y - 26, '→', { size: 18, fill: '#0f766e' });
+                s += txt(ox + w - 34, y - 26, '←', { size: 18, fill: '#1d4ed8' });
+                s += span(ox, ox + w, 34, `はなれている きょり ${D}m`);
+                if (reveal) {
+                    const mx = ox + w * va / (va + vb);
+                    s += line(mx, y - 34, mx, y + 10, { stroke: '#ea580c', dash: '4 3' });
+                    s += txt(mx, y + 36, `${t}分後 ここで 出会う`, { size: 11, fill: '#ea580c' });
+                    s += txt(mx / 2 + ox / 2, y + 52, `${va}×${t}＝${va * t}m`, { size: 10, fill: '#0f766e' });
+                    s += txt((mx + ox + w) / 2, y + 52, `${vb}×${t}＝${vb * t}m`, { size: 10, fill: '#1d4ed8' });
+                }
+                s += txt(165, H - 8, '1分に （' + va + '＋' + vb + '）m ずつ ちぢまる', { size: 12, fill: '#475569' });
+            } else {
+                s += `<text x="${ox}" y="${y - 8}" font-size="22" text-anchor="middle">🏃</text>`;
+                s += `<text x="${ox + w * 0.55}" y="${y - 8}" font-size="22" text-anchor="middle">🚶</text>`;
+                s += txt(ox, y + 20, `${va}m/分（はやい）`, { size: 11, fill: '#0f766e', anchor: 'start' });
+                s += txt(ox + w * 0.55, y + 20, `${vb}m/分`, { size: 11, fill: '#1d4ed8' });
+                s += txt(ox + 34, y - 26, '→', { size: 18, fill: '#0f766e' });
+                s += txt(ox + w * 0.55 + 30, y - 26, '→', { size: 18, fill: '#1d4ed8' });
+                s += span(ox, ox + w * 0.55, 34, `さいしょの 差 ${D}m`);
+                s += txt(165, H - 8, reveal
+                    ? `${t}分後、2人とも 兄の スタートから ${va * t}m の ところ（${vb}×${t}＋${D}＝${va * t}）`
+                    : '1分に （' + va + '−' + vb + '）m ずつ ちぢまる', { size: reveal ? 11 : 12, fill: '#475569' });
+            }
+            return SVG(W, H, s, 170);
+        }
+
+        function genTabibito() {
+            const kind = pick(['meet', 'chase']);
+            const t = rnd(4, 15);
+            if (kind === 'meet') {
+                const va = pick([40, 50, 60, 70]), vb = pick([30, 45, 55, 65, 80]);
+                const D = (va + vb) * t;
+                return {
+                    story: `${D}m はなれた ところから、ゆうきさんと あおいさんが 向かいあって 同時に 歩きます。` +
+                        `ゆうきさんは 分速 <b class="text-teal-700">${va}m</b>、あおいさんは 分速 <b class="text-teal-700">${vb}m</b> です。`,
+                    ask: '2人が 出会うのは 何分後？',
+                    fig: () => roadFig('meet', D, va, vb, t, false),
+                    figAnswer: () => roadFig('meet', D, va, vb, t, true),
+                    answer: t, unit: '分後',
+                    wrongs: [Math.round(D / va), Math.round(D / vb), t + 1],
+                    steps: [
+                        `向かいあって 進むので、1分で ちぢまる きょりは　${va} ＋ ${vb} ＝ <b>${va + vb}m</b>`,
+                        `${D}m ちぢまれば 出会う　${D} ÷ ${va + vb} ＝ <b class="text-teal-700">${t}分後</b>`
+                    ]
+                };
+            }
+            const vb = pick([40, 50, 60, 70]), va = vb + pick([10, 20, 25, 30]);
+            const D = (va - vb) * t;
+            return {
+                story: `弟が 家を 出て <b class="text-teal-700">${D}m</b> 進んだ ところで、兄が 同じ 道を 追いかけます。` +
+                    `弟は 分速 <b class="text-teal-700">${vb}m</b>、兄は 分速 <b class="text-teal-700">${va}m</b> です。`,
+                ask: '兄が 弟に 追いつくのは 何分後？',
+                fig: () => roadFig('chase', D, va, vb, t, false),
+                figAnswer: () => roadFig('chase', D, va, vb, t, true),
+                answer: t, unit: '分後',
+                wrongs: [Math.round(D / va), Math.round(D / (va + vb)), t + 2],
+                steps: [
+                    `同じ むきに 進むので、1分で ちぢまる 差は　${va} − ${vb} ＝ <b>${va - vb}m</b>`,
+                    `${D}m の 差が なくなれば 追いつく　${D} ÷ ${va - vb} ＝ <b class="text-teal-700">${t}分後</b>`
+                ]
+            };
+        }
+
+        /* ===================== 過不足算 ===================== */
+        function giveFig(a, b, p, q, people, reveal) {
+            const W = 330, H = 176, ox = 42, w = 250;
+            const maxUnits = b * people + q;
+            const sx = w / maxUnits;
+            let s = '';
+            // 1回目：a こずつ で p こ あまる
+            s += txt(ox - 8, 44, '①', { anchor: 'end', size: 14, fill: '#0f766e' });
+            s += rect(ox, 30, a * people * sx, 24, { fill: '#a7f3d0', stroke: '#0f766e' });
+            s += txt(ox + a * people * sx / 2, 47, `${a}こずつ`, { size: 12, fill: '#065f46' });
+            s += rect(ox + a * people * sx, 30, p * sx, 24, { fill: '#bbf7d0', stroke: '#16a34a', dash: '4 3' });
+            s += txt(ox + a * people * sx + p * sx / 2, 22, `あまり ${p}`, { size: 11, fill: '#16a34a' });
+            // 2回目：b こずつ で q こ たりない
+            s += txt(ox - 8, 104, '②', { anchor: 'end', size: 14, fill: '#b45309' });
+            s += rect(ox, 90, b * people * sx, 24, { fill: '#fed7aa', stroke: '#ea580c' });
+            s += txt(ox + b * people * sx / 2, 107, `${b}こずつ`, { size: 12, fill: '#9a3412' });
+            s += rect(ox + (b * people - q) * sx, 90, q * sx, 24, { fill: '#fecaca', stroke: '#dc2626', dash: '4 3' });
+            s += txt(ox + (b * people - q) * sx + q * sx / 2, 82, `たりない ${q}`, { size: 11, fill: '#dc2626' });
+            // あめの 数（同じ）
+            const candy = a * people + p;
+            s += line(ox + candy * sx, 20, ox + candy * sx, 124, { stroke: '#475569', dash: '4 3' });
+            s += txt(ox + candy * sx, 138, reveal ? `あめ ${candy}こ` : 'あめの 数', { size: 12, fill: '#475569' });
+            s += txt(165, H - 6, `ちがいは ぜんぶで ${p} ＋ ${q} ＝ ${p + q}こ`, { size: 12, fill: '#334155' });
+            return SVG(W, H, s, 200);
+        }
+
+        function genKabusoku() {
+            let people = 8, a = 3, b = 4, p = 3, q = 5;
+            for (let t = 0; t < 200; t++) {
+                const P = rnd(4, 12), A = rnd(2, 5), B = A + pick([1, 2]), pp = rnd(1, 8);
+                const qq = (B - A) * P - pp;           // たりない 数が 1いじょうに なる くみあわせだけ つかう
+                if (qq >= 1) { people = P; a = A; b = B; p = pp; q = qq; break; }
+            }
+            const candy = a * people + p;
+            const askPeople = Math.random() < 0.5;
+            return {
+                story: `子どもたちに あめを くばります。1人に <b class="text-teal-700">${a}こ</b>ずつ くばると ` +
+                    `<b class="text-teal-700">${p}こ あまり</b>、1人に <b class="text-teal-700">${b}こ</b>ずつ くばると ` +
+                    `<b class="text-teal-700">${q}こ たりません</b>。`,
+                ask: askPeople ? '子どもは 何人？' : 'あめは ぜんぶで 何こ？',
+                fig: () => giveFig(a, b, p, q, people, false),
+                figAnswer: () => giveFig(a, b, p, q, people, true),
+                answer: askPeople ? people : candy, unit: askPeople ? '人' : 'こ',
+                wrongs: askPeople ? [p + q, Math.max(1, people + 1), Math.max(1, people - 1)]
+                    : [b * people, Math.max(1, candy + q), Math.max(1, candy - p)],
+                steps: [
+                    `1人ぶん が ${b} − ${a} ＝ <b>${b - a}こ</b> ふえると、いる あめは その 人数ぶん ふえる`,
+                    `ふえた ぶんは ${p} ＋ ${q} ＝ <b>${p + q}こ</b>（あまりが なくなって、さらに たりなくなった ぶん）`,
+                    `人数は　${p + q} ÷ ${b - a} ＝ <b class="text-teal-700">${people}人</b>`,
+                    `あめは　${a} × ${people} ＋ ${p} ＝ <b class="text-teal-700">${candy}こ</b>`
+                ]
+            };
+        }
+
+        /* ===================== 平均算 ===================== */
+        // hideAvg: 平均を 答える もんだいでは、平均の 線を 出さない（答えが 見えて しまうため）
+        function avgFig(scores, avg, extra, hideAvg) {
+            const W = 330, H = 180, ox = 30, oy = 20, w = 240, h = 108;
+            const all = extra === undefined ? scores : [...scores, extra];
+            const max = Math.max(...all, avg) * 1.1;
+            const bw = w / all.length;
+            let s = line(ox, oy + h, ox + w, oy + h, { stroke: '#94a3b8' });
+            all.forEach((v, i) => {
+                const bh = v / max * h;
+                const isNew = extra !== undefined && i === all.length - 1;
+                s += rect(ox + i * bw + bw * 0.18, oy + h - bh, bw * 0.64, bh,
+                    { fill: isNew ? '#fed7aa' : '#a7f3d0', stroke: isNew ? '#ea580c' : '#0f766e' });
+                s += txt(ox + i * bw + bw / 2, oy + h - bh - 5, `${v}`, { size: 12 });
+                s += txt(ox + i * bw + bw / 2, oy + h + 15, `${i + 1}回目`, { size: 10, fill: '#64748b' });
+            });
+            if (!hideAvg) {
+                const ay = oy + h - avg / max * h;
+                s += line(ox, ay, ox + w, ay, { stroke: '#dc2626', sw: 2, dash: '6 4' });
+                s += txt(ox + w + 4, ay + 4, `平均`, { anchor: 'start', size: 11, fill: '#dc2626' });
+                s += txt(ox + w + 4, ay + 17, `${avg}`, { anchor: 'start', size: 13, fill: '#dc2626' });
+            }
+            s += txt(165, H - 8, hideAvg ? 'でこぼこを「ならす」と どの 高さに なる？'
+                : 'でこぼこを「ならす」と 平均の 線に なる', { size: 11, fill: '#64748b' });
+            return SVG(W, H, s, 200);
+        }
+
+        function genHeikin() {
+            const kind = pick(['find', 'need']);
+            const n = rnd(3, 4);
+            const realAvg = pick([70, 72, 75, 78, 80, 82, 85]);
+            // 平均が ぴったり realAvg に なる 点数の くみあわせを さがす
+            let scores = null;
+            for (let t = 0; t < 200 && !scores; t++) {
+                const rest = Array(n - 1).fill(0).map(() => realAvg + rnd(-9, 9));
+                const last = realAvg * n - rest.reduce((a, b) => a + b, 0);
+                const all = [...rest, last];
+                if (all.every(v => v >= 45 && v <= 100)) scores = shuffle(all);
+            }
+            if (!scores) scores = Array(n).fill(realAvg);
+            const sum = scores.reduce((a, b) => a + b, 0);
+            if (kind === 'find') {
+                return {
+                    story: `テストを ${n}回 うけました。点数は <b class="text-teal-700">${scores.join('点、')}点</b> です。`,
+                    ask: '平均は 何点？',
+                    fig: () => avgFig(scores, realAvg, undefined, true),
+                    figAnswer: () => avgFig(scores, realAvg),
+                    answer: realAvg, unit: '点',
+                    wrongs: [sum, realAvg + 1, realAvg - 1, Math.max(...scores)],
+                    steps: [
+                        `ぜんぶ たす　${scores.join(' ＋ ')} ＝ <b>${sum}点</b>`,
+                        `回数で わる　${sum} ÷ ${n} ＝ <b class="text-teal-700">${realAvg}点</b>`,
+                        `平均は「でこぼこを ならした 高さ」だよ`
+                    ]
+                };
+            }
+            // つぎの 点が 100点を こえない はんいで 目標を 上げる
+            const maxUp = Math.max(1, Math.min(5, Math.floor((100 - realAvg) / (n + 1))));
+            const target = realAvg + rnd(1, maxUp);
+            const need = target * (n + 1) - sum;
+            return {
+                story: `テストを ${n}回 うけて、点数は ${scores.join('点、')}点（平均 <b class="text-teal-700">${realAvg}点</b>）でした。` +
+                    `つぎの ${n + 1}回目で、${n + 1}回 ぜんぶの 平均を <b class="text-teal-700">${target}点</b> に したいです。`,
+                ask: `${n + 1}回目は 何点 とれば いい？`,
+                fig: () => avgFig(scores, realAvg),
+                figAnswer: () => avgFig(scores, target, need),
+                answer: need, unit: '点',
+                wrongs: [target, target + (target - realAvg), realAvg + (target - realAvg) * n],
+                steps: [
+                    `いままでの 合計　${realAvg} × ${n} ＝ <b>${sum}点</b>`,
+                    `ほしい 合計　${target} × ${n + 1} ＝ <b>${target * (n + 1)}点</b>`,
+                    `その ちがいが つぎの 点　${target * (n + 1)} − ${sum} ＝ <b class="text-teal-700">${need}点</b>`,
+                    `（平均を ${target - realAvg}点 上げるには、${n + 1}こぶん の ${(target - realAvg) * (n + 1)}点 を よぶんに とる、と 考えても いいよ）`
+                ]
+            };
+        }
+
+        /* ===================== トピック ===================== */
+        const TOPICS = {
+            tsurukame: {
+                name: 'つるかめ算', emoji: '🦢', sub: 'あわせた 数と、ぜんぶの 合計から 内わけを 出す',
+                idea: 'まず <b>ぜんぶ 足の 少ないほう</b> だと 考えて 合計を 出す。じっさいとの ちがいを、' +
+                    '1つ とりかえたときに ふえる 数で わると、多いほうの 数が わかる。<br>' +
+                    '<span class="text-teal-700">面積図（めんせきず）</span>では「よこ＝数」「たて＝1つぶん」で、四角の 広さが 合計に なる。',
+                gen: genTsurukame, playground: true
+            },
+            wasa: {
+                name: '和差算', emoji: '📏', sub: '2つの 合計（和）と ちがい（差）から それぞれを 出す',
+                idea: '<span class="text-teal-700">線分図（せんぶんず）</span>を かいて、長いほうから ちがいを 切りとる。' +
+                    'すると 同じ 長さが 2本 に なるので、2で わると 小さいほうが 出る。<br>' +
+                    '小さいほう ＝（和 − 差）÷ 2　　大きいほう ＝（和 ＋ 差）÷ 2',
+                gen: genWasa
+            },
+            ueki: {
+                name: '植木算', emoji: '🌳', sub: '木の 数と 間（あいだ）の 数の ちがいに 気をつける',
+                idea: 'まず <b>間の 数 ＝ 長さ ÷ 間かく</b> を 出す。そのあと…<br>' +
+                    '・りょうはし に うえる → 木 ＝ 間 ＋ 1<br>' +
+                    '・りょうはし に うえない → 木 ＝ 間 − 1<br>' +
+                    '・まるい 池の まわり → 木 ＝ 間（同じ）',
+                gen: genUeki
+            },
+            tabibito: {
+                name: '旅人算', emoji: '🏃', sub: '2人の きょりが 1分で どれだけ ちぢむか',
+                idea: '向かいあって 進む（出会う）→ 1分に <b>速さの 和</b> だけ ちぢまる。<br>' +
+                    '同じ むきに 進む（追いかける）→ 1分に <b>速さの 差</b> だけ ちぢまる。<br>' +
+                    '時間 ＝ はなれている きょり ÷（和 または 差）',
+                gen: genTabibito
+            },
+            kabusoku: {
+                name: '過不足算', emoji: '🍬', sub: '「あまる」と「たりない」の 差から 人数を 出す',
+                idea: '1人ぶんを ふやすと、いる 数は <b>人数ぶん</b> ふえる。<br>' +
+                    'あまった 分 ＋ たりない 分 ＝ ふえた 合計 なので、<br>' +
+                    '人数 ＝（あまり ＋ ふそく）÷（1人ぶんの ちがい）',
+                gen: genKabusoku
+            },
+            heikin: {
+                name: '平均算', emoji: '📊', sub: 'でこぼこを ならした 高さが 平均',
+                idea: '平均 ＝ 合計 ÷ 個数。ぎゃくに <b>合計 ＝ 平均 × 個数</b> と できるのが だいじ。<br>' +
+                    'あとから 1回 ふえるときは、「ほしい 合計」から「いままでの 合計」を ひく。',
+                gen: genHeikin
+            }
+        };
+
+        /* ===================== うごかして たしかめる（つるかめ） ===================== */
+        const pg = { total: 10, target: 0, nb: 0, ctx: TK_CTX[0] };
+        function setupPlayground() {
+            pg.ctx = TK_CTX[0];
+            pg.total = rnd(8, 12);
+            const ans = rnd(2, pg.total - 2);
+            pg.target = (pg.total - ans) * pg.ctx.a[2] + ans * pg.ctx.b[2];
+            pg.nb = 0;
+            document.getElementById('pg-desc').innerText =
+                `${pg.ctx.a[0]}と${pg.ctx.b[0]}が あわせて ${pg.total}${pg.ctx.cnt}。あしが ${pg.target}本に なるように、${pg.ctx.b[0]}の 数を 動かしてみよう。`;
+            drawPlayground();
+        }
+        function drawPlayground() {
+            const c = pg.ctx, na = pg.total - pg.nb;
+            const legs = na * c.a[2] + pg.nb * c.b[2];
+            const ok = legs === pg.target;
+            document.getElementById('pg-body').innerHTML = `
+                <div class="bg-slate-50 rounded-2xl border-2 border-slate-200 p-2">${areaFig(c, pg.total, pg.nb, legs, true)}</div>
+                <p class="text-center text-2xl mt-2 leading-relaxed">${c.a[1].repeat(na)}${c.b[1].repeat(pg.nb)}</p>
+                <input type="range" min="0" max="${pg.total}" value="${pg.nb}" oninput="pg.nb=+this.value;drawPlayground()"
+                       class="w-full mt-2 h-3" aria-label="かめの数">
+                <div class="flex justify-between text-sm font-black mt-1">
+                    <span class="text-sky-700">${c.a[1]} ${na}${c.cnt}</span>
+                    <span class="text-orange-600">${c.b[1]} ${pg.nb}${c.cnt}</span>
+                </div>
+                <p class="text-center font-black mt-2 ${ok ? 'text-emerald-600' : 'text-slate-600'}">
+                    いまの あし ＝ ${c.a[2]}×${na} ＋ ${c.b[2]}×${pg.nb} ＝ <span class="num text-xl">${legs}</span>本
+                    ${ok ? '　🎉 ぴったり！' : `（めざすのは ${pg.target}本：あと ${legs < pg.target ? 'ふやす' : 'へらす'}）`}
+                </p>
+                <button onclick="setupPlayground()" class="w-full mt-2 bg-white border-2 border-teal-300 text-teal-700 font-black py-2 rounded-xl bounce-hover text-sm">べつの 問題に する</button>`;
+        }
+
+        /* ===================== 出題の ながれ ===================== */
+        const state = { topic: 'tsurukame', q: null, ok: 0, total: 0, locked: false, shown: false };
+
+        function renderNav() {
+            document.getElementById('topic-nav').innerHTML = Object.entries(TOPICS).map(([k, t]) => {
+                const on = state.topic === k;
+                return `<button onclick="setTopic('${k}')" data-t="${k}" class="${on ? 'bg-teal-600 text-white' : 'bg-white border-2 border-teal-200 text-slate-600'} font-black px-4 py-2 rounded-full text-sm whitespace-nowrap bounce-hover">${t.emoji} ${t.name}</button>`;
+            }).join('');
+        }
+
+        function setTopic(k) {
+            state.topic = k;
+            state.ok = 0; state.total = 0;
+            const t = TOPICS[k];
+            document.getElementById('t-emoji').innerText = t.emoji;
+            document.getElementById('t-name').innerText = t.name;
+            document.getElementById('t-sub').innerText = t.sub;
+            document.getElementById('t-idea').innerHTML = t.idea;
+            const pgEl = document.getElementById('playground');
+            pgEl.classList.toggle('hidden', !t.playground);
+            if (t.playground) setupPlayground();
+            renderNav();
+            newQuestion();
+        }
+
+        // まちがいの 選択肢は「よくある まちがい」から。足りなければ 近い数で うめる
+        function buildChoices(q) {
+            const set = [q.answer];
+            [...q.wrongs].forEach(w => {
+                if (Number.isFinite(w) && w > 0 && !set.includes(w)) set.push(w);
+            });
+            let d = 1;
+            while (set.length < 4 && d < 40) {
+                [q.answer + d, q.answer - d].forEach(v => {
+                    if (set.length < 4 && v > 0 && !set.includes(v)) set.push(v);
+                });
+                d++;
+            }
+            return shuffle(set.slice(0, 4));
+        }
+
+        function newQuestion() {
+            const t = TOPICS[state.topic];
+            const q = t.gen();
+            q.choices = buildChoices(q);
+            state.q = q; state.locked = false; state.shown = false;
+
+            document.getElementById('q-tag').innerText = `${t.emoji} ${t.name}`;
+            document.getElementById('q-score').innerText = `せいかい ${state.ok} / ${state.total}`;
+            document.getElementById('q-story').innerHTML = q.story;
+            document.getElementById('q-ask').innerText = q.ask;
+            document.getElementById('q-fig').innerHTML = q.fig();
+            document.getElementById('q-msg').innerText = '';
+            document.getElementById('q-steps').innerHTML = '';
+            document.getElementById('q-choices').innerHTML = q.choices.map((v, i) =>
+                `<button onclick="answer(${i})" data-i="${i}" data-v="${v}" class="bg-slate-100 hover:bg-teal-100 border-2 border-slate-200 hover:border-teal-400 rounded-2xl py-3 px-2 font-black bounce-hover">
+                    <span class="num text-2xl">${v}</span><span class="text-sm">${q.unit}</span></button>`).join('');
+        }
+
+        function answer(i) {
+            if (state.locked) return;
+            const q = state.q;
+            state.total++;
+            if (q.choices[i] === q.answer) {
+                state.locked = true; state.ok++;
+                document.getElementById('q-msg').innerHTML =
+                    `<span class="text-emerald-600">せいかい！ こたえは ${q.answer}${q.unit}</span>`;
+                document.querySelectorAll('#q-choices button').forEach(b => {
+                    if (+b.dataset.v === q.answer) b.classList.add('bg-emerald-200', 'border-emerald-500');
+                });
+                showSteps();
+            } else {
+                const btn = document.querySelector(`#q-choices button[data-i="${i}"]`);
+                if (btn) {
+                    btn.classList.add('shake', 'bg-rose-100', 'border-rose-400');
+                    setTimeout(() => btn.classList.remove('shake'), 320);
+                }
+                document.getElementById('q-msg').innerHTML =
+                    `<span class="text-rose-500">おしい！ 図を 見ながら もう いちど。</span>`;
+            }
+            document.getElementById('q-score').innerText = `せいかい ${state.ok} / ${state.total}`;
+        }
+
+        function showSteps() {
+            if (state.shown) return;
+            state.shown = true;
+            const q = state.q;
+            // とき方を 先に 見たら、その もんだいは 答えあわせを 終わりに する
+            if (!state.locked) {
+                state.locked = true;
+                document.querySelectorAll('#q-choices button').forEach(b => {
+                    if (+b.dataset.v === q.answer) b.classList.add('bg-emerald-200', 'border-emerald-500');
+                });
+            }
+            document.getElementById('q-fig').innerHTML = q.figAnswer();
+            document.getElementById('q-steps').innerHTML =
+                `<p class="font-black text-teal-700">とき方</p>` +
+                q.steps.map((s, i) => `<div class="step bg-teal-50 border-2 border-teal-100 rounded-2xl p-3 text-sm font-bold leading-relaxed"
+                    style="animation-delay:${i * 60}ms"><span class="bg-teal-600 text-white rounded-full px-2 py-0.5 text-xs mr-2">${i + 1}</span>${s}</div>`).join('') +
+                `<p class="text-center font-black text-lg mt-2">こたえ　<span class="num text-2xl text-teal-700">${q.answer}</span>${q.unit}</p>`;
+        }
+
+        window.addEventListener('load', () => setTopic('tsurukame'));
+    </script>
+</body>
+</html>
