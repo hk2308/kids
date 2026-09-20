@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>きせつ はっけん</title>
+    <meta name="description" content="春夏秋冬の花・植物・旬の食べ物・行事・生きものを図鑑で見て、季節わけゲームと行事カレンダーで学ぼう。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums; }
+        .bounce-hover { transition: transform .15s cubic-bezier(.175,.885,.32,1.275); }
+        .bounce-hover:hover { transform: scale(1.04); }
+        .bounce-hover:active { transform: scale(.96); }
+        @keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.12) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275); }
+        @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+        .shake { animation: shake .3s ease-in-out; }
+    </style>
+</head>
+<body class="bg-orange-50 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-pink-400 via-emerald-400 to-amber-400 text-white p-3 sm:p-4 shadow-lg sticky top-0 z-30">
+        <div class="max-w-5xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">🍂</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">きせつ はっけん</h1>
+                    <p class="text-xs text-white/90 font-bold hidden sm:block">春（はる）・夏（なつ）・秋（あき）・冬（ふゆ）の 花・たべもの・行事</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/25 hover:bg-white/40 backdrop-blur p-2 rounded-full border border-white/40 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[72px] z-20 bg-orange-50/95 backdrop-blur border-b border-orange-200">
+        <div class="max-w-5xl mx-auto flex gap-2 p-3 overflow-x-auto">
+            <button data-tab="book" onclick="showTab('book')" class="tab-btn active bg-emerald-600 text-white font-black px-4 py-2 rounded-full text-sm whitespace-nowrap">きせつのずかん</button>
+            <button data-tab="game" onclick="showTab('game')" class="tab-btn bg-white border-2 border-emerald-200 text-slate-600 font-black px-4 py-2 rounded-full text-sm whitespace-nowrap">きせつわけゲーム</button>
+            <button data-tab="cal" onclick="showTab('cal')" class="tab-btn bg-white border-2 border-emerald-200 text-slate-600 font-black px-4 py-2 rounded-full text-sm whitespace-nowrap">行事カレンダー</button>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto w-full p-3 sm:p-6 flex-grow space-y-5">
+
+        <!-- ============ ずかん ============ -->
+        <section id="tab-book" class="tab-content space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <p class="text-xs font-black text-slate-500 mb-2">きせつ</p>
+                <div id="season-filters" class="flex flex-wrap gap-2"></div>
+                <p class="text-xs font-black text-slate-500 mt-3 mb-2">なかま</p>
+                <div id="cat-filters" class="flex flex-wrap gap-2"></div>
+            </div>
+            <p class="text-xs font-black text-slate-500"><span id="book-count">0</span>こ</p>
+            <div id="book-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"></div>
+        </section>
+
+        <!-- ============ きせつわけゲーム ============ -->
+        <section id="tab-game" class="tab-content hidden space-y-4">
+            <div id="game-start" class="bg-white rounded-3xl p-5 sm:p-7 shadow-md border-2 border-emerald-100 text-center">
+                <span class="text-4xl">🎲</span>
+                <h2 class="text-2xl font-black mt-2">きせつ わけゲーム（10問）</h2>
+                <p class="text-sm font-bold text-slate-500 mt-2">出てきた ものが どの きせつの ものか あてよう！</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                    <button onclick="startGame('all')" class="bg-gradient-to-br from-emerald-500 to-teal-600 text-white font-black p-4 rounded-2xl border-b-4 border-emerald-700 bounce-hover">
+                        <span class="block text-2xl">🌏</span>ぜんぶから
+                    </button>
+                    <button onclick="startGame('event')" class="bg-gradient-to-br from-rose-500 to-pink-600 text-white font-black p-4 rounded-2xl border-b-4 border-rose-700 bounce-hover">
+                        <span class="block text-2xl">🎏</span>行事（ぎょうじ）だけ
+                    </button>
+                </div>
+            </div>
+
+            <div id="game-play" class="hidden">
+                <div class="flex justify-between items-center mb-3 gap-2">
+                    <button id="game-quit" onclick="backToGameStart()" class="bg-white border-2 border-slate-200 text-slate-600 font-bold px-3 py-1.5 rounded-full text-sm">← やめる</button>
+                    <span id="game-progress" class="bg-emerald-100 text-emerald-700 font-black px-4 py-1.5 rounded-full text-sm">1 / 10</span>
+                    <span id="game-score" class="bg-amber-100 text-amber-700 font-black px-4 py-1.5 rounded-full text-sm">せいかい 0</span>
+                </div>
+                <div class="bg-white rounded-3xl p-5 sm:p-7 shadow-md border-2 border-emerald-100 text-center">
+                    <p class="text-sm font-bold text-slate-500">これは どの きせつ？</p>
+                    <p id="game-emoji" class="text-8xl my-3">🍓</p>
+                    <p id="game-name" class="text-2xl font-black">いちご</p>
+                    <p id="game-cat" class="text-xs font-bold text-slate-400 mb-4"></p>
+                    <div id="game-choices" class="grid grid-cols-2 gap-3"></div>
+                    <p id="game-msg" class="font-black mt-3 min-h-[2.5rem]"></p>
+                    <button id="game-next" onclick="nextGame()" class="hidden mt-2 w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black py-3 rounded-2xl border-b-4 border-emerald-700 bounce-hover text-lg">つぎへ →</button>
+                </div>
+            </div>
+
+            <div id="game-result" class="hidden bg-white rounded-3xl p-6 shadow-md border-4 border-amber-300 text-center">
+                <div class="text-5xl">🏅</div>
+                <h2 class="text-2xl font-black mt-2">おつかれさま！</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">10問のうち <span id="game-final" class="text-emerald-600 font-black text-xl">0</span> 問せいかい</p>
+                <div id="game-review" class="mt-4 space-y-2 text-left"></div>
+                <button onclick="backToGameStart()" class="mt-5 w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black py-3 rounded-2xl border-b-4 border-emerald-700 bounce-hover">もういちど</button>
+            </div>
+        </section>
+
+        <!-- ============ 行事カレンダー ============ -->
+        <section id="tab-cal" class="tab-content hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-emerald-100">
+                <h2 class="text-lg sm:text-xl font-black flex items-center gap-2"><span>📅</span> 1年の 行事（ぎょうじ）カレンダー</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">日にちが きまっている 行事は 日づけも のせているよ。</p>
+                <div id="cal-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-4"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-emerald-100">
+                <h3 class="font-black flex items-center gap-2"><span>❓</span> いつの 行事？</h3>
+                <p id="calq-q" class="text-center text-2xl font-black my-4"></p>
+                <div id="calq-choices" class="grid grid-cols-2 gap-2"></div>
+                <p id="calq-msg" class="text-center font-black mt-3 min-h-[1.5rem]"></p>
+                <button onclick="newCalQuestion()" class="mt-2 mx-auto block bg-white border-2 border-slate-200 text-slate-600 font-bold px-4 py-1.5 rounded-full text-xs">つぎの もんだい</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- モーダル -->
+    <div id="item-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border-4 relative text-center" id="item-modal-box">
+            <button onclick="closeModal()" class="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full w-8 h-8 flex items-center justify-center font-bold">✕</button>
+            <p id="im-season" class="inline-block text-xs font-black px-3 py-1 rounded-full"></p>
+            <p id="im-emoji" class="text-8xl my-2"></p>
+            <h2 id="im-name" class="text-2xl font-black"></h2>
+            <p id="im-cat" class="text-xs font-bold text-slate-400"></p>
+            <p id="im-when" class="num text-sm font-black text-rose-500 mt-1"></p>
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 mt-3 text-left">
+                <p id="im-note" class="font-bold text-sm leading-relaxed"></p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center py-3 text-xs text-slate-400 font-bold">きせつ はっけん © 2026</footer>
+
+    <script>
+        const shuffle = l => [...l].sort(() => 0.5 - Math.random());
+        const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+
+        const SEASONS = [
+            { name: '春', kana: 'はる', emoji: '🌸', color: '#ec4899', light: '#fce7f3', months: '3・4・5月' },
+            { name: '夏', kana: 'なつ', emoji: '🌞', color: '#0ea5e9', light: '#e0f2fe', months: '6・7・8月' },
+            { name: '秋', kana: 'あき', emoji: '🍁', color: '#f97316', light: '#ffedd5', months: '9・10・11月' },
+            { name: '冬', kana: 'ふゆ', emoji: '⛄', color: '#6366f1', light: '#e0e7ff', months: '12・1・2月' }
+        ];
+        const CATS = [
+            { id: 'flower', name: '花・植物', emoji: '🌷' },
+            { id: 'food', name: 'たべもの', emoji: '🍽️' },
+            { id: 'event', name: '行事', emoji: '🎏' },
+            { id: 'life', name: '生きもの', emoji: '🐞' }
+        ];
+
+        /* [なまえ, えもじ, きせつ, なかま, せつめい, いつ（行事のみ）] */
+        const ITEMS = [
+            // ---- 春 ----
+            ['さくら', '🌸', '春', 'flower', '日本（にほん）を だいひょうする 春の 花。さいてから 1〜2週間で ちってしまう。'],
+            ['チューリップ', '🌷', '春', 'flower', '球根（きゅうこん）を 秋に うえると、春に さく。富山県（とやまけん）が ゆうめい。'],
+            ['たんぽぽ', '🌼', '春', 'flower', '花の あとに わた毛（げ）が できて、風に のって たねを はこぶ。'],
+            ['つくし', '🌱', '春', 'flower', 'すぎなの 赤ちゃん。土（つち）から にょきっと 出てくる。'],
+            ['うめ', '🏵️', '春', 'flower', 'さくらより 早く、まだ 寒（さむ）い ころに さく。いい においが する。'],
+            ['いちご', '🍓', '春', 'food', 'あまくて すっぱい 春の くだもの。とちぎ県や 福岡県で たくさん とれる。'],
+            ['たけのこ', '🎋', '春', 'food', '竹（たけ）の 赤ちゃん。1日で 何十cmも のびる ことが ある。'],
+            ['そらまめ', '🫛', '春', 'food', 'さやが 空（そら）に むかって つくので この 名前。'],
+            ['キャベツ', '🥬', '春', 'food', '春キャベツは やわらかくて あまい。'],
+            ['ひなまつり', '🎎', '春', 'event', '女の子の すこやかな せいちょうを ねがう 行事。ひな人形を かざる。', '3月3日'],
+            ['入学式', '🎒', '春', 'event', '新（あたら）しい 学校生活の スタート。日本では 4月に 学年が はじまる。', '4月'],
+            ['こどもの日', '🎏', '春', 'event', 'こいのぼりを あげて、こどもの げんきを ねがう 日。', '5月5日'],
+            ['お花見', '🌸', '春', 'event', 'さくらの 下（した）で ごはんを 食べたり、花を ながめたり する。', '3〜4月'],
+            ['つばめ', '🐦', '春', 'life', '南（みなみ）の 国から わたって きて、家（いえ）の 軒下（のきした）に すを つくる。'],
+            ['おたまじゃくし', '🐸', '春', 'life', 'かえるの こども。足（あし）が はえて しっぽが なくなり、かえるに なる。'],
+            ['ちょうちょ', '🦋', '春', 'life', 'たまご → よう虫 → さなぎ → せい虫 と すがたを かえる（かんぜんへんたい）。'],
+            ['てんとうむし', '🐞', '春', 'life', 'アブラムシを 食べてくれる、やさいの みかた。'],
+
+            // ---- 夏 ----
+            ['ひまわり', '🌻', '夏', 'flower', '太陽（たいよう）の ほうを むく ことから この 名前。せの高さは 3mに なる ことも。'],
+            ['あさがお', '🌺', '夏', 'flower', '小学校で そだてる 定番（ていばん）。朝（あさ）に さいて 昼（ひる）には しぼむ。'],
+            ['あじさい', '💐', '夏', 'flower', 'つゆ（6月）に さく。土（つち）の せいしつで 青（あお）や ピンクに かわる。'],
+            ['はす', '🪷', '夏', 'flower', '池（いけ）に さく 大きな 花。朝はやく ひらく。'],
+            ['すいか', '🍉', '夏', 'food', '90%以上（いじょう）が 水（みず）。熊本県（くまもとけん）が 日本一。'],
+            ['とうもろこし', '🌽', '夏', 'food', 'ひげ1本ずつに 実（み）が 1つぶ つながっている。'],
+            ['きゅうり', '🥒', '夏', 'food', 'ほとんどが 水分（すいぶん）。体（からだ）を ひやして くれる。'],
+            ['トマト', '🍅', '夏', 'food', '夏の 太陽を あびて 赤く なる。'],
+            ['かきごおり', '🍧', '夏', 'food', '氷（こおり）を けずって シロップを かけた 夏の おやつ。'],
+            ['たなばた', '🎋', '夏', 'event', 'たんざくに ねがいごとを 書（か）いて ささに かざる。天の川（あまのがわ）の おはなし。', '7月7日'],
+            ['はなび', '🎆', '夏', 'event', '夏の 夜空（よぞら）に 大きな 光の 花が さく。', '7〜8月'],
+            ['夏まつり', '🏮', '夏', 'event', 'ぼんおどりや やたいが ならぶ。ゆかたを きて 出かける。', '7〜8月'],
+            ['海びらき', '🏖️', '夏', 'event', '海（うみ）で およげるように なる 日。', '7月ごろ'],
+            ['かぶとむし', '🪲', '夏', 'life', '大きな つのが とくちょう。木（き）の しるを すいに 集（あつ）まる。'],
+            ['かえる', '🐸', '夏', 'life', '雨（あめ）の 日に 元気。虫（むし）を 食べる。'],
+            ['きんぎょ', '🐠', '夏', 'life', 'おまつりの きんぎょすくいで おなじみ。'],
+            ['ほたる', '✨', '夏', 'life', 'きれいな 水（みず）の ある ところに すむ。お しりが 光（ひか）る。'],
+
+            // ---- 秋 ----
+            ['コスモス', '🌼', '秋', 'flower', '「秋ざくら」とも よばれる。風に ゆれる ピンクの 花。'],
+            ['きんもくせい', '🧡', '秋', 'flower', 'とても いい においが する 小さな オレンジの 花。'],
+            ['もみじ', '🍁', '秋', 'flower', '気温（きおん）が 下がると 葉（は）が 赤や 黄色に かわる（こうよう）。'],
+            ['いちょう', '🍂', '秋', 'flower', '黄色（きいろ）に なる 葉。実（み）は ぎんなん。'],
+            ['さつまいも', '🍠', '秋', 'food', 'いもほりの 定番。鹿児島県（かごしまけん）が 日本一。'],
+            ['くり', '🌰', '秋', 'food', 'いがの 中に 入っている。ごはんに 入れると くりごはん。'],
+            ['ぶどう', '🍇', '秋', 'food', '山梨県（やまなしけん）が 日本一。'],
+            ['さんま', '🐟', '秋', 'food', '漢字（かんじ）で「秋刀魚」。秋に あぶらが のって おいしい。'],
+            ['きのこ', '🍄', '秋', 'food', 'しいたけ・まいたけ・まつたけ。しめった 森（もり）に はえる。'],
+            ['お月見', '🌕', '秋', 'event', '十五夜（じゅうごや）に お月さまを 見て、だんごや すすきを そなえる。', '9〜10月'],
+            ['うんどうかい', '🏃', '秋', 'event', 'かけっこや たまいれ。すずしくて 体（からだ）を うごかしやすい きせつ。', '9〜10月'],
+            ['ハロウィン', '🎃', '秋', 'event', 'かぼちゃの ランタンを かざる、外国（がいこく）から きた 行事。', '10月31日'],
+            ['七五三', '👘', '秋', 'event', '3歳（さい）・5歳・7歳の せいちょうを おいわいして 神社（じんじゃ）へ。', '11月15日'],
+            ['すずむし', '🦗', '秋', 'life', '「リーンリーン」と 鳴（な）く。秋の 虫の 音（ね）。'],
+            ['りす', '🐿️', '秋', 'life', 'どんぐりを あつめて 冬（ふゆ）に そなえる。'],
+            ['わたりどり', '🦆', '秋', 'life', '寒（さむ）く なる 前（まえ）に、あたたかい 国へ わたる 鳥（とり）も いる。'],
+
+            // ---- 冬 ----
+            ['つばき', '🌹', '冬', 'flower', '寒（さむ）い 中で さく。花ごと ぽとりと おちる。'],
+            ['すいせん', '💮', '冬', 'flower', '冬から 早春（そうしゅん）に さく。いい においが する。'],
+            ['シクラメン', '🪴', '冬', 'flower', '冬の はちうえの 定番。'],
+            ['みかん', '🍊', '冬', 'food', 'こたつと いえば みかん。和歌山県（わかやまけん）などが ゆうめい。'],
+            ['はくさい', '🥬', '冬', 'food', 'なべに かかせない やさい。寒さで あまく なる。'],
+            ['おでん', '🍢', '冬', 'food', 'だしで だいこんや たまごを にこんだ、あたたまる 料理（りょうり）。'],
+            ['おもち', '🍡', '冬', 'food', 'お正月の おぞうにや きなこもち。もち米（ごめ）から つくる。'],
+            ['ぶり', '🐟', '冬', 'food', '冬に あぶらが のる さかな。大きさで 名前が かわる「出世魚（しゅっせうお）」。'],
+            ['お正月', '🎍', '冬', 'event', '1年の はじまり。かどまつ・おせち・お年玉（としだま）。', '1月1日'],
+            ['せつぶん', '👹', '冬', 'event', '「鬼（おに）は外、福（ふく）は内」と 豆（まめ）を まく。', '2月3日ごろ'],
+            ['クリスマス', '🎄', '冬', 'event', 'ツリーを かざって プレゼントを まつ 日。', '12月25日'],
+            ['おおみそか', '🔔', '冬', 'event', '1年の さいごの 日。じょやのかねを 108回 つく。', '12月31日'],
+            ['バレンタイン', '🍫', '冬', 'event', 'チョコレートを おくる 日。', '2月14日'],
+            ['はくちょう', '🦢', '冬', 'life', '北（きた）の 国から 日本へ 冬を こしに くる。'],
+            ['くま', '🐻', '冬', 'life', '冬のあいだ、あなの 中で 冬眠（とうみん）して すごす。'],
+            ['ゆきうさぎ', '🐇', '冬', 'life', 'ユキウサギは 冬に 毛（け）が 白く なって、雪（ゆき）に まぎれる。']
+        ];
+
+        const seasonOf = name => SEASONS.find(s => s.name === name);
+        const catOf = id => CATS.find(c => c.id === id);
+
+        /* ===== ずかん ===== */
+        let filterSeason = 'すべて';
+        let filterCat = 'すべて';
+
+        function renderFilters() {
+            document.getElementById('season-filters').innerHTML =
+                ['すべて', ...SEASONS.map(s => s.name)].map(n => {
+                    const on = filterSeason === n;
+                    const s = seasonOf(n);
+                    return `<button onclick="setSeasonFilter('${n}')" data-s="${n}" class="font-black px-3 py-1.5 rounded-full text-sm bounce-hover ${on ? 'text-white' : 'bg-white border-2 border-slate-200 text-slate-600'}"
+                        style="${on ? `background:${s ? s.color : '#059669'}` : ''}">${s ? s.emoji + ' ' : ''}${n}${s ? `<span class="text-[10px] font-bold ml-1">${s.months}</span>` : ''}</button>`;
+                }).join('');
+            document.getElementById('cat-filters').innerHTML =
+                ['すべて', ...CATS.map(c => c.name)].map(n => {
+                    const on = filterCat === n;
+                    const c = CATS.find(x => x.name === n);
+                    return `<button onclick="setCatFilter('${n}')" data-c="${n}" class="font-black px-3 py-1.5 rounded-full text-sm bounce-hover ${on ? 'bg-emerald-600 text-white' : 'bg-white border-2 border-slate-200 text-slate-600'}">${c ? c.emoji + ' ' : ''}${n}</button>`;
+                }).join('');
+        }
+
+        function setSeasonFilter(n) { filterSeason = n; renderFilters(); renderBook(); }
+        function setCatFilter(n) { filterCat = n; renderFilters(); renderBook(); }
+
+        function filteredItems() {
+            return ITEMS.filter(it =>
+                (filterSeason === 'すべて' || it[2] === filterSeason) &&
+                (filterCat === 'すべて' || catOf(it[3]).name === filterCat));
+        }
+
+        function renderBook() {
+            const list = filteredItems();
+            document.getElementById('book-count').innerText = list.length;
+            document.getElementById('book-grid').innerHTML = list.map((it, i) => {
+                const s = seasonOf(it[2]);
+                return `<button onclick="openItem('${it[0]}')" data-n="${it[0]}" class="bg-white rounded-2xl p-3 border-2 shadow-sm hover:shadow-md bounce-hover text-center" style="border-color:${s.light}">
+                    <span class="inline-block text-[10px] font-black px-2 py-0.5 rounded-full" style="background:${s.light};color:${s.color}">${s.emoji} ${s.name}</span>
+                    <p class="text-5xl my-2">${it[1]}</p>
+                    <p class="font-black">${it[0]}</p>
+                    <p class="text-[10px] font-bold text-slate-400">${catOf(it[3]).name}${it[5] ? '・' + it[5] : ''}</p>
+                </button>`;
+            }).join('');
+        }
+
+        function openItem(name) {
+            const it = ITEMS.find(x => x[0] === name);
+            if (!it) return;
+            const s = seasonOf(it[2]);
+            document.getElementById('item-modal-box').style.borderColor = s.color;
+            const badge = document.getElementById('im-season');
+            badge.innerText = `${s.emoji} ${s.name}（${s.kana}）・${s.months}`;
+            badge.style.background = s.light;
+            badge.style.color = s.color;
+            document.getElementById('im-emoji').innerText = it[1];
+            document.getElementById('im-name').innerText = it[0];
+            document.getElementById('im-cat').innerText = catOf(it[3]).name;
+            document.getElementById('im-when').innerText = it[5] || '';
+            document.getElementById('im-note').innerText = it[4];
+            document.getElementById('item-modal').classList.remove('hidden');
+        }
+        function closeModal() { document.getElementById('item-modal').classList.add('hidden'); }
+
+        /* ===== きせつわけゲーム ===== */
+        const game = { queue: [], index: 0, correct: 0, wrong: [], locked: false };
+
+        function startGame(kind) {
+            const pool = kind === 'event' ? ITEMS.filter(i => i[3] === 'event') : ITEMS;
+            game.queue = shuffle(pool).slice(0, 10);
+            game.index = 0;
+            game.correct = 0;
+            game.wrong = [];
+            document.getElementById('game-start').classList.add('hidden');
+            document.getElementById('game-result').classList.add('hidden');
+            document.getElementById('game-play').classList.remove('hidden');
+            renderGame();
+        }
+        function backToGameStart() {
+            document.getElementById('game-result').classList.add('hidden');
+            document.getElementById('game-play').classList.add('hidden');
+            document.getElementById('game-start').classList.remove('hidden');
+        }
+
+        function renderGame() {
+            const it = game.queue[game.index];
+            game.locked = false;
+            document.getElementById('game-progress').innerText = `${game.index + 1} / ${game.queue.length}`;
+            document.getElementById('game-score').innerText = `せいかい ${game.correct}`;
+            document.getElementById('game-emoji').innerText = it[1];
+            document.getElementById('game-name').innerText = it[0];
+            document.getElementById('game-cat').innerText = `${catOf(it[3]).name}${it[5] ? '・' + it[5] : ''}`;
+            document.getElementById('game-msg').innerText = '';
+            document.getElementById('game-next').classList.add('hidden');
+            document.getElementById('game-choices').innerHTML = SEASONS.map(s => `
+                <button onclick="answerGame('${s.name}')" data-s="${s.name}" class="font-black py-4 rounded-2xl border-2 bounce-hover text-lg"
+                    style="background:${s.light};border-color:${s.color};color:${s.color}">${s.emoji} ${s.name}</button>`).join('');
+        }
+
+        function answerGame(name) {
+            if (game.locked) return;
+            game.locked = true;
+            const it = game.queue[game.index];
+            const s = seasonOf(it[2]);
+            if (name === it[2]) {
+                game.correct++;
+                document.getElementById('game-msg').innerHTML = `<span class="text-emerald-600">せいかい！ ${it[0]}は ${s.emoji}${s.name}（${s.months}）— ${it[4]}</span>`;
+            } else {
+                game.wrong.push(it);
+                document.getElementById('game-msg').innerHTML = `<span class="text-rose-500">ざんねん… ${it[0]}は ${s.emoji}${s.name} の ものだよ。</span>`;
+            }
+            document.getElementById('game-score').innerText = `せいかい ${game.correct}`;
+            document.querySelectorAll('#game-choices button').forEach(b => {
+                if (b.dataset.s === it[2]) b.classList.add('ring-4', 'ring-emerald-400');
+                else if (b.dataset.s === name) b.classList.add('opacity-40');
+            });
+            document.getElementById('game-next').classList.remove('hidden');
+        }
+
+        function nextGame() {
+            game.index++;
+            if (game.index < game.queue.length) {
+                renderGame();
+            } else {
+                document.getElementById('game-play').classList.add('hidden');
+                document.getElementById('game-result').classList.remove('hidden');
+                document.getElementById('game-final').innerText = game.correct;
+                document.getElementById('game-review').innerHTML = game.wrong.length === 0
+                    ? '<p class="text-center font-bold text-emerald-600">ぜんもん せいかい！ 🎉</p>'
+                    : '<p class="text-xs font-black text-slate-500">もう いちど かくにん しよう</p>' + game.wrong.map(it => {
+                        const s = seasonOf(it[2]);
+                        return `<button onclick="openItem('${it[0]}')" class="w-full text-left flex items-center gap-3 rounded-xl p-2 border" style="background:${s.light};border-color:${s.color}33">
+                            <span class="text-3xl">${it[1]}</span>
+                            <span><span class="font-black">${it[0]}</span>
+                            <span class="text-xs font-bold block" style="color:${s.color}">${s.emoji} ${s.name}</span></span>
+                        </button>`;
+                    }).join('');
+            }
+        }
+
+        /* ===== 行事カレンダー ===== */
+        // 月ごとに 行事を ならべる（月の 数字が わかる ものだけ）
+        const MONTH_OF = {
+            '1月1日': 1, '2月3日ごろ': 2, '2月14日': 2, '3月3日': 3, '3〜4月': 3, '4月': 4,
+            '5月5日': 5, '7月7日': 7, '7〜8月': 7, '7月ごろ': 7, '9〜10月': 9, '10月31日': 10,
+            '11月15日': 11, '12月25日': 12, '12月31日': 12
+        };
+
+        function renderCalendar() {
+            const events = ITEMS.filter(i => i[3] === 'event');
+            let html = '';
+            for (let m = 1; m <= 12; m++) {
+                const list = events.filter(e => MONTH_OF[e[5]] === m);
+                const season = m <= 2 || m === 12 ? SEASONS[3] : m <= 5 ? SEASONS[0] : m <= 8 ? SEASONS[1] : SEASONS[2];
+                html += `<div class="rounded-2xl border-2 p-3" style="border-color:${season.light};background:${season.light}55">
+                    <p class="font-black text-sm" style="color:${season.color}">${m}月 <span class="text-[10px]">${season.emoji}${season.name}</span></p>
+                    ${list.length === 0 ? '<p class="text-xs font-bold text-slate-400 mt-1">—</p>' :
+                        list.map(e => `<button onclick="openItem('${e[0]}')" class="w-full text-left flex items-center gap-2 mt-1.5 bg-white rounded-xl p-1.5 border border-slate-200 bounce-hover">
+                            <span class="text-2xl">${e[1]}</span>
+                            <span><span class="font-black text-sm">${e[0]}</span><span class="num block text-[10px] font-bold text-rose-500">${e[5]}</span></span>
+                        </button>`).join('')}
+                </div>`;
+            }
+            document.getElementById('cal-grid').innerHTML = html;
+        }
+
+        let calQ = null;
+        function newCalQuestion() {
+            const dated = ITEMS.filter(i => i[3] === 'event' && /^\d+月\d+日/.test(i[5]));
+            calQ = dated[rnd(0, dated.length - 1)];
+            document.getElementById('calq-q').innerText = `${calQ[1]} 「${calQ[0]}」は いつ？`;
+            document.getElementById('calq-msg').innerText = '';
+            const set = new Set([calQ[5]]);
+            while (set.size < 4) set.add(dated[rnd(0, dated.length - 1)][5]);
+            document.getElementById('calq-choices').innerHTML = shuffle([...set]).map(d => `
+                <button onclick="answerCal('${d}')" data-d="${d}" class="num bg-slate-100 hover:bg-emerald-100 border-2 border-slate-200 hover:border-emerald-400 rounded-xl py-3 font-black bounce-hover">${d}</button>`).join('');
+        }
+
+        function answerCal(d) {
+            const msg = document.getElementById('calq-msg');
+            if (d === calQ[5]) {
+                msg.innerHTML = `<span class="text-emerald-600">せいかい！ ${calQ[0]}は ${calQ[5]}。${calQ[4]}</span>`;
+            } else {
+                const btn = document.querySelector(`#calq-choices button[data-d="${d}"]`);
+                if (btn) { btn.classList.add('shake'); setTimeout(() => btn.classList.remove('shake'), 320); }
+                msg.innerHTML = `<span class="text-rose-500">ちがうよ。カレンダーを 見てみよう。</span>`;
+            }
+        }
+
+        /* ===== タブ ===== */
+        function showTab(name) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById('tab-' + name).classList.remove('hidden');
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                const on = btn.dataset.tab === name;
+                btn.classList.toggle('active', on);
+                btn.classList.toggle('bg-emerald-600', on);
+                btn.classList.toggle('text-white', on);
+                btn.classList.toggle('bg-white', !on);
+                btn.classList.toggle('border-2', !on);
+                btn.classList.toggle('border-emerald-200', !on);
+                btn.classList.toggle('text-slate-600', !on);
+            });
+        }
+
+        window.addEventListener('load', () => {
+            renderFilters();
+            renderBook();
+            renderCalendar();
+            newCalQuestion();
+        });
+    </script>
+</body>
+</html>
