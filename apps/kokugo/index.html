@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>こくごランド 1〜3年</title>
+    <meta name="description" content="50音表と、小学1〜3年で習う漢字440字（学年別漢字配当表）を、読み方・例のことば・クイズで学べる国語アプリ。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums; }
+        .bounce-hover { transition: transform .15s cubic-bezier(.175,.885,.32,1.275); }
+        .bounce-hover:hover { transform: scale(1.05); }
+        .bounce-hover:active { transform: scale(.95); }
+        @keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.12) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275); }
+        @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+        .shake { animation: shake .3s ease-in-out; }
+        .kanji { font-family: 'Hiragino Mincho ProN', 'Yu Mincho', serif; }
+    </style>
+</head>
+<body class="bg-violet-50 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-violet-600 via-purple-500 to-fuchsia-400 text-white p-3 sm:p-4 shadow-lg sticky top-0 z-30">
+        <div class="max-w-5xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">✏️</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">こくごランド</h1>
+                    <p class="text-xs text-violet-100 font-bold hidden sm:block">50音（おん）と 1〜3年で ならう かん字 440字</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[72px] z-20 bg-violet-50/95 backdrop-blur border-b border-violet-200">
+        <div class="max-w-5xl mx-auto flex gap-2 p-3 overflow-x-auto">
+            <button data-tab="aiueo" onclick="showTab('aiueo')" class="tab-btn active bg-violet-600 text-white font-black px-4 py-2 rounded-full text-sm whitespace-nowrap">あいうえお</button>
+            <button data-tab="kanji" onclick="showTab('kanji')" class="tab-btn bg-white border-2 border-violet-200 text-slate-600 font-black px-4 py-2 rounded-full text-sm whitespace-nowrap">かん字ひょう</button>
+            <button data-tab="quiz" onclick="showTab('quiz')" class="tab-btn bg-white border-2 border-violet-200 text-slate-600 font-black px-4 py-2 rounded-full text-sm whitespace-nowrap">かん字クイズ</button>
+            <button data-tab="words" onclick="showTab('words')" class="tab-btn bg-white border-2 border-violet-200 text-slate-600 font-black px-4 py-2 rounded-full text-sm whitespace-nowrap">ことばあそび</button>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto w-full p-3 sm:p-6 flex-grow space-y-5">
+
+        <!-- ============ あいうえお ============ -->
+        <section id="tab-aiueo" class="tab-content space-y-4">
+            <div class="bg-white rounded-3xl p-3 sm:p-5 shadow-md border-2 border-violet-100">
+                <h2 class="text-lg sm:text-xl font-black flex items-center gap-2"><span>🔤</span> 50音（ごじゅうおん）ひょう</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">上（うえ）が ひらがな、下（した）が カタカナ。タップすると 大きく 見えて、こえで 読むよ。</p>
+                <div id="kana-table" class="mt-3 overflow-x-auto"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-5 shadow-md border-2 border-violet-100 text-center">
+                <div class="flex items-center justify-center gap-6">
+                    <div>
+                        <p class="text-xs font-black text-slate-400">ひらがな</p>
+                        <p id="kana-big" class="text-7xl font-black text-violet-600 leading-none">あ</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-black text-slate-400">カタカナ</p>
+                        <p id="kana-big2" class="text-7xl font-black text-fuchsia-500 leading-none">ア</p>
+                    </div>
+                </div>
+                <p id="kana-word" class="text-2xl font-black mt-3">🐜 あり</p>
+                <button onclick="speakKana()" class="mt-3 bg-violet-600 hover:bg-violet-700 text-white font-black px-5 py-2.5 rounded-xl border-b-4 border-violet-800 bounce-hover text-sm">🔊 こえで きく</button>
+            </div>
+        </section>
+
+        <!-- ============ かん字ひょう ============ -->
+        <section id="tab-kanji" class="tab-content hidden space-y-4">
+            <div class="bg-white rounded-3xl p-3 sm:p-5 shadow-md border-2 border-violet-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <div id="grade-buttons" class="flex gap-2"></div>
+                    <input id="kanji-search" type="search" placeholder="かん字や 読みで さがす" class="flex-1 min-w-[160px] border-2 border-slate-200 rounded-full px-4 py-2 text-sm font-bold">
+                </div>
+                <p class="text-xs font-black text-slate-500 mt-2"><span id="kanji-count">80</span>字（学年別漢字配当表・がくねんべつかんじはいとうひょう）</p>
+                <div id="kanji-grid" class="grid grid-cols-6 sm:grid-cols-10 gap-1.5 mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ============ かん字クイズ ============ -->
+        <section id="tab-quiz" class="tab-content hidden space-y-4">
+            <div id="quiz-start" class="bg-white rounded-3xl p-5 sm:p-7 shadow-md border-2 border-violet-100 text-center">
+                <span class="text-4xl">📝</span>
+                <h2 class="text-2xl font-black mt-2">かん字クイズ（10問）</h2>
+                <p class="text-sm font-bold text-slate-500 mt-2">学年（がくねん）と やりかたを えらんでね。</p>
+                <div class="mt-4">
+                    <p class="text-xs font-black text-slate-500 mb-2">どの学年？</p>
+                    <div id="quiz-grade" class="flex justify-center gap-2"></div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-5">
+                    <button onclick="startQuiz('read')" class="bg-gradient-to-br from-violet-500 to-purple-600 text-white font-black p-4 rounded-2xl border-b-4 border-violet-700 bounce-hover">
+                        <span class="block text-2xl">🔍</span>読みかたクイズ
+                        <span class="block text-[11px] font-bold opacity-90 mt-1">かん字の 読みを えらぶ</span>
+                    </button>
+                    <button onclick="startQuiz('word')" class="bg-gradient-to-br from-fuchsia-500 to-pink-600 text-white font-black p-4 rounded-2xl border-b-4 border-fuchsia-700 bounce-hover">
+                        <span class="block text-2xl">🧩</span>ことばクイズ
+                        <span class="block text-[11px] font-bold opacity-90 mt-1">ことばに あう かん字を えらぶ</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="quiz-play" class="hidden">
+                <div class="flex justify-between items-center mb-3 gap-2">
+                    <button id="quiz-quit" onclick="backToQuizStart()" class="bg-white border-2 border-slate-200 text-slate-600 font-bold px-3 py-1.5 rounded-full text-sm">← やめる</button>
+                    <span id="quiz-progress" class="bg-violet-100 text-violet-700 font-black px-4 py-1.5 rounded-full text-sm">1 / 10</span>
+                    <span id="quiz-score" class="bg-amber-100 text-amber-700 font-black px-4 py-1.5 rounded-full text-sm">せいかい 0</span>
+                </div>
+                <div class="bg-white rounded-3xl p-5 sm:p-7 shadow-md border-2 border-violet-100 text-center">
+                    <p id="quiz-label" class="text-sm font-bold text-slate-500"></p>
+                    <p id="quiz-target" class="kanji text-7xl font-black my-3"></p>
+                    <div id="quiz-choices" class="grid grid-cols-2 gap-3"></div>
+                    <p id="quiz-msg" class="font-black mt-3 min-h-[1.5rem]"></p>
+                    <button id="quiz-next" onclick="nextQuiz()" class="hidden mt-2 w-full bg-gradient-to-r from-violet-500 to-purple-600 text-white font-black py-3 rounded-2xl border-b-4 border-violet-700 bounce-hover text-lg">つぎへ →</button>
+                </div>
+            </div>
+
+            <div id="quiz-result" class="hidden bg-white rounded-3xl p-6 shadow-md border-4 border-amber-300 text-center">
+                <div class="text-5xl">🏅</div>
+                <h2 class="text-2xl font-black mt-2">おつかれさま！</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">10問のうち <span id="quiz-final" class="text-violet-600 font-black text-xl">0</span> 問せいかい</p>
+                <div id="quiz-review" class="mt-4 space-y-2 text-left"></div>
+                <button onclick="backToQuizStart()" class="mt-5 w-full bg-gradient-to-r from-violet-500 to-purple-600 text-white font-black py-3 rounded-2xl border-b-4 border-violet-700 bounce-hover">もういちど</button>
+            </div>
+        </section>
+
+        <!-- ============ ことばあそび ============ -->
+        <section id="tab-words" class="tab-content hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-violet-100">
+                <h2 class="text-lg sm:text-xl font-black flex items-center gap-2"><span>↔️</span> はんたいの ことば</h2>
+                <p id="opp-q" class="text-center text-3xl font-black my-4"></p>
+                <div id="opp-choices" class="grid grid-cols-2 gap-3"></div>
+                <p id="opp-msg" class="text-center font-black mt-3 min-h-[1.5rem]"></p>
+                <button onclick="newOpposite()" class="mt-2 mx-auto block bg-white border-2 border-slate-200 text-slate-600 font-bold px-4 py-1.5 rounded-full text-xs">つぎの もんだい</button>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-violet-100">
+                <h2 class="text-lg sm:text-xl font-black flex items-center gap-2"><span>🔢</span> かぞえかた（助数詞・じょすうし）</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">ものの かぞえかたは いろいろ。えらんでみよう。</p>
+                <p id="count-q" class="text-center text-2xl font-black my-4"></p>
+                <div id="count-choices" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
+                <p id="count-msg" class="text-center font-black mt-3 min-h-[1.5rem]"></p>
+                <button onclick="newCounter()" class="mt-2 mx-auto block bg-white border-2 border-slate-200 text-slate-600 font-bold px-4 py-1.5 rounded-full text-xs">つぎの もんだい</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- かん字モーダル -->
+    <div id="kanji-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border-4 border-violet-300 relative text-center">
+            <button onclick="closeKanjiModal()" class="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full w-8 h-8 flex items-center justify-center font-bold">✕</button>
+            <p id="km-grade" class="inline-block text-xs font-black px-3 py-1 rounded-full bg-violet-100 text-violet-700"></p>
+            <p id="km-char" class="kanji text-8xl font-black my-2 leading-none"></p>
+            <div class="grid grid-cols-2 gap-2 text-left mt-3">
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-2">
+                    <p class="text-[11px] font-black text-slate-500">音読み（おんよみ）</p>
+                    <p id="km-on" class="font-black text-lg"></p>
+                </div>
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-2">
+                    <p class="text-[11px] font-black text-slate-500">訓読み（くんよみ）</p>
+                    <p id="km-kun" class="font-black text-lg"></p>
+                </div>
+            </div>
+            <div class="bg-violet-50 border border-violet-200 rounded-xl p-3 mt-2">
+                <p class="text-[11px] font-black text-violet-500">つかいかた</p>
+                <p id="km-word" class="font-black text-xl"></p>
+            </div>
+            <button onclick="speakKanji()" class="mt-4 w-full bg-violet-600 hover:bg-violet-700 text-white font-black py-3 rounded-2xl border-b-4 border-violet-800 bounce-hover">🔊 こえで きく</button>
+        </div>
+    </div>
+
+    <footer class="text-center py-3 text-xs text-slate-400 font-bold">こくごランド © 2026</footer>
+
+    <script>
+        /* ===== 学年別漢字配当表（小学1〜3年）=====
+           [漢字, 音読み, 訓読み, 例のことば] */
+        const KANJI = {
+            1: [
+                ['一', 'イチ', 'ひと', '一つ'], ['右', 'ウ', 'みぎ', '右手'], ['雨', 'ウ', 'あめ', '雨の日'],
+                ['円', 'エン', 'まる', '百円'], ['王', 'オウ', '', '王さま'], ['音', 'オン', 'おと', '音楽'],
+                ['下', 'カ', 'した', '下がる'], ['火', 'カ', 'ひ', '火よう日'], ['花', 'カ', 'はな', '花だん'],
+                ['貝', '', 'かい', '貝がら'], ['学', 'ガク', 'まな(ぶ)', '学校'], ['気', 'キ', '', '天気'],
+                ['九', 'キュウ', 'ここの', '九つ'], ['休', 'キュウ', 'やす(む)', '休み時間'], ['玉', 'ギョク', 'たま', '目玉'],
+                ['金', 'キン', 'かね', '金よう日'], ['空', 'クウ', 'そら', '青空'], ['月', 'ゲツ', 'つき', '月よう日'],
+                ['犬', 'ケン', 'いぬ', '子犬'], ['見', 'ケン', 'み(る)', '見学'], ['五', 'ゴ', 'いつ', '五つ'],
+                ['口', 'コウ', 'くち', '出口'], ['校', 'コウ', '', '学校'], ['左', 'サ', 'ひだり', '左手'],
+                ['三', 'サン', 'み(つ)', '三角'], ['山', 'サン', 'やま', '山のぼり'], ['子', 'シ', 'こ', '子ども'],
+                ['四', 'シ', 'よん', '四つ'], ['糸', 'シ', 'いと', '糸でんわ'], ['字', 'ジ', '', '文字'],
+                ['耳', 'ジ', 'みみ', '耳たぶ'], ['七', 'シチ', 'なな', '七つ'], ['車', 'シャ', 'くるま', '電車'],
+                ['手', 'シュ', 'て', '手がみ'], ['十', 'ジュウ', 'とお', '十日'], ['出', 'シュツ', 'で(る)', '出口'],
+                ['女', 'ジョ', 'おんな', '女の子'], ['小', 'ショウ', 'ちい(さい)', '小学校'], ['上', 'ジョウ', 'うえ', '上がる'],
+                ['森', 'シン', 'もり', '森林'], ['人', 'ジン', 'ひと', '人気'], ['水', 'スイ', 'みず', '水よう日'],
+                ['正', 'セイ', 'ただ(しい)', '正月'], ['生', 'セイ', 'い(きる)', '生活'], ['青', 'セイ', 'あお', '青空'],
+                ['夕', '', 'ゆう', '夕がた'], ['石', 'セキ', 'いし', '石ころ'], ['赤', 'セキ', 'あか', '赤い'],
+                ['千', 'セン', '', '千円'], ['川', 'セン', 'かわ', '小川'], ['先', 'セン', 'さき', '先生'],
+                ['早', 'ソウ', 'はや(い)', '早おき'], ['草', 'ソウ', 'くさ', '草花'], ['足', 'ソク', 'あし', '足あと'],
+                ['村', 'ソン', 'むら', '村人'], ['大', 'ダイ', 'おお(きい)', '大きい'], ['男', 'ダン', 'おとこ', '男の子'],
+                ['竹', 'チク', 'たけ', '竹うま'], ['中', 'チュウ', 'なか', '中心'], ['虫', 'チュウ', 'むし', '虫めがね'],
+                ['町', 'チョウ', 'まち', '町なみ'], ['天', 'テン', '', '天気'], ['田', 'デン', 'た', '田んぼ'],
+                ['土', 'ド', 'つち', '土よう日'], ['二', 'ニ', 'ふた', '二つ'], ['日', 'ニチ', 'ひ', '日よう日'],
+                ['入', 'ニュウ', 'はい(る)', '入学'], ['年', 'ネン', 'とし', '一年'], ['白', 'ハク', 'しろ', '白い'],
+                ['八', 'ハチ', 'やっ', '八つ'], ['百', 'ヒャク', '', '百円'], ['文', 'ブン', 'ふみ', '文字'],
+                ['木', 'モク', 'き', '木よう日'], ['本', 'ホン', 'もと', '本だな'], ['名', 'メイ', 'な', '名まえ'],
+                ['目', 'モク', 'め', '目だつ'], ['立', 'リツ', 'た(つ)', '立つ'], ['力', 'リョク', 'ちから', '力もち'],
+                ['林', 'リン', 'はやし', '林道'], ['六', 'ロク', 'むっ', '六つ']
+            ],
+            2: [
+                ['引', 'イン', 'ひ(く)', '引力'], ['羽', 'ウ', 'はね', '羽ね'], ['雲', 'ウン', 'くも', '雨雲'],
+                ['園', 'エン', 'その', '公園'], ['遠', 'エン', 'とお(い)', '遠足'], ['何', 'カ', 'なに', '何人'],
+                ['科', 'カ', '', '理科'], ['夏', 'カ', 'なつ', '夏休み'], ['家', 'カ', 'いえ', '家ぞく'],
+                ['歌', 'カ', 'うた', '歌声'], ['画', 'ガ', '', '図画'], ['回', 'カイ', 'まわ(る)', '何回'],
+                ['会', 'カイ', 'あ(う)', '会社'], ['海', 'カイ', 'うみ', '海べ'], ['絵', 'カイ', '', '絵本'],
+                ['外', 'ガイ', 'そと', '外がわ'], ['角', 'カク', 'つの', '三角'], ['楽', 'ガク', 'たの(しい)', '音楽'],
+                ['活', 'カツ', '', '生活'], ['間', 'カン', 'あいだ', '時間'], ['丸', 'ガン', 'まる', '丸い'],
+                ['岩', 'ガン', 'いわ', '岩場'], ['顔', 'ガン', 'かお', '顔いろ'], ['汽', 'キ', '', '汽車'],
+                ['記', 'キ', 'しる(す)', '日記'], ['帰', 'キ', 'かえ(る)', '帰り道'], ['弓', 'キュウ', 'ゆみ', '弓矢'],
+                ['牛', 'ギュウ', 'うし', '牛乳'], ['魚', 'ギョ', 'さかな', '金魚'], ['京', 'キョウ', '', '東京'],
+                ['強', 'キョウ', 'つよ(い)', '強い'], ['教', 'キョウ', 'おし(える)', '教室'], ['近', 'キン', 'ちか(い)', '近道'],
+                ['兄', 'ケイ', 'あに', '兄弟'], ['形', 'ケイ', 'かたち', '人形'], ['計', 'ケイ', 'はか(る)', '時計'],
+                ['元', 'ゲン', 'もと', '元気'], ['言', 'ゲン', 'い(う)', '言葉'], ['原', 'ゲン', 'はら', '高原'],
+                ['戸', 'コ', 'と', '戸口'], ['古', 'コ', 'ふる(い)', '古い'], ['午', 'ゴ', '', '午前'],
+                ['後', 'ゴ', 'うし(ろ)', '午後'], ['語', 'ゴ', 'かた(る)', '国語'], ['工', 'コウ', '', '工作'],
+                ['公', 'コウ', '', '公園'], ['広', 'コウ', 'ひろ(い)', '広場'], ['交', 'コウ', 'まじ(わる)', '交番'],
+                ['光', 'コウ', 'ひかり', '光る'], ['考', 'コウ', 'かんが(える)', '考える'], ['行', 'コウ', 'い(く)', '行列'],
+                ['高', 'コウ', 'たか(い)', '高い'], ['黄', 'コウ', 'き', '黄色'], ['合', 'ゴウ', 'あ(う)', '合計'],
+                ['谷', 'コク', 'たに', '谷川'], ['国', 'コク', 'くに', '外国'], ['黒', 'コク', 'くろ', '黒板'],
+                ['今', 'コン', 'いま', '今日'], ['才', 'サイ', '', '天才'], ['細', 'サイ', 'ほそ(い)', '細い'],
+                ['作', 'サク', 'つく(る)', '工作'], ['算', 'サン', '', '算数'], ['止', 'シ', 'と(まる)', '止まる'],
+                ['市', 'シ', 'いち', '市場'], ['矢', 'シ', 'や', '弓矢'], ['姉', 'シ', 'あね', '姉妹'],
+                ['思', 'シ', 'おも(う)', '思い出'], ['紙', 'シ', 'かみ', '紙ひこうき'], ['寺', 'ジ', 'てら', 'お寺'],
+                ['自', 'ジ', 'みずか(ら)', '自分'], ['時', 'ジ', 'とき', '時間'], ['室', 'シツ', '', '教室'],
+                ['社', 'シャ', '', '会社'], ['弱', 'ジャク', 'よわ(い)', '弱い'], ['首', 'シュ', 'くび', '首すじ'],
+                ['秋', 'シュウ', 'あき', '秋風'], ['週', 'シュウ', '', '今週'], ['春', 'シュン', 'はる', '春休み'],
+                ['書', 'ショ', 'か(く)', '書く'], ['少', 'ショウ', 'すこ(し)', '少ない'], ['場', 'ジョウ', 'ば', '広場'],
+                ['色', 'ショク', 'いろ', '色紙'], ['食', 'ショク', 'た(べる)', '食事'], ['心', 'シン', 'こころ', '心ぱい'],
+                ['新', 'シン', 'あたら(しい)', '新しい'], ['親', 'シン', 'おや', '親子'], ['図', 'ズ', 'はか(る)', '図書'],
+                ['数', 'スウ', 'かず', '数字'], ['西', 'セイ', 'にし', '西日本'], ['声', 'セイ', 'こえ', '大声'],
+                ['星', 'セイ', 'ほし', '星空'], ['晴', 'セイ', 'は(れる)', '晴れ'], ['切', 'セツ', 'き(る)', '大切'],
+                ['雪', 'セツ', 'ゆき', '雪だるま'], ['船', 'セン', 'ふね', '風船'], ['線', 'セン', '', '直線'],
+                ['前', 'ゼン', 'まえ', '午前'], ['組', 'ソ', 'く(む)', '組み立て'], ['走', 'ソウ', 'はし(る)', '走る'],
+                ['多', 'タ', 'おお(い)', '多い'], ['太', 'タイ', 'ふと(い)', '太い'], ['体', 'タイ', 'からだ', '体そう'],
+                ['台', 'ダイ', '', '台風'], ['地', 'チ', '', '地図'], ['池', 'チ', 'いけ', '電池'],
+                ['知', 'チ', 'し(る)', '知る'], ['茶', 'チャ', '', 'お茶'], ['昼', 'チュウ', 'ひる', '昼ごはん'],
+                ['長', 'チョウ', 'なが(い)', '長い'], ['鳥', 'チョウ', 'とり', '小鳥'], ['朝', 'チョウ', 'あさ', '朝ごはん'],
+                ['直', 'チョク', 'なお(す)', '直線'], ['通', 'ツウ', 'とお(る)', '通学'], ['弟', 'テイ', 'おとうと', '兄弟'],
+                ['店', 'テン', 'みせ', 'お店'], ['点', 'テン', '', '点すう'], ['電', 'デン', '', '電気'],
+                ['刀', 'トウ', 'かたな', '日本刀'], ['冬', 'トウ', 'ふゆ', '冬休み'], ['当', 'トウ', 'あ(たる)', '当番'],
+                ['東', 'トウ', 'ひがし', '東京'], ['答', 'トウ', 'こた(える)', '答え'], ['頭', 'トウ', 'あたま', '先頭'],
+                ['同', 'ドウ', 'おな(じ)', '同じ'], ['道', 'ドウ', 'みち', '道ろ'], ['読', 'ドク', 'よ(む)', '読書'],
+                ['内', 'ナイ', 'うち', '内がわ'], ['南', 'ナン', 'みなみ', '南国'], ['肉', 'ニク', '', '牛肉'],
+                ['馬', 'バ', 'うま', '馬車'], ['売', 'バイ', 'う(る)', '売店'], ['買', 'バイ', 'か(う)', '買い物'],
+                ['麦', 'バク', 'むぎ', '小麦'], ['半', 'ハン', 'なか(ば)', '半分'], ['番', 'バン', '', '番号'],
+                ['父', 'フ', 'ちち', 'お父さん'], ['風', 'フウ', 'かぜ', '風船'], ['分', 'ブン', 'わ(ける)', '半分'],
+                ['聞', 'ブン', 'き(く)', '新聞'], ['米', 'ベイ', 'こめ', '米つぶ'], ['歩', 'ホ', 'ある(く)', '歩道'],
+                ['母', 'ボ', 'はは', 'お母さん'], ['方', 'ホウ', 'かた', '方こう'], ['北', 'ホク', 'きた', '北風'],
+                ['毎', 'マイ', '', '毎日'], ['妹', 'マイ', 'いもうと', '姉妹'], ['万', 'マン', '', '一万'],
+                ['明', 'メイ', 'あか(るい)', '明るい'], ['鳴', 'メイ', 'な(く)', '鳴き声'], ['毛', 'モウ', 'け', '毛いと'],
+                ['門', 'モン', 'かど', '校門'], ['夜', 'ヤ', 'よる', '夜空'], ['野', 'ヤ', 'の', '野原'],
+                ['友', 'ユウ', 'とも', '友だち'], ['用', 'ヨウ', 'もち(いる)', '用じ'], ['曜', 'ヨウ', '', '日曜日'],
+                ['来', 'ライ', 'く(る)', '来年'], ['里', 'リ', 'さと', '里山'], ['理', 'リ', '', '理科'],
+                ['話', 'ワ', 'はな(す)', '会話']
+            ],
+            3: [
+                ['悪', 'アク', 'わる(い)', '悪者'], ['安', 'アン', 'やす(い)', '安心'], ['暗', 'アン', 'くら(い)', '暗い'],
+                ['医', 'イ', '', '医者'], ['委', 'イ', '', '委員'], ['意', 'イ', '', '意見'],
+                ['育', 'イク', 'そだ(つ)', '体育'], ['員', 'イン', '', '店員'], ['院', 'イン', '', '病院'],
+                ['飲', 'イン', 'の(む)', '飲み物'], ['運', 'ウン', 'はこ(ぶ)', '運どう'], ['泳', 'エイ', 'およ(ぐ)', '水泳'],
+                ['駅', 'エキ', '', '駅前'], ['央', 'オウ', '', '中央'], ['横', 'オウ', 'よこ', '横道'],
+                ['屋', 'オク', 'や', '屋上'], ['温', 'オン', 'あたた(かい)', '気温'], ['化', 'カ', 'ば(ける)', '化学'],
+                ['荷', 'カ', 'に', '荷物'], ['界', 'カイ', '', '世界'], ['開', 'カイ', 'ひら(く)', '開く'],
+                ['階', 'カイ', '', '二階'], ['寒', 'カン', 'さむ(い)', '寒い'], ['感', 'カン', '', '感じる'],
+                ['漢', 'カン', '', '漢字'], ['館', 'カン', 'やかた', '図書館'], ['岸', 'ガン', 'きし', '川岸'],
+                ['起', 'キ', 'お(きる)', '早起き'], ['期', 'キ', '', '学期'], ['客', 'キャク', '', 'お客さん'],
+                ['究', 'キュウ', '', '研究'], ['急', 'キュウ', 'いそ(ぐ)', '急ぐ'], ['級', 'キュウ', '', '学級'],
+                ['宮', 'キュウ', 'みや', 'お宮'], ['球', 'キュウ', 'たま', '野球'], ['去', 'キョ', 'さ(る)', '去年'],
+                ['橋', 'キョウ', 'はし', '歩道橋'], ['業', 'ギョウ', '', '工業'], ['曲', 'キョク', 'ま(がる)', '曲がる'],
+                ['局', 'キョク', '', '郵便局'], ['銀', 'ギン', '', '銀色'], ['区', 'ク', '', '地区'],
+                ['苦', 'ク', 'くる(しい)', '苦い'], ['具', 'グ', '', '道具'], ['君', 'クン', 'きみ', '君たち'],
+                ['係', 'ケイ', 'かかり', '係り'], ['軽', 'ケイ', 'かる(い)', '軽い'], ['血', 'ケツ', 'ち', '血えき'],
+                ['決', 'ケツ', 'き(める)', '決める'], ['研', 'ケン', '', '研究'], ['県', 'ケン', '', '県ちょう'],
+                ['庫', 'コ', '', '車庫'], ['湖', 'コ', 'みずうみ', '湖水'], ['向', 'コウ', 'む(く)', '方向'],
+                ['幸', 'コウ', 'しあわ(せ)', '幸せ'], ['港', 'コウ', 'みなと', '空港'], ['号', 'ゴウ', '', '番号'],
+                ['根', 'コン', 'ね', '根っこ'], ['祭', 'サイ', 'まつ(り)', 'お祭り'], ['皿', '', 'さら', '大皿'],
+                ['仕', 'シ', 'つか(える)', '仕事'], ['死', 'シ', 'し(ぬ)', '死ぬ'], ['使', 'シ', 'つか(う)', '使う'],
+                ['始', 'シ', 'はじ(める)', '開始'], ['指', 'シ', 'ゆび', '指さす'], ['歯', 'シ', 'は', '歯みがき'],
+                ['詩', 'シ', '', '詩人'], ['次', 'ジ', 'つぎ', '次の日'], ['事', 'ジ', 'こと', '仕事'],
+                ['持', 'ジ', 'も(つ)', '持つ'], ['式', 'シキ', '', '計算式'], ['実', 'ジツ', 'み', '実る'],
+                ['写', 'シャ', 'うつ(す)', '写真'], ['者', 'シャ', 'もの', '医者'], ['主', 'シュ', 'おも', '主人'],
+                ['守', 'シュ', 'まも(る)', '守る'], ['取', 'シュ', 'と(る)', '取る'], ['酒', 'シュ', 'さけ', 'お酒'],
+                ['受', 'ジュ', 'う(ける)', '受ける'], ['州', 'シュウ', '', '九州'], ['拾', 'シュウ', 'ひろ(う)', '拾う'],
+                ['終', 'シュウ', 'お(わる)', '終わり'], ['習', 'シュウ', 'なら(う)', '学習'], ['集', 'シュウ', 'あつ(める)', '集める'],
+                ['住', 'ジュウ', 'す(む)', '住所'], ['重', 'ジュウ', 'おも(い)', '重い'], ['宿', 'シュク', 'やど', '宿題'],
+                ['所', 'ショ', 'ところ', '場所'], ['暑', 'ショ', 'あつ(い)', '暑い'], ['助', 'ジョ', 'たす(ける)', '助ける'],
+                ['昭', 'ショウ', '', '昭和'], ['消', 'ショウ', 'き(える)', '消しゴム'], ['商', 'ショウ', '', '商店'],
+                ['章', 'ショウ', '', '文章'], ['勝', 'ショウ', 'か(つ)', '勝つ'], ['乗', 'ジョウ', 'の(る)', '乗り物'],
+                ['植', 'ショク', 'う(える)', '植物'], ['申', 'シン', 'もう(す)', '申しこみ'], ['身', 'シン', 'み', '身長'],
+                ['神', 'シン', 'かみ', '神社'], ['真', 'シン', 'ま', '真ん中'], ['深', 'シン', 'ふか(い)', '深い'],
+                ['進', 'シン', 'すす(む)', '前進'], ['世', 'セイ', 'よ', '世界'], ['整', 'セイ', 'ととの(える)', '整理'],
+                ['昔', 'セキ', 'むかし', '昔話'], ['全', 'ゼン', 'すべ(て)', '全部'], ['相', 'ソウ', 'あい', '相手'],
+                ['送', 'ソウ', 'おく(る)', '送る'], ['想', 'ソウ', '', '想ぞう'], ['息', 'ソク', 'いき', '休息'],
+                ['速', 'ソク', 'はや(い)', '速い'], ['族', 'ゾク', '', '家族'], ['他', 'タ', 'ほか', '他の人'],
+                ['打', 'ダ', 'う(つ)', '打つ'], ['対', 'タイ', '', '反対'], ['待', 'タイ', 'ま(つ)', '待つ'],
+                ['代', 'ダイ', 'か(わる)', '交代'], ['第', 'ダイ', '', '第一'], ['題', 'ダイ', '', '問題'],
+                ['炭', 'タン', 'すみ', '石炭'], ['短', 'タン', 'みじか(い)', '短い'], ['談', 'ダン', '', '相談'],
+                ['着', 'チャク', 'き(る)', '着る'], ['注', 'チュウ', 'そそ(ぐ)', '注意'], ['柱', 'チュウ', 'はしら', '電柱'],
+                ['丁', 'チョウ', '', '丁目'], ['帳', 'チョウ', '', '手帳'], ['調', 'チョウ', 'しら(べる)', '調べる'],
+                ['追', 'ツイ', 'お(う)', '追いかける'], ['定', 'テイ', 'さだ(める)', '定食'], ['庭', 'テイ', 'にわ', '校庭'],
+                ['笛', 'テキ', 'ふえ', '口笛'], ['鉄', 'テツ', '', '鉄道'], ['転', 'テン', 'ころ(がる)', '回転'],
+                ['都', 'ト', 'みやこ', '東京都'], ['度', 'ド', 'たび', '一度'], ['投', 'トウ', 'な(げる)', '投げる'],
+                ['豆', 'トウ', 'まめ', '豆まき'], ['島', 'トウ', 'しま', '半島'], ['湯', 'トウ', 'ゆ', 'お湯'],
+                ['登', 'トウ', 'のぼ(る)', '登山'], ['等', 'トウ', 'ひと(しい)', '平等'], ['動', 'ドウ', 'うご(く)', '動物'],
+                ['童', 'ドウ', 'わらべ', '童話'], ['農', 'ノウ', '', '農家'], ['波', 'ハ', 'なみ', '波うち'],
+                ['配', 'ハイ', 'くば(る)', '心配'], ['倍', 'バイ', '', '二倍'], ['箱', '', 'はこ', '本箱'],
+                ['畑', '', 'はたけ', '田畑'], ['発', 'ハツ', '', '出発'], ['反', 'ハン', 'そ(る)', '反対'],
+                ['坂', 'ハン', 'さか', '坂道'], ['板', 'バン', 'いた', '黒板'], ['皮', 'ヒ', 'かわ', '皮ふ'],
+                ['悲', 'ヒ', 'かな(しい)', '悲しい'], ['美', 'ビ', 'うつく(しい)', '美しい'], ['鼻', 'ビ', 'はな', '鼻声'],
+                ['筆', 'ヒツ', 'ふで', '筆ばこ'], ['氷', 'ヒョウ', 'こおり', '氷水'], ['表', 'ヒョウ', 'おもて', '表がわ'],
+                ['秒', 'ビョウ', '', '一秒'], ['病', 'ビョウ', 'やまい', '病気'], ['品', 'ヒン', 'しな', '食品'],
+                ['負', 'フ', 'ま(ける)', '負ける'], ['部', 'ブ', '', '部分'], ['服', 'フク', '', '洋服'],
+                ['福', 'フク', '', '幸福'], ['物', 'ブツ', 'もの', '動物'], ['平', 'ヘイ', 'たい(ら)', '平ら'],
+                ['返', 'ヘン', 'かえ(す)', '返事'], ['勉', 'ベン', '', '勉強'], ['放', 'ホウ', 'はな(す)', '放送'],
+                ['味', 'ミ', 'あじ', '味見'], ['命', 'メイ', 'いのち', '生命'], ['面', 'メン', 'おも', '画面'],
+                ['問', 'モン', 'と(う)', '問題'], ['役', 'ヤク', '', '役わり'], ['薬', 'ヤク', 'くすり', '薬局'],
+                ['由', 'ユ', '', '自由'], ['油', 'ユ', 'あぶら', '石油'], ['有', 'ユウ', 'あ(る)', '有名'],
+                ['遊', 'ユウ', 'あそ(ぶ)', '遊ぶ'], ['予', 'ヨ', '', '予定'], ['羊', 'ヨウ', 'ひつじ', '羊毛'],
+                ['洋', 'ヨウ', '', '洋服'], ['葉', 'ヨウ', 'は', '葉っぱ'], ['陽', 'ヨウ', '', '太陽'],
+                ['様', 'ヨウ', 'さま', '王様'], ['落', 'ラク', 'お(ちる)', '落ち葉'], ['流', 'リュウ', 'なが(れる)', '流れる'],
+                ['旅', 'リョ', 'たび', '旅行'], ['両', 'リョウ', '', '両手'], ['緑', 'リョク', 'みどり', '緑色'],
+                ['礼', 'レイ', '', 'お礼'], ['列', 'レツ', '', '行列'], ['練', 'レン', 'ね(る)', '練習'],
+                ['路', 'ロ', 'みち', '道路'], ['和', 'ワ', 'やわ(らぐ)', '和紙']
+            ]
+        };
+
+
+        /* ===== 50音（ひらがな・カタカナ・れいの ことば） ===== */
+        const KANA_ROWS = [
+            [['あ', 'ア', 'あり', '🐜'], ['い', 'イ', 'いぬ', '🐕'], ['う', 'ウ', 'うし', '🐄'], ['え', 'エ', 'えび', '🦐'], ['お', 'オ', 'おに', '👹']],
+            [['か', 'カ', 'かさ', '☂️'], ['き', 'キ', 'きつね', '🦊'], ['く', 'ク', 'くま', '🐻'], ['け', 'ケ', 'けむし', '🐛'], ['こ', 'コ', 'こま', '🪀']],
+            [['さ', 'サ', 'さかな', '🐟'], ['し', 'シ', 'しか', '🦌'], ['す', 'ス', 'すいか', '🍉'], ['せ', 'セ', 'せみ', '🦗'], ['そ', 'ソ', 'そら', '☁️']],
+            [['た', 'タ', 'たこ', '🐙'], ['ち', 'チ', 'ちず', '🗺️'], ['つ', 'ツ', 'つき', '🌙'], ['て', 'テ', 'てがみ', '✉️'], ['と', 'ト', 'とけい', '🕐']],
+            [['な', 'ナ', 'なす', '🍆'], ['に', 'ニ', 'にわとり', '🐔'], ['ぬ', 'ヌ', 'ぬいぐるみ', '🧸'], ['ね', 'ネ', 'ねこ', '🐈'], ['の', 'ノ', 'のり', '🍙']],
+            [['は', 'ハ', 'はな', '🌸'], ['ひ', 'ヒ', 'ひまわり', '🌻'], ['ふ', 'フ', 'ふね', '⛵'], ['へ', 'ヘ', 'へび', '🐍'], ['ほ', 'ホ', 'ほし', '⭐']],
+            [['ま', 'マ', 'まめ', '🫘'], ['み', 'ミ', 'みかん', '🍊'], ['む', 'ム', 'むし', '🐞'], ['め', 'メ', 'めがね', '👓'], ['も', 'モ', 'もも', '🍑']],
+            [['や', 'ヤ', 'やま', '⛰️'], null, ['ゆ', 'ユ', 'ゆき', '⛄'], null, ['よ', 'ヨ', 'よる', '🌃']],
+            [['ら', 'ラ', 'らくだ', '🐫'], ['り', 'リ', 'りんご', '🍎'], ['る', 'ル', 'るすばん', '🏠'], ['れ', 'レ', 'れんこん', '🥬'], ['ろ', 'ロ', 'ろうそく', '🕯️']],
+            [['わ', 'ワ', 'わに', '🐊'], null, null, null, ['を', 'ヲ', '「本を よむ」の を', '📖']],
+            [['ん', 'ン', 'ぱん', '🍞'], null, null, null, null]
+        ];
+
+        let kanaPick = KANA_ROWS[0][0];
+
+        function renderKanaTable() {
+            let html = '<table class="mx-auto border-separate" style="border-spacing:4px">';
+            KANA_ROWS.forEach(row => {
+                html += '<tr>';
+                row.forEach(cell => {
+                    if (!cell) { html += '<td class="w-12"></td>'; return; }
+                    html += `<td><button onclick="pickKana('${cell[0]}')" data-k="${cell[0]}" class="bg-violet-50 hover:bg-violet-200 border-2 border-violet-200 rounded-xl w-12 h-14 sm:w-14 sm:h-16 bounce-hover">
+                        <span class="block text-xl sm:text-2xl font-black text-violet-700 leading-none">${cell[0]}</span>
+                        <span class="block text-[11px] sm:text-xs font-black text-fuchsia-500">${cell[1]}</span>
+                    </button></td>`;
+                });
+                html += '</tr>';
+            });
+            html += '</table>';
+            document.getElementById('kana-table').innerHTML = html;
+        }
+
+        function pickKana(h) {
+            const cell = KANA_ROWS.flat().find(c => c && c[0] === h);
+            if (!cell) return;
+            kanaPick = cell;
+            document.getElementById('kana-big').innerText = cell[0];
+            document.getElementById('kana-big2').innerText = cell[1];
+            document.getElementById('kana-word').innerText = `${cell[3]} ${cell[2]}`;
+            speakKana();
+        }
+
+        function speak(text, rate = 0.85) {
+            if (!('speechSynthesis' in window)) return;
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = 'ja-JP';
+            u.rate = rate;
+            window.speechSynthesis.speak(u);
+        }
+        function speakKana() { speak(`${kanaPick[0]}、${kanaPick[2]}`); }
+
+        /* ===== かん字ひょう ===== */
+        let kanjiGrade = 1;
+        const gradeOf = ch => {
+            for (const g of [1, 2, 3]) if (KANJI[g].some(k => k[0] === ch)) return g;
+            return 0;
+        };
+
+        function renderGradeButtons() {
+            document.getElementById('grade-buttons').innerHTML = [1, 2, 3].map(g => {
+                const on = kanjiGrade === g;
+                return `<button onclick="setKanjiGrade(${g})" data-g="${g}" class="${on ? 'bg-violet-600 text-white' : 'bg-white border-2 border-violet-200 text-slate-600'} font-black px-4 py-2 rounded-full text-sm bounce-hover">${g}年<span class="text-[10px] font-bold ml-1">${KANJI[g].length}字</span></button>`;
+            }).join('');
+        }
+
+        function setKanjiGrade(g) {
+            kanjiGrade = g;
+            renderGradeButtons();
+            renderKanjiGrid();
+        }
+
+        function renderKanjiGrid() {
+            const q = document.getElementById('kanji-search').value.trim();
+            let list = KANJI[kanjiGrade];
+            if (q) {
+                list = [1, 2, 3].flatMap(g => KANJI[g]).filter(k =>
+                    k[0] === q || k[1].includes(q) || k[2].includes(q) || k[3].includes(q));
+            }
+            document.getElementById('kanji-count').innerText = list.length;
+            document.getElementById('kanji-grid').innerHTML = list.map(k => `
+                <button onclick="openKanji('${k[0]}')" data-c="${k[0]}" class="kanji bg-slate-50 hover:bg-violet-100 border-2 border-slate-200 hover:border-violet-400 rounded-xl aspect-square text-2xl sm:text-3xl font-black bounce-hover">${k[0]}</button>`).join('');
+        }
+
+        let kanjiPick = null;
+        function openKanji(ch) {
+            const g = gradeOf(ch);
+            const k = KANJI[g].find(x => x[0] === ch);
+            if (!k) return;
+            kanjiPick = k;
+            document.getElementById('km-grade').innerText = `${g}年で ならう かん字`;
+            document.getElementById('km-char').innerText = k[0];
+            document.getElementById('km-on').innerText = k[1] || '（ないよ）';
+            document.getElementById('km-kun').innerText = k[2] || '（ないよ）';
+            document.getElementById('km-word').innerText = k[3];
+            document.getElementById('kanji-modal').classList.remove('hidden');
+        }
+        function closeKanjiModal() { document.getElementById('kanji-modal').classList.add('hidden'); }
+        function speakKanji() { if (kanjiPick) speak(`${kanjiPick[3]}`); }
+
+        /* ===== かん字クイズ ===== */
+        const quiz = { mode: 'read', grade: 1, queue: [], index: 0, correct: 0, wrong: [], locked: false };
+
+        function renderQuizGrade() {
+            document.getElementById('quiz-grade').innerHTML = [1, 2, 3].map(g => {
+                const on = quiz.grade === g;
+                return `<button onclick="setQuizGrade(${g})" data-g="${g}" class="${on ? 'bg-violet-600 text-white' : 'bg-white border-2 border-violet-200 text-slate-600'} font-black px-4 py-2 rounded-full text-sm">${g}年</button>`;
+            }).join('');
+        }
+        function setQuizGrade(g) { quiz.grade = g; renderQuizGrade(); }
+
+        function startQuiz(mode) {
+            quiz.mode = mode;
+            quiz.queue = [...KANJI[quiz.grade]].sort(() => 0.5 - Math.random()).slice(0, 10);
+            quiz.index = 0;
+            quiz.correct = 0;
+            quiz.wrong = [];
+            document.getElementById('quiz-start').classList.add('hidden');
+            document.getElementById('quiz-result').classList.add('hidden');
+            document.getElementById('quiz-play').classList.remove('hidden');
+            renderQuiz();
+        }
+        function backToQuizStart() {
+            document.getElementById('quiz-result').classList.add('hidden');
+            document.getElementById('quiz-play').classList.add('hidden');
+            document.getElementById('quiz-start').classList.remove('hidden');
+        }
+
+        // その字の 読み（音か訓）を 1つ かえす
+        const readingOf = k => k[1] || k[2];
+
+        function renderQuiz() {
+            const k = quiz.queue[quiz.index];
+            quiz.locked = false;
+            document.getElementById('quiz-progress').innerText = `${quiz.index + 1} / ${quiz.queue.length}`;
+            document.getElementById('quiz-score').innerText = `せいかい ${quiz.correct}`;
+            document.getElementById('quiz-msg').innerText = '';
+            document.getElementById('quiz-next').classList.add('hidden');
+
+            const pool = KANJI[quiz.grade].filter(x => x[0] !== k[0]);
+
+            if (quiz.mode === 'read') {
+                document.getElementById('quiz-label').innerText = 'この かん字の 読みかたは？';
+                document.getElementById('quiz-target').innerText = k[0];
+                const right = readingOf(k);
+                const set = new Set([right]);
+                for (const x of pool.sort(() => 0.5 - Math.random())) {
+                    if (set.size >= 4) break;
+                    const r = readingOf(x);
+                    if (r && r !== right) set.add(r);
+                }
+                document.getElementById('quiz-choices').innerHTML = [...set].sort(() => 0.5 - Math.random()).map(r => `
+                    <button onclick="answerQuiz('${r}')" data-v="${r}" class="bg-slate-100 hover:bg-violet-100 border-2 border-slate-200 hover:border-violet-400 rounded-2xl py-3 text-xl font-black bounce-hover">${r}</button>`).join('');
+            } else {
+                document.getElementById('quiz-label').innerText = 'この ことばに 入る かん字は？';
+                document.getElementById('quiz-target').innerHTML =
+                    `<span class="text-3xl sm:text-4xl">${k[3].replace(k[0], '<span class="text-violet-400">◯</span>')}</span>`;
+                const set = new Set([k[0]]);
+                for (const x of pool.sort(() => 0.5 - Math.random())) {
+                    if (set.size >= 4) break;
+                    set.add(x[0]);
+                }
+                document.getElementById('quiz-choices').innerHTML = [...set].sort(() => 0.5 - Math.random()).map(c => `
+                    <button onclick="answerQuiz('${c}')" data-v="${c}" class="kanji bg-slate-100 hover:bg-violet-100 border-2 border-slate-200 hover:border-violet-400 rounded-2xl py-3 text-4xl font-black bounce-hover">${c}</button>`).join('');
+            }
+        }
+
+        function answerQuiz(v) {
+            if (quiz.locked) return;
+            const k = quiz.queue[quiz.index];
+            const right = quiz.mode === 'read' ? readingOf(k) : k[0];
+            quiz.locked = true;
+            if (v === right) {
+                quiz.correct++;
+                document.getElementById('quiz-msg').innerHTML =
+                    `<span class="text-emerald-600">せいかい！ ${k[0]}（${[k[1], k[2]].filter(Boolean).join('・')}）${k[3]}</span>`;
+            } else {
+                quiz.wrong.push(k);
+                document.getElementById('quiz-msg').innerHTML =
+                    `<span class="text-rose-500">ざんねん… こたえは 「${right}」（${k[0]}・${k[3]}）</span>`;
+            }
+            document.getElementById('quiz-score').innerText = `せいかい ${quiz.correct}`;
+            document.querySelectorAll('#quiz-choices button').forEach(b => {
+                if (b.dataset.v === right) b.classList.add('bg-emerald-200', 'border-emerald-500');
+                else if (b.dataset.v === v) b.classList.add('bg-rose-200', 'border-rose-500');
+            });
+            document.getElementById('quiz-next').classList.remove('hidden');
+        }
+
+        function nextQuiz() {
+            quiz.index++;
+            if (quiz.index < quiz.queue.length) {
+                renderQuiz();
+            } else {
+                document.getElementById('quiz-play').classList.add('hidden');
+                document.getElementById('quiz-result').classList.remove('hidden');
+                document.getElementById('quiz-final').innerText = quiz.correct;
+                document.getElementById('quiz-review').innerHTML = quiz.wrong.length === 0
+                    ? '<p class="text-center font-bold text-emerald-600">ぜんもん せいかい！ 🎉</p>'
+                    : '<p class="text-xs font-black text-slate-500">もう いちど かくにん しよう</p>' + quiz.wrong.map(k => `
+                        <button onclick="openKanji('${k[0]}')" class="w-full text-left flex items-center gap-3 bg-violet-50 border border-violet-200 rounded-xl p-2">
+                            <span class="kanji text-3xl font-black">${k[0]}</span>
+                            <span><span class="font-black">${[k[1], k[2]].filter(Boolean).join('・')}</span>
+                            <span class="text-xs font-bold text-slate-500 block">${k[3]}</span></span>
+                        </button>`).join('');
+            }
+        }
+
+        /* ===== ことばあそび: はんたいの ことば ===== */
+        const OPPOSITES = [
+            ['大きい', '小さい'], ['多い', '少ない'], ['長い', '短い'], ['高い', '低い'],
+            ['強い', '弱い'], ['明るい', '暗い'], ['新しい', '古い'], ['暑い', '寒い'],
+            ['広い', 'せまい'], ['重い', '軽い'], ['早い', 'おそい'], ['上', '下'],
+            ['右', '左'], ['前', 'うしろ'], ['内', '外'], ['朝', '夜'],
+            ['夏', '冬'], ['男', '女'], ['兄', '弟'], ['姉', '妹'],
+            ['父', '母'], ['入る', '出る'], ['立つ', 'すわる'], ['開ける', 'しめる'],
+            ['買う', '売る'], ['行く', '来る'], ['勝つ', '負ける'], ['笑う', 'なく'],
+            ['始まる', '終わる'], ['白', '黒']
+        ];
+        let oppQ = null;
+
+        function newOpposite() {
+            const pair = OPPOSITES[Math.floor(Math.random() * OPPOSITES.length)];
+            const flip = Math.random() < 0.5;
+            const q = flip ? pair[1] : pair[0];
+            const a = flip ? pair[0] : pair[1];
+            oppQ = { q, a };
+            document.getElementById('opp-q').innerText = `「${q}」の はんたいは？`;
+            document.getElementById('opp-msg').innerText = '';
+            const set = new Set([a]);
+            while (set.size < 4) {
+                const p = OPPOSITES[Math.floor(Math.random() * OPPOSITES.length)];
+                const cand = Math.random() < 0.5 ? p[0] : p[1];
+                if (cand !== q && cand !== a) set.add(cand);
+            }
+            document.getElementById('opp-choices').innerHTML = [...set].sort(() => 0.5 - Math.random()).map(c => `
+                <button onclick="answerOpposite('${c}')" data-v="${c}" class="bg-slate-100 hover:bg-violet-100 border-2 border-slate-200 hover:border-violet-400 rounded-2xl py-3 text-xl font-black bounce-hover">${c}</button>`).join('');
+        }
+
+        function answerOpposite(v) {
+            const msg = document.getElementById('opp-msg');
+            if (v === oppQ.a) {
+                msg.innerHTML = `<span class="text-emerald-600">せいかい！ ${oppQ.q} ↔ ${oppQ.a}</span>`;
+            } else {
+                const btn = document.querySelector(`#opp-choices button[data-v="${v}"]`);
+                if (btn) { btn.classList.add('shake'); setTimeout(() => btn.classList.remove('shake'), 320); }
+                msg.innerHTML = `<span class="text-rose-500">ちがうよ。もういちど！</span>`;
+            }
+        }
+
+        /* ===== ことばあそび: かぞえかた ===== */
+        const COUNTERS = [
+            ['えんぴつ', '本', '✏️'], ['いぬ', 'ひき', '🐕'], ['とり', 'わ', '🐦'],
+            ['くるま', '台', '🚗'], ['かみ', 'まい', '📄'], ['ノート', 'さつ', '📒'],
+            ['たまご', 'こ', '🥚'], ['ひと', '人', '🧑'], ['くつ', 'そく', '👟'],
+            ['ぞう', 'とう', '🐘'], ['さかな', 'ひき', '🐟'], ['ケーキ', 'こ', '🍰'],
+            ['シャツ', 'まい', '👕'], ['バス', '台', '🚌'], ['本', 'さつ', '📕']
+        ];
+        const COUNTER_ALL = [...new Set(COUNTERS.map(c => c[1]))];
+        let countQ = null;
+
+        function newCounter() {
+            countQ = COUNTERS[Math.floor(Math.random() * COUNTERS.length)];
+            document.getElementById('count-q').innerText = `${countQ[2]} ${countQ[0]}は 「1◯」？`;
+            document.getElementById('count-msg').innerText = '';
+            const set = new Set([countQ[1]]);
+            while (set.size < 4) set.add(COUNTER_ALL[Math.floor(Math.random() * COUNTER_ALL.length)]);
+            document.getElementById('count-choices').innerHTML = [...set].sort(() => 0.5 - Math.random()).map(c => `
+                <button onclick="answerCounter('${c}')" data-v="${c}" class="bg-slate-100 hover:bg-violet-100 border-2 border-slate-200 hover:border-violet-400 rounded-2xl py-3 text-xl font-black bounce-hover">1${c}</button>`).join('');
+        }
+
+        function answerCounter(v) {
+            const msg = document.getElementById('count-msg');
+            if (v === countQ[1]) {
+                msg.innerHTML = `<span class="text-emerald-600">せいかい！ ${countQ[0]}は 「1${countQ[1]}」と かぞえる。</span>`;
+            } else {
+                const btn = document.querySelector(`#count-choices button[data-v="${v}"]`);
+                if (btn) { btn.classList.add('shake'); setTimeout(() => btn.classList.remove('shake'), 320); }
+                msg.innerHTML = `<span class="text-rose-500">ちがうよ。もういちど！</span>`;
+            }
+        }
+
+        /* ===== タブ ===== */
+        function showTab(name) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById('tab-' + name).classList.remove('hidden');
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                const on = btn.dataset.tab === name;
+                btn.classList.toggle('active', on);
+                btn.classList.toggle('bg-violet-600', on);
+                btn.classList.toggle('text-white', on);
+                btn.classList.toggle('bg-white', !on);
+                btn.classList.toggle('border-2', !on);
+                btn.classList.toggle('border-violet-200', !on);
+                btn.classList.toggle('text-slate-600', !on);
+            });
+        }
+
+        window.addEventListener('load', () => {
+            renderKanaTable();
+            renderGradeButtons();
+            renderKanjiGrid();
+            renderQuizGrade();
+            newOpposite();
+            newCounter();
+            document.getElementById('kanji-search').addEventListener('input', renderKanjiGrid);
+        });
+    </script>
+</body>
+</html>
