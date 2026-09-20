@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>かけ算ラボ 九九とインド式</title>
+    <meta name="description" content="九九を面積モデルで見て覚え、ドリルで練習。インド式の2桁かけ算も手順を1つずつ目で見て学べる。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums; }
+        .bounce-hover { transition: transform .15s cubic-bezier(.175,.885,.32,1.275); }
+        .bounce-hover:hover { transform: scale(1.04); }
+        .bounce-hover:active { transform: scale(.96); }
+        @keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.12) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275); }
+        @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+        .shake { animation: shake .3s ease-in-out; }
+        /* 九九ひょうの マス */
+        .kuku-cell { transition: background-color .12s, color .12s; }
+    </style>
+</head>
+<body class="bg-orange-50 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-400 text-white p-3 sm:p-4 shadow-lg sticky top-0 z-30">
+        <div class="max-w-5xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">✖️</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">かけ算ラボ</h1>
+                    <p class="text-xs text-amber-50 font-bold hidden sm:block">九九（くく）と インド式（しき）2けたの かけ算</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[72px] z-20 bg-orange-50/95 backdrop-blur border-b border-orange-200">
+        <div class="max-w-5xl mx-auto flex gap-2 p-3 overflow-x-auto">
+            <button data-tab="table" onclick="showTab('table')" class="tab-btn active bg-orange-500 text-white font-black px-4 py-2 rounded-full text-sm whitespace-nowrap">九九ひょう</button>
+            <button data-tab="drill" onclick="showTab('drill')" class="tab-btn bg-white border-2 border-orange-200 text-slate-600 font-black px-4 py-2 rounded-full text-sm whitespace-nowrap">九九ドリル</button>
+            <button data-tab="india" onclick="showTab('india')" class="tab-btn bg-white border-2 border-orange-200 text-slate-600 font-black px-4 py-2 rounded-full text-sm whitespace-nowrap">インド式 2けた</button>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto w-full p-3 sm:p-6 flex-grow space-y-5">
+
+        <!-- ============ 九九ひょう ============ -->
+        <section id="tab-table" class="tab-content space-y-4">
+            <div class="bg-white rounded-3xl p-3 sm:p-5 shadow-md border-2 border-orange-100">
+                <h2 class="text-lg sm:text-xl font-black flex items-center gap-2"><span>📋</span> マスを タップしてみよう</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">「いくつが いくつ ぶん」を 四角（しかく）の 数（かず）で 見（み）せるよ。</p>
+
+                <div id="kuku-table" class="mt-3 overflow-x-auto"></div>
+
+                <div class="mt-3 flex flex-wrap gap-2 items-center">
+                    <span class="text-xs font-black text-slate-500">段（だん）で 色（いろ）を つける:</span>
+                    <div id="dan-buttons" class="flex flex-wrap gap-1"></div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-orange-100">
+                <div class="grid grid-cols-1 sm:grid-cols-[1fr_240px] gap-4 items-center">
+                    <div id="area-model" class="bg-slate-50 rounded-2xl border-2 border-slate-200 p-2"></div>
+                    <div class="space-y-3 text-center sm:text-left">
+                        <p id="fact-expr" class="num text-3xl sm:text-4xl font-black text-orange-600">3 × 7 = 21</p>
+                        <p id="fact-read" class="text-lg font-black text-slate-700">さんしちにじゅういち</p>
+                        <p id="fact-note" class="text-sm font-bold text-slate-500 leading-relaxed">3こずつ 7れつ ならべると 21こ。</p>
+                        <button onclick="speakFact()" class="bg-orange-500 hover:bg-orange-600 text-white font-black px-4 py-2.5 rounded-xl border-b-4 border-orange-700 bounce-hover text-sm">🔊 読（よ）みかたを きく</button>
+                        <p id="fact-swap" class="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-2"></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ ドリル ============ -->
+        <section id="tab-drill" class="tab-content hidden space-y-4">
+            <div id="drill-start" class="bg-white rounded-3xl p-5 sm:p-7 shadow-md border-2 border-orange-100 text-center">
+                <span class="text-4xl">✏️</span>
+                <h2 class="text-2xl font-black mt-2">九九ドリル（10問）</h2>
+                <p class="text-sm font-bold text-slate-500 mt-2">れんしゅうしたい 段（だん）を えらんでね。</p>
+                <div id="drill-dan" class="grid grid-cols-3 sm:grid-cols-5 gap-2 mt-4"></div>
+            </div>
+
+            <div id="drill-play" class="hidden">
+                <div class="flex justify-between items-center mb-3">
+                    <span id="drill-progress" class="bg-orange-100 text-orange-700 font-black px-4 py-1.5 rounded-full text-sm">1 / 10</span>
+                    <span id="drill-score" class="bg-amber-100 text-amber-700 font-black px-4 py-1.5 rounded-full text-sm">せいかい 0</span>
+                </div>
+                <div class="bg-white rounded-3xl p-5 sm:p-7 shadow-md border-2 border-orange-100 text-center">
+                    <p id="drill-q" class="num text-5xl sm:text-6xl font-black text-slate-800">3 × 7</p>
+                    <div id="drill-choices" class="grid grid-cols-2 gap-3 mt-6"></div>
+                    <div id="drill-feedback" class="hidden mt-4">
+                        <div id="drill-area" class="bg-slate-50 rounded-2xl border-2 border-slate-200 p-2 max-w-xs mx-auto"></div>
+                        <p id="drill-msg" class="font-black mt-2"></p>
+                        <button onclick="nextDrill()" class="mt-3 w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black py-3 rounded-2xl border-b-4 border-orange-700 bounce-hover text-lg">つぎへ →</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="drill-result" class="hidden bg-white rounded-3xl p-6 shadow-md border-4 border-amber-300 text-center">
+                <div class="text-5xl">🏅</div>
+                <h2 class="text-2xl font-black mt-2">おつかれさま！</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">10問のうち <span id="drill-final" class="text-orange-600 font-black text-xl">0</span> 問せいかい</p>
+                <div id="drill-review" class="mt-4 space-y-2 text-left"></div>
+                <div class="flex flex-col sm:flex-row gap-3 mt-5">
+                    <button onclick="backToDrillStart()" class="flex-1 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black py-3 rounded-2xl border-b-4 border-orange-700 bounce-hover">もういちど</button>
+                    <button onclick="showTab('table')" class="flex-1 bg-white border-2 border-slate-200 text-slate-600 font-black py-3 rounded-2xl bounce-hover">九九ひょうを 見る</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ インド式 ============ -->
+        <section id="tab-india" class="tab-content hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-orange-100">
+                <h2 class="text-lg sm:text-xl font-black flex items-center gap-2"><span>🇮🇳</span> インド式 かけ算</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">やりかたを えらんで、「つぎ」で 1つずつ 手順（てじゅん）を 見てみよう。</p>
+                <div id="method-buttons" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-orange-100">
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <h3 id="method-name" class="text-xl font-black text-orange-600">十字法（じゅうじほう）</h3>
+                        <p id="method-desc" class="text-sm font-bold text-slate-500 mt-1"></p>
+                    </div>
+                    <button onclick="newNumbers()" class="shrink-0 bg-white border-2 border-orange-200 text-slate-600 font-black px-3 py-2 rounded-xl text-xs bounce-hover">🎲 べつの数</button>
+                </div>
+
+                <p id="india-expr" class="num text-4xl sm:text-5xl font-black text-center my-4">23 × 47</p>
+
+                <div id="india-visual" class="bg-slate-50 rounded-2xl border-2 border-slate-200 p-2"></div>
+
+                <div id="india-steps" class="mt-4 space-y-2"></div>
+
+
+                <div id="india-answer" class="hidden mt-4 bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 text-center">
+                    <p class="text-xs font-black text-amber-600">こたえ</p>
+                    <p id="india-final" class="num text-4xl font-black text-orange-700"></p>
+                    <p id="india-check" class="num text-xs font-bold text-slate-500 mt-1"></p>
+                </div>
+
+                <div class="mt-4 flex items-center gap-2">
+                    <button onclick="stepBack()" class="bg-white border-2 border-slate-200 text-slate-600 font-black px-4 py-2.5 rounded-xl bounce-hover">← もどる</button>
+                    <button id="india-next" onclick="stepNext()" class="flex-1 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black py-3 rounded-2xl border-b-4 border-orange-700 bounce-hover text-lg">つぎへ →</button>
+                </div>
+            </div>
+
+            <!-- じぶんで れんしゅう -->
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-orange-100">
+                <h3 class="font-black flex items-center gap-2"><span>✍️</span> じぶんで やってみよう</h3>
+                <p id="practice-q" class="num text-3xl font-black text-center my-3">36 × 11 = ?</p>
+                <div class="flex gap-2 justify-center">
+                    <input id="practice-input" type="number" inputmode="numeric" class="num w-36 text-center text-2xl font-black border-2 border-slate-300 rounded-xl px-3 py-2" placeholder="?">
+                    <button onclick="checkPractice()" class="bg-orange-500 hover:bg-orange-600 text-white font-black px-5 py-2 rounded-xl border-b-4 border-orange-700 bounce-hover">答（こた）えあわせ</button>
+                </div>
+                <p id="practice-msg" class="text-center font-black mt-3 min-h-[1.5rem]"></p>
+                <button onclick="newPractice()" class="mt-2 mx-auto block bg-white border-2 border-slate-200 text-slate-600 font-bold px-4 py-1.5 rounded-full text-xs">つぎの もんだい</button>
+            </div>
+        </section>
+    </main>
+
+    <footer class="text-center py-3 text-xs text-slate-400 font-bold">かけ算ラボ © 2026</footer>
+
+    <script>
+        /* ================= 九九の 読みかた ================= */
+        const KUKU_READ = [
+            ['いんいちがいち', 'いんにがに', 'いんさんがさん', 'いんしがし', 'いんごがご', 'いんろくがろく', 'いんしちがしち', 'いんはちがはち', 'いんくがく'],
+            ['にいちがに', 'ににんがし', 'にさんがろく', 'にしがはち', 'にごじゅう', 'にろくじゅうに', 'にしちじゅうし', 'にはちじゅうろく', 'にくじゅうはち'],
+            ['さんいちがさん', 'さんにがろく', 'さざんがく', 'さんしじゅうに', 'さんごじゅうご', 'さぶろくじゅうはち', 'さんしちにじゅういち', 'さんぱにじゅうし', 'さんくにじゅうしち'],
+            ['しいちがし', 'しにがはち', 'しさんじゅうに', 'ししじゅうろく', 'しごにじゅう', 'しろくにじゅうし', 'しちにじゅうはち', 'しはさんじゅうに', 'しくさんじゅうろく'],
+            ['ごいちがご', 'ごにじゅう', 'ごさんじゅうご', 'ごしにじゅう', 'ごごにじゅうご', 'ごろくさんじゅう', 'ごしちさんじゅうご', 'ごはしじゅう', 'ごっくしじゅうご'],
+            ['ろくいちがろく', 'ろくにじゅうに', 'ろくさんじゅうはち', 'ろくしにじゅうし', 'ろくごさんじゅう', 'ろくろくさんじゅうろく', 'ろくしちしじゅうに', 'ろくはしじゅうはち', 'ろっくごじゅうし'],
+            ['しちいちがしち', 'しちにじゅうし', 'しちさんにじゅういち', 'しちしにじゅうはち', 'しちごさんじゅうご', 'しちろくしじゅうに', 'しちしちしじゅうく', 'しちはごじゅうろく', 'しちくろくじゅうさん'],
+            ['はちいちがはち', 'はちにじゅうろく', 'はちさんにじゅうし', 'はちしさんじゅうに', 'はちごしじゅう', 'はちろくしじゅうはち', 'はちしちごじゅうろく', 'はっぱろくじゅうし', 'はっくしちじゅうに'],
+            ['くいちがく', 'くにじゅうはち', 'くさんにじゅうしち', 'くしさんじゅうろく', 'くごしじゅうご', 'くろくごじゅうし', 'くしちろくじゅうさん', 'くはしちじゅうに', 'くくはちじゅういち']
+        ];
+
+        /* ================= 九九ひょう ================= */
+        let picked = { a: 3, b: 7 };
+        let danHighlight = 0;
+
+        function renderKukuTable() {
+            let html = '<table class="mx-auto num border-separate" style="border-spacing:3px"><tr><th class="w-8"></th>';
+            for (let b = 1; b <= 9; b++) {
+                html += `<th class="w-8 sm:w-10 text-xs sm:text-sm font-black text-orange-500">${b}</th>`;
+            }
+            html += '</tr>';
+            for (let a = 1; a <= 9; a++) {
+                html += `<tr><th class="text-xs sm:text-sm font-black text-orange-500">${a}</th>`;
+                for (let b = 1; b <= 9; b++) {
+                    const on = picked.a === a && picked.b === b;
+                    const inDan = danHighlight && (a === danHighlight);
+                    const cls = on ? 'bg-orange-500 text-white ring-2 ring-orange-700'
+                        : inDan ? 'bg-amber-200 text-amber-900'
+                        : (a === picked.a || b === picked.b) ? 'bg-orange-50 text-slate-700' : 'bg-slate-50 text-slate-600';
+                    html += `<td><button onclick="pickFact(${a},${b})" data-cell="${a}x${b}" class="kuku-cell ${cls} w-8 h-8 sm:w-10 sm:h-10 rounded-lg font-black text-xs sm:text-sm">${a * b}</button></td>`;
+                }
+                html += '</tr>';
+            }
+            html += '</table>';
+            document.getElementById('kuku-table').innerHTML = html;
+        }
+
+        function renderDanButtons() {
+            let html = `<button onclick="setDan(0)" class="dan-btn ${danHighlight === 0 ? 'bg-orange-500 text-white' : 'bg-white border border-slate-200 text-slate-600'} font-bold px-2.5 py-1 rounded-full text-xs">なし</button>`;
+            for (let d = 1; d <= 9; d++) {
+                html += `<button onclick="setDan(${d})" class="dan-btn ${danHighlight === d ? 'bg-orange-500 text-white' : 'bg-white border border-slate-200 text-slate-600'} font-bold px-2.5 py-1 rounded-full text-xs">${d}の段</button>`;
+            }
+            document.getElementById('dan-buttons').innerHTML = html;
+        }
+
+        function setDan(d) {
+            danHighlight = d;
+            renderKukuTable();
+            renderDanButtons();
+        }
+
+        // a こずつ b れつ の 四角（面積モデル）
+        function areaModelSVG(a, b, opts = {}) {
+            const cell = 22, pad = 14;
+            const w = pad * 2 + b * cell, h = pad * 2 + a * cell;
+            let out = '';
+            for (let i = 0; i < a; i++) {
+                for (let j = 0; j < b; j++) {
+                    out += `<rect x="${pad + j * cell + 2}" y="${pad + i * cell + 2}" width="${cell - 4}" height="${cell - 4}" rx="4" fill="${opts.color || '#fb923c'}" opacity="${0.55 + 0.45 * ((i + j) % 2)}" />`;
+                }
+            }
+            // まわりの わく と 数
+            out += `<rect x="${pad - 3}" y="${pad - 3}" width="${b * cell + 6}" height="${a * cell + 6}" rx="8" fill="none" stroke="#f97316" stroke-width="2.5" />`;
+            return `<svg viewBox="0 0 ${w} ${h}" class="w-full h-auto" style="max-height:230px" role="img" aria-label="${a}×${b}の四角">${out}</svg>`;
+        }
+
+        function pickFact(a, b) {
+            picked = { a, b };
+            renderKukuTable();
+            renderFact();
+        }
+
+        function renderFact() {
+            const { a, b } = picked;
+            document.getElementById('area-model').innerHTML = areaModelSVG(a, b);
+            document.getElementById('fact-expr').innerText = `${a} × ${b} = ${a * b}`;
+            document.getElementById('fact-read').innerText = KUKU_READ[a - 1][b - 1];
+            document.getElementById('fact-note').innerText = `${a}こずつ ${b}れつ ならべると ${a * b}こ。`;
+            document.getElementById('fact-swap').innerText =
+                a === b ? `${a} × ${b} は たてと よこが おなじ、正方形（せいほうけい）に なるね。`
+                    : `ひっくり返（かえ）しても おなじ！ ${b} × ${a} = ${a * b}（${KUKU_READ[b - 1][a - 1]}）`;
+        }
+
+        function speakFact() {
+            if (!('speechSynthesis' in window)) return;
+            const u = new SpeechSynthesisUtterance(KUKU_READ[picked.a - 1][picked.b - 1]);
+            u.lang = 'ja-JP';
+            u.rate = 0.85;
+            window.speechSynthesis.speak(u);
+        }
+
+        /* ================= 九九ドリル ================= */
+        const drill = { queue: [], index: 0, correct: 0, wrong: [], locked: false, dan: 0 };
+
+        function renderDrillDan() {
+            let html = `<button onclick="startDrill(0)" class="bg-orange-500 text-white font-black px-3 py-2.5 rounded-xl bounce-hover text-sm">ぜんぶ</button>`;
+            for (let d = 1; d <= 9; d++) {
+                html += `<button onclick="startDrill(${d})" class="bg-white border-2 border-orange-200 text-slate-700 font-black px-3 py-2.5 rounded-xl bounce-hover text-sm">${d}の段</button>`;
+            }
+            document.getElementById('drill-dan').innerHTML = html;
+        }
+
+        function startDrill(dan) {
+            drill.dan = dan;
+            drill.queue = [];
+            drill.index = 0;
+            drill.correct = 0;
+            drill.wrong = [];
+            for (let i = 0; i < 10; i++) {
+                const a = dan || (1 + Math.floor(Math.random() * 9));
+                const b = 1 + Math.floor(Math.random() * 9);
+                drill.queue.push({ a, b });
+            }
+            document.getElementById('drill-start').classList.add('hidden');
+            document.getElementById('drill-result').classList.add('hidden');
+            document.getElementById('drill-play').classList.remove('hidden');
+            renderDrill();
+        }
+
+        function backToDrillStart() {
+            document.getElementById('drill-result').classList.add('hidden');
+            document.getElementById('drill-play').classList.add('hidden');
+            document.getElementById('drill-start').classList.remove('hidden');
+        }
+
+        function renderDrill() {
+            const q = drill.queue[drill.index];
+            drill.locked = false;
+            document.getElementById('drill-progress').innerText = `${drill.index + 1} / ${drill.queue.length}`;
+            document.getElementById('drill-score').innerText = `せいかい ${drill.correct}`;
+            document.getElementById('drill-q').innerText = `${q.a} × ${q.b}`;
+            document.getElementById('drill-feedback').classList.add('hidden');
+            document.getElementById('drill-choices').classList.remove('hidden');
+
+            // ありそうな まちがいを 混（ま）ぜる
+            const right = q.a * q.b;
+            const cands = new Set([right]);
+            const near = [q.a * (q.b + 1), q.a * (q.b - 1), (q.a + 1) * q.b, (q.a - 1) * q.b, right + 1, right - 1, right + 10];
+            for (const c of near.sort(() => 0.5 - Math.random())) {
+                if (cands.size >= 4) break;
+                if (c > 0 && c !== right) cands.add(c);
+            }
+            const choices = [...cands].sort(() => 0.5 - Math.random());
+            document.getElementById('drill-choices').innerHTML = choices.map(c => `
+                <button onclick="answerDrill(${c})" data-v="${c}" class="num bg-slate-100 hover:bg-orange-100 border-2 border-slate-200 hover:border-orange-400 rounded-2xl py-4 text-3xl font-black text-slate-800 bounce-hover">${c}</button>`).join('');
+        }
+
+        function answerDrill(v) {
+            if (drill.locked) return;
+            const q = drill.queue[drill.index];
+            const right = q.a * q.b;
+            if (v !== right) {
+                const btn = document.querySelector(`#drill-choices button[data-v="${v}"]`);
+                if (btn) {
+                    btn.classList.add('shake', 'bg-rose-100', 'border-rose-400');
+                    setTimeout(() => btn.classList.remove('shake'), 320);
+                }
+                if (!drill.wrong.find(w => w.a === q.a && w.b === q.b)) drill.wrong.push(q);
+                return;
+            }
+            drill.locked = true;
+            drill.correct++;
+            document.getElementById('drill-score').innerText = `せいかい ${drill.correct}`;
+            document.getElementById('drill-area').innerHTML = areaModelSVG(q.a, q.b);
+            document.getElementById('drill-msg').innerHTML =
+                `<span class="text-emerald-600">せいかい！</span> <span class="num">${q.a} × ${q.b} = ${right}</span><br><span class="text-sm text-slate-500">${KUKU_READ[q.a - 1][q.b - 1]}</span>`;
+            document.getElementById('drill-feedback').classList.remove('hidden');
+            document.getElementById('drill-choices').classList.add('hidden');
+        }
+
+        function nextDrill() {
+            drill.index++;
+            if (drill.index < drill.queue.length) {
+                renderDrill();
+            } else {
+                document.getElementById('drill-play').classList.add('hidden');
+                document.getElementById('drill-result').classList.remove('hidden');
+                document.getElementById('drill-final').innerText = drill.correct;
+                document.getElementById('drill-review').innerHTML = drill.wrong.length === 0
+                    ? '<p class="text-center font-bold text-emerald-600">まちがい なし！すばらしい 🎉</p>'
+                    : '<p class="text-xs font-black text-slate-500">もう いちど かくにん しよう</p>' + drill.wrong.map(w => `
+                        <div class="flex items-center gap-3 bg-orange-50 border border-orange-200 rounded-xl p-2">
+                            <span class="num font-black text-orange-700">${w.a} × ${w.b} = ${w.a * w.b}</span>
+                            <span class="text-xs font-bold text-slate-500">${KUKU_READ[w.a - 1][w.b - 1]}</span>
+                        </div>`).join('');
+            }
+        }
+
+        /* ================= インド式 ================= */
+        const rnd = (min, max) => min + Math.floor(Math.random() * (max - min + 1));
+        const pad2 = n => String(n).padStart(2, '0');
+
+        // 数字を 大きく 並（なら）べる ための SVG
+        function digitsSVG(top, bottom, links, opts = {}) {
+            const W = 260, H = 150;
+            const x1 = 88, x2 = 156, yT = 42, yB = 112;
+            const ta = String(top), ba = String(bottom);
+            let out = `<rect x="0" y="0" width="${W}" height="${H}" fill="none" />`;
+
+            (links || []).forEach(l => {
+                const from = l.from === 0 ? x1 : x2;
+                const to = l.to === 0 ? x1 : x2;
+                out += `<line x1="${from}" y1="${yT + 16}" x2="${to}" y2="${yB - 16}" stroke="${l.color}" stroke-width="3.5" stroke-linecap="round" ${l.dash ? 'stroke-dasharray="6 5"' : ''} />`;
+            });
+
+            const digit = (ch, x, y, color) =>
+                `<text x="${x}" y="${y}" fill="${color}" font-size="42" font-weight="900" text-anchor="middle" dominant-baseline="central" font-family="inherit">${ch}</text>`;
+
+            out += digit(ta[0], x1, yT, opts.hi0 ? '#ea580c' : '#334155');
+            out += digit(ta[1] || '', x2, yT, opts.hi1 ? '#ea580c' : '#334155');
+            out += digit(ba[0], x1, yB, opts.hi2 ? '#ea580c' : '#334155');
+            out += digit(ba[1] || '', x2, yB, opts.hi3 ? '#ea580c' : '#334155');
+            out += `<text x="46" y="${(yT + yB) / 2}" fill="#94a3b8" font-size="30" font-weight="900" text-anchor="middle" dominant-baseline="central">×</text>`;
+            return `<svg viewBox="0 0 ${W} ${H}" class="w-full h-auto" style="max-height:180px">${out}</svg>`;
+        }
+
+        // けたの はこを ならべる（×11 の「あいだに はさむ」用）
+        function slotsSVG(cells) {
+            const W = 280, H = 120, bw = 62, gap = 10;
+            const total = cells.length * bw + (cells.length - 1) * gap;
+            let x = (W - total) / 2;
+            let out = '';
+            cells.forEach(c => {
+                out += `<rect x="${x}" y="30" width="${bw}" height="60" rx="12" fill="${c.fill || '#fff'}" stroke="${c.stroke || '#cbd5e1'}" stroke-width="3" ${c.dash ? 'stroke-dasharray="6 5"' : ''} />`;
+                out += `<text x="${x + bw / 2}" y="60" fill="${c.color || '#334155'}" font-size="34" font-weight="900" text-anchor="middle" dominant-baseline="central" font-family="inherit">${c.v}</text>`;
+                if (c.caption) out += `<text x="${x + bw / 2}" y="104" fill="#94a3b8" font-size="13" font-weight="900" text-anchor="middle" font-family="inherit">${c.caption}</text>`;
+                x += bw + gap;
+            });
+            return `<svg viewBox="0 0 ${W} ${H}" class="w-full h-auto" style="max-height:150px">${out}</svg>`;
+        }
+
+        const METHODS = {
+            cross: {
+                name: '十字法（じゅうじほう）',
+                short: '十字法',
+                desc: 'どんな 2けた × 2けた でも つかえる 方法（ほうほう）。「たて・ななめ・たて」の 3回で こたえが 出る。',
+                gen: () => [rnd(11, 99), rnd(11, 99)],
+                steps(a, b) {
+                    const [A, B] = [Math.floor(a / 10), a % 10];
+                    const [C, D] = [Math.floor(b / 10), b % 10];
+                    const p1 = A * C, p2 = A * D + B * C, p3 = B * D;
+                    return [
+                        {
+                            title: '① 左（ひだり）どうし', math: `${A} × ${C} = ${p1}`,
+                            note: `十（じゅう）の位（くらい）どうしを かける。これは ${p1} × 100 のぶん。`,
+                            value: p1 * 100, label: `${p1}00`,
+                            visual: digitsSVG(a, b, [{ from: 0, to: 0, color: '#f97316' }], { hi0: 1, hi2: 1 })
+                        },
+                        {
+                            title: '② ななめ（たすきがけ）', math: `${A} × ${D} + ${B} × ${C} = ${A * D} + ${B * C} = ${p2}`,
+                            note: `ななめ 2本を かけて たす。これは ${p2} × 10 のぶん。`,
+                            value: p2 * 10, label: `${p2}0`,
+                            visual: digitsSVG(a, b, [{ from: 0, to: 1, color: '#0ea5e9' }, { from: 1, to: 0, color: '#0ea5e9' }], { hi0: 1, hi1: 1, hi2: 1, hi3: 1 })
+                        },
+                        {
+                            title: '③ 右（みぎ）どうし', math: `${B} × ${D} = ${p3}`,
+                            note: `一（いち）の位どうしを かける。そのまま ${p3}。`,
+                            value: p3, label: `${p3}`,
+                            visual: digitsSVG(a, b, [{ from: 1, to: 1, color: '#10b981' }], { hi1: 1, hi3: 1 })
+                        },
+                        {
+                            title: '④ ぜんぶ たす', math: `${p1 * 100} + ${p2 * 10} + ${p3} = ${a * b}`,
+                            note: 'くらいを そろえて たすだけ！',
+                            value: a * b, label: `${a * b}`, final: true,
+                            visual: digitsSVG(a, b, [], {})
+                        }
+                    ];
+                }
+            },
+            eleven: {
+                name: '11を かける',
+                short: '×11',
+                desc: '2けた × 11 は、2つの 数字（すうじ）の あいだに その 和（わ）を はさむだけ。',
+                gen: () => [rnd(12, 98), 11],
+                steps(a) {
+                    const A = Math.floor(a / 10), B = a % 10, sum = A + B;
+                    const carry = sum >= 10;
+                    const steps = [
+                        {
+                            title: '① 両（りょう）はしを そのまま', math: `${A} _ ${B}`,
+                            note: `${a} の 十の位 ${A} と 一の位 ${B} を 左右（さゆう）に おく。`,
+                            value: A * 100 + B, label: `${A}_${B}`,
+                            visual: slotsSVG([
+                                { v: A, caption: '十の位', fill: '#ffedd5', stroke: '#f97316', color: '#c2410c' },
+                                { v: '?', dash: true, color: '#94a3b8' },
+                                { v: B, caption: '一の位', fill: '#ffedd5', stroke: '#f97316', color: '#c2410c' }
+                            ])
+                        },
+                        {
+                            title: '② あいだに 和（わ）を はさむ', math: `${A} + ${B} = ${sum}`,
+                            note: `真ん中（まんなか）に ${sum} を いれる。`,
+                            value: A * 100 + sum * 10 + B, label: `${A} ${sum} ${B}`,
+                            visual: slotsSVG([
+                                { v: A },
+                                { v: sum, caption: `${A}+${B}`, fill: '#dbeafe', stroke: '#3b82f6', color: '#1d4ed8' },
+                                { v: B }
+                            ])
+                        }
+                    ];
+                    if (carry) {
+                        steps.push({
+                            title: '③ 10を こえたら くり上（あ）げ', math: `${A}(${sum})${B} → ${a * 11}`,
+                            note: `真ん中が ${sum} で 10以上（いじょう）なので、1を 左に くり上げる。`,
+                            value: a * 11, label: `${a * 11}`, final: true,
+                            visual: slotsSVG(String(a * 11).split('').map(d => ({
+                                v: d, fill: '#dcfce7', stroke: '#22c55e', color: '#15803d'
+                            })))
+                        });
+                    } else {
+                        steps.push({
+                            title: '③ できあがり', math: `${a} × 11 = ${a * 11}`,
+                            note: 'くり上がりが ないので そのまま！',
+                            value: a * 11, label: `${a * 11}`, final: true,
+                            visual: slotsSVG(String(a * 11).split('').map(d => ({
+                                v: d, fill: '#dcfce7', stroke: '#22c55e', color: '#15803d'
+                            })))
+                        });
+                    }
+                    return steps;
+                }
+            },
+            same10: {
+                name: '十の位が同じ＋一の位の和が10',
+                short: '和が10',
+                desc: '43 × 47 のように、十の位が おなじで 一の位を たすと 10 に なる ときの 早（はや）わざ。',
+                gen: () => {
+                    const t = rnd(1, 9), u = rnd(1, 9);
+                    return [t * 10 + u, t * 10 + (10 - u)];
+                },
+                steps(a, b) {
+                    const t = Math.floor(a / 10), u = a % 10, v = b % 10;
+                    const left = t * (t + 1), right = u * v;
+                    return [
+                        {
+                            title: '① たしかめる', math: `十の位: ${t} と ${t} ／ 一の位: ${u} + ${v} = 10`,
+                            note: '十の位が おなじ・一の位の 和が 10。この ときだけ つかえる。',
+                            value: null, label: 'OK',
+                            visual: digitsSVG(a, b, [], { hi0: 1, hi2: 1 })
+                        },
+                        {
+                            title: '② 十の位 ×（十の位＋1）', math: `${t} × ${t + 1} = ${left}`,
+                            note: `これが 上（うえ）の けた。`,
+                            value: left * 100, label: `${left}__`,
+                            visual: digitsSVG(a, b, [{ from: 0, to: 0, color: '#f97316' }], { hi0: 1, hi2: 1 })
+                        },
+                        {
+                            title: '③ 一の位どうしを かける', math: `${u} × ${v} = ${right}`,
+                            note: `これを 2けたに して 右（みぎ）に くっつける（${pad2(right)}）。`,
+                            value: left * 100 + right, label: `${left}${pad2(right)}`, final: true,
+                            visual: digitsSVG(a, b, [{ from: 1, to: 1, color: '#10b981' }], { hi1: 1, hi3: 1 })
+                        }
+                    ];
+                }
+            },
+            five: {
+                name: '5で おわる数の 2乗（じじょう）',
+                short: '×同じ数',
+                desc: '25 × 25 のような「5で おわる 数を 2回 かける」計算も 一瞬（いっしゅん）。',
+                gen: () => { const t = rnd(1, 9); const n = t * 10 + 5; return [n, n]; },
+                steps(a) {
+                    const t = Math.floor(a / 10);
+                    const left = t * (t + 1);
+                    return [
+                        {
+                            title: '① 十の位 ×（十の位＋1）', math: `${t} × ${t + 1} = ${left}`,
+                            note: '5を のぞいた 十の位と、その つぎの 数を かける。',
+                            value: left * 100, label: `${left}__`,
+                            visual: digitsSVG(a, a, [{ from: 0, to: 0, color: '#f97316' }], { hi0: 1, hi2: 1 })
+                        },
+                        {
+                            title: '② うしろに 25 を つける', math: `${left} と 25 → ${a * a}`,
+                            note: '5 × 5 = 25 は いつも おなじ。だから うしろは かならず 25。',
+                            value: left * 100 + 25, label: `${left}25`, final: true,
+                            visual: digitsSVG(a, a, [{ from: 1, to: 1, color: '#10b981' }], { hi1: 1, hi3: 1 })
+                        }
+                    ];
+                }
+            }
+        };
+
+        const india = { method: 'cross', a: 23, b: 47, steps: [], shown: 0 };
+
+        function renderMethodButtons() {
+            document.getElementById('method-buttons').innerHTML = Object.entries(METHODS).map(([key, m]) => {
+                const on = india.method === key;
+                return `<button onclick="setMethod('${key}')" data-m="${key}" class="${on ? 'bg-orange-500 text-white border-orange-700 border-b-4' : 'bg-white border-2 border-orange-200 text-slate-600'} font-black px-3 py-2.5 rounded-xl text-xs sm:text-sm bounce-hover">${m.short}</button>`;
+            }).join('');
+        }
+
+        function setMethod(key) {
+            india.method = key;
+            renderMethodButtons();
+            newNumbers();
+        }
+
+        function newNumbers() {
+            const m = METHODS[india.method];
+            const [a, b] = m.gen();
+            india.a = a;
+            india.b = b;
+            india.steps = m.steps(a, b);
+            india.shown = 0;
+            renderIndia();
+            newPractice();
+        }
+
+        function renderIndia() {
+            const m = METHODS[india.method];
+            document.getElementById('method-name').innerText = m.name;
+            document.getElementById('method-desc').innerText = m.desc;
+            document.getElementById('india-expr').innerText = `${india.a} × ${india.b}`;
+
+            const cur = india.steps[Math.max(0, india.shown - 1)];
+            document.getElementById('india-visual').innerHTML = india.shown === 0
+                ? digitsSVG(india.a, india.b, [], {})
+                : cur.visual;
+
+            document.getElementById('india-steps').innerHTML = india.steps.slice(0, india.shown).map((s, i) => `
+                <div class="pop flex items-start gap-3 bg-slate-50 border-2 border-slate-200 rounded-2xl p-3">
+                    <span class="shrink-0 w-7 h-7 rounded-full bg-orange-500 text-white font-black flex items-center justify-center text-sm">${i + 1}</span>
+                    <div>
+                        <p class="font-black text-slate-800 text-sm">${s.title}</p>
+                        <p class="num font-black text-orange-600 text-lg">${s.math}</p>
+                        <p class="text-xs font-bold text-slate-500 mt-0.5">${s.note}</p>
+                    </div>
+                </div>`).join('');
+
+            const done = india.shown >= india.steps.length;
+            document.getElementById('india-answer').classList.toggle('hidden', !done);
+            if (done) {
+                document.getElementById('india-final').innerText = `${india.a} × ${india.b} = ${india.a * india.b}`;
+                document.getElementById('india-check').innerText = `ふつうに 計算しても ${india.a * india.b}。あっているね！`;
+            }
+            document.getElementById('india-next').innerText = done ? '🎲 べつの数で もういちど' : 'つぎへ →';
+        }
+
+        function stepNext() {
+            if (india.shown >= india.steps.length) { newNumbers(); return; }
+            india.shown++;
+            renderIndia();
+        }
+        function stepBack() {
+            if (india.shown > 0) india.shown--;
+            renderIndia();
+        }
+
+        /* ---- じぶんで やってみよう ---- */
+        let practice = { a: 36, b: 11 };
+        function newPractice() {
+            const m = METHODS[india.method];
+            const [a, b] = m.gen();
+            practice = { a, b };
+            document.getElementById('practice-q').innerText = `${a} × ${b} = ?`;
+            document.getElementById('practice-input').value = '';
+            document.getElementById('practice-msg').innerText = '';
+        }
+        function checkPractice() {
+            const v = parseInt(document.getElementById('practice-input').value, 10);
+            const right = practice.a * practice.b;
+            const msg = document.getElementById('practice-msg');
+            if (Number.isNaN(v)) {
+                msg.innerHTML = '<span class="text-slate-500">数（すう）を 入れてね</span>';
+            } else if (v === right) {
+                msg.innerHTML = `<span class="text-emerald-600">せいかい！ ${practice.a} × ${practice.b} = ${right}</span>`;
+            } else {
+                msg.innerHTML = `<span class="text-rose-500">ざんねん… こたえは ${right}</span>`;
+            }
+        }
+
+        /* ================= タブ ================= */
+        function showTab(name) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById('tab-' + name).classList.remove('hidden');
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                const on = btn.dataset.tab === name;
+                btn.classList.toggle('active', on);
+                btn.classList.toggle('bg-orange-500', on);
+                btn.classList.toggle('text-white', on);
+                btn.classList.toggle('bg-white', !on);
+                btn.classList.toggle('border-2', !on);
+                btn.classList.toggle('border-orange-200', !on);
+                btn.classList.toggle('text-slate-600', !on);
+            });
+        }
+
+        window.addEventListener('load', () => {
+            renderKukuTable();
+            renderDanButtons();
+            renderFact();
+            renderDrillDan();
+            renderMethodButtons();
+            india.steps = METHODS.cross.steps(india.a, india.b);
+            renderIndia();
+            newPractice();
+        });
+    </script>
+</body>
+</html>
