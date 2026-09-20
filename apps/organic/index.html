@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ゆうき化学ラボ ベンゼンのひみつ</title>
+    <meta name="description" content="ベンゼン環の共鳴、官能基（かんのうき）パズル、有機化合物の構造式図鑑で、有機化学を目で見て学ぼう。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'M PLUS Rounded 1c', system-ui, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .bounce-hover { transition: transform .15s cubic-bezier(.175,.885,.32,1.275); }
+        .bounce-hover:hover { transform: scale(1.04); }
+        .bounce-hover:active { transform: scale(.96); }
+        .tab-btn.active { color: #fff; }
+
+        @keyframes pop { 0% { transform: scale(.3); opacity: 0 } 70% { transform: scale(1.15) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .35s cubic-bezier(.175,.885,.32,1.275); transform-origin: center; transform-box: fill-box; }
+
+        @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+        .shake { animation: shake .3s ease-in-out; }
+
+        @keyframes slotblink { 0%,100% { opacity: .35 } 50% { opacity: 1 } }
+        .slot { animation: slotblink 1.3s ease-in-out infinite; }
+    </style>
+</head>
+<body class="bg-emerald-50 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-emerald-600 via-teal-500 to-lime-500 text-white p-3 sm:p-4 shadow-lg sticky top-0 z-30">
+        <div class="max-w-5xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">🧫</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">ゆうき化学ラボ</h1>
+                    <p class="text-xs text-emerald-100 font-bold hidden sm:block">ベンゼン環（かん）と 官能基（かんのうき）の せかい</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[72px] z-20 bg-emerald-50/95 backdrop-blur border-b border-emerald-200">
+        <div class="max-w-5xl mx-auto flex gap-2 p-3 overflow-x-auto">
+            <button data-tab="benzene" onclick="showTab('benzene')" class="tab-btn active bg-emerald-600 font-black px-4 py-2 rounded-full text-sm whitespace-nowrap">ベンゼンのひみつ</button>
+            <button data-tab="puzzle" onclick="showTab('puzzle')" class="tab-btn bg-white border-2 border-emerald-200 text-slate-600 font-black px-4 py-2 rounded-full text-sm whitespace-nowrap">官能基パズル</button>
+            <button data-tab="book" onclick="showTab('book')" class="tab-btn bg-white border-2 border-emerald-200 text-slate-600 font-black px-4 py-2 rounded-full text-sm whitespace-nowrap">構造式ずかん</button>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto w-full p-3 sm:p-6 flex-grow space-y-5">
+
+        <!-- ============ ベンゼン ============ -->
+        <section id="tab-benzene" class="tab-content space-y-5">
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-emerald-100">
+                <div class="flex items-start gap-3">
+                    <span class="text-3xl">🔷</span>
+                    <div>
+                        <h2 class="text-xl sm:text-2xl font-black">ベンゼン C<sub>6</sub>H<sub>6</sub> は 6角形（かっけい）</h2>
+                        <p class="text-sm font-bold text-slate-500 mt-1">炭素（たんそ）6こが 輪（わ）に なって、その まわりに 水素（すいそ）が 1こずつ。有機化学（ゆうきかがく）の 主役（しゅやく）だよ。</p>
+                    </div>
+                </div>
+
+                <div class="mt-4 grid grid-cols-1 sm:grid-cols-[1fr_260px] gap-4 items-center">
+                    <div id="benzene-canvas" class="bg-slate-50 rounded-2xl border-2 border-slate-200 p-2"></div>
+                    <div class="space-y-3">
+                        <div class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-3">
+                            <p class="text-xs font-black text-emerald-600 mb-1">いまの 見せかた</p>
+                            <p id="benzene-mode-name" class="font-black text-lg">二重結合（にじゅうけつごう）A</p>
+                            <p id="benzene-mode-desc" class="text-xs font-bold text-slate-600 mt-1 leading-relaxed">1つおきに 二重結合を かいた かたち。</p>
+                        </div>
+                        <div class="grid grid-cols-1 gap-2">
+                            <button onclick="setBenzeneMode('a')" class="benz-btn bg-emerald-600 text-white font-black px-4 py-2.5 rounded-xl border-b-4 border-emerald-800 bounce-hover text-sm">Aの かたち</button>
+                            <button onclick="setBenzeneMode('b')" class="benz-btn bg-white border-2 border-emerald-200 text-slate-600 font-black px-4 py-2.5 rounded-xl bounce-hover text-sm">Bの かたち（入れかえ）</button>
+                            <button onclick="setBenzeneMode('ring')" class="benz-btn bg-white border-2 border-emerald-200 text-slate-600 font-black px-4 py-2.5 rounded-xl bounce-hover text-sm">〇 で あらわす（共鳴）</button>
+                            <button id="benz-anim" onclick="toggleBenzeneAnim()" class="bg-amber-400 hover:bg-amber-500 text-slate-900 font-black px-4 py-2.5 rounded-xl border-b-4 border-amber-600 bounce-hover text-sm">▶ A と B を 入れかえる</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                    <div class="bg-slate-50 border-2 border-slate-200 rounded-2xl p-3">
+                        <p class="font-black text-emerald-600 text-xs mb-1">🤔 ふしぎな こと</p>
+                        <p class="font-bold text-slate-700 leading-relaxed">A と B、どっちが 本物（ほんもの）？ じつは <span class="text-emerald-700">どちらでもない</span>。2つが まざった すがた（共鳴・きょうめい）なんだ。</p>
+                    </div>
+                    <div class="bg-slate-50 border-2 border-slate-200 rounded-2xl p-3">
+                        <p class="font-black text-emerald-600 text-xs mb-1">📏 6本 ぜんぶ おなじ</p>
+                        <p class="font-bold text-slate-700 leading-relaxed">ほんとうは 6本の 結合が <span class="text-emerald-700">ぜんぶ おなじ長さ</span>。一重（いちじゅう）と 二重の あいだくらい（1.5本ぶん）だよ。</p>
+                    </div>
+                    <div class="bg-slate-50 border-2 border-slate-200 rounded-2xl p-3">
+                        <p class="font-black text-emerald-600 text-xs mb-1">🧴 どこに ある？</p>
+                        <p class="font-bold text-slate-700 leading-relaxed">プラスチック・薬（くすり）・せんざい・タイヤ。ベンゼン環は 身（み）の まわりの ものの 材料（ざいりょう）。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ 官能基パズル ============ -->
+        <section id="tab-puzzle" class="tab-content hidden space-y-5">
+            <div id="puzzle-start" class="bg-white rounded-3xl p-5 sm:p-7 shadow-md border-2 border-emerald-100 text-center">
+                <span class="text-4xl">🧩</span>
+                <h2 class="text-2xl font-black mt-2">官能基（かんのうき）パズル</h2>
+                <p class="text-sm font-bold text-slate-500 mt-2 leading-relaxed">
+                    有機化合物（ゆうきかごうぶつ）は「<span class="text-emerald-600">骨組（ほねぐみ）</span>」＋「<span class="text-rose-500">官能基</span>」で できている。<br>
+                    骨組に あう 官能基を くっつけて、なまえを 完成（かんせい）させよう！
+                </p>
+                <button onclick="startPuzzle()" class="mt-5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black px-8 py-3 rounded-2xl border-b-4 border-emerald-700 bounce-hover text-lg">スタート（10問）</button>
+            </div>
+
+            <div id="puzzle-play" class="hidden">
+                <div class="flex justify-between items-center mb-3">
+                    <span id="puzzle-progress" class="bg-emerald-100 text-emerald-700 font-black px-4 py-1.5 rounded-full text-sm">1 / 10</span>
+                    <span id="puzzle-score" class="bg-amber-100 text-amber-700 font-black px-4 py-1.5 rounded-full text-sm">せいかい 0</span>
+                </div>
+
+                <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-emerald-100 text-center">
+                    <p class="text-sm font-bold text-slate-500">この ものを つくろう！</p>
+                    <h2 id="puzzle-target" class="text-2xl sm:text-3xl font-black mt-1">フェノール</h2>
+                    <p id="puzzle-target-hint" class="text-xs font-bold text-emerald-600 mt-1">しょうどく液（えき）に つかわれる</p>
+
+                    <div id="puzzle-canvas" class="my-4 bg-slate-50 rounded-2xl border-2 border-slate-200 p-2 mx-auto max-w-md"></div>
+
+                    <p id="puzzle-msg" class="text-sm font-bold text-slate-600 mb-3">? の ところに くっつける 官能基を えらんで！</p>
+
+                    <div id="puzzle-groups" class="grid grid-cols-3 sm:grid-cols-5 gap-2"></div>
+
+                    <div id="puzzle-done" class="hidden mt-4">
+                        <div class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-4 text-left">
+                            <p class="font-black text-emerald-600 text-xs mb-1">🎉 せいかい！</p>
+                            <p id="puzzle-fact" class="font-bold text-slate-700 text-sm leading-relaxed"></p>
+                        </div>
+                        <button onclick="nextPuzzle()" class="mt-4 w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black py-3 rounded-2xl border-b-4 border-emerald-700 bounce-hover text-lg">つぎへ →</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="puzzle-result" class="hidden bg-white rounded-3xl p-6 shadow-md border-4 border-amber-300 text-center">
+                <div class="text-5xl">🏅</div>
+                <h2 class="text-2xl font-black mt-2">おつかれさま！</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">10問のうち <span id="puzzle-final" class="text-emerald-600 font-black text-xl">0</span> 問せいかい</p>
+                <p id="puzzle-final-msg" class="text-sm font-bold text-emerald-600 mt-2"></p>
+                <div class="flex flex-col sm:flex-row gap-3 mt-5">
+                    <button onclick="startPuzzle()" class="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black py-3 rounded-2xl border-b-4 border-emerald-700 bounce-hover">もういちど</button>
+                    <button onclick="showTab('book')" class="flex-1 bg-white border-2 border-slate-200 text-slate-600 font-black py-3 rounded-2xl bounce-hover">ずかんを 見る</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ ずかん ============ -->
+        <section id="tab-book" class="tab-content hidden space-y-4">
+            <div class="flex gap-2 overflow-x-auto pb-1">
+                <button onclick="filterBook('all', this)" class="filter-btn active bg-emerald-600 text-white font-bold px-3 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap">すべて</button>
+                <button onclick="filterBook('alkane', this)" class="filter-btn bg-white border border-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap">炭化水素</button>
+                <button onclick="filterBook('unsat', this)" class="filter-btn bg-white border border-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap">二重・三重結合</button>
+                <button onclick="filterBook('aromatic', this)" class="filter-btn bg-white border border-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap">芳香族</button>
+                <button onclick="filterBook('alcohol', this)" class="filter-btn bg-white border border-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap">アルコール</button>
+                <button onclick="filterBook('acid', this)" class="filter-btn bg-white border border-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap">酸・その他</button>
+            </div>
+            <p class="text-xs font-black text-slate-500"><span id="book-count">0</span>この ゆうき化合物</p>
+            <p class="text-[11px] font-bold text-slate-400 -mt-2">※ ベンゼン環の C に ついている H は、図が こまかく なりすぎないよう かいていません（構造式の おやくそく）。</p>
+            <div id="book-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+        </section>
+    </main>
+
+    <!-- くわしく モーダル -->
+    <div id="detail-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border-4 border-emerald-300 relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeModal()" class="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full w-8 h-8 flex items-center justify-center font-bold">✕</button>
+            <div class="text-center">
+                <h2 id="modal-name" class="text-2xl font-black">ベンゼン</h2>
+                <p id="modal-kana" class="text-xs font-bold text-slate-500">べんぜん</p>
+                <p id="modal-formula" class="text-xl font-black text-emerald-600 mt-1"></p>
+                <div id="modal-canvas" class="my-3 bg-slate-50 rounded-2xl border-2 border-slate-200 p-2"></div>
+                <div class="text-left space-y-3 text-sm">
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                        <p class="font-extrabold text-emerald-600 text-xs mb-1">💡 とくちょう</p>
+                        <p id="modal-fact" class="font-bold leading-relaxed"></p>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                        <p class="font-extrabold text-amber-600 text-xs mb-1">🏠 どこで つかう？</p>
+                        <p id="modal-use" class="font-bold leading-relaxed"></p>
+                    </div>
+                    <div id="modal-group-wrap" class="bg-slate-50 p-3 rounded-xl border border-slate-200 hidden">
+                        <p class="font-extrabold text-rose-500 text-xs mb-1">🔖 官能基</p>
+                        <p id="modal-group" class="font-bold leading-relaxed"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center py-3 text-xs text-slate-400 font-bold">ゆうき化学ラボ © 2026</footer>
+
+    <script>
+        /* ================= えがく どうぐ ================= */
+        // げんしの みため
+        const ATOM = {
+            C:  { fill: '#475569', stroke: '#1e293b', text: '#ffffff', r: 15 },
+            H:  { fill: '#f8fafc', stroke: '#cbd5e1', text: '#334155', r: 11 },
+            O:  { fill: '#ef4444', stroke: '#b91c1c', text: '#ffffff', r: 15 },
+            N:  { fill: '#3b82f6', stroke: '#1d4ed8', text: '#ffffff', r: 15 }
+        };
+        // まとめて かく グループ（CH3 や OH など）
+        const GROUP = {
+            CH3:  { label: 'CH₃',  fill: '#64748b', text: '#fff', w: 42 },
+            CH2:  { label: 'CH₂',  fill: '#64748b', text: '#fff', w: 42 },
+            C2H5: { label: 'C₂H₅', fill: '#64748b', text: '#fff', w: 50 },
+            OH:   { label: 'OH',   fill: '#ef4444', text: '#fff', w: 36 },
+            NH2:  { label: 'NH₂',  fill: '#3b82f6', text: '#fff', w: 42 },
+            COOH: { label: 'COOH', fill: '#e11d48', text: '#fff', w: 58 },
+            CHO:  { label: 'CHO',  fill: '#f97316', text: '#fff', w: 48 }
+        };
+
+        function hexVertices(cx, cy, r) {
+            // 上下に かどが ある 6角形（よこの へんが たてに なる）
+            return [30, 90, 150, 210, 270, 330].map(deg => {
+                const a = deg * Math.PI / 180;
+                return { x: cx + r * Math.cos(a), y: cy - r * Math.sin(a) };
+            });
+        }
+
+        function bondLines(A, B, order, color) {
+            const dx = B.x - A.x, dy = B.y - A.y;
+            const len = Math.hypot(dx, dy) || 1;
+            const px = (-dy / len), py = (dx / len);
+            const offsets = order === 1 ? [0] : order === 2 ? [-1, 1] : [-1.4, 0, 1.4];
+            const gap = order === 3 ? 4.5 : 5;
+            const width = order === 1 ? 5 : 4;
+            return offsets.map(s => `<line x1="${A.x + px * gap * s}" y1="${A.y + py * gap * s}" x2="${B.x + px * gap * s}" y2="${B.y + py * gap * s}" stroke="${color}" stroke-width="${width}" stroke-linecap="round" />`).join('');
+        }
+
+        // mol = { nodes:[{t,x,y}], bonds:[[i,j,order]], ring:{cx,cy,r}|null, view:[w,h] }
+        function structureSVG(mol, opts = {}) {
+            const view = mol.view || [200, 160];
+            let out = '';
+
+            (mol.bonds || []).forEach(([i, j, order]) => {
+                const A = mol.nodes[i], B = mol.nodes[j];
+                if (!A || !B) return;
+                const hidden = A.t === 'slot' || B.t === 'slot';
+                out += bondLines(A, B, order, hidden ? '#cbd5e1' : '#94a3b8');
+            });
+
+            if (mol.ring) {
+                out += `<circle cx="${mol.ring.cx}" cy="${mol.ring.cy}" r="${mol.ring.r}" fill="none" stroke="#94a3b8" stroke-width="4.5" />`;
+            }
+
+            mol.nodes.forEach((n, idx) => {
+                const popped = opts.popIndex === idx ? ' class="pop"' : '';
+                if (n.t === 'slot') {
+                    out += `<g class="slot"><circle cx="${n.x}" cy="${n.y}" r="17" fill="#fff" stroke="#10b981" stroke-width="3" stroke-dasharray="6 5" />
+                        <text x="${n.x}" y="${n.y}" fill="#10b981" font-size="18" font-weight="900" text-anchor="middle" dominant-baseline="central">?</text></g>`;
+                } else if (ATOM[n.t]) {
+                    const s = ATOM[n.t];
+                    out += `<g${popped}><circle cx="${n.x}" cy="${n.y}" r="${s.r}" fill="${s.fill}" stroke="${s.stroke}" stroke-width="2.5" />
+                        <text x="${n.x}" y="${n.y}" fill="${s.text}" font-size="${s.r}" font-weight="900" text-anchor="middle" dominant-baseline="central">${n.t}</text></g>`;
+                } else {
+                    const g = GROUP[n.t];
+                    if (!g) return;
+                    const w = g.w, h = 26;
+                    out += `<g${popped}><rect x="${n.x - w / 2}" y="${n.y - h / 2}" width="${w}" height="${h}" rx="9" fill="${g.fill}" />
+                        <text x="${n.x}" y="${n.y}" fill="${g.text}" font-size="15" font-weight="900" text-anchor="middle" dominant-baseline="central">${g.label}</text></g>`;
+                }
+            });
+
+            return `<svg viewBox="0 0 ${view[0]} ${view[1]}" class="w-full h-auto" style="max-height:260px" role="img" aria-label="${mol.aria || '構造式'}">${out}</svg>`;
+        }
+
+        /* ================= ベンゼンの ずけい ================= */
+        function benzeneMol(mode) {
+            const V = hexVertices(100, 82, 42);
+            const H = hexVertices(100, 82, 70);
+            const nodes = V.map(v => ({ t: 'C', x: v.x, y: v.y }))
+                .concat(H.map(v => ({ t: 'H', x: v.x, y: v.y })));
+            const ringBonds = [];
+            for (let i = 0; i < 6; i++) {
+                const j = (i + 1) % 6;
+                let order = 1;
+                if (mode === 'a') order = i % 2 === 0 ? 2 : 1;
+                if (mode === 'b') order = i % 2 === 0 ? 1 : 2;
+                ringBonds.push([i, j, order]);
+            }
+            for (let i = 0; i < 6; i++) ringBonds.push([i, 6 + i, 1]);
+            return {
+                nodes,
+                bonds: ringBonds,
+                ring: mode === 'ring' ? { cx: 100, cy: 82, r: 24 } : null,
+                view: [200, 165],
+                aria: 'ベンゼンの構造式'
+            };
+        }
+
+        const BENZENE_MODES = {
+            a: { name: '二重結合（にじゅうけつごう）A', desc: '1つおきに 二重結合を かいた かたち。' },
+            b: { name: '二重結合 B（入れかえ）', desc: 'A の 一重（いちじゅう）と 二重を そっくり 入れかえた かたち。どちらも 正しく かけてしまう！' },
+            ring: { name: '〇 であらわす（共鳴）', desc: '二重結合が 輪（わ）の中を ぐるぐる 回（まわ）っている イメージ。ほんとうの ベンゼンは これ。' }
+        };
+
+        let benzeneMode = 'a';
+        let benzeneAnim = null;
+
+        function renderBenzene() {
+            document.getElementById('benzene-canvas').innerHTML = structureSVG(benzeneMol(benzeneMode));
+            document.getElementById('benzene-mode-name').innerText = BENZENE_MODES[benzeneMode].name;
+            document.getElementById('benzene-mode-desc').innerText = BENZENE_MODES[benzeneMode].desc;
+            document.querySelectorAll('.benz-btn').forEach((btn, i) => {
+                const on = ['a', 'b', 'ring'][i] === benzeneMode;
+                btn.classList.toggle('bg-emerald-600', on);
+                btn.classList.toggle('text-white', on);
+                btn.classList.toggle('border-b-4', on);
+                btn.classList.toggle('border-emerald-800', on);
+                btn.classList.toggle('bg-white', !on);
+                btn.classList.toggle('border-2', !on);
+                btn.classList.toggle('border-emerald-200', !on);
+                btn.classList.toggle('text-slate-600', !on);
+            });
+        }
+
+        function setBenzeneMode(mode) {
+            stopBenzeneAnim();
+            benzeneMode = mode;
+            renderBenzene();
+        }
+
+        function toggleBenzeneAnim() {
+            if (benzeneAnim) { stopBenzeneAnim(); return; }
+            document.getElementById('benz-anim').innerText = '⏸ とめる';
+            benzeneAnim = setInterval(() => {
+                benzeneMode = benzeneMode === 'a' ? 'b' : 'a';
+                renderBenzene();
+            }, 900);
+        }
+
+        function stopBenzeneAnim() {
+            if (benzeneAnim) clearInterval(benzeneAnim);
+            benzeneAnim = null;
+            document.getElementById('benz-anim').innerText = '▶ A と B を 入れかえる';
+        }
+
+        /* ================= ずかんの データ ================= */
+        // 骨組（ほねぐみ）づくりの ヘルパー
+        function chain(labels, y = 82, x0 = null, gap = 54) {
+            const total = (labels.length - 1) * gap;
+            const start = x0 === null ? 100 - total / 2 : x0;
+            return labels.map((t, i) => ({ t, x: start + i * gap, y: y + (i % 2 ? 12 : 0) }));
+        }
+        function benzeneRingNodes(cx, cy, r) {
+            return hexVertices(cx, cy, r).map(v => ({ t: 'C', x: v.x, y: v.y }));
+        }
+        // ベンゼン環 ＋ 右がわに くっつく 1つの グループ
+        function phenylWith(groupType, popSlot) {
+            const cx = 78, cy = 82, r = 38;
+            const nodes = benzeneRingNodes(cx, cy, r);
+            const v = hexVertices(cx, cy, r);
+            // 右の 2つの かどの あいだ（0番: 30°）から 外へ
+            nodes.push({ t: groupType, x: v[0].x + 46, y: v[0].y - 8 });
+            const bonds = [];
+            for (let i = 0; i < 6; i++) bonds.push([i, (i + 1) % 6, i % 2 === 0 ? 2 : 1]);
+            bonds.push([0, 6, 1]);
+            return { nodes, bonds, view: [200, 165], popIndexHint: 6, aria: 'ベンゼン環に官能基がついた構造式' };
+        }
+
+        const COMPOUNDS = [
+            {
+                id: 'methane', name: 'メタン', kana: 'めたん', formula: 'CH₄', cats: ['alkane'],
+                fact: 'いちばん かんたんな 有機化合物。炭素（たんそ）1こに 水素 4こが ついた かたち。',
+                use: 'としガス、うしの げっぷ',
+                mol: {
+                    nodes: [
+                        { t: 'C', x: 100, y: 82 },
+                        { t: 'H', x: 100, y: 30 }, { t: 'H', x: 100, y: 134 },
+                        { t: 'H', x: 48, y: 82 }, { t: 'H', x: 152, y: 82 }
+                    ],
+                    bonds: [[0, 1, 1], [0, 2, 1], [0, 3, 1], [0, 4, 1]], view: [200, 165]
+                }
+            },
+            {
+                id: 'ethane', name: 'エタン', kana: 'えたん', formula: 'C₂H₆', cats: ['alkane'],
+                fact: 'CH₃ が 2つ つながった かたち。炭素が 2こ。',
+                use: 'プラスチックの 材料（ざいりょう）',
+                mol: { nodes: chain(['CH3', 'CH3']), bonds: [[0, 1, 1]], view: [200, 165] }
+            },
+            {
+                id: 'propane', name: 'プロパン', kana: 'ぷろぱん', formula: 'C₃H₈', cats: ['alkane'],
+                fact: '炭素が 3こ ならんだ かたち。ボンベに つめて はこべる 気体（きたい）。',
+                use: 'プロパンガス、カセットコンロ',
+                mol: { nodes: chain(['CH3', 'CH2', 'CH3']), bonds: [[0, 1, 1], [1, 2, 1]], view: [200, 165] }
+            },
+            {
+                id: 'butane', name: 'ブタン', kana: 'ぶたん', formula: 'C₄H₁₀', cats: ['alkane'],
+                fact: '炭素 4こが 1れつ。おなじ C₄H₁₀ でも えだ分かれした イソブタンも あって、これを 異性体（いせいたい）と いうよ。',
+                use: 'ライターの ガス',
+                mol: { nodes: chain(['CH3', 'CH2', 'CH2', 'CH3'], 78, 24, 52), bonds: [[0, 1, 1], [1, 2, 1], [2, 3, 1]], view: [200, 165] }
+            },
+            {
+                id: 'isobutane', name: 'イソブタン', kana: 'いそぶたん', formula: 'C₄H₁₀', cats: ['alkane'],
+                fact: 'ブタンと 同（おな）じ C₄H₁₀ なのに、えだ分かれして いる 別（べつ）の もの。これが 異性体（いせいたい）。',
+                use: 'スプレーの ガス、れいぞうこの れいばい',
+                mol: {
+                    nodes: [
+                        { t: 'C', x: 100, y: 82 },
+                        { t: 'CH3', x: 44, y: 82 }, { t: 'CH3', x: 156, y: 82 }, { t: 'CH3', x: 100, y: 32 },
+                        { t: 'H', x: 100, y: 130 }
+                    ],
+                    bonds: [[0, 1, 1], [0, 2, 1], [0, 3, 1], [0, 4, 1]], view: [200, 165]
+                }
+            },
+            {
+                id: 'cyclohexane', name: 'シクロヘキサン', kana: 'しくろへきさん', formula: 'C₆H₁₂', cats: ['alkane'],
+                fact: '炭素 6こが 輪（わ）に なった かたち。ベンゼンと にているけれど 二重結合が ない。',
+                use: 'ナイロンの 材料',
+                mol: {
+                    nodes: hexVertices(100, 82, 53).map(v => ({ t: 'CH2', x: v.x, y: v.y })),
+                    bonds: [[0, 1, 1], [1, 2, 1], [2, 3, 1], [3, 4, 1], [4, 5, 1], [5, 0, 1]], view: [200, 165]
+                }
+            },
+            {
+                id: 'ethylene', name: 'エチレン', kana: 'えちれん', formula: 'C₂H₄', cats: ['unsat'],
+                fact: '炭素の あいだが 二重結合。くだものを あまく 熟（じゅく）させる 気体でも あるよ。',
+                use: 'ポリエチレン（ふくろ）の 材料',
+                mol: {
+                    nodes: [
+                        { t: 'C', x: 72, y: 82 }, { t: 'C', x: 128, y: 82 },
+                        { t: 'H', x: 36, y: 50 }, { t: 'H', x: 36, y: 114 },
+                        { t: 'H', x: 164, y: 50 }, { t: 'H', x: 164, y: 114 }
+                    ],
+                    bonds: [[0, 1, 2], [0, 2, 1], [0, 3, 1], [1, 4, 1], [1, 5, 1]], view: [200, 165]
+                }
+            },
+            {
+                id: 'acetylene', name: 'アセチレン', kana: 'あせちれん', formula: 'C₂H₂', cats: ['unsat'],
+                fact: '炭素の あいだが 三重結合（さんじゅうけつごう）。もやすと とても 高温（こうおん）に なる。',
+                use: '鉄（てつ）を きる ガスバーナー',
+                mol: {
+                    nodes: [
+                        { t: 'H', x: 34, y: 82 }, { t: 'C', x: 76, y: 82 },
+                        { t: 'C', x: 124, y: 82 }, { t: 'H', x: 166, y: 82 }
+                    ],
+                    bonds: [[0, 1, 1], [1, 2, 3], [2, 3, 1]], view: [200, 165]
+                }
+            },
+            {
+                id: 'benzene', name: 'ベンゼン', kana: 'べんぜん', formula: 'C₆H₆', cats: ['aromatic'],
+                fact: '炭素 6この 輪。二重結合が 輪の中を 回（まわ）っている（共鳴）ため、6本の 結合は ぜんぶ おなじ 長さ。',
+                use: 'プラスチック・薬・せんざいの 出発点（しゅっぱつてん）',
+                mol: benzeneMol('a')
+            },
+            {
+                id: 'toluene', name: 'トルエン', kana: 'とるえん', formula: 'C₇H₈', cats: ['aromatic'],
+                fact: 'ベンゼン環に CH₃（メチル基）が 1こ ついた もの。',
+                use: 'シンナー、せっちゃくざい', group: 'CH₃（メチル基）',
+                mol: phenylWith('CH3')
+            },
+            {
+                id: 'phenol', name: 'フェノール', kana: 'ふぇのーる', formula: 'C₆H₅OH', cats: ['aromatic', 'alcohol'],
+                fact: 'ベンゼン環に OH（ヒドロキシ基）。バイキンを やっつける ちからが ある。',
+                use: 'しょうどく液、プラスチック（ベークライト）', group: 'OH（ヒドロキシ基）',
+                mol: phenylWith('OH')
+            },
+            {
+                id: 'aniline', name: 'アニリン', kana: 'あにりん', formula: 'C₆H₅NH₂', cats: ['aromatic'],
+                fact: 'ベンゼン環に NH₂（アミノ基）。むかしは これから きれいな 色（いろ）を つくった。',
+                use: '染料（せんりょう）、くすり', group: 'NH₂（アミノ基）',
+                mol: phenylWith('NH2')
+            },
+            {
+                id: 'benzoic', name: '安息香酸', kana: 'あんそくこうさん', formula: 'C₆H₅COOH', cats: ['aromatic', 'acid'],
+                fact: 'ベンゼン環に COOH（カルボキシ基）。カビを ふせぐ はたらきが ある。',
+                use: 'しょくひんの ほぞんりょう', group: 'COOH（カルボキシ基）',
+                mol: phenylWith('COOH')
+            },
+            {
+                id: 'naphthalene', name: 'ナフタレン', kana: 'なふたれん', formula: 'C₁₀H₈', cats: ['aromatic'],
+                fact: 'ベンゼン環が 2つ くっついた かたち。かたまりから じわじわ 気体に なる（しょうか）。',
+                use: '虫（むし）よけの しょうのう',
+                mol: (() => {
+                    const r = 34;
+                    const A = hexVertices(70, 82, r);
+                    const B = hexVertices(70 + Math.sqrt(3) * r, 82, r);
+                    // A の 0（30°）と 5（330°）は B の 2（150°）と 3（210°）と 同じ ばしょ
+                    const nodes = A.map(v => ({ t: 'C', x: v.x, y: v.y }))
+                        .concat([B[0], B[1], B[4], B[5]].map(v => ({ t: 'C', x: v.x, y: v.y })));
+                    // A: 0-1-2-3-4-5, B のこり: 6=B0, 7=B1, 8=B4, 9=B5
+                    const bonds = [
+                        [0, 1, 2], [1, 2, 1], [2, 3, 2], [3, 4, 1], [4, 5, 2], [5, 0, 1],
+                        [0, 7, 1], [7, 6, 2], [6, 9, 1], [9, 8, 2], [8, 5, 1]
+                    ];
+                    return { nodes, bonds, view: [200, 165] };
+                })()
+            },
+            {
+                id: 'methanol', name: 'メタノール', kana: 'めたのーる', formula: 'CH₃OH', cats: ['alcohol'],
+                fact: 'CH₃ に OH が ついた いちばん 小（ちい）さな アルコール。のむと とても 危険（きけん）。',
+                use: 'ねんりょう、ほるまりん（ホルマリン）の 原料', group: 'OH（ヒドロキシ基）',
+                mol: { nodes: [{ t: 'CH3', x: 72, y: 82 }, { t: 'OH', x: 140, y: 82 }], bonds: [[0, 1, 1]], view: [200, 165] }
+            },
+            {
+                id: 'ethanol', name: 'エタノール', kana: 'えたのーる', formula: 'C₂H₅OH', cats: ['alcohol'],
+                fact: 'CH₃CH₂ に OH。おさけに はいっている アルコールで、しょうどくにも つかう。',
+                use: 'しょうどく用アルコール、おさけ', group: 'OH（ヒドロキシ基）',
+                mol: {
+                    nodes: [{ t: 'CH3', x: 46, y: 82 }, { t: 'CH2', x: 100, y: 82 }, { t: 'OH', x: 154, y: 82 }],
+                    bonds: [[0, 1, 1], [1, 2, 1]], view: [200, 165]
+                }
+            },
+            {
+                id: 'acetic', name: '酢酸', kana: 'さくさん', formula: 'CH₃COOH', cats: ['acid'],
+                fact: 'COOH（カルボキシ基）を もつ 酸（さん）。すっぱい においの もと。',
+                use: 'おすの せいぶん', group: 'COOH（カルボキシ基）',
+                mol: {
+                    nodes: [
+                        { t: 'CH3', x: 48, y: 90 }, { t: 'C', x: 106, y: 90 },
+                        { t: 'O', x: 106, y: 38 }, { t: 'OH', x: 162, y: 90 }
+                    ],
+                    bonds: [[0, 1, 1], [1, 2, 2], [1, 3, 1]], view: [200, 165]
+                }
+            },
+            {
+                id: 'acetaldehyde', name: 'アセトアルデヒド', kana: 'あせとあるでひど', formula: 'CH₃CHO', cats: ['acid'],
+                fact: 'CHO（アルデヒド基）を もつ。おさけを のんだ からだの 中で できて、二日酔（ふつかよ）いの もとに なる。',
+                use: 'こうぎょうの 原料', group: 'CHO（アルデヒド基）',
+                mol: { nodes: [{ t: 'CH3', x: 66, y: 82 }, { t: 'CHO', x: 140, y: 82 }], bonds: [[0, 1, 1]], view: [200, 165] }
+            },
+            {
+                id: 'acetone', name: 'アセトン', kana: 'あせとん', formula: 'C₃H₆O', cats: ['acid'],
+                fact: '真ん中（まんなか）の 炭素に O が 二重結合。いろいろな ものを よく とかす。',
+                use: 'マニキュアの じょこうえき',
+                mol: {
+                    nodes: [
+                        { t: 'CH3', x: 44, y: 96 }, { t: 'C', x: 100, y: 96 },
+                        { t: 'CH3', x: 156, y: 96 }, { t: 'O', x: 100, y: 42 }
+                    ],
+                    bonds: [[0, 1, 1], [1, 2, 1], [1, 3, 2]], view: [200, 165]
+                }
+            },
+            {
+                id: 'methylamine', name: 'メチルアミン', kana: 'めちるあみん', formula: 'CH₃NH₂', cats: ['acid'],
+                fact: 'NH₂（アミノ基）を もつ。さかなが ふるく なった ときの においの なかま。',
+                use: 'くすり・農薬（のうやく）の 原料', group: 'NH₂（アミノ基）',
+                mol: { nodes: [{ t: 'CH3', x: 70, y: 82 }, { t: 'NH2', x: 140, y: 82 }], bonds: [[0, 1, 1]], view: [200, 165] }
+            }
+        ];
+
+        /* ================= 官能基パズル ================= */
+        // 骨組（ほねぐみ）
+        const SKELETONS = {
+            phenyl: {
+                name: 'ベンゼン環', label: 'ベンゼン環（C₆H₅−）',
+                build: (groupType, pop) => {
+                    const mol = phenylWith(groupType || 'slot');
+                    return { mol, popIndex: pop ? 6 : -1 };
+                }
+            },
+            methyl: {
+                name: 'メチル基', label: 'CH₃−',
+                build: (groupType, pop) => ({
+                    mol: {
+                        nodes: [{ t: 'CH3', x: 70, y: 82 }, { t: groupType || 'slot', x: 144, y: 82 }],
+                        bonds: [[0, 1, 1]], view: [200, 165]
+                    },
+                    popIndex: pop ? 1 : -1
+                })
+            },
+            ethyl: {
+                name: 'エチル基', label: 'C₂H₅−',
+                build: (groupType, pop) => ({
+                    mol: {
+                        nodes: [{ t: 'CH3', x: 40, y: 82 }, { t: 'CH2', x: 96, y: 82 }, { t: groupType || 'slot', x: 156, y: 82 }],
+                        bonds: [[0, 1, 1], [1, 2, 1]], view: [200, 165]
+                    },
+                    popIndex: pop ? 2 : -1
+                })
+            }
+        };
+
+        const GROUP_CHOICES = ['OH', 'CH3', 'NH2', 'COOH', 'CHO'];
+
+        const PUZZLES = [
+            { skeleton: 'phenyl', answer: 'OH', name: 'フェノール', formula: 'C₆H₅OH', hint: 'しょうどく液に つかわれる', fact: 'ベンゼン環 ＋ OH（ヒドロキシ基）＝ フェノール。バイキンを やっつける ちからが あり、しょうどくや プラスチックに つかわれる。' },
+            { skeleton: 'phenyl', answer: 'CH3', name: 'トルエン', formula: 'C₇H₈', hint: 'シンナーの におい', fact: 'ベンゼン環 ＋ CH₃（メチル基）＝ トルエン。ペンキや せっちゃくざいを とかす えきたい。' },
+            { skeleton: 'phenyl', answer: 'NH2', name: 'アニリン', formula: 'C₆H₅NH₂', hint: 'むかし 染料（せんりょう）に つかわれた', fact: 'ベンゼン環 ＋ NH₂（アミノ基）＝ アニリン。人間が はじめて つくった 化学（かがく）の 色の もと。' },
+            { skeleton: 'phenyl', answer: 'COOH', name: '安息香酸', formula: 'C₆H₅COOH', hint: 'しょくひんの ほぞんりょう', fact: 'ベンゼン環 ＋ COOH（カルボキシ基）＝ 安息香酸（あんそくこうさん）。カビや バイキンが ふえるのを ふせぐ。' },
+            { skeleton: 'methyl', answer: 'OH', name: 'メタノール', formula: 'CH₃OH', hint: 'いちばん 小さい アルコール', fact: 'CH₃ ＋ OH ＝ メタノール。アルコールの なかまだけど、のむと とても 危険（きけん）。' },
+            { skeleton: 'ethyl', answer: 'OH', name: 'エタノール', formula: 'C₂H₅OH', hint: 'しょうどく用アルコール', fact: 'C₂H₅ ＋ OH ＝ エタノール。手（て）の しょうどくや、おさけの せいぶん。' },
+            { skeleton: 'methyl', answer: 'COOH', name: '酢酸', formula: 'CH₃COOH', hint: 'おすの せいぶん', fact: 'CH₃ ＋ COOH ＝ 酢酸（さくさん）。すっぱい においと あじの もと。' },
+            { skeleton: 'methyl', answer: 'NH2', name: 'メチルアミン', formula: 'CH₃NH₂', hint: 'さかなの においの なかま', fact: 'CH₃ ＋ NH₂ ＝ メチルアミン。アミノ基は タンパク質（しつ）にも ふくまれる だいじな かたち。' },
+            { skeleton: 'methyl', answer: 'CHO', name: 'アセトアルデヒド', formula: 'CH₃CHO', hint: '二日酔（ふつかよ）いの もと', fact: 'CH₃ ＋ CHO（アルデヒド基）＝ アセトアルデヒド。からだの 中で エタノールから できる。' },
+            { skeleton: 'phenyl', answer: 'CHO', name: 'ベンズアルデヒド', formula: 'C₆H₅CHO', hint: 'アーモンドの ような におい', fact: 'ベンゼン環 ＋ CHO ＝ ベンズアルデヒド。アーモンドや あんずの たねの においの もと。' }
+        ];
+
+        const puzzle = { queue: [], index: 0, correct: 0, locked: false };
+
+        function startPuzzle() {
+            puzzle.queue = [...PUZZLES].sort(() => 0.5 - Math.random());
+            puzzle.index = 0;
+            puzzle.correct = 0;
+            document.getElementById('puzzle-start').classList.add('hidden');
+            document.getElementById('puzzle-result').classList.add('hidden');
+            document.getElementById('puzzle-play').classList.remove('hidden');
+            renderPuzzle();
+        }
+
+        function renderPuzzle() {
+            const q = puzzle.queue[puzzle.index];
+            const sk = SKELETONS[q.skeleton];
+            puzzle.locked = false;
+
+            document.getElementById('puzzle-progress').innerText = `${puzzle.index + 1} / ${puzzle.queue.length}`;
+            document.getElementById('puzzle-score').innerText = `せいかい ${puzzle.correct}`;
+            document.getElementById('puzzle-target').innerText = q.name;
+            document.getElementById('puzzle-target-hint').innerText = `${q.formula}・${q.hint}`;
+            document.getElementById('puzzle-msg').innerText = `${sk.label} の ? に くっつける 官能基を えらんで！`;
+            document.getElementById('puzzle-done').classList.add('hidden');
+            document.getElementById('puzzle-groups').classList.remove('hidden');
+
+            const built = sk.build(null, false);
+            document.getElementById('puzzle-canvas').innerHTML = structureSVG(built.mol);
+
+            document.getElementById('puzzle-groups').innerHTML = GROUP_CHOICES.map(g => {
+                const style = GROUP[g];
+                return `<button onclick="answerPuzzle('${g}')" data-g="${g}" class="bounce-hover rounded-2xl border-2 border-slate-200 bg-white p-2 shadow-sm flex flex-col items-center gap-1">
+                    <span class="px-2 py-1 rounded-lg font-black text-white text-sm" style="background:${style.fill}">${style.label}</span>
+                    <span class="text-[10px] font-bold text-slate-500">${GROUP_NAME[g]}</span>
+                </button>`;
+            }).join('');
+        }
+
+        const GROUP_NAME = {
+            OH: 'ヒドロキシ基', CH3: 'メチル基', NH2: 'アミノ基',
+            COOH: 'カルボキシ基', CHO: 'アルデヒド基'
+        };
+
+        function answerPuzzle(g) {
+            if (puzzle.locked) return;
+            const q = puzzle.queue[puzzle.index];
+            const sk = SKELETONS[q.skeleton];
+
+            if (g !== q.answer) {
+                const btn = document.querySelector(`#puzzle-groups button[data-g="${g}"]`);
+                if (btn) {
+                    btn.classList.add('shake');
+                    setTimeout(() => btn.classList.remove('shake'), 320);
+                }
+                document.getElementById('puzzle-msg').innerText =
+                    `${GROUP[g].label}（${GROUP_NAME[g]}）だと ${q.name} には ならないよ。もういちど！`;
+                return;
+            }
+
+            puzzle.locked = true;
+            puzzle.correct++;
+            const built = sk.build(g, true);
+            document.getElementById('puzzle-canvas').innerHTML = structureSVG(built.mol, { popIndex: built.popIndex });
+            document.getElementById('puzzle-msg').innerText = `${q.name}（${q.formula}）が できた！`;
+            document.getElementById('puzzle-score').innerText = `せいかい ${puzzle.correct}`;
+            document.getElementById('puzzle-fact').innerText = q.fact;
+            document.getElementById('puzzle-done').classList.remove('hidden');
+            document.getElementById('puzzle-groups').classList.add('hidden');
+        }
+
+        function nextPuzzle() {
+            puzzle.index++;
+            if (puzzle.index < puzzle.queue.length) {
+                renderPuzzle();
+            } else {
+                document.getElementById('puzzle-play').classList.add('hidden');
+                document.getElementById('puzzle-result').classList.remove('hidden');
+                document.getElementById('puzzle-final').innerText = puzzle.correct;
+                document.getElementById('puzzle-final-msg').innerText =
+                    puzzle.correct === puzzle.queue.length ? '🏆 ぜんもん せいかい！官能基マスター！'
+                        : puzzle.correct >= 7 ? '👏 よく できました！' : '📖 ずかんを 見て もういちど ちょうせん！';
+            }
+        }
+
+        /* ================= ずかん ================= */
+        function renderBook(filter = 'all') {
+            const list = filter === 'all' ? COMPOUNDS : COMPOUNDS.filter(c => c.cats.includes(filter));
+            document.getElementById('book-count').innerText = list.length;
+            document.getElementById('book-grid').innerHTML = list.map(c => `
+                <div onclick="openModal('${c.id}')" class="bg-white rounded-2xl p-3 border-2 border-slate-200 shadow-sm hover:shadow-md cursor-pointer bounce-hover text-center group">
+                    <div class="bg-slate-50 rounded-xl border border-slate-100">${structureSVG(c.mol)}</div>
+                    <h4 class="text-base font-black text-slate-800 mt-2">${c.name}</h4>
+                    <p class="text-sm font-black text-emerald-600">${c.formula}</p>
+                    <span class="mt-2 inline-block text-[10px] bg-slate-100 text-slate-500 font-bold px-2 py-0.5 rounded-full group-hover:bg-emerald-100 group-hover:text-emerald-700">くわしく →</span>
+                </div>`).join('');
+        }
+
+        function filterBook(cat, btn) {
+            document.querySelectorAll('.filter-btn').forEach(b => {
+                b.classList.remove('active', 'bg-emerald-600', 'text-white');
+                b.classList.add('bg-white', 'text-slate-700', 'border', 'border-slate-200');
+            });
+            btn.classList.remove('bg-white', 'text-slate-700', 'border', 'border-slate-200');
+            btn.classList.add('active', 'bg-emerald-600', 'text-white');
+            renderBook(cat);
+        }
+
+        function openModal(id) {
+            const c = COMPOUNDS.find(x => x.id === id);
+            if (!c) return;
+            document.getElementById('modal-name').innerText = c.name;
+            document.getElementById('modal-kana').innerText = c.kana;
+            document.getElementById('modal-formula').innerText = c.formula;
+            document.getElementById('modal-canvas').innerHTML = structureSVG(c.mol);
+            document.getElementById('modal-fact').innerText = c.fact;
+            document.getElementById('modal-use').innerText = c.use;
+            const wrap = document.getElementById('modal-group-wrap');
+            if (c.group) {
+                wrap.classList.remove('hidden');
+                document.getElementById('modal-group').innerText = c.group;
+            } else {
+                wrap.classList.add('hidden');
+            }
+            document.getElementById('detail-modal').classList.remove('hidden');
+        }
+        function closeModal() {
+            document.getElementById('detail-modal').classList.add('hidden');
+        }
+
+        /* ================= タブ ================= */
+        function showTab(name) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById('tab-' + name).classList.remove('hidden');
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                const on = btn.dataset.tab === name;
+                btn.classList.toggle('active', on);
+                btn.classList.toggle('bg-emerald-600', on);
+                btn.classList.toggle('bg-white', !on);
+                btn.classList.toggle('border-2', !on);
+                btn.classList.toggle('border-emerald-200', !on);
+                btn.classList.toggle('text-slate-600', !on);
+            });
+            if (name !== 'benzene') stopBenzeneAnim();
+            if (name === 'book') renderBook('all');
+        }
+
+        window.addEventListener('load', () => {
+            renderBenzene();
+            renderBook('all');
+        });
+    </script>
+</body>
+</html>
