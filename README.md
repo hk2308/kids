@@ -44,7 +44,12 @@ python3 -m http.server -d _site 8000
 # http://localhost:8000 を開く
 ```
 
-## 初回セットアップ（リポジトリ設定）
+## 初回セットアップ（リポジトリ設定 / 手動・1回だけ）
 
-GitHub の **Settings → Pages → Build and deployment → Source** を
-**GitHub Actions** に設定する。これは一度だけ必要。
+1. **Settings → Pages → Build and deployment → Source** を **GitHub Actions** にする
+   （この操作は Actions の `GITHUB_TOKEN` からは実行できないため手動が必要）
+2. 設定後、**Actions → Deploy to GitHub Pages → Run workflow** で再実行する
+   （以降はデフォルトブランチへの push で自動デプロイ）
+
+> プライベートリポジトリの Pages は有料プラン（Pro / Team / Enterprise）が必要。
+> 無料プランの場合は、リポジトリを public にすると公開できる。
