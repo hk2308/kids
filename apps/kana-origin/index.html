@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>かなのルーツ 字源しらべ</title>
+    <meta name="description" content="ひらがな・カタカナ五十音すべての、もとになった漢字（字源）を表で見て、クイズでたしかめよう。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&family=Shippori+Mincho:wght@600;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        /* もとの 漢字は 筆（ふで）っぽい 明朝体（みんちょうたい）で 見せる */
+        .mincho { font-family: 'Shippori Mincho', 'Hiragino Mincho ProN', 'Yu Mincho', serif; }
+        .bounce-hover { transition: transform .15s cubic-bezier(.175,.885,.32,1.275); }
+        .bounce-hover:hover { transform: scale(1.05); }
+        .bounce-hover:active { transform: scale(.95); }
+        @keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.12) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275); }
+        @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+        .shake { animation: shake .3s ease-in-out; }
+        @keyframes morph { 0%, 45% { opacity: 1 } 55%, 100% { opacity: 0 } }
+        .morph-from { animation: morph 2.6s ease-in-out infinite alternate; }
+    </style>
+</head>
+<body class="bg-stone-50 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-stone-700 via-amber-700 to-orange-600 text-white p-3 sm:p-4 shadow-lg sticky top-0 z-30">
+        <div class="max-w-5xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">🖌️</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">かなのルーツ</h1>
+                    <p class="text-xs text-amber-100 font-bold hidden sm:block">ひらがな・カタカナは どの 漢字（かんじ）から できた？</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[72px] z-20 bg-stone-50/95 backdrop-blur border-b border-stone-200">
+        <div class="max-w-5xl mx-auto flex gap-2 p-3 overflow-x-auto">
+            <button data-tab="table" onclick="showTab('table')" class="tab-btn active bg-amber-700 text-white font-black px-4 py-2 rounded-full text-sm whitespace-nowrap">五十音ひょう</button>
+            <button data-tab="pairs" onclick="showTab('pairs')" class="tab-btn bg-white border-2 border-amber-200 text-slate-600 font-black px-4 py-2 rounded-full text-sm whitespace-nowrap">おなじ漢字の なかま</button>
+            <button data-tab="quiz" onclick="showTab('quiz')" class="tab-btn bg-white border-2 border-amber-200 text-slate-600 font-black px-4 py-2 rounded-full text-sm whitespace-nowrap">字源クイズ</button>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto w-full p-3 sm:p-6 flex-grow space-y-5">
+
+        <!-- ============ 五十音ひょう ============ -->
+        <section id="tab-table" class="tab-content space-y-4">
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-amber-100">
+                <h2 class="text-lg sm:text-xl font-black flex items-center gap-2"><span>📜</span> かなは 漢字から 生（う）まれた</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1 leading-relaxed">
+                    <span class="text-amber-700">ひらがな</span>は 漢字を くずして（草書・そうしょ）まるく した もの。
+                    <span class="text-orange-600">カタカナ</span>は 漢字の <span class="text-orange-600">一部分（いちぶぶん）</span>を とった もの。
+                    ますを タップすると、もとの 漢字が わかるよ。
+                </p>
+                <div class="flex flex-wrap gap-2 mt-3">
+                    <button onclick="setShowOrigin(true, this)" class="orig-btn bg-amber-700 text-white font-black px-3 py-1.5 rounded-full text-xs">もとの漢字を 見せる</button>
+                    <button onclick="setShowOrigin(false, this)" class="orig-btn bg-white border-2 border-amber-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs">かなだけ（かくす）</button>
+                </div>
+                <div id="kana-table" class="mt-3 overflow-x-auto"></div>
+                <p class="text-[11px] font-bold text-slate-400 mt-3">
+                    ※ ゐ・ゑ・ヰ・ヱ は いまは ふつう つかわない かな。むかしの 本（ほん）で 見かけるよ。
+                </p>
+            </div>
+        </section>
+
+        <!-- ============ おなじ漢字の なかま ============ -->
+        <section id="tab-pairs" class="tab-content hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-amber-100">
+                <h2 class="text-lg sm:text-xl font-black flex items-center gap-2"><span>👯</span> おなじ 漢字から できた ひらがなと カタカナ</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">ひらがなと カタカナで <span class="text-amber-700">同じ 漢字</span> が もとに なっている ものが あるよ。</p>
+                <div id="pair-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4"></div>
+            </div>
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-amber-100">
+                <h2 class="text-lg sm:text-xl font-black flex items-center gap-2"><span>🔀</span> ちがう 漢字から できた もの</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">おなじ 音（おん）なのに、もとの 漢字は べつべつ。</p>
+                <div id="diff-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4"></div>
+            </div>
+        </section>
+
+        <!-- ============ クイズ ============ -->
+        <section id="tab-quiz" class="tab-content hidden space-y-4">
+            <div id="quiz-start" class="bg-white rounded-3xl p-5 sm:p-7 shadow-md border-2 border-amber-100 text-center">
+                <span class="text-4xl">🧐</span>
+                <h2 class="text-2xl font-black mt-2">字源（じげん）クイズ（10問）</h2>
+                <p class="text-sm font-bold text-slate-500 mt-2">やりかたを えらんでね。</p>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
+                    <button onclick="startQuiz('k2h')" class="bg-gradient-to-br from-amber-600 to-orange-700 text-white font-black p-4 rounded-2xl border-b-4 border-amber-800 bounce-hover">
+                        <span class="block text-2xl mincho">安</span>→ ひらがな
+                        <span class="block text-[11px] font-bold opacity-90 mt-1">漢字から ひらがなを あてる</span>
+                    </button>
+                    <button onclick="startQuiz('k2k')" class="bg-gradient-to-br from-orange-500 to-red-600 text-white font-black p-4 rounded-2xl border-b-4 border-orange-700 bounce-hover">
+                        <span class="block text-2xl mincho">阿</span>→ カタカナ
+                        <span class="block text-[11px] font-bold opacity-90 mt-1">漢字から カタカナを あてる</span>
+                    </button>
+                    <button onclick="startQuiz('h2k')" class="bg-gradient-to-br from-stone-600 to-stone-800 text-white font-black p-4 rounded-2xl border-b-4 border-stone-900 bounce-hover">
+                        <span class="block text-2xl">あ</span>→ 漢字
+                        <span class="block text-[11px] font-bold opacity-90 mt-1">かなから もとの 漢字を あてる</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="quiz-play" class="hidden">
+                <div class="flex justify-between items-center mb-3 gap-2">
+                    <button id="quiz-quit" onclick="backToQuizStart()" class="bg-white border-2 border-slate-200 text-slate-600 font-bold px-3 py-1.5 rounded-full text-sm">← やめる</button>
+                    <span id="quiz-progress" class="bg-amber-100 text-amber-800 font-black px-4 py-1.5 rounded-full text-sm">1 / 10</span>
+                    <span id="quiz-score" class="bg-orange-100 text-orange-700 font-black px-4 py-1.5 rounded-full text-sm">せいかい 0</span>
+                </div>
+                <div class="bg-white rounded-3xl p-5 sm:p-7 shadow-md border-2 border-amber-100 text-center">
+                    <p id="quiz-label" class="text-sm font-bold text-slate-500"></p>
+                    <p id="quiz-target" class="text-8xl font-black my-4 leading-none"></p>
+                    <div id="quiz-choices" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
+                    <p id="quiz-msg" class="font-black mt-3 min-h-[1.5rem]"></p>
+                    <button id="quiz-next" onclick="nextQuiz()" class="hidden mt-2 w-full bg-gradient-to-r from-amber-600 to-orange-700 text-white font-black py-3 rounded-2xl border-b-4 border-amber-800 bounce-hover text-lg">つぎへ →</button>
+                </div>
+            </div>
+
+            <div id="quiz-result" class="hidden bg-white rounded-3xl p-6 shadow-md border-4 border-amber-300 text-center">
+                <div class="text-5xl">🏅</div>
+                <h2 class="text-2xl font-black mt-2">おつかれさま！</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">10問のうち <span id="quiz-final" class="text-amber-700 font-black text-xl">0</span> 問せいかい</p>
+                <div id="quiz-review" class="mt-4 space-y-2 text-left"></div>
+                <button onclick="backToQuizStart()" class="mt-5 w-full bg-gradient-to-r from-amber-600 to-orange-700 text-white font-black py-3 rounded-2xl border-b-4 border-amber-800 bounce-hover">もういちど</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- モーダル -->
+    <div id="kana-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border-4 border-amber-300 relative text-center max-h-[90vh] overflow-y-auto">
+            <button onclick="closeModal()" class="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full w-8 h-8 flex items-center justify-center font-bold">✕</button>
+
+            <p id="km-yomi" class="inline-block text-xs font-black px-3 py-1 rounded-full bg-amber-100 text-amber-800"></p>
+
+            <!-- ひらがな -->
+            <div class="mt-4 bg-amber-50 border-2 border-amber-200 rounded-2xl p-3">
+                <p class="text-xs font-black text-amber-700 mb-1">ひらがな は 漢字を くずして できた</p>
+                <div class="flex items-center justify-center gap-3">
+                    <div>
+                        <p id="km-h-kanji" class="mincho text-6xl font-black text-stone-700 leading-none"></p>
+                        <p class="text-[10px] font-bold text-slate-400 mt-1">もとの漢字</p>
+                    </div>
+                    <span class="text-3xl text-amber-500">➡</span>
+                    <div>
+                        <p id="km-h-kana" class="text-6xl font-black text-amber-700 leading-none"></p>
+                        <p class="text-[10px] font-bold text-slate-400 mt-1">ひらがな</p>
+                    </div>
+                </div>
+                <p id="km-h-note" class="text-xs font-bold text-slate-600 mt-2"></p>
+            </div>
+
+            <!-- カタカナ -->
+            <div class="mt-3 bg-orange-50 border-2 border-orange-200 rounded-2xl p-3">
+                <p class="text-xs font-black text-orange-700 mb-1">カタカナ は 漢字の 一部（いちぶ）から できた</p>
+                <div class="flex items-center justify-center gap-3">
+                    <div>
+                        <p id="km-k-kanji" class="mincho text-6xl font-black text-stone-700 leading-none"></p>
+                        <p class="text-[10px] font-bold text-slate-400 mt-1">もとの漢字</p>
+                    </div>
+                    <span class="text-3xl text-orange-500">➡</span>
+                    <div>
+                        <p id="km-k-kana" class="text-6xl font-black text-orange-600 leading-none"></p>
+                        <p class="text-[10px] font-bold text-slate-400 mt-1">カタカナ</p>
+                    </div>
+                </div>
+                <p id="km-k-note" class="text-xs font-bold text-slate-600 mt-2"></p>
+            </div>
+
+            <p id="km-same" class="mt-3 text-sm font-black"></p>
+            <button onclick="speakKana()" class="mt-3 w-full bg-amber-700 hover:bg-amber-800 text-white font-black py-3 rounded-2xl border-b-4 border-amber-900 bounce-hover">🔊 こえで きく</button>
+        </div>
+    </div>
+
+    <footer class="text-center py-3 text-xs text-slate-400 font-bold">かなのルーツ © 2026</footer>
+
+    <script>
+        const shuffle = l => [...l].sort(() => 0.5 - Math.random());
+        const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+
+        /* =========================================================
+           かなの 字源（じげん）データ
+           [ひらがな, カタカナ, よみ, ひらがなの もと漢字, カタカナの もと漢字, カタカナの どの部分か]
+           ========================================================= */
+        const KANA = [
+            ['あ', 'ア', 'a', '安', '阿', '左がわ（こざとへん）'],
+            ['い', 'イ', 'i', '以', '伊', '左がわ（にんべん）'],
+            ['う', 'ウ', 'u', '宇', '宇', '上（うかんむり）'],
+            ['え', 'エ', 'e', '衣', '江', '右がわ（工）'],
+            ['お', 'オ', 'o', '於', '於', '左がわ'],
+            ['か', 'カ', 'ka', '加', '加', '左がわ（力）'],
+            ['き', 'キ', 'ki', '幾', '幾', '上のほう'],
+            ['く', 'ク', 'ku', '久', '久', '上のほう'],
+            ['け', 'ケ', 'ke', '計', '介', '上のほう'],
+            ['こ', 'コ', 'ko', '己', '己', '上のほう'],
+            ['さ', 'サ', 'sa', '左', '散', '左上'],
+            ['し', 'シ', 'shi', '之', '之', 'ぜんたいを 点（てん）で'],
+            ['す', 'ス', 'su', '寸', '須', '右下'],
+            ['せ', 'セ', 'se', '世', '世', '左のほう'],
+            ['そ', 'ソ', 'so', '曽', '曽', '上の 2つの 点'],
+            ['た', 'タ', 'ta', '太', '多', '上半分'],
+            ['ち', 'チ', 'chi', '知', '千', 'ぜんぶ'],
+            ['つ', 'ツ', 'tsu', '川', '川', '上のほう'],
+            ['て', 'テ', 'te', '天', '天', '上のほう'],
+            ['と', 'ト', 'to', '止', '止', '左上'],
+            ['な', 'ナ', 'na', '奈', '奈', '上（大の上）'],
+            ['に', 'ニ', 'ni', '仁', '二', 'ぜんぶ'],
+            ['ぬ', 'ヌ', 'nu', '奴', '奴', '右がわ（又）'],
+            ['ね', 'ネ', 'ne', '祢', '祢', '左がわ（しめすへん）'],
+            ['の', 'ノ', 'no', '乃', '乃', '左はらい'],
+            ['は', 'ハ', 'ha', '波', '八', 'ぜんぶ'],
+            ['ひ', 'ヒ', 'hi', '比', '比', '右がわ'],
+            ['ふ', 'フ', 'fu', '不', '不', '上のほう'],
+            ['へ', 'ヘ', 'he', '部', '部', '右がわ（おおざと）の 一部'],
+            ['ほ', 'ホ', 'ho', '保', '保', '右下（木）'],
+            ['ま', 'マ', 'ma', '末', '万', '上のほう'],
+            ['み', 'ミ', 'mi', '美', '三', 'ぜんぶ'],
+            ['む', 'ム', 'mu', '武', '牟', '上のほう'],
+            ['め', 'メ', 'me', '女', '女', '中の 交（こう）さ'],
+            ['も', 'モ', 'mo', '毛', '毛', '上のほう'],
+            ['や', 'ヤ', 'ya', '也', '也', '左のほう'],
+            ['ゆ', 'ユ', 'yu', '由', '由', '下のほう'],
+            ['よ', 'ヨ', 'yo', '与', '与', '下のほう'],
+            ['ら', 'ラ', 'ra', '良', '良', '上のほう'],
+            ['り', 'リ', 'ri', '利', '利', '右がわ（りっとう）'],
+            ['る', 'ル', 'ru', '留', '流', '右下'],
+            ['れ', 'レ', 're', '礼', '礼', '右がわ'],
+            ['ろ', 'ロ', 'ro', '呂', '呂', '上の 口'],
+            ['わ', 'ワ', 'wa', '和', '和', '右がわ（口）の 上'],
+            ['ゐ', 'ヰ', 'wi', '為', '井', 'ぜんぶ'],
+            ['ゑ', 'ヱ', 'we', '恵', '恵', '下のほう'],
+            ['を', 'ヲ', 'wo', '遠', '乎', '上のほう'],
+            ['ん', 'ン', 'n', '无', '尓', '上の 点と はらい']
+        ];
+
+        // 五十音ひょうの ならび（行ごと）。null は ますが ない ところ
+        const ROWS = [
+            ['あ', 'い', 'う', 'え', 'お'],
+            ['か', 'き', 'く', 'け', 'こ'],
+            ['さ', 'し', 'す', 'せ', 'そ'],
+            ['た', 'ち', 'つ', 'て', 'と'],
+            ['な', 'に', 'ぬ', 'ね', 'の'],
+            ['は', 'ひ', 'ふ', 'へ', 'ほ'],
+            ['ま', 'み', 'む', 'め', 'も'],
+            ['や', null, 'ゆ', null, 'よ'],
+            ['ら', 'り', 'る', 'れ', 'ろ'],
+            ['わ', 'ゐ', null, 'ゑ', 'を'],
+            ['ん', null, null, null, null]
+        ];
+
+        const BY_HIRA = {};
+        KANA.forEach(k => { BY_HIRA[k[0]] = { hira: k[0], kata: k[1], yomi: k[2], hKanji: k[3], kKanji: k[4], part: k[5] }; });
+
+        let showOrigin = true;
+
+        /* ===== 五十音ひょう ===== */
+        function renderTable() {
+            let html = '<table class="mx-auto border-separate" style="border-spacing:5px">';
+            ROWS.forEach(row => {
+                html += '<tr>';
+                row.forEach(h => {
+                    if (!h) { html += '<td class="w-14"></td>'; return; }
+                    const k = BY_HIRA[h];
+                    const same = k.hKanji === k.kKanji;
+                    html += `<td><button onclick="openKana('${h}')" data-k="${h}" class="bg-white hover:bg-amber-50 border-2 ${same ? 'border-amber-400' : 'border-stone-200'} rounded-2xl w-14 h-[74px] sm:w-16 sm:h-20 bounce-hover shadow-sm flex flex-col items-center justify-center">
+                        <span class="flex items-baseline gap-1">
+                            <span class="text-xl sm:text-2xl font-black text-amber-800 leading-none">${k.hira}</span>
+                            <span class="text-base sm:text-lg font-black text-orange-500 leading-none">${k.kata}</span>
+                        </span>
+                        <span class="origin-cell mincho text-[11px] sm:text-xs font-black text-stone-500 mt-1 ${showOrigin ? '' : 'invisible'}">${k.hKanji}${same ? '' : '・' + k.kKanji}</span>
+                    </button></td>`;
+                });
+                html += '</tr>';
+            });
+            html += '</table>';
+            document.getElementById('kana-table').innerHTML = html;
+        }
+
+        function setShowOrigin(v, btn) {
+            showOrigin = v;
+            document.querySelectorAll('.orig-btn').forEach(b => {
+                b.classList.remove('bg-amber-700', 'text-white');
+                b.classList.add('bg-white', 'border-2', 'border-amber-200', 'text-slate-600');
+            });
+            btn.classList.remove('bg-white', 'border-2', 'border-amber-200', 'text-slate-600');
+            btn.classList.add('bg-amber-700', 'text-white');
+            renderTable();
+        }
+
+        /* ===== モーダル ===== */
+        let modalKana = null;
+        function openKana(h) {
+            const k = BY_HIRA[h];
+            if (!k) return;
+            modalKana = k;
+            const same = k.hKanji === k.kKanji;
+            document.getElementById('km-yomi').innerText = `「${k.hira}」「${k.kata}」（${k.yomi}）`;
+            document.getElementById('km-h-kanji').innerText = k.hKanji;
+            document.getElementById('km-h-kana').innerText = k.hira;
+            document.getElementById('km-h-note').innerText = `「${k.hKanji}」を 筆（ふで）で さらさら くずして いくうちに 「${k.hira}」に なった。`;
+            document.getElementById('km-k-kanji').innerText = k.kKanji;
+            document.getElementById('km-k-kana').innerText = k.kata;
+            document.getElementById('km-k-note').innerText = `「${k.kKanji}」の ${k.part} を とって 「${k.kata}」に なった。`;
+            document.getElementById('km-same').innerHTML = same
+                ? `<span class="text-amber-700">「${k.hira}」と「${k.kata}」は おなじ 漢字「${k.hKanji}」から できた なかま！</span>`
+                : `<span class="text-slate-500">「${k.hira}」は「${k.hKanji}」、「${k.kata}」は「${k.kKanji}」。もとの 漢字が ちがうね。</span>`;
+            document.getElementById('kana-modal').classList.remove('hidden');
+        }
+        function closeModal() { document.getElementById('kana-modal').classList.add('hidden'); }
+        function speakKana() {
+            if (!modalKana || !('speechSynthesis' in window)) return;
+            const u = new SpeechSynthesisUtterance(`${modalKana.hira}。もとの かんじは ${modalKana.hKanji}`);
+            u.lang = 'ja-JP';
+            u.rate = 0.85;
+            window.speechSynthesis.speak(u);
+        }
+
+        /* ===== なかま（同じ漢字／ちがう漢字） ===== */
+        function renderPairs() {
+            const same = KANA.filter(k => k[3] === k[4]);
+            const diff = KANA.filter(k => k[3] !== k[4]);
+            const card = (k, tone) => `
+                <button onclick="openKana('${k[0]}')" class="bg-white border-2 ${tone} rounded-2xl p-3 bounce-hover shadow-sm">
+                    <p class="mincho text-3xl font-black text-stone-700">${k[3] === k[4] ? k[3] : `${k[3]}<span class="text-base text-slate-400">／</span>${k[4]}`}</p>
+                    <p class="text-2xl font-black mt-1"><span class="text-amber-700">${k[0]}</span> <span class="text-orange-500">${k[1]}</span></p>
+                </button>`;
+            document.getElementById('pair-grid').innerHTML = same.map(k => card(k, 'border-amber-300')).join('');
+            document.getElementById('diff-grid').innerHTML = diff.map(k => card(k, 'border-stone-200')).join('');
+        }
+
+        /* ===== クイズ ===== */
+        const quiz = { mode: 'k2h', queue: [], index: 0, correct: 0, wrong: [], locked: false };
+
+        function startQuiz(mode) {
+            quiz.mode = mode;
+            quiz.queue = shuffle(KANA).slice(0, 10);
+            quiz.index = 0;
+            quiz.correct = 0;
+            quiz.wrong = [];
+            document.getElementById('quiz-start').classList.add('hidden');
+            document.getElementById('quiz-result').classList.add('hidden');
+            document.getElementById('quiz-play').classList.remove('hidden');
+            renderQuiz();
+        }
+        function backToQuizStart() {
+            document.getElementById('quiz-result').classList.add('hidden');
+            document.getElementById('quiz-play').classList.add('hidden');
+            document.getElementById('quiz-start').classList.remove('hidden');
+        }
+
+        // モードごとの 「問題に 出す もの」と「こたえ」
+        const quizFace = {
+            k2h: { label: 'この 漢字から できた ひらがなは？', target: k => k[3], answer: k => k[0], targetClass: 'mincho text-stone-700', choiceClass: 'text-amber-800' },
+            k2k: { label: 'この 漢字から できた カタカナは？', target: k => k[4], answer: k => k[1], targetClass: 'mincho text-stone-700', choiceClass: 'text-orange-600' },
+            h2k: { label: 'この かなの もとに なった 漢字は？', target: k => k[0], answer: k => k[3], targetClass: 'text-amber-800', choiceClass: 'mincho text-stone-700' }
+        };
+
+        function renderQuiz() {
+            const k = quiz.queue[quiz.index];
+            const f = quizFace[quiz.mode];
+            quiz.locked = false;
+
+            document.getElementById('quiz-progress').innerText = `${quiz.index + 1} / ${quiz.queue.length}`;
+            document.getElementById('quiz-score').innerText = `せいかい ${quiz.correct}`;
+            document.getElementById('quiz-msg').innerText = '';
+            document.getElementById('quiz-next').classList.add('hidden');
+            document.getElementById('quiz-label').innerText = f.label;
+            const t = document.getElementById('quiz-target');
+            t.innerText = f.target(k);
+            t.className = `text-8xl font-black my-4 leading-none ${f.targetClass}`;
+
+            const right = f.answer(k);
+            const set = new Set([right]);
+            for (const x of shuffle(KANA)) {
+                if (set.size >= 4) break;
+                const cand = f.answer(x);
+                if (cand !== right) set.add(cand);
+            }
+            document.getElementById('quiz-choices').innerHTML = shuffle([...set]).map(c => `
+                <button onclick="answerQuiz('${c}')" data-v="${c}" class="bg-stone-100 hover:bg-amber-100 border-2 border-stone-200 hover:border-amber-400 rounded-2xl py-4 text-4xl font-black bounce-hover ${f.choiceClass}">${c}</button>`).join('');
+        }
+
+        function answerQuiz(v) {
+            if (quiz.locked) return;
+            quiz.locked = true;
+            const k = quiz.queue[quiz.index];
+            const f = quizFace[quiz.mode];
+            const right = f.answer(k);
+            if (v === right) {
+                quiz.correct++;
+                document.getElementById('quiz-msg').innerHTML =
+                    `<span class="text-emerald-600">せいかい！ ${k[3]} → ${k[0]} ／ ${k[4]} → ${k[1]}</span>`;
+            } else {
+                quiz.wrong.push(k);
+                document.getElementById('quiz-msg').innerHTML =
+                    `<span class="text-rose-500">ざんねん… こたえは 「${right}」（${k[3]}→${k[0]}、${k[4]}→${k[1]}）</span>`;
+            }
+            document.getElementById('quiz-score').innerText = `せいかい ${quiz.correct}`;
+            document.querySelectorAll('#quiz-choices button').forEach(b => {
+                if (b.dataset.v === right) b.classList.add('bg-emerald-200', 'border-emerald-500');
+                else if (b.dataset.v === v) b.classList.add('bg-rose-200', 'border-rose-500');
+            });
+            document.getElementById('quiz-next').classList.remove('hidden');
+        }
+
+        function nextQuiz() {
+            quiz.index++;
+            if (quiz.index < quiz.queue.length) {
+                renderQuiz();
+            } else {
+                document.getElementById('quiz-play').classList.add('hidden');
+                document.getElementById('quiz-result').classList.remove('hidden');
+                document.getElementById('quiz-final').innerText = quiz.correct;
+                document.getElementById('quiz-review').innerHTML = quiz.wrong.length === 0
+                    ? '<p class="text-center font-bold text-emerald-600">ぜんもん せいかい！ 🎉</p>'
+                    : '<p class="text-xs font-black text-slate-500">もう いちど かくにん しよう</p>' + quiz.wrong.map(k => `
+                        <button onclick="openKana('${k[0]}')" class="w-full text-left flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl p-2">
+                            <span class="mincho text-3xl font-black text-stone-700">${k[3]}</span>
+                            <span class="text-2xl">➡</span>
+                            <span class="text-2xl font-black text-amber-800">${k[0]}</span>
+                            <span class="text-2xl font-black text-orange-500">${k[1]}</span>
+                        </button>`).join('');
+            }
+        }
+
+        /* ===== タブ ===== */
+        function showTab(name) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById('tab-' + name).classList.remove('hidden');
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                const on = btn.dataset.tab === name;
+                btn.classList.toggle('active', on);
+                btn.classList.toggle('bg-amber-700', on);
+                btn.classList.toggle('text-white', on);
+                btn.classList.toggle('bg-white', !on);
+                btn.classList.toggle('border-2', !on);
+                btn.classList.toggle('border-amber-200', !on);
+                btn.classList.toggle('text-slate-600', !on);
+            });
+        }
+
+        window.addEventListener('load', () => {
+            renderTable();
+            renderPairs();
+        });
+    </script>
+</body>
+</html>
