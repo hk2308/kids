@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>リズム たいそう</title>
+    <meta name="description" content="拍にあわせてタップするリズムゲーム。音を消しても、拍が目で見えるので遊べるよ。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'M PLUS Rounded 1c', system-ui, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior: none;
+        }
+        canvas { display: block; width: 100%; touch-action: none; }
+        .num { font-variant-numeric: tabular-nums; }
+        .bounce-hover { transition: transform .15s cubic-bezier(.175,.885,.32,1.275); }
+        .bounce-hover:hover { transform: scale(1.04); }
+        .bounce-hover:active { transform: scale(.96); }
+        #tap-pad:active { transform: scale(.97); filter: brightness(1.08); }
+    </style>
+</head>
+<body class="bg-slate-900 min-h-screen text-white flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-fuchsia-600 via-rose-500 to-orange-400 p-3 sm:p-4 shadow-lg">
+        <div class="max-w-4xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">🥁</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">リズム たいそう</h1>
+                    <p class="text-xs text-rose-100 font-bold hidden sm:block">拍（ひょうし）に あわせて タップ！音（おと）なしでも あそべるよ</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="sound-btn" onclick="toggleSound()" title="音を オン・オフ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🔊</button>
+                <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto w-full p-3 sm:p-5 flex-grow">
+
+        <!-- ================= ステージえらび ================= -->
+        <section id="screen-select">
+            <div class="bg-white/10 border border-white/15 rounded-3xl p-4 sm:p-6 backdrop-blur">
+                <h2 class="text-2xl sm:text-3xl font-black">ステージを えらぼう</h2>
+                <p class="text-sm font-bold text-slate-300 mt-1">ながれてくる ●が まん中の わに かさなった しゅんかんに タップ！</p>
+
+                <div id="stage-list" class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4"></div>
+
+                <!-- あそびかた・音なしの せつめい -->
+                <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="bg-slate-800/80 border border-white/10 rounded-2xl p-4">
+                        <h3 class="font-black text-amber-300 flex items-center gap-2"><span>👀</span> 音（おと）が なくても わかる しくみ</h3>
+                        <ul class="text-xs sm:text-sm font-bold text-slate-300 mt-2 space-y-1.5 list-disc list-inside">
+                            <li>上（うえ）の <span class="text-amber-300">4つの はこ</span> が 1拍ずつ ひかる</li>
+                            <li><span class="text-amber-300">ふりこ</span> が 左右（さゆう）に ふれて 拍を おしえる</li>
+                            <li>拍ごとに <span class="text-amber-300">画面（がめん）が ポワッ</span> と 光（ひか）る</li>
+                            <li>ズレは <span class="text-amber-300">はやい / おそい メーター</span> で 見（み）える</li>
+                        </ul>
+                    </div>
+                    <div class="bg-slate-800/80 border border-white/10 rounded-2xl p-4">
+                        <h3 class="font-black text-cyan-300 flex items-center gap-2"><span>🎮</span> そうさ</h3>
+                        <ul class="text-xs sm:text-sm font-bold text-slate-300 mt-2 space-y-1.5 list-disc list-inside">
+                            <li>画面を タップ／クリック</li>
+                            <li>スペースキー か Enterキー</li>
+                            <li>下（した）の 大（おお）きな ボタン</li>
+                        </ul>
+                        <div class="mt-3 space-y-2">
+                            <label class="flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-200">
+                                <input type="checkbox" id="opt-vibrate" class="w-4 h-4 accent-cyan-400">
+                                拍で ブルッと ふるえる（スマホ・音なし むけ）
+                            </label>
+                            <div>
+                                <p class="text-xs font-bold text-slate-400 mb-1">スピード</p>
+                                <div class="flex gap-2">
+                                    <button onclick="setSpeed(0.75, this)" class="speed-btn bg-slate-700 border border-white/10 text-slate-200 font-black px-3 py-1.5 rounded-full text-xs">ゆっくり</button>
+                                    <button onclick="setSpeed(1, this)" class="speed-btn active bg-cyan-500 text-white font-black px-3 py-1.5 rounded-full text-xs">ふつう</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= プレイ ================= -->
+        <section id="screen-play" class="hidden">
+            <div class="flex items-center justify-between gap-2 mb-2">
+                <button onclick="quitGame()" class="bg-white/10 hover:bg-white/20 border border-white/20 font-bold px-3 py-1.5 rounded-full text-sm">← やめる</button>
+                <p id="play-title" class="font-black text-sm sm:text-base">たいこ たいそう</p>
+                <p class="num font-black text-amber-300 text-sm sm:text-base">スコア <span id="score-out">0</span></p>
+            </div>
+
+            <div class="rounded-3xl overflow-hidden border-2 border-white/15 shadow-2xl bg-slate-800">
+                <canvas id="game" height="330"></canvas>
+            </div>
+
+            <button id="tap-pad" class="mt-3 w-full bg-gradient-to-b from-rose-400 to-rose-600 border-b-8 border-rose-800 rounded-3xl py-6 text-3xl font-black shadow-xl transition-transform">
+                タップ！
+            </button>
+            <p class="text-center text-xs font-bold text-slate-400 mt-2">画面・ボタン・スペースキー どれでも OK</p>
+        </section>
+
+        <!-- ================= けっか ================= -->
+        <section id="screen-result" class="hidden">
+            <div class="bg-white/10 border border-white/15 rounded-3xl p-5 sm:p-8 backdrop-blur text-center">
+                <p id="result-rank" class="text-7xl font-black text-amber-300 drop-shadow">A</p>
+                <h2 id="result-title" class="text-2xl font-black mt-1">よく できました！</h2>
+                <p class="num text-sm font-bold text-slate-300 mt-1">スコア <span id="result-score" class="text-amber-300">0</span> ／ せいかくさ <span id="result-acc">0</span>%</p>
+
+                <div class="grid grid-cols-3 gap-2 mt-5">
+                    <div class="bg-emerald-500/20 border border-emerald-400/40 rounded-2xl p-3">
+                        <p class="text-xs font-black text-emerald-300">ばっちり</p>
+                        <p id="result-perfect" class="num text-2xl font-black">0</p>
+                    </div>
+                    <div class="bg-amber-500/20 border border-amber-400/40 rounded-2xl p-3">
+                        <p class="text-xs font-black text-amber-300">おしい</p>
+                        <p id="result-good" class="num text-2xl font-black">0</p>
+                    </div>
+                    <div class="bg-slate-500/20 border border-slate-400/40 rounded-2xl p-3">
+                        <p class="text-xs font-black text-slate-300">ミス</p>
+                        <p id="result-miss" class="num text-2xl font-black">0</p>
+                    </div>
+                </div>
+
+                <p class="num text-sm font-bold text-slate-300 mt-4">さいこう コンボ <span id="result-combo" class="text-rose-300">0</span> ／ ハイスコア <span id="result-best" class="text-amber-300">0</span></p>
+                <p id="result-tip" class="text-sm font-bold text-cyan-300 mt-3"></p>
+
+                <div class="flex flex-col sm:flex-row gap-3 mt-6">
+                    <button onclick="retryStage()" class="flex-1 bg-gradient-to-r from-rose-500 to-orange-500 font-black py-3 rounded-2xl border-b-4 border-rose-700 bounce-hover text-lg">もういちど</button>
+                    <button onclick="quitGame()" class="flex-1 bg-white/15 border border-white/20 font-black py-3 rounded-2xl bounce-hover">ステージえらび</button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center py-3 text-xs text-slate-500 font-bold">リズム たいそう © 2026</footer>
+
+    <script>
+        /* ===================== ステージ（リズムの ふ） =====================
+           beats: 何拍目（なんはくめ）に たたくか。0.5 は うら拍（8ぶおんぷ）。 */
+        const STAGES = [
+            {
+                id: 'taiko', name: 'たいこ たいそう', emoji: '🥁', bpm: 88, stars: 1,
+                hint: '1拍ずつ まっすぐ たたこう',
+                bars: 8,
+                beats: [
+                    0, 1, 2, 3,
+                    4, 5, 6,
+                    8, 9, 10, 11,
+                    12, 14,
+                    16, 17, 18, 19,
+                    20, 21, 22,
+                    24, 25, 26, 27,
+                    28, 30
+                ]
+            },
+            {
+                id: 'usagi', name: 'うさぎ ジャンプ', emoji: '🐰', bpm: 104, stars: 2,
+                hint: 'ときどき はいる 2れんぞくに ちゅうい',
+                bars: 8,
+                beats: [
+                    0, 1, 2, 2.5, 3,
+                    4, 5, 6, 6.5, 7,
+                    8, 8.5, 9, 10, 11,
+                    12, 14,
+                    16, 17, 18, 18.5, 19,
+                    20, 21, 22, 22.5, 23,
+                    24, 24.5, 25, 26, 27,
+                    28, 29, 30
+                ]
+            },
+            {
+                id: 'robot', name: 'ロボット ダンス', emoji: '🤖', bpm: 118, stars: 3,
+                hint: 'はこの あいだ（うら拍）で たたく ところが あるよ',
+                bars: 8,
+                beats: [
+                    0, 1.5, 2, 3.5,
+                    4, 5.5, 6, 7.5,
+                    8, 8.5, 9.5, 10.5, 11.5,
+                    12, 13, 14, 15,
+                    16, 17.5, 18, 19.5,
+                    20, 21.5, 22, 23.5,
+                    24, 24.5, 25.5, 26.5, 27.5,
+                    28, 29, 30, 31
+                ]
+            }
+        ];
+
+        const COUNT_IN = 4;          // さいしょの「1・2・3・4」
+        const PERFECT_MS = 85;       // ばっちりの はんい
+        const GOOD_MS = 160;         // おしいの はんい
+        const TAKE_MS = 230;         // これより はなれた タップは その音符に つかわない
+
+        /* ===================== じょうたい ===================== */
+        const state = {
+            soundOn: true,
+            vibrate: false,
+            speed: 1,
+            screen: 'select',
+            stage: null,
+            playing: false,
+            startPerf: 0,
+            beatMs: 600,
+            notes: [],
+            score: 0, combo: 0, maxCombo: 0,
+            counts: { perfect: 0, good: 0, miss: 0 },
+            lastJudge: null,          // { type, offset, at }
+            offsets: [],              // さいきんの ズレ（ミリびょう）
+            hitFx: [],                // はじけた えんこう
+            tapFx: 0,                 // タップした しゅんかんの アニメ
+            beatSeen: -1,
+            nextTickBeat: 0,
+            endMs: 0
+        };
+
+        /* ===================== おと（Web Audio） ===================== */
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function ensureAudio() {
+            if (!state.soundOn) return null;
+            try {
+                if (!audioCtx) audioCtx = new AudioCtx();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                return audioCtx;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function toggleSound() {
+            state.soundOn = !state.soundOn;
+            document.getElementById('sound-btn').innerText = state.soundOn ? '🔊' : '🔇';
+            if (state.soundOn) ensureAudio();
+        }
+
+        // メトロノームの カチッ（拍の あたまは たかい音）
+        function tick(when, strong) {
+            const ctx = ensureAudio();
+            if (!ctx) return;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.type = 'square';
+            osc.frequency.value = strong ? 1500 : 1000;
+            gain.gain.setValueAtTime(strong ? 0.12 : 0.06, when);
+            gain.gain.exponentialRampToValueAtTime(0.0001, when + 0.05);
+            osc.start(when);
+            osc.stop(when + 0.06);
+        }
+
+        function sfx(kind) {
+            const ctx = ensureAudio();
+            if (!ctx) return;
+            const now = ctx.currentTime;
+
+            if (kind === 'miss') {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.linearRampToValueAtTime(110, now + 0.18);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
+                osc.start(now); osc.stop(now + 0.2);
+                return;
+            }
+
+            // ドン（たいこ）
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(kind === 'perfect' ? 320 : 240, now);
+            osc.frequency.exponentialRampToValueAtTime(70, now + 0.16);
+            gain.gain.setValueAtTime(0.32, now);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+            osc.start(now); osc.stop(now + 0.24);
+
+            if (kind === 'perfect') {
+                // ばっちりの ときだけ キラッと たかい音を かさねる
+                const o2 = ctx.createOscillator();
+                const g2 = ctx.createGain();
+                o2.connect(g2); g2.connect(ctx.destination);
+                o2.type = 'triangle';
+                o2.frequency.setValueAtTime(1046, now);
+                g2.gain.setValueAtTime(0.1, now);
+                g2.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
+                o2.start(now); o2.stop(now + 0.15);
+            }
+        }
+
+        function buzz(ms) {
+            if (!state.vibrate) return;
+            if (navigator.vibrate) navigator.vibrate(ms);
+        }
+
+        /* ===================== キャンバス ===================== */
+        const canvas = document.getElementById('game');
+        let ctx2d = null, CW = 0, CH = 0;
+
+        function fitCanvas() {
+            if (!canvas.dataset.cssHeight) canvas.dataset.cssHeight = canvas.getAttribute('height') || 330;
+            const dpr = window.devicePixelRatio || 1;
+            const cssH = parseInt(canvas.dataset.cssHeight, 10);
+            CW = canvas.clientWidth || 640;
+            CH = cssH;
+            canvas.style.height = cssH + 'px';
+            canvas.width = Math.round(CW * dpr);
+            canvas.height = Math.round(CH * dpr);
+            ctx2d = canvas.getContext('2d');
+            ctx2d.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+        window.addEventListener('resize', () => { if (state.screen === 'play') fitCanvas(); });
+
+        /* ===================== ステージえらび ===================== */
+        function renderStageList() {
+            document.getElementById('stage-list').innerHTML = STAGES.map(s => {
+                const best = parseInt(localStorage.getItem('rhythm_best_' + s.id) || '0', 10);
+                return `
+                <button onclick="startStage('${s.id}')" class="bg-gradient-to-br from-slate-700 to-slate-800 hover:from-slate-600 border-2 border-white/10 rounded-2xl p-4 text-left bounce-hover">
+                    <div class="flex items-center justify-between">
+                        <span class="text-3xl">${s.emoji}</span>
+                        <span class="text-amber-300 text-sm">${'★'.repeat(s.stars)}${'☆'.repeat(3 - s.stars)}</span>
+                    </div>
+                    <p class="font-black text-lg mt-2">${s.name}</p>
+                    <p class="num text-xs font-bold text-slate-400">BPM ${s.bpm}・${s.beats.length}かい たたく</p>
+                    <p class="text-xs font-bold text-cyan-300 mt-1">${s.hint}</p>
+                    <p class="num text-xs font-bold text-amber-300/80 mt-2">ハイスコア ${best}</p>
+                </button>`;
+            }).join('');
+        }
+
+        function setSpeed(v, btn) {
+            state.speed = v;
+            document.querySelectorAll('.speed-btn').forEach(b => {
+                b.classList.remove('active', 'bg-cyan-500', 'text-white');
+                b.classList.add('bg-slate-700', 'text-slate-200');
+            });
+            btn.classList.remove('bg-slate-700', 'text-slate-200');
+            btn.classList.add('active', 'bg-cyan-500', 'text-white');
+        }
+
+        function showScreen(name) {
+            state.screen = name;
+            ['select', 'play', 'result'].forEach(s =>
+                document.getElementById('screen-' + s).classList.toggle('hidden', s !== name));
+        }
+
+        /* ===================== ゲーム かいし ===================== */
+        function startStage(id) {
+            state.stage = STAGES.find(s => s.id === id);
+            showScreen('play');
+            fitCanvas();
+            resetGame();
+            ensureAudio();
+        }
+        function retryStage() { startStage(state.stage.id); }
+        function quitGame() {
+            state.playing = false;
+            renderStageList();
+            showScreen('select');
+        }
+
+        function resetGame() {
+            const s = state.stage;
+            state.beatMs = (60000 / s.bpm) / state.speed;
+            state.notes = s.beats.map(b => ({
+                beat: b,
+                time: (COUNT_IN + b) * state.beatMs,
+                offBeat: Math.abs(b % 1) > 0.01,
+                judged: null
+            }));
+            state.score = 0;
+            state.combo = 0;
+            state.maxCombo = 0;
+            state.counts = { perfect: 0, good: 0, miss: 0 };
+            state.lastJudge = null;
+            state.offsets = [];
+            state.hitFx = [];
+            state.tapFx = 0;
+            state.beatSeen = -1;
+            state.nextTickBeat = 0;
+            state.endMs = (COUNT_IN + s.bars * 4 + 2) * state.beatMs;
+            state.startPerf = performance.now();
+            state.playing = true;
+
+            document.getElementById('play-title').innerText = `${s.emoji} ${s.name}`;
+            document.getElementById('score-out').innerText = '0';
+        }
+
+        /* ===================== タップの はんてい ===================== */
+        function onTap() {
+            if (!state.playing) return;
+            const t = performance.now() - state.startPerf;
+            state.tapFx = performance.now();
+
+            // いちばん 近（ちか）い まだ たたいていない 音符を さがす
+            let target = null, bestDiff = Infinity;
+            for (const n of state.notes) {
+                if (n.judged) continue;
+                const diff = t - n.time;
+                if (Math.abs(diff) < Math.abs(bestDiff)) { bestDiff = diff; target = n; }
+            }
+
+            if (!target || Math.abs(bestDiff) > TAKE_MS) {
+                // 音符が ないところの タップ（へらす ものは なし）
+                state.lastJudge = { type: 'empty', offset: 0, at: performance.now() };
+                return;
+            }
+
+            const abs = Math.abs(bestDiff);
+            if (abs <= PERFECT_MS) {
+                target.judged = 'perfect';
+                state.counts.perfect++;
+                state.combo++;
+                state.score += 100 + Math.min(state.combo, 20) * 5;
+                sfx('perfect');
+                buzz(25);
+            } else {
+                target.judged = 'good';
+                state.counts.good++;
+                state.combo++;
+                state.score += 50;
+                sfx('good');
+                buzz(15);
+            }
+            state.maxCombo = Math.max(state.maxCombo, state.combo);
+            state.lastJudge = { type: target.judged, offset: bestDiff, at: performance.now() };
+            state.offsets.push(bestDiff);
+            if (state.offsets.length > 10) state.offsets.shift();
+            state.hitFx.push({ at: performance.now(), type: target.judged });
+            document.getElementById('score-out').innerText = state.score;
+        }
+
+        function missNote(n) {
+            n.judged = 'miss';
+            state.counts.miss++;
+            state.combo = 0;
+            state.lastJudge = { type: 'miss', offset: 0, at: performance.now() };
+            sfx('miss');
+        }
+
+        /* 入力（クリック・タップ・キー） */
+        document.getElementById('tap-pad').addEventListener('pointerdown', e => { e.preventDefault(); onTap(); });
+        canvas.addEventListener('pointerdown', e => { e.preventDefault(); onTap(); });
+        window.addEventListener('keydown', e => {
+            if (e.code === 'Space' || e.code === 'Enter') {
+                if (state.screen === 'play') e.preventDefault();
+                if (!e.repeat) onTap();
+            }
+        });
+
+        /* ===================== えがく ===================== */
+        const COL = {
+            don: '#fb7185', donDark: '#e11d48',
+            ka: '#22d3ee', kaDark: '#0891b2',
+            perfect: '#34d399', good: '#fbbf24', miss: '#94a3b8'
+        };
+
+        function draw(t) {
+            const ctx = ctx2d;
+            const beat = t / state.beatMs;              // いま 何拍目か（小数）
+            const phase = beat - Math.floor(beat);      // 拍の なかの しんど（0〜1）
+            const beatIndex = Math.floor(beat);
+            const inCountIn = beat < COUNT_IN;
+
+            ctx.clearRect(0, 0, CW, CH);
+
+            /* 背景：拍ごとに ポワッと 光る（音なしでも 拍が わかる） */
+            const pulse = Math.max(0, 1 - phase * 3.2);
+            const strong = ((beatIndex % 4) + 4) % 4 === 0;
+            const bg = ctx.createLinearGradient(0, 0, 0, CH);
+            bg.addColorStop(0, '#1e293b');
+            bg.addColorStop(1, '#0f172a');
+            ctx.fillStyle = bg;
+            ctx.fillRect(0, 0, CW, CH);
+            ctx.fillStyle = `rgba(251, 113, 133, ${pulse * (strong ? 0.17 : 0.07)})`;
+            ctx.fillRect(0, 0, CW, CH);
+
+            /* ==== 上：4つの はこ（拍の めやす） ==== */
+            const boxTop = 14, boxH = 30, boxGap = 8;
+            const boxW = Math.min(88, (CW - 40 - boxGap * 3) / 4);
+            const boxesW = boxW * 4 + boxGap * 3;
+            const boxX0 = (CW - boxesW) / 2;
+            const beatInBar = ((beatIndex % 4) + 4) % 4;
+            for (let i = 0; i < 4; i++) {
+                const x = boxX0 + i * (boxW + boxGap);
+                const on = i === beatInBar;
+                ctx.save();
+                ctx.fillStyle = on ? `rgba(251, 191, 36, ${0.35 + pulse * 0.65})` : 'rgba(255,255,255,.07)';
+                ctx.strokeStyle = on ? '#fbbf24' : 'rgba(255,255,255,.18)';
+                ctx.lineWidth = on ? 3 : 1.5;
+                const r = 9;
+                ctx.beginPath();
+                ctx.roundRect ? ctx.roundRect(x, boxTop, boxW, boxH, r) : ctx.rect(x, boxTop, boxW, boxH);
+                ctx.fill();
+                ctx.stroke();
+                ctx.fillStyle = on ? '#3f2d00' : 'rgba(255,255,255,.55)';
+                ctx.font = `900 ${on ? 19 : 15}px 'M PLUS Rounded 1c', sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(`${i + 1}`, x + boxW / 2, boxTop + boxH / 2 + 1);
+                ctx.restore();
+            }
+
+            /* ==== ふりこ（2拍で 1おうふく） ==== */
+            const pivotX = CW / 2, pivotY = boxTop + boxH + 14;
+            const swing = Math.sin((beat / 2) * Math.PI * 2 - Math.PI / 2) * 0.55;
+            const armLen = 34;
+            const bobX = pivotX + Math.sin(swing) * armLen;
+            const bobY = pivotY + Math.cos(swing) * armLen;
+            ctx.save();
+            ctx.strokeStyle = 'rgba(255,255,255,.35)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(pivotX, pivotY);
+            ctx.lineTo(bobX, bobY);
+            ctx.stroke();
+            ctx.fillStyle = '#fbbf24';
+            ctx.beginPath();
+            ctx.arc(bobX, bobY, 8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            /* ==== レーン と ターゲット ==== */
+            const laneY = CH - 116;
+            const targetX = Math.min(120, CW * 0.22);
+            const approachMs = state.beatMs * 2.4;
+            const pxPerMs = (CW - targetX - 20) / approachMs;
+
+            ctx.save();
+            ctx.strokeStyle = 'rgba(255,255,255,.12)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, laneY);
+            ctx.lineTo(CW, laneY);
+            ctx.stroke();
+            ctx.restore();
+
+            // ターゲットの わ（拍で ふくらむ）
+            const ringR = 30 + pulse * 7;
+            ctx.save();
+            ctx.strokeStyle = `rgba(251, 191, 36, ${0.5 + pulse * 0.5})`;
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(targetX, laneY, ringR, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.strokeStyle = 'rgba(255,255,255,.25)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(targetX, laneY, 30, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+
+            /* ==== 音符 ==== */
+            for (const n of state.notes) {
+                if (n.judged === 'perfect' || n.judged === 'good') continue;
+                const dx = (n.time - t) * pxPerMs;
+                const x = targetX + dx;
+                if (x < -40 || x > CW + 40) continue;
+                const missed = n.judged === 'miss';
+                const color = missed ? COL.miss : (n.offBeat ? COL.ka : COL.don);
+                const edge = missed ? '#64748b' : (n.offBeat ? COL.kaDark : COL.donDark);
+                const r = n.offBeat ? 14 : 18;
+
+                ctx.save();
+                ctx.globalAlpha = missed ? 0.35 : 1;
+                ctx.fillStyle = color;
+                ctx.strokeStyle = edge;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                if (n.offBeat) {
+                    // うら拍は ひしがた（見ただけで ちがいが わかる）
+                    ctx.moveTo(x, laneY - r);
+                    ctx.lineTo(x + r, laneY);
+                    ctx.lineTo(x, laneY + r);
+                    ctx.lineTo(x - r, laneY);
+                    ctx.closePath();
+                } else {
+                    ctx.arc(x, laneY, r, 0, Math.PI * 2);
+                }
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            /* ==== たたく キャラ（たいこ） ==== */
+            const sinceTap = performance.now() - state.tapFx;
+            const squash = state.tapFx && sinceTap < 160 ? (1 - sinceTap / 160) : 0;
+            ctx.save();
+            ctx.translate(targetX, laneY);
+            ctx.scale(1 + squash * 0.18, 1 - squash * 0.14);
+            ctx.fillStyle = '#7c2d12';
+            ctx.beginPath();
+            ctx.ellipse(0, 6, 22, 9, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#fde68a';
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 22, 12, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#b45309';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+            ctx.restore();
+
+            /* ==== はじける えんこう ==== */
+            state.hitFx = state.hitFx.filter(fx => performance.now() - fx.at < 420);
+            for (const fx of state.hitFx) {
+                const p = (performance.now() - fx.at) / 420;
+                ctx.save();
+                ctx.globalAlpha = 1 - p;
+                ctx.strokeStyle = fx.type === 'perfect' ? COL.perfect : COL.good;
+                ctx.lineWidth = 4 * (1 - p) + 1;
+                ctx.beginPath();
+                ctx.arc(targetX, laneY, 26 + p * 46, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            /* ==== はんてい の もじ ==== */
+            if (state.lastJudge) {
+                const age = performance.now() - state.lastJudge.at;
+                if (age < 700) {
+                    const p = age / 700;
+                    const text = { perfect: 'ばっちり！', good: 'おしい', miss: 'ミス', empty: 'いま じゃない' }[state.lastJudge.type];
+                    const color = { perfect: COL.perfect, good: COL.good, miss: COL.miss, empty: '#64748b' }[state.lastJudge.type];
+                    ctx.save();
+                    ctx.globalAlpha = 1 - p * p;
+                    ctx.fillStyle = color;
+                    ctx.font = `900 ${26 + (1 - p) * 8}px 'M PLUS Rounded 1c', sans-serif`;
+                    ctx.textAlign = 'center';
+                    // せまい 画面でも 文字が きれないように よせる
+                    const tx = Math.min(Math.max(targetX + 4, 86), CW - 86);
+                    ctx.fillText(text, tx, laneY - 46 - p * 14);
+                    ctx.restore();
+                }
+            }
+
+            /* ==== コンボ ==== */
+            if (state.combo >= 2) {
+                ctx.save();
+                ctx.fillStyle = '#fb7185';
+                ctx.font = `900 ${20 + Math.min(state.combo, 20) * 0.4}px 'M PLUS Rounded 1c', sans-serif`;
+                ctx.textAlign = 'right';
+                ctx.fillText(`🔥 ${state.combo} コンボ`, CW - 16, laneY - 52);
+                ctx.restore();
+            }
+
+            /* ==== ズレの メーター（はやい・おそい） ==== */
+            const mY = CH - 42;
+            const mW = Math.min(300, CW - 60);
+            const mX = (CW - mW) / 2;
+            const msToPx = (mW / 2) / TAKE_MS;
+            ctx.save();
+            ctx.fillStyle = 'rgba(255,255,255,.07)';
+            ctx.fillRect(mX, mY - 9, mW, 18);
+            ctx.fillStyle = 'rgba(52, 211, 153, .3)';
+            ctx.fillRect(mX + mW / 2 - PERFECT_MS * msToPx, mY - 9, PERFECT_MS * 2 * msToPx, 18);
+            ctx.fillStyle = 'rgba(251, 191, 36, .16)';
+            ctx.fillRect(mX + mW / 2 - GOOD_MS * msToPx, mY - 9, GOOD_MS * 2 * msToPx, 18);
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(mX + mW / 2, mY - 12);
+            ctx.lineTo(mX + mW / 2, mY + 12);
+            ctx.stroke();
+            state.offsets.forEach((off, i) => {
+                const age = (state.offsets.length - i) / state.offsets.length;
+                ctx.globalAlpha = 0.25 + age * 0.75;
+                ctx.fillStyle = Math.abs(off) <= PERFECT_MS ? COL.perfect : COL.good;
+                ctx.beginPath();
+                ctx.arc(mX + mW / 2 + off * msToPx, mY, 4.5, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = 'rgba(255,255,255,.5)';
+            ctx.font = `900 11px 'M PLUS Rounded 1c', sans-serif`;
+            ctx.textAlign = 'left';
+            ctx.fillText('← はやい', mX, mY + 26);
+            ctx.textAlign = 'right';
+            ctx.fillText('おそい →', mX + mW, mY + 26);
+            ctx.restore();
+
+            /* ==== カウントイン（1・2・3・4） ==== */
+            if (inCountIn) {
+                const n = Math.floor(beat) + 1;
+                ctx.save();
+                ctx.globalAlpha = 0.25 + pulse * 0.75;
+                ctx.fillStyle = '#fff';
+                ctx.font = `900 ${64 + pulse * 18}px 'M PLUS Rounded 1c', sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.fillText(`${n}`, CW / 2, laneY - 4);
+                ctx.globalAlpha = 0.8;
+                ctx.font = `900 15px 'M PLUS Rounded 1c', sans-serif`;
+                ctx.fillText('よーい…', CW / 2, laneY + 34);
+                ctx.restore();
+            }
+        }
+
+        /* ===================== ループ ===================== */
+        function loop() {
+            requestAnimationFrame(loop);
+            if (state.screen !== 'play' || !ctx2d) return;
+
+            const t = performance.now() - state.startPerf;
+            const beatIndex = Math.floor(t / state.beatMs);
+
+            // 拍の あたま：音を さきに よやく（音オフでも 見た目は うごく）
+            if (state.soundOn && ensureAudio()) {
+                const look = 260;
+                while (state.nextTickBeat * state.beatMs < t + look) {
+                    const when = audioCtx.currentTime + (state.nextTickBeat * state.beatMs - t) / 1000;
+                    tick(Math.max(audioCtx.currentTime, when), state.nextTickBeat % 4 === 0);
+                    state.nextTickBeat++;
+                }
+            } else {
+                state.nextTickBeat = beatIndex + 1;
+            }
+
+            // 拍ごとの ふるえ（音なしの ときの たより）
+            if (beatIndex !== state.beatSeen) {
+                state.beatSeen = beatIndex;
+                if (state.playing && beatIndex % 4 === 0) buzz(12);
+            }
+
+            // たたきそこない
+            if (state.playing) {
+                for (const n of state.notes) {
+                    if (!n.judged && t > n.time + GOOD_MS) missNote(n);
+                }
+                if (t > state.endMs) finishGame();
+            }
+
+            draw(t);
+        }
+
+        /* ===================== けっか ===================== */
+        function finishGame() {
+            state.playing = false;
+            const total = state.notes.length;
+            const acc = (state.counts.perfect + state.counts.good * 0.5) / total;
+            const rank = acc >= 0.95 ? 'S' : acc >= 0.85 ? 'A' : acc >= 0.7 ? 'B' : acc >= 0.5 ? 'C' : 'D';
+            const titles = {
+                S: 'かんぺき！リズムの てんさい', A: 'よく できました！',
+                B: 'いいかんじ！', C: 'もう すこし！', D: 'れんしゅう しよう！'
+            };
+
+            const bestKey = 'rhythm_best_' + state.stage.id;
+            const best = Math.max(state.score, parseInt(localStorage.getItem(bestKey) || '0', 10));
+            localStorage.setItem(bestKey, best);
+
+            // ズレの かたよりを アドバイスに する
+            let tip = '';
+            if (state.offsets.length >= 3) {
+                const avg = state.offsets.reduce((a, b) => a + b, 0) / state.offsets.length;
+                if (avg < -45) tip = '⚡ すこし はやい みたい。はこが 光った しゅんかんを まってみよう。';
+                else if (avg > 45) tip = '🐢 すこし おそい みたい。●が わに つく すこし 手前で タップ！';
+                else tip = '🎯 タイミングの かたよりは ほとんど なし！';
+            }
+
+            document.getElementById('result-rank').innerText = rank;
+            document.getElementById('result-title').innerText = titles[rank];
+            document.getElementById('result-score').innerText = state.score;
+            document.getElementById('result-acc').innerText = Math.round(acc * 100);
+            document.getElementById('result-perfect').innerText = state.counts.perfect;
+            document.getElementById('result-good').innerText = state.counts.good;
+            document.getElementById('result-miss').innerText = state.counts.miss;
+            document.getElementById('result-combo').innerText = state.maxCombo;
+            document.getElementById('result-best').innerText = best;
+            document.getElementById('result-tip').innerText = tip;
+            showScreen('result');
+        }
+
+        /* ===================== スタート ===================== */
+        window.addEventListener('load', () => {
+            document.getElementById('opt-vibrate').addEventListener('change', e => {
+                state.vibrate = e.target.checked;
+                if (state.vibrate) buzz(30);
+            });
+            renderStageList();
+            requestAnimationFrame(loop);
+        });
+    </script>
+</body>
+</html>
