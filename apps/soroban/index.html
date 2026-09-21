@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>そろばん道場 珠の うごかし方から</title>
+    <meta name="description" content="そろばんの珠を指で動かして学べるアプリ。5の補数・10のくり上がりの指づかいをお手本アニメーションで1手ずつ確認でき、読みとりクイズとフラッシュ暗算つき。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums; }
+        .bounce-hover { transition: transform .12s cubic-bezier(.175,.885,.32,1.275) }
+        .bounce-hover:active { transform: scale(.94) }
+        @keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.1) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275) }
+        @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+        .shake { animation: shake .3s ease-in-out }
+        /* 珠は transform だけ うごかして、なめらかに する */
+        .bead { transition: transform .18s cubic-bezier(.2,.8,.3,1); cursor: pointer }
+        .bead.locked { cursor: default }
+        @keyframes glow { 0%,100% { opacity: .25 } 50% { opacity: .9 } }
+        .glow { animation: glow .8s ease-in-out infinite }
+        svg text { font-family: inherit }
+        rt { font-size: .55em; font-weight: 700; color: #b45309 }
+    </style>
+</head>
+<body class="bg-orange-50 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-amber-700 via-orange-600 to-yellow-600 text-white p-3 sm:p-4 shadow-lg sticky top-0 z-30">
+        <div class="max-w-5xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">🧮</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">そろばん道場</h1>
+                    <p class="text-xs text-amber-50 font-bold hidden sm:block">珠（たま）を さわって おぼえる</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[72px] z-20 bg-orange-50/95 backdrop-blur border-b border-orange-200">
+        <div class="max-w-5xl mx-auto flex gap-2 p-3 overflow-x-auto" id="tab-nav"></div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto w-full p-3 sm:p-6 flex-grow space-y-4">
+
+        <!-- ===== ① そろばん ===== -->
+        <section id="tab-play" class="space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <h2 class="text-lg font-black">🧮 そろばんを さわってみよう</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    珠（たま）を タップすると <ruby>梁<rt>はり</rt></ruby>（まん中の ぼう）に よったり はなれたり するよ。
+                    <span class="text-amber-700">梁に くっついた 珠だけ</span> かぞえる。
+                </p>
+            </div>
+
+            <div class="bg-white rounded-3xl p-3 sm:p-4 shadow-md border-2 border-amber-100">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-xs font-black text-slate-400">いまの かず</span>
+                    <span id="play-value" class="num text-3xl sm:text-4xl font-black text-amber-700">0</span>
+                </div>
+                <div id="play-board"></div>
+                <div class="grid grid-cols-3 gap-2 mt-3">
+                    <button onclick="playClear()" class="bg-white border-2 border-slate-200 text-slate-600 font-black py-2.5 rounded-xl bounce-hover text-sm">ごわさん（0に する）</button>
+                    <button onclick="playRandom()" class="bg-white border-2 border-amber-200 text-amber-700 font-black py-2.5 rounded-xl bounce-hover text-sm">てきとうに おく</button>
+                    <button onclick="playCount()" class="bg-white border-2 border-emerald-200 text-emerald-700 font-black py-2.5 rounded-xl bounce-hover text-sm">1 たす</button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <p class="font-black text-sm">🔢 この かずを つくってみよう</p>
+                <div class="flex items-center gap-3 mt-2">
+                    <span id="play-target" class="num text-3xl font-black text-rose-600">7</span>
+                    <span id="play-judge" class="font-black text-sm"></span>
+                    <button onclick="newPlayTarget()" class="ml-auto bg-white border-2 border-rose-200 text-rose-600 font-black py-2 px-4 rounded-xl bounce-hover text-sm">べつの かず</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== ② たしざん・ひきざん ===== -->
+        <section id="tab-calc" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="font-black text-sm text-slate-500">レベル</span>
+                    <div id="level-buttons" class="flex flex-wrap gap-2"></div>
+                </div>
+                <p id="level-desc" class="text-sm font-bold text-slate-500 mt-2"></p>
+            </div>
+
+            <div class="bg-white rounded-3xl p-3 sm:p-4 shadow-md border-2 border-amber-100">
+                <p id="calc-q" class="num text-center text-3xl sm:text-4xl font-black"></p>
+                <div class="flex justify-between items-center mt-3 mb-1">
+                    <span class="text-xs font-black text-slate-400">そろばんの かず</span>
+                    <span id="calc-value" class="num text-2xl font-black text-amber-700">0</span>
+                </div>
+                <div id="calc-board"></div>
+                <p id="calc-msg" class="text-center font-black mt-2 min-h-[1.75rem]"></p>
+                <div class="grid grid-cols-2 gap-2 mt-2">
+                    <button id="calc-step" onclick="calcStep()" class="bg-gradient-to-r from-amber-500 to-orange-600 text-white font-black py-3 rounded-2xl border-b-4 border-amber-700 bounce-hover">お手本を 1つ すすめる ▶</button>
+                    <button onclick="newCalc()" class="bg-white border-2 border-amber-200 text-amber-700 font-black py-3 rounded-2xl bounce-hover">つぎの もんだい</button>
+                </div>
+                <p class="text-center text-xs font-bold text-slate-400 mt-2">
+                    じぶんで 珠を うごかしても OK。答えの かずに なったら せいかい！
+                </p>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <p class="font-black text-sm mb-2">👣 ゆびの うごかし方</p>
+                <ol id="calc-steps" class="space-y-1.5"></ol>
+            </div>
+        </section>
+
+        <!-- ===== ③ クイズ ===== -->
+        <section id="tab-quiz" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-3 shadow-md border-2 border-amber-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="font-black text-sm text-slate-500">クイズ</span>
+                    <button onclick="setQuizMode('read')" data-qm="read" class="font-black px-3 py-1.5 rounded-full text-xs bounce-hover">👀 そろばんを よむ</button>
+                    <button onclick="setQuizMode('make')" data-qm="make" class="font-black px-3 py-1.5 rounded-full text-xs bounce-hover">✋ かずを つくる</button>
+                    <span id="quiz-score" class="num ml-auto bg-amber-100 text-amber-700 font-black px-3 py-1 rounded-full text-xs">せいかい 0 / 0</span>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-3 sm:p-4 shadow-md border-2 border-amber-100">
+                <p id="quiz-q" class="text-center text-xl font-black"></p>
+                <div id="quiz-board" class="mt-2"></div>
+                <div id="quiz-input" class="mt-3"></div>
+                <p id="quiz-msg" class="text-center font-black mt-2 min-h-[1.75rem]"></p>
+                <button onclick="newQuiz()" class="w-full bg-white border-2 border-amber-200 text-amber-700 font-black py-3 rounded-2xl bounce-hover mt-1">つぎの もんだい</button>
+            </div>
+        </section>
+
+        <!-- ===== ④ フラッシュ暗算 ===== -->
+        <section id="tab-flash" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <h2 class="text-lg font-black">⚡ フラッシュ<ruby>暗算<rt>あんざん</rt></ruby></h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">つぎつぎ 出てくる かずを 頭の中の そろばんで たしていこう。</p>
+                <div class="grid grid-cols-3 gap-3 mt-3 text-sm font-black">
+                    <label class="block">くち数
+                        <select id="flash-n" class="w-full mt-1 border-2 border-amber-200 rounded-xl p-2 bg-white">
+                            <option value="3">3こ</option><option value="5" selected>5こ</option><option value="7">7こ</option>
+                        </select></label>
+                    <label class="block">けた
+                        <select id="flash-d" class="w-full mt-1 border-2 border-amber-200 rounded-xl p-2 bg-white">
+                            <option value="1" selected>1けた</option><option value="2">2けた</option>
+                        </select></label>
+                    <label class="block">はやさ
+                        <select id="flash-s" class="w-full mt-1 border-2 border-amber-200 rounded-xl p-2 bg-white">
+                            <option value="1400">ゆっくり</option><option value="900" selected>ふつう</option><option value="500">はやい</option>
+                        </select></label>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <div id="flash-stage" class="h-40 sm:h-48 flex items-center justify-center bg-slate-900 rounded-2xl">
+                    <span id="flash-num" class="num text-6xl sm:text-7xl font-black text-amber-300">🧮</span>
+                </div>
+                <div id="flash-input" class="mt-3"></div>
+                <p id="flash-msg" class="text-center font-black mt-2 min-h-[1.75rem]"></p>
+                <button id="flash-start" onclick="flashStart()" class="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white font-black py-3 rounded-2xl border-b-4 border-amber-700 bounce-hover mt-1">スタート！</button>
+            </div>
+        </section>
+
+        <!-- ===== ⑤ つかいかた ===== -->
+        <section id="tab-help" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <h2 class="text-lg font-black">📖 そろばんの きほん</h2>
+                <div id="help-fig" class="mt-3"></div>
+                <ul class="text-sm font-bold text-slate-600 mt-3 space-y-1.5 leading-relaxed">
+                    <li>・まん中の ぼうを <ruby>梁<rt>はり</rt></ruby>（はり）と いう。<span class="text-amber-700">梁に くっついた 珠だけ かぞえる</span>。</li>
+                    <li>・上の 珠（<span class="text-rose-600">五玉・ごだま</span>）は 1こで <b>5</b>。下の 珠（<span class="text-sky-600">一玉・いちだま</span>）は 1こで <b>1</b>。</li>
+                    <li>・1本の けたで <b>0〜9</b> まで あらわせる（五玉1こ＋一玉4こ＝9）。</li>
+                    <li>・梁の <span class="text-amber-700">・（定位点）</span> を 一の位に すると 読みやすい。</li>
+                    <li>・ぜんぶ はらって 0に することを <b>ごわさん</b>（御破算）と いう。</li>
+                </ul>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <h3 class="font-black">✋ 5の たすけ（5の<ruby>補数<rt>ほすう</rt></ruby>）</h3>
+                <p class="text-sm font-bold text-slate-600 mt-1 leading-relaxed">
+                    一玉が たりない ときは、五玉を つかう。<br>
+                    たとえば <b class="num">3 ＋ 4</b>：一玉は あと1こしか ないので たせない。<br>
+                    <span class="text-amber-700">4 ＝ 5 − 1</span> だから 「五玉を 下ろして（＋5）、一玉を 1こ 下げる（−1）」。
+                </p>
+                <div class="grid grid-cols-2 gap-2 mt-2 text-center text-sm font-black">
+                    <div class="bg-amber-50 rounded-xl p-2">たす 1 → <span class="text-amber-700">5 を たして 4 ひく</span></div>
+                    <div class="bg-amber-50 rounded-xl p-2">たす 2 → <span class="text-amber-700">5 を たして 3 ひく</span></div>
+                    <div class="bg-amber-50 rounded-xl p-2">たす 3 → <span class="text-amber-700">5 を たして 2 ひく</span></div>
+                    <div class="bg-amber-50 rounded-xl p-2">たす 4 → <span class="text-amber-700">5 を たして 1 ひく</span></div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <h3 class="font-black">🔟 10の くり上がり（10の<ruby>補数<rt>ほすう</rt></ruby>）</h3>
+                <p class="text-sm font-bold text-slate-600 mt-1 leading-relaxed">
+                    その けたに 入りきらない ときは、<span class="text-amber-700">先に 補数を ひいてから、となりの けたに 1</span>。<br>
+                    たとえば <b class="num">8 ＋ 7</b>：<span class="text-amber-700">7 ＝ 10 − 3</span> だから 「3 を ひいて、となりに 1 くり上げる」。
+                </p>
+                <div class="grid grid-cols-3 gap-2 mt-2 text-center text-sm font-black" id="ten-pairs"></div>
+                <p class="text-sm font-bold text-slate-600 mt-3 leading-relaxed">
+                    ひきざんで たりない ときは ぎゃく：<span class="text-amber-700">となりから 1 かりて、補数を たす</span>。<br>
+                    <b class="num">12 − 5</b> → 「となりの 1 を ひいて、5 の 補数 5 を たす」。
+                </p>
+            </div>
+
+            <details class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <summary class="font-black cursor-pointer">📋 おうちの方へ</summary>
+                <div class="text-sm font-bold text-slate-600 mt-3 space-y-2 leading-relaxed">
+                    <p>珠算（しゅざん）で いちばん つまずくのが「5の補数」と「10の補数」の指づかいです。
+                       このアプリの「たしざん・ひきざん」タブは、実際の珠算と同じ手順
+                       （加算のくり上がりは<b>先に補数を引いてから上位に1</b>、減算のくり下がりは<b>先に上位から1を引いてから補数を足す</b>）で
+                       1手ずつ動かして見せます。</p>
+                    <p>お手本を見ずに自分で珠を動かしても、答えの数になれば正解になります。
+                       フラッシュ暗算は「読み上げ算」の代わりに、音なしで視覚的に練習できるようにしたものです。</p>
+                </div>
+            </details>
+        </section>
+    </main>
+
+    <footer class="text-center py-3 text-xs text-slate-400 font-bold">そろばん道場 © 2026</footer>
+
+    <script>
+        const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+        const pick = l => l[Math.floor(Math.random() * l.length)];
+
+        /* ===================== そろばんの 珠 ===================== */
+        // けたは 右から 0（一の位）、1（十の位）…
+        const KETA = ['一', '十', '百', '千', '万', '十万', '百万', '千万', '億'];
+        const CW = 46, BEAD_DY_H = 40, BEAD_DY_E = -28;
+
+        function makeAbacus(hostId, prefix, opts = {}) {
+            const n = opts.cols || 9;
+            const host = document.getElementById(hostId);
+            const cols = Array.from({ length: n }, () => ({ h: 0, e: 0 }));
+            const W = 20 + n * CW, H = 296;
+            const beamY = 100, beamH = 14;
+            const colX = i => 10 + (n - 1 - i) * CW + CW / 2;   // i=0 が 右はし
+            const bead = (cx, cy, fill, stroke) =>
+                `<polygon points="${cx - 19},${cy} ${cx - 7},${cy - 12} ${cx + 7},${cy - 12} ${cx + 19},${cy} ${cx + 7},${cy + 12} ${cx - 7},${cy + 12}"
+                     fill="${fill}" stroke="${stroke}" stroke-width="2" stroke-linejoin="round" />
+                 <ellipse cx="${cx - 4}" cy="${cy - 5}" rx="5" ry="2.5" fill="#ffffff" opacity=".45" />`;
+
+            let svg = `<svg viewBox="0 0 ${W} ${H}" class="w-full h-auto select-none" style="max-height:340px" id="${prefix}-svg">
+                <rect x="2" y="2" width="${W - 4}" height="${H - 34}" rx="14" fill="#fde9cf" stroke="#92400e" stroke-width="5" />`;
+            // ぼう
+            for (let i = 0; i < n; i++) {
+                const x = colX(i);
+                svg += `<line x1="${x}" y1="14" x2="${x}" y2="${H - 44}" stroke="#c8a27a" stroke-width="4" stroke-linecap="round" />`;
+            }
+            // 梁
+            svg += `<rect x="4" y="${beamY}" width="${W - 8}" height="${beamH}" fill="#92400e" />`;
+            for (let i = 0; i < n; i += 3) {
+                svg += `<circle cx="${colX(i)}" cy="${beamY + beamH / 2}" r="3.2" fill="#fde9cf" />`;   // 定位点
+            }
+            // 珠
+            for (let i = 0; i < n; i++) {
+                const x = colX(i);
+                svg += `<g class="bead" id="${prefix}-h-${i}" data-col="${i}" data-type="h">
+                    <rect x="${x - 22}" y="33" width="44" height="26" fill="transparent" />
+                    ${bead(x, 46, '#fda4af', '#9f1239')}</g>`;
+                for (let j = 1; j <= 4; j++) {
+                    const cy = 128 + j * 28;
+                    svg += `<g class="bead" id="${prefix}-e-${i}-${j}" data-col="${i}" data-type="e" data-j="${j}">
+                        <rect x="${x - 22}" y="${cy - 13}" width="44" height="26" fill="transparent" />
+                        ${bead(x, cy, '#7dd3fc', '#075985')}</g>`;
+                }
+                svg += `<text x="${x}" y="${H - 8}" font-size="13" font-weight="800" fill="#92400e" text-anchor="middle">${KETA[i] || ''}</text>`;
+            }
+            svg += `</svg>`;
+            host.innerHTML = svg;
+
+            const api = {
+                cols, n, prefix,
+                interactive: opts.interactive !== false,
+                onChange: opts.onChange || (() => { }),
+                value() { return cols.reduce((a, c, i) => a + (c.h * 5 + c.e) * Math.pow(10, i), 0); },
+                set(v) {
+                    let x = Math.max(0, Math.floor(v));
+                    for (let i = 0; i < n; i++) { const d = x % 10; cols[i].h = d >= 5 ? 1 : 0; cols[i].e = d % 5; x = Math.floor(x / 10); }
+                    api.sync();
+                },
+                clear() { cols.forEach(c => { c.h = 0; c.e = 0; }); api.sync(); },
+                sync() {
+                    for (let i = 0; i < n; i++) {
+                        const g = document.getElementById(`${prefix}-h-${i}`);
+                        g.setAttribute('transform', `translate(0,${cols[i].h ? BEAD_DY_H : 0})`);
+                        g.querySelector('polygon').setAttribute('fill', cols[i].h ? '#f43f5e' : '#fecdd3');
+                        for (let j = 1; j <= 4; j++) {
+                            const ge = document.getElementById(`${prefix}-e-${i}-${j}`);
+                            const on = cols[i].e >= j;
+                            ge.setAttribute('transform', `translate(0,${on ? BEAD_DY_E : 0})`);
+                            ge.querySelector('polygon').setAttribute('fill', on ? '#0ea5e9' : '#e0f2fe');
+                        }
+                    }
+                    api.onChange(api.value());
+                },
+                // お手本で うごかす 珠を 光らせる
+                highlight(list) {
+                    document.querySelectorAll(`#${prefix}-svg .halo`).forEach(e => e.remove());
+                    (list || []).forEach(id => {
+                        const g = document.getElementById(id);
+                        if (!g) return;
+                        const poly = g.querySelector('polygon');
+                        const halo = poly.cloneNode();
+                        halo.setAttribute('fill', 'none');
+                        halo.setAttribute('stroke', '#facc15');
+                        halo.setAttribute('stroke-width', '6');
+                        halo.classList.add('halo', 'glow');
+                        g.appendChild(halo);
+                    });
+                }
+            };
+
+            host.querySelectorAll('.bead').forEach(g => {
+                g.addEventListener('click', () => {
+                    if (!api.interactive) return;
+                    const i = +g.dataset.col;
+                    if (g.dataset.type === 'h') cols[i].h = cols[i].h ? 0 : 1;
+                    else { const j = +g.dataset.j; cols[i].e = cols[i].e >= j ? j - 1 : j; }
+                    api.sync();
+                });
+            });
+            api.sync();
+            return api;
+        }
+
+        /* ===================== 珠算の 手順（5の補数・10の補数） ===================== */
+        // cols を じっさいに 書きかえながら、1手ずつの てじゅんを かえす
+        function addToColumn(cols, col, add) {          // add: 1〜9
+            if (col >= cols.length) return [{ over: true, why: 'けたが たりません' }];
+            const steps = [];
+            const c = cols[col];
+            const digit = c.h * 5 + c.e;
+            if (digit + add <= 9) {
+                if (c.e + add <= 4) {
+                    steps.push({ col, type: 'e', from: c.e, to: c.e + add, why: `${KETA[col]}の位：一玉を ${add}こ 上げる（＋${add}）` });
+                    c.e += add;
+                } else if (add >= 5) {                   // 五玉を つかう（そのまま）
+                    steps.push({ col, type: 'h', from: 0, to: 1, why: `${KETA[col]}の位：五玉を 下ろす（＋5）` });
+                    c.h = 1;
+                    if (add - 5 > 0) {
+                        steps.push({ col, type: 'e', from: c.e, to: c.e + (add - 5), why: `${KETA[col]}の位：一玉を ${add - 5}こ 上げる（＋${add - 5}）` });
+                        c.e += add - 5;
+                    }
+                } else {                                 // 5の補数
+                    steps.push({ col, type: 'h', from: 0, to: 1, why: `5の たすけ：${add} ＝ 5 − ${5 - add} → 五玉を 下ろす（＋5）` });
+                    c.h = 1;
+                    steps.push({ col, type: 'e', from: c.e, to: c.e - (5 - add), why: `${KETA[col]}の位：一玉を ${5 - add}こ 下げる（−${5 - add}）` });
+                    c.e -= 5 - add;
+                }
+            } else {                                     // 10の補数（先に ひいてから くり上げ）
+                const comp = 10 - add;
+                steps.push({ note: true, why: `くり上がり：${add} ＝ 10 − ${comp} → 先に ${comp} を ひく` });
+                steps.push(...subFromColumn(cols, col, comp));
+                steps.push({ note: true, why: `つぎに ${KETA[col + 1] || '上'}の位に 1 くり上げる` });
+                steps.push(...addToColumn(cols, col + 1, 1));
+            }
+            return steps;
+        }
+
+        function subFromColumn(cols, col, sub) {         // sub: 1〜9
+            if (col >= cols.length) return [{ over: true, why: 'けたが たりません' }];
+            const steps = [];
+            const c = cols[col];
+            const digit = c.h * 5 + c.e;
+            if (digit - sub >= 0) {
+                if (c.e >= sub) {
+                    steps.push({ col, type: 'e', from: c.e, to: c.e - sub, why: `${KETA[col]}の位：一玉を ${sub}こ 下げる（−${sub}）` });
+                    c.e -= sub;
+                } else if (sub >= 5) {
+                    steps.push({ col, type: 'h', from: 1, to: 0, why: `${KETA[col]}の位：五玉を 上げる（−5）` });
+                    c.h = 0;
+                    if (sub - 5 > 0) {
+                        steps.push({ col, type: 'e', from: c.e, to: c.e - (sub - 5), why: `${KETA[col]}の位：一玉を ${sub - 5}こ 下げる（−${sub - 5}）` });
+                        c.e -= sub - 5;
+                    }
+                } else {                                 // 5の補数（ひく）
+                    steps.push({ col, type: 'h', from: 1, to: 0, why: `5の たすけ：${sub} ＝ 5 − ${5 - sub} → 五玉を 上げる（−5）` });
+                    c.h = 0;
+                    steps.push({ col, type: 'e', from: c.e, to: c.e + (5 - sub), why: `${KETA[col]}の位：一玉を ${5 - sub}こ 上げる（＋${5 - sub}）` });
+                    c.e += 5 - sub;
+                }
+            } else {                                     // くり下がり（先に となりから 1 かりる）
+                const comp = 10 - sub;
+                steps.push({ note: true, why: `くり下がり：となりの ${KETA[col + 1] || '上'}の位から 1 かりる` });
+                steps.push(...subFromColumn(cols, col + 1, 1));
+                steps.push({ note: true, why: `かりた 10 から ${sub} を ひくので、この位に ${comp} を たす` });
+                steps.push(...addToColumn(cols, col, comp));
+            }
+            return steps;
+        }
+
+        // 数どうしの たしざん・ひきざん（上の位から 1けたずつ）
+        function planCalc(start, num, sign, ncol) {
+            const cols = Array.from({ length: ncol }, (_, i) => {
+                const d = Math.floor(start / Math.pow(10, i)) % 10;
+                return { h: d >= 5 ? 1 : 0, e: d % 5 };
+            });
+            const digits = String(num).split('').map(Number);      // 上の位から
+            const steps = [];
+            digits.forEach((d, k) => {
+                if (d === 0) return;
+                const col = digits.length - 1 - k;
+                steps.push(...(sign > 0 ? addToColumn(cols, col, d) : subFromColumn(cols, col, d)));
+            });
+            return { steps, cols };
+        }
+
+        /* ===================== タブ ===================== */
+        const TABS = { play: '🧮 そろばん', calc: '➕ たしざん・ひきざん', quiz: '❓ クイズ', flash: '⚡ フラッシュ暗算', help: '📖 つかいかた' };
+        const state = { tab: 'play', level: 1, quizMode: 'read', quizOK: 0, quizTotal: 0 };
+        let playAb, calcAb, quizAb, helpAb;
+
+        function renderNav() {
+            document.getElementById('tab-nav').innerHTML = Object.entries(TABS).map(([k, label]) => {
+                const on = state.tab === k;
+                return `<button onclick="setTab('${k}')" data-tab="${k}" class="${on ? 'bg-amber-600 text-white' : 'bg-white border-2 border-amber-200 text-slate-600'} font-black px-4 py-2 rounded-full text-sm whitespace-nowrap bounce-hover">${label}</button>`;
+            }).join('');
+        }
+        function setTab(k) {
+            state.tab = k;
+            Object.keys(TABS).forEach(t => document.getElementById('tab-' + t).classList.toggle('hidden', t !== k));
+            renderNav();
+            if (k === 'flash') flashReset();
+        }
+
+        /* ===================== ① そろばん ===================== */
+        function playClear() { playAb.clear(); }
+        function playRandom() { playAb.set(rnd(1, 99999)); }
+        function playCount() {
+            const cols = playAb.cols;
+            addToColumn(cols, 0, 1);
+            playAb.sync();
+        }
+        function newPlayTarget() {
+            const t = pick([rnd(1, 9), rnd(10, 99), rnd(100, 999), rnd(1000, 99999)]);
+            document.getElementById('play-target').innerText = t.toLocaleString();
+            document.getElementById('play-target').dataset.v = t;
+            judgePlay();
+        }
+        // v は 盤が できあがる 前にも 呼ばれるので、引数で うけとる
+        function judgePlay(v) {
+            if (v === undefined) v = playAb ? playAb.value() : 0;
+            const t = +document.getElementById('play-target').dataset.v;
+            const ok = v === t;
+            const el = document.getElementById('play-judge');
+            el.innerHTML = ok ? '<span class="text-emerald-600">⭕ できた！</span>' : '<span class="text-slate-400">そろばんで つくってね</span>';
+        }
+
+        /* ===================== ② たしざん・ひきざん ===================== */
+        const LEVELS = {
+            1: { name: '① そのまま', desc: '五玉や くり上がりを つかわず、一玉だけで できる もんだい。' },
+            2: { name: '② 5の たすけ', desc: '一玉が たりないので 五玉を つかう（5の補数）もんだい。' },
+            3: { name: '③ くり上がり', desc: 'となりの けたへ くり上がる／くり下がる（10の補数）もんだい。' },
+            4: { name: '④ 2けた', desc: '2けたの たしざん・ひきざん。いろいろな 技が まざるよ。' }
+        };
+        const calc = { a: 0, b: 0, sign: 1, steps: [], at: 0, answer: 0 };
+
+        function renderLevels() {
+            document.getElementById('level-buttons').innerHTML = Object.entries(LEVELS).map(([k, l]) => {
+                const on = state.level === +k;
+                return `<button onclick="setLevel(${k})" data-level="${k}" class="${on ? 'bg-orange-500 text-white' : 'bg-white border-2 border-orange-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs whitespace-nowrap bounce-hover">${l.name}</button>`;
+            }).join('');
+            document.getElementById('level-desc').innerText = LEVELS[state.level].desc;
+        }
+        function setLevel(k) { state.level = k; renderLevels(); newCalc(); }
+
+        function kindOf(steps) {
+            const txt = steps.map(s => s.why).join('');
+            return { five: txt.includes('5の たすけ'), carry: txt.includes('くり上がり') || txt.includes('くり下がり') };
+        }
+
+        function makeProblem(level) {
+            for (let t = 0; t < 400; t++) {
+                const sign = Math.random() < 0.5 ? 1 : -1;
+                let a, b;
+                if (level === 4) { a = rnd(10, 89); b = rnd(11, 89); }
+                else { a = rnd(1, 9); b = rnd(1, 9); }
+                if (sign < 0 && a - b < 0) continue;
+                if (sign < 0 && level === 4 && a - b < 1) continue;
+                const { steps } = planCalc(a, b, sign, 9);
+                if (steps.some(s => s.over)) continue;
+                const k = kindOf(steps);
+                if (level === 1 && (k.five || k.carry)) continue;
+                if (level === 2 && (!k.five || k.carry)) continue;
+                if (level === 3 && !k.carry) continue;
+                return { a, b, sign, steps, answer: sign > 0 ? a + b : a - b };
+            }
+            return { a: 3, b: 4, sign: 1, steps: planCalc(3, 4, 1, 9).steps, answer: 7 };
+        }
+
+        function newCalc() {
+            const p = makeProblem(state.level);
+            Object.assign(calc, p, { at: 0 });
+            document.getElementById('calc-q').innerHTML =
+                `${p.a} <span class="text-amber-600">${p.sign > 0 ? '＋' : '−'}</span> ${p.b} <span class="text-slate-300">＝</span> <span class="text-slate-300">？</span>`;
+            calcAb.set(p.a);
+            calcAb.highlight([]);
+            document.getElementById('calc-msg').innerText = '';
+            document.getElementById('calc-step').disabled = false;
+            document.getElementById('calc-step').classList.remove('opacity-40');
+            renderCalcSteps();
+        }
+
+        function renderCalcSteps() {
+            document.getElementById('calc-steps').innerHTML = calc.steps.map((s, i) => {
+                const done = i < calc.at, now = i === calc.at;
+                return `<li data-step="${i}" class="${now ? 'bg-amber-100 border-amber-400' : done ? 'bg-slate-50 border-slate-200 text-slate-400' : 'bg-white border-slate-200'} border-2 rounded-xl px-3 py-2 text-sm font-bold">
+                    <span class="${done ? 'bg-slate-300' : 'bg-amber-500'} text-white rounded-full px-2 text-xs mr-2">${i + 1}</span>${s.why}</li>`;
+            }).join('');
+        }
+
+        // じぶんで 珠を うごかした あとでも お手本が つづけられるよう、盤を そこまでの 形に そろえる
+        function syncBoardToStep(n) {
+            calcAb.set(calc.a);
+            for (let i = 0; i < n; i++) {
+                const s = calc.steps[i];
+                if (s.note) continue;
+                const c = calcAb.cols[s.col];
+                if (s.type === 'h') c.h = s.to; else c.e = s.to;
+            }
+            calcAb.sync();
+        }
+
+        function calcStep() {
+            if (calc.at >= calc.steps.length) return;
+            syncBoardToStep(calc.at);
+            const s = calc.steps[calc.at];
+            if (!s.note) {
+                const c = calcAb.cols[s.col];
+                if (s.type === 'h') c.h = s.to; else c.e = s.to;
+                calcAb.sync();
+                const ids = s.type === 'h'
+                    ? [`${calcAb.prefix}-h-${s.col}`]
+                    : Array.from({ length: Math.abs(s.to - s.from) }, (_, k) => {
+                        const j = s.to > s.from ? s.from + 1 + k : s.to + 1 + k;
+                        return `${calcAb.prefix}-e-${s.col}-${j}`;
+                    });
+                calcAb.highlight(ids);
+            } else calcAb.highlight([]);
+            calc.at++;
+            renderCalcSteps();
+            if (calc.at >= calc.steps.length) {
+                document.getElementById('calc-step').disabled = true;
+                document.getElementById('calc-step').classList.add('opacity-40');
+            }
+            judgeCalc();
+        }
+
+        function judgeCalc(v) {
+            if (v === undefined) v = calcAb ? calcAb.value() : 0;
+            const el = document.getElementById('calc-msg');
+            if (v === calc.answer) {
+                el.innerHTML = `<span class="text-emerald-600">⭕ せいかい！ ${calc.a} ${calc.sign > 0 ? '＋' : '−'} ${calc.b} ＝ ${calc.answer}</span>`;
+                document.getElementById('calc-q').innerHTML =
+                    `${calc.a} <span class="text-amber-600">${calc.sign > 0 ? '＋' : '−'}</span> ${calc.b} ＝ <span class="text-emerald-600">${calc.answer}</span>`;
+            } else el.innerText = '';
+        }
+
+        /* ===================== ③ クイズ ===================== */
+        function setQuizMode(m) { state.quizMode = m; renderQuizModes(); newQuiz(); }
+        function renderQuizModes() {
+            document.querySelectorAll('[data-qm]').forEach(b => {
+                const on = b.dataset.qm === state.quizMode;
+                b.className = `${on ? 'bg-amber-600 text-white' : 'bg-white border-2 border-amber-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover`;
+            });
+        }
+        const quiz = { answer: 0, typed: '' };
+
+        function newQuiz() {
+            quiz.typed = '';
+            document.getElementById('quiz-msg').innerText = '';
+            const v = pick([rnd(1, 9), rnd(10, 99), rnd(100, 999), rnd(1000, 9999)]);
+            quiz.answer = v;
+            if (state.quizMode === 'read') {
+                document.getElementById('quiz-q').innerText = 'この そろばんは いくつ？';
+                quizAb.interactive = false;
+                quizAb.set(v);
+                renderPad('quiz');
+            } else {
+                document.getElementById('quiz-q').innerHTML = `<span class="num text-3xl text-rose-600">${v.toLocaleString()}</span> を そろばんで つくろう`;
+                quizAb.interactive = true;
+                quizAb.clear();
+                document.getElementById('quiz-input').innerHTML =
+                    `<p class="text-center text-sm font-bold text-slate-500">珠を うごかしてね</p>`;
+            }
+        }
+
+        function renderPad(which) {
+            const host = document.getElementById(which + '-input');
+            host.innerHTML = `
+                <div class="num text-center text-3xl font-black bg-slate-50 border-2 border-slate-200 rounded-2xl py-2 mb-2" id="${which}-typed">_</div>
+                <div class="grid grid-cols-5 gap-1.5">
+                    ${[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map(d => `<button onclick="padPress('${which}',${d})" class="bg-slate-100 border-b-4 border-slate-300 rounded-xl py-3 font-black text-xl bounce-hover">${d}</button>`).join('')}
+                </div>
+                <div class="grid grid-cols-2 gap-1.5 mt-1.5">
+                    <button onclick="padBack('${which}')" class="bg-slate-200 border-b-4 border-slate-400 rounded-xl py-2.5 font-black bounce-hover">⌫</button>
+                    <button onclick="padEnter('${which}')" class="bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-b-4 border-emerald-700 rounded-xl py-2.5 font-black bounce-hover">こたえる</button>
+                </div>`;
+            updatePad(which);
+        }
+        const padState = { quiz: '', flash: '' };
+        function updatePad(which) {
+            const el = document.getElementById(which + '-typed');
+            if (el) el.innerText = padState[which] === '' ? '_' : Number(padState[which]).toLocaleString();
+        }
+        function padPress(which, d) {
+            if (padState[which].length >= 7) return;
+            padState[which] = (padState[which] + d).replace(/^0+(?=\d)/, '');
+            updatePad(which);
+        }
+        function padBack(which) { padState[which] = padState[which].slice(0, -1); updatePad(which); }
+        function padEnter(which) { which === 'quiz' ? quizAnswer() : flashAnswer(); }
+
+        function quizAnswer() {
+            if (padState.quiz === '') return;
+            const v = Number(padState.quiz);
+            state.quizTotal++;
+            const msg = document.getElementById('quiz-msg');
+            if (v === quiz.answer) {
+                state.quizOK++;
+                msg.innerHTML = `<span class="text-emerald-600">⭕ せいかい！ ${quiz.answer.toLocaleString()}</span>`;
+            } else {
+                msg.innerHTML = `<span class="text-rose-500">✗ ざんねん…（こたえは ${quiz.answer.toLocaleString()}）</span>`;
+            }
+            padState.quiz = '';
+            updatePad('quiz');
+            document.getElementById('quiz-score').innerText = `せいかい ${state.quizOK} / ${state.quizTotal}`;
+        }
+
+        function judgeQuizMake(v) {
+            if (state.tab !== 'quiz' || state.quizMode !== 'make') return;
+            if (v === undefined) v = quizAb ? quizAb.value() : 0;
+            const msg = document.getElementById('quiz-msg');
+            if (v === quiz.answer) {
+                msg.innerHTML = `<span class="text-emerald-600">⭕ できた！ ${quiz.answer.toLocaleString()}</span>`;
+            } else msg.innerText = '';
+        }
+
+        /* ===================== ④ フラッシュ暗算 ===================== */
+        const flash = { nums: [], sum: 0, timer: null, running: false };
+        function flashReset() {
+            flash.running = false;
+            if (flash.timer) { clearTimeout(flash.timer); flash.timer = null; }
+            document.getElementById('flash-num').innerText = '🧮';
+            document.getElementById('flash-input').innerHTML = '';
+            document.getElementById('flash-msg').innerText = '';
+            document.getElementById('flash-start').classList.remove('opacity-40');
+            document.getElementById('flash-start').disabled = false;
+        }
+        function flashStart() {
+            const n = +document.getElementById('flash-n').value;
+            const dig = +document.getElementById('flash-d').value;
+            const speed = +document.getElementById('flash-s').value;
+            flash.nums = Array.from({ length: n }, () => dig === 1 ? rnd(1, 9) : rnd(10, 99));
+            flash.sum = flash.nums.reduce((a, b) => a + b, 0);
+            flash.running = true;
+            padState.flash = '';
+            document.getElementById('flash-input').innerHTML = '';
+            document.getElementById('flash-msg').innerText = '';
+            document.getElementById('flash-start').disabled = true;
+            document.getElementById('flash-start').classList.add('opacity-40');
+            const el = document.getElementById('flash-num');
+            let i = 0;
+            const show = () => {
+                if (i >= flash.nums.length) {
+                    el.innerText = '＝ ？';
+                    renderPad('flash');
+                    return;
+                }
+                el.innerText = flash.nums[i];
+                el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+                i++;
+                flash.timer = setTimeout(() => { el.innerText = ''; flash.timer = setTimeout(show, speed * 0.25); }, speed * 0.75);
+            };
+            el.innerText = 'よーい…';
+            flash.timer = setTimeout(show, 800);
+        }
+        function flashAnswer() {
+            if (padState.flash === '') return;
+            const v = Number(padState.flash);
+            const msg = document.getElementById('flash-msg');
+            msg.innerHTML = v === flash.sum
+                ? `<span class="text-emerald-600">⭕ せいかい！ ${flash.nums.join(' ＋ ')} ＝ ${flash.sum}</span>`
+                : `<span class="text-rose-500">✗ こたえは ${flash.sum}（${flash.nums.join(' ＋ ')}）</span>`;
+            document.getElementById('flash-start').disabled = false;
+            document.getElementById('flash-start').classList.remove('opacity-40');
+            document.getElementById('flash-start').innerText = 'もう いちど！';
+        }
+
+        /* ===================== はじめ ===================== */
+        window.addEventListener('load', () => {
+            playAb = makeAbacus('play-board', 'pb', {
+                cols: 9, onChange: v => {
+                    const el = document.getElementById('play-value');
+                    if (el) el.innerText = v.toLocaleString();
+                    judgePlay(v);
+                }
+            });
+            calcAb = makeAbacus('calc-board', 'cb', {
+                cols: 5, onChange: v => {
+                    const el = document.getElementById('calc-value');
+                    if (el) el.innerText = v.toLocaleString();
+                    judgeCalc(v);
+                }
+            });
+            quizAb = makeAbacus('quiz-board', 'qb', { cols: 5, onChange: v => judgeQuizMake(v) });
+            helpAb = makeAbacus('help-fig', 'hb', { cols: 3, interactive: false });
+            helpAb.set(507);
+
+            document.getElementById('ten-pairs').innerHTML = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+                .map(d => `<div class="bg-amber-50 rounded-xl p-2">たす ${d} → <span class="text-amber-700">${10 - d} ひいて くり上げ</span></div>`).join('');
+
+            renderNav();
+            renderLevels();
+            renderQuizModes();
+            newPlayTarget();
+            newCalc();
+            newQuiz();
+        });
+    </script>
+</body>
+</html>
