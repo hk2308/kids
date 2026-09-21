@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>山手線マスター 30駅をおぼえよう</title>
+    <meta name="description" content="山手線の全30駅を路線図・つぎの駅クイズ・位置あて・一周チャレンジ・読みかたクイズでおぼえる学習ゲーム。内回りと外回りのちがいもわかる。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums }
+        .bounce-hover { transition: transform .12s cubic-bezier(.175,.885,.32,1.275) }
+        .bounce-hover:active { transform: scale(.94) }
+        @keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.1) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275) }
+        @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+        .shake { animation: shake .3s ease-in-out }
+        svg text { font-family: inherit }
+        .stdot { cursor: pointer }
+        /* 駅名は せまい 画面では かくして、番号と リストで 見る */
+        .stlabel { display: none }
+        @media (min-width: 640px) { .stlabel { display: block } }
+        rt { font-size: .55em; font-weight: 700; color: #4d7c0f }
+    </style>
+</head>
+<body class="bg-lime-50 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-lime-600 via-green-600 to-emerald-600 text-white p-3 shadow-lg sticky top-0 z-30">
+        <div class="max-w-4xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">🚃</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">山手線マスター</h1>
+                    <p class="text-xs text-lime-50 font-bold hidden sm:block">ぜんぶで 30駅・一周 34.5km</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[64px] z-20 bg-lime-50/95 backdrop-blur border-b border-lime-200">
+        <div class="max-w-4xl mx-auto flex gap-2 p-3 overflow-x-auto" id="tab-nav"></div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto w-full p-3 sm:p-5 flex-grow space-y-4">
+
+        <!-- ===== ① ろせんず ===== -->
+        <section id="tab-map" class="space-y-4">
+            <div class="bg-white rounded-3xl p-3 sm:p-4 shadow-md border-2 border-lime-100">
+                <div class="flex flex-wrap items-center gap-2 mb-2">
+                    <button onclick="setDir(1)" data-dir="1" class="font-black px-3 py-1.5 rounded-full text-xs bounce-hover">↺ 内回り（うちまわり）</button>
+                    <button onclick="setDir(-1)" data-dir="-1" class="font-black px-3 py-1.5 rounded-full text-xs bounce-hover">↻ 外回り（そとまわり）</button>
+                    <button id="btn-run" onclick="toggleTrain()" class="ml-auto bg-lime-600 text-white font-black px-3 py-1.5 rounded-full text-xs bounce-hover">▶ 電車を はしらせる</button>
+                </div>
+                <div id="map-host"></div>
+                <p class="text-center text-xs font-bold text-slate-400 mt-1">駅（えき）を タップすると くわしく 出るよ</p>
+            </div>
+
+            <div id="detail" class="bg-white rounded-3xl p-4 shadow-md border-2 border-lime-100"></div>
+
+            <div class="bg-white rounded-3xl p-3 shadow-md border-2 border-lime-100">
+                <p class="font-black text-sm mb-2">🚉 駅の じゅんばん（内回り・東京から）</p>
+                <div id="station-list" class="grid grid-cols-3 sm:grid-cols-5 gap-1.5"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-lime-100">
+                <p class="font-black">📘 山手線の きほん</p>
+                <ul class="text-sm font-bold text-slate-600 mt-2 space-y-1.5 leading-relaxed">
+                    <li>・ぜんぶで <b class="text-lime-700">30駅</b>。ぐるっと 一周 <b class="text-lime-700">34.5km</b>、だいたい <b class="text-lime-700">1時間</b>（約59分）。</li>
+                    <li>・駅の 番号は <b>JY01（東京）〜 JY30（有楽町）</b>。番号は 内回りの じゅんばん。</li>
+                    <li>・<b class="text-sky-700">内回り</b>＝東京から 上野・池袋・新宿・渋谷・品川 のじゅん（地図では 左まわり）。</li>
+                    <li>・<b class="text-orange-700">外回り</b>＝東京から 品川・渋谷・新宿・池袋・上野 のじゅん（地図では 右まわり）。</li>
+                    <li>・いちばん 新しい駅は <b>高輪ゲートウェイ</b>（2020年）。</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- ===== ② つぎの駅クイズ ===== -->
+        <section id="tab-next" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-lime-100">
+                <div class="flex justify-between items-center">
+                    <h2 class="font-black">🚦 つぎの駅は どこ？</h2>
+                    <span id="next-score" class="num bg-amber-100 text-amber-700 font-black px-3 py-1 rounded-full text-xs">せいかい 0 / 0</span>
+                </div>
+                <p id="next-q" class="text-center text-xl sm:text-2xl font-black mt-4 leading-relaxed"></p>
+                <div id="next-choices" class="grid grid-cols-2 gap-3 mt-4"></div>
+                <p id="next-msg" class="text-center font-black mt-3 min-h-[2rem]"></p>
+                <button onclick="newNext()" class="w-full bg-gradient-to-r from-lime-500 to-green-600 text-white font-black py-3 rounded-2xl border-b-4 border-green-700 bounce-hover">つぎの もんだい →</button>
+            </div>
+        </section>
+
+        <!-- ===== ③ いちあてクイズ ===== -->
+        <section id="tab-where" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-3 sm:p-4 shadow-md border-2 border-lime-100">
+                <div class="flex justify-between items-center">
+                    <p id="where-q" class="font-black text-lg"></p>
+                    <span id="where-score" class="num bg-amber-100 text-amber-700 font-black px-3 py-1 rounded-full text-xs">せいかい 0 / 0</span>
+                </div>
+                <div id="where-host" class="mt-2"></div>
+                <p id="where-msg" class="text-center font-black mt-2 min-h-[2rem]"></p>
+                <button onclick="newWhere()" class="w-full bg-white border-2 border-lime-300 text-lime-700 font-black py-3 rounded-2xl bounce-hover">つぎの もんだい →</button>
+            </div>
+        </section>
+
+        <!-- ===== ④ 一周チャレンジ ===== -->
+        <section id="tab-lap" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-lime-100">
+                <h2 class="font-black">⏱ 一周チャレンジ</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    スタートの 駅から <span id="lap-dir-name" class="text-lime-700">内回り</span>の じゅんに 30駅 ぜんぶ タップしよう。
+                </p>
+                <div class="flex flex-wrap items-center gap-2 mt-3">
+                    <button onclick="startLap()" class="bg-gradient-to-r from-lime-500 to-green-600 text-white font-black px-4 py-2.5 rounded-xl border-b-4 border-green-700 bounce-hover">▶ スタート</button>
+                    <span id="lap-time" class="num font-black text-2xl text-lime-700">0.0</span>
+                    <span class="text-xs font-bold text-slate-400">びょう</span>
+                    <span id="lap-progress" class="num ml-auto bg-lime-100 text-lime-700 font-black px-3 py-1 rounded-full text-xs">0 / 30</span>
+                </div>
+                <p id="lap-next" class="text-center font-black text-lg mt-2 min-h-[1.75rem]"></p>
+            </div>
+            <div class="bg-white rounded-3xl p-3 sm:p-4 shadow-md border-2 border-lime-100">
+                <div id="lap-host"></div>
+                <p id="lap-msg" class="text-center font-black mt-2 min-h-[2rem]"></p>
+            </div>
+        </section>
+
+        <!-- ===== ⑤ よみかた ===== -->
+        <section id="tab-read" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-lime-100">
+                <div class="flex justify-between items-center">
+                    <h2 class="font-black">🔤 なんて 読む？</h2>
+                    <span id="read-score" class="num bg-amber-100 text-amber-700 font-black px-3 py-1 rounded-full text-xs">せいかい 0 / 0</span>
+                </div>
+                <p id="read-q" class="text-center text-4xl sm:text-5xl font-black mt-5 tracking-wider"></p>
+                <div id="read-choices" class="grid grid-cols-2 gap-3 mt-5"></div>
+                <p id="read-msg" class="text-center font-black mt-3 min-h-[2rem]"></p>
+                <button onclick="newRead()" class="w-full bg-gradient-to-r from-lime-500 to-green-600 text-white font-black py-3 rounded-2xl border-b-4 border-green-700 bounce-hover">つぎの もんだい →</button>
+            </div>
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-lime-100">
+                <p class="font-black text-sm">✏️ 読みかたが むずかしい 駅</p>
+                <div id="hard-list" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="text-center py-3 text-xs text-slate-400 font-bold">山手線マスター © 2026</footer>
+
+    <script>
+        const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+        const pick = l => l[Math.floor(Math.random() * l.length)];
+        const shuffle = l => [...l].sort(() => 0.5 - Math.random());
+
+        /* ===================== 駅データ（内回り・東京から じゅんに） =====================
+           [駅名, よみ, x, y, おもな のりかえ, ひとこと]                                   */
+        const ST = [
+            ['東京', 'とうきょう', 451, 364, '東海道・東北新幹線／中央線／京葉線／丸ノ内線', '赤いレンガの 駅舎が ゆうめい'],
+            ['神田', 'かんだ', 461, 329, '中央線／銀座線', '古本屋さんが 多い まち'],
+            ['秋葉原', 'あきはばら', 466, 295, '総武線／つくばエクスプレス／日比谷線', '電気の まち・アニメの まち'],
+            ['御徒町', 'おかちまち', 461, 261, '（大江戸線 上野御徒町）', 'アメヤ横丁（アメ横）の 駅'],
+            ['上野', 'うえの', 451, 227, '東北・上越新幹線／銀座線／日比谷線', '動物園と 博物館、上野公園'],
+            ['鶯谷', 'うぐいすだに', 430, 198, '—', '読みかたが むずかしい 駅'],
+            ['日暮里', 'にっぽり', 409, 170, '京成線／日暮里・舎人ライナー', '成田空港へ 行ける 駅'],
+            ['西日暮里', 'にしにっぽり', 388, 147, '千代田線／日暮里・舎人ライナー', '1971年に できた 駅'],
+            ['田端', 'たばた', 357, 130, '京浜東北線', '京浜東北線と わかれる 北の はし'],
+            ['駒込', 'こまごめ', 315, 118, '南北線', '六義園（りくぎえん）の さくら'],
+            ['巣鴨', 'すがも', 279, 113, '都営三田線', 'とげぬき地蔵・おばあちゃんの原宿'],
+            ['大塚', 'おおつか', 243, 118, '都電荒川線', 'ちんちん電車（都電）に のりかえ'],
+            ['池袋', 'いけぶくろ', 201, 136, '丸ノ内線／有楽町線／副都心線／西武池袋線／東武東上線', 'サンシャイン60と 水族館'],
+            ['目白', 'めじろ', 180, 170, '—', '学校が 多い しずかな まち'],
+            ['高田馬場', 'たかだのばば', 165, 204, '東西線／西武新宿線', '学生の まち'],
+            ['新大久保', 'しんおおくぼ', 154, 238, '—', 'コリアタウンで ゆうめい'],
+            ['新宿', 'しんじゅく', 149, 278, '中央線／小田急線／京王線／丸ノ内線ほか', '世界一 のりおりが 多い 駅'],
+            ['代々木', 'よよぎ', 154, 312, '中央・総武線／大江戸線', '代々木公園が ちかい'],
+            ['原宿', 'はらじゅく', 170, 352, '（千代田線・副都心線 明治神宮前）', '明治神宮と 竹下通り'],
+            ['渋谷', 'しぶや', 191, 392, '銀座線／半蔵門線／東急線／京王井の頭線', 'ハチ公と スクランブル交差点'],
+            ['恵比寿', 'えびす', 217, 426, '日比谷線／湘南新宿ライン', 'ビールの 工場から はじまった 駅'],
+            ['目黒', 'めぐろ', 248, 455, '南北線／都営三田線／東急目黒線', '目黒川の さくらが きれい'],
+            ['五反田', 'ごたんだ', 279, 483, '都営浅草線／東急池上線', 'ビルが ならぶ まち'],
+            ['大崎', 'おおさき', 310, 506, '湘南新宿ライン／りんかい線', '山手線の 電車が ねむる 車両基地'],
+            ['品川', 'しながわ', 347, 517, '東海道新幹線／京急線', '新幹線と 羽田空港への 玄関口'],
+            ['高輪ゲートウェイ', 'たかなわゲートウェイ', 378, 500, '—', '2020年にできた いちばん 新しい駅'],
+            ['田町', 'たまち', 404, 478, '（都営浅草線・三田線 三田）', 'ビジネスの まち'],
+            ['浜松町', 'はままつちょう', 425, 449, '東京モノレール／都営浅草線（大門）', '羽田空港への モノレール・小便小僧'],
+            ['新橋', 'しんばし', 440, 421, '銀座線／都営浅草線／ゆりかもめ', '日本で はじめての 鉄道（新橋〜横浜）'],
+            ['有楽町', 'ゆうらくちょう', 445, 392, '有楽町線／（銀座）', '銀座が すぐ そば']
+        ];
+        const N = ST.length;                       // 30
+        const jy = i => 'JY' + String(i + 1).padStart(2, '0');
+        const nameOf = i => ST[i][0];
+        const yomiOf = i => ST[i][1];
+        // 内回り(+1)＝番号が ふえる むき、外回り(-1)＝へる むき
+        const nextIdx = (i, dir) => (i + dir + N) % N;
+
+        const HARD = [5, 3, 6, 7, 13, 8, 11, 17];  // 読みが むずかしい 駅（鶯谷・御徒町 など）
+
+        /* ===================== 路線図を かく ===================== */
+        const VW = 620, VH = 660;
+        const CENTER = ST.reduce((a, s) => [a[0] + s[2] / N, a[1] + s[3] / N], [0, 0]);
+
+        // せまい 画面では 駅名を 出さないので、そのぶん 図を 大きく 見せる
+        const isNarrow = () => window.innerWidth < 640;
+        const viewBoxNow = () => isNarrow() ? '132 96 352 442' : `0 0 ${VW} ${VH}`;
+
+        function mapSVG(prefix, opts = {}) {
+            const line = ST.map(s => `${s[2]},${s[3]}`).join(' ');
+            let out = `<svg viewBox="${viewBoxNow()}" class="w-full h-auto select-none" style="max-height:${opts.max || '62vh'}" id="${prefix}-svg">`;
+            // 線路
+            out += `<polygon points="${line}" fill="#f7fee7" stroke="#9ACD32" stroke-width="13" stroke-linejoin="round" />`;
+            out += `<polygon points="${line}" fill="none" stroke="#ffffff" stroke-width="2" stroke-dasharray="7 9" stroke-linejoin="round" opacity=".8" />`;
+            // まん中に 線の 名前と、いま えらんでいる むき
+            out += `<text x="${CENTER[0]}" y="${CENTER[1] - 6}" font-size="30" font-weight="900" fill="#84cc16" text-anchor="middle" opacity=".5">山手線</text>`;
+            out += `<text class="dirlab" x="${CENTER[0]}" y="${CENTER[1] + 22}" font-size="16" font-weight="800" fill="#0284c7" text-anchor="middle" opacity=".8">↺ 内回り</text>`;
+            // 電車
+            out += `<g id="${prefix}-train" style="display:none"><rect x="-13" y="-8" width="26" height="16" rx="5" fill="#16a34a" stroke="#fff" stroke-width="2.5"/></g>`;
+            // 駅
+            ST.forEach((s, i) => {
+                const [nm, , x, y] = s;
+                const dx = x - CENTER[0], dy = y - CENTER[1];
+                const len = Math.hypot(dx, dy) || 1;
+                const lx = x + dx / len * 30, ly = y + dy / len * 30 + 4;
+                const anchor = dx > 20 ? 'start' : dx < -20 ? 'end' : 'middle';
+                out += `<g class="stdot" data-i="${i}" id="${prefix}-st-${i}">
+                    <circle class="hit" cx="${x}" cy="${y}" r="23" fill="transparent" />
+                    <circle cx="${x}" cy="${y}" r="14" fill="#fff" stroke="#4d7c0f" stroke-width="3" />
+                    <text x="${x}" y="${y + 4}" font-size="11" font-weight="900" fill="#4d7c0f" text-anchor="middle">${i + 1}</text>
+                    <text class="stlabel" x="${lx}" y="${ly}" font-size="13" font-weight="800" fill="#334155" text-anchor="${anchor}"
+                          stroke="#ffffff" stroke-width="3.5" paint-order="stroke">${nm}</text>
+                </g>`;
+            });
+            out += `</svg>`;
+            return out;
+        }
+
+        function paintMap(prefix, opts = {}) {
+            ST.forEach((s, i) => {
+                const g = document.getElementById(`${prefix}-st-${i}`);
+                if (!g) return;
+                const c = g.querySelectorAll('circle')[1], t = g.querySelectorAll('text')[0];
+                const st = (opts.colors && opts.colors[i]) || {};
+                c.setAttribute('fill', st.fill || '#ffffff');
+                c.setAttribute('stroke', st.stroke || '#4d7c0f');
+                c.setAttribute('r', st.r || 14);
+                t.setAttribute('fill', st.text || '#4d7c0f');
+                const lab = g.querySelector('.stlabel');
+                if (lab) lab.style.display = opts.hideNames ? 'none' : '';
+            });
+        }
+
+        function bindMap(prefix, fn) {
+            document.querySelectorAll(`#${prefix}-svg .stdot`).forEach(g =>
+                g.addEventListener('click', () => fn(+g.dataset.i)));
+        }
+
+        /* ===================== ①ろせんず ===================== */
+        const state = {
+            tab: 'map', dir: 1, sel: 0, running: false, trainT: 0,
+            next: { ok: 0, total: 0, q: null },
+            where: { ok: 0, total: 0, target: 0, done: false },
+            read: { ok: 0, total: 0, q: null },
+            lap: { on: false, start: 0, at: 0, from: 0, miss: 0, best: null }
+        };
+
+        const TABS = { map: '🗺️ ろせんず', next: '🚦 つぎの駅', where: '📍 いちあて', lap: '⏱ 一周チャレンジ', read: '🔤 よみかた' };
+
+        function renderNav() {
+            document.getElementById('tab-nav').innerHTML = Object.entries(TABS).map(([k, label]) => {
+                const on = state.tab === k;
+                return `<button onclick="setTab('${k}')" data-tab="${k}" class="${on ? 'bg-lime-600 text-white' : 'bg-white border-2 border-lime-200 text-slate-600'} font-black px-4 py-2 rounded-full text-sm whitespace-nowrap bounce-hover">${label}</button>`;
+            }).join('');
+        }
+        function setTab(k) {
+            state.tab = k;
+            Object.keys(TABS).forEach(t => document.getElementById('tab-' + t).classList.toggle('hidden', t !== k));
+            renderNav();
+            if (k === 'where') newWhere();
+            if (k === 'lap') drawLap();
+        }
+
+        function setDir(d) {
+            state.dir = d;
+            document.querySelectorAll('[data-dir]').forEach(b => {
+                const on = +b.dataset.dir === d;
+                b.className = `${on ? (d > 0 ? 'bg-sky-600 text-white' : 'bg-orange-500 text-white') : 'bg-white border-2 border-slate-200 text-slate-500'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover`;
+            });
+            const ln = document.getElementById('lap-dir-name');
+            if (ln) { ln.innerText = d > 0 ? '内回り' : '外回り'; }
+            document.querySelectorAll('.dirlab').forEach(t => {
+                t.textContent = d > 0 ? '↺ 内回り' : '↻ 外回り';
+                t.setAttribute('fill', d > 0 ? '#0284c7' : '#ea580c');
+            });
+        }
+
+        function showDetail(i) {
+            state.sel = i;
+            const s = ST[i];
+            const prev = nextIdx(i, -1), nx = nextIdx(i, 1);
+            document.getElementById('detail').innerHTML = `
+                <div class="flex items-start gap-3">
+                    <span class="num bg-lime-600 text-white font-black rounded-xl px-2.5 py-1.5 text-sm">${jy(i)}</span>
+                    <div class="flex-1">
+                        <h3 class="text-2xl font-black leading-tight">${s[0]}</h3>
+                        <p class="text-sm font-bold text-lime-700">${s[1]}</p>
+                    </div>
+                </div>
+                <p class="text-sm font-bold text-slate-600 mt-2">🚉 のりかえ：${s[4]}</p>
+                <p class="text-sm font-bold text-slate-600">✨ ${s[5]}</p>
+                <div class="grid grid-cols-2 gap-2 mt-3 text-center">
+                    <div class="bg-sky-50 border-2 border-sky-100 rounded-xl p-2">
+                        <p class="text-[11px] font-black text-sky-700">↺ 内回りの つぎ</p>
+                        <button onclick="showDetail(${nx})" class="font-black text-sm underline">${nameOf(nx)}</button></div>
+                    <div class="bg-orange-50 border-2 border-orange-100 rounded-xl p-2">
+                        <p class="text-[11px] font-black text-orange-700">↻ 外回りの つぎ</p>
+                        <button onclick="showDetail(${prev})" class="font-black text-sm underline">${nameOf(prev)}</button></div>
+                </div>`;
+            const colors = {};
+            colors[i] = { fill: '#facc15', stroke: '#a16207', r: 17, text: '#713f12' };
+            paintMap('mp', { colors });
+            document.querySelectorAll('#station-list button').forEach((b, k) => {
+                b.className = `${k === i ? 'bg-lime-600 text-white border-lime-700' : 'bg-white border-lime-200 text-slate-700'} border-2 rounded-xl py-1.5 px-1 font-black text-[11px] leading-tight bounce-hover`;
+            });
+        }
+
+        function renderList() {
+            document.getElementById('station-list').innerHTML = ST.map((s, i) =>
+                `<button onclick="showDetail(${i})" data-i="${i}" class="bg-white border-2 border-lime-200 text-slate-700 rounded-xl py-1.5 px-1 font-black text-[11px] leading-tight bounce-hover">
+                    <span class="num block text-[9px] text-lime-600">${jy(i)}</span>${s[0]}</button>`).join('');
+        }
+
+        /* 電車アニメ */
+        function toggleTrain() {
+            state.running = !state.running;
+            document.getElementById('btn-run').innerHTML = state.running ? '⏸ とめる' : '▶ 電車を はしらせる';
+            document.getElementById('mp-train').style.display = state.running ? '' : 'none';
+        }
+        function trainStep(dt) {
+            if (!state.running) return;
+            state.trainT += dt * state.dir * 0.55;
+            const t = ((state.trainT % N) + N) % N;
+            const i = Math.floor(t), f = t - i, j = (i + 1) % N;
+            const x = ST[i][2] + (ST[j][2] - ST[i][2]) * f;
+            const y = ST[i][3] + (ST[j][3] - ST[i][3]) * f;
+            const g = document.getElementById('mp-train');
+            if (g) g.setAttribute('transform', `translate(${x},${y})`);
+        }
+
+        /* ===================== ②つぎの駅クイズ ===================== */
+        function newNext() {
+            const from = rnd(0, N - 1);
+            const dir = Math.random() < 0.5 ? 1 : -1;
+            const ans = nextIdx(from, dir);
+            // まちがいは「逆むきの となり駅」「2つ先」など、まよいやすい ものから。
+            // 聞かれている 駅 じたいは 入れない
+            const wrongs = shuffle([nextIdx(from, -dir), nextIdx(from, dir * 2), nextIdx(from, -dir * 2)])
+                .filter(v => v !== ans && v !== from);
+            const set = [ans];
+            wrongs.forEach(w => { if (!set.includes(w)) set.push(w); });
+            while (set.length < 4) { const r = rnd(0, N - 1); if (!set.includes(r) && r !== from) set.push(r); }
+            state.next.q = { from, dir, ans, choices: shuffle(set.slice(0, 4)) };
+            document.getElementById('next-q').innerHTML =
+                `<span class="${dir > 0 ? 'text-sky-700' : 'text-orange-700'}">${dir > 0 ? '↺ 内回り' : '↻ 外回り'}</span>　` +
+                `<b>${nameOf(from)}</b> の つぎの駅は？`;
+            document.getElementById('next-msg').innerText = '';
+            document.getElementById('next-choices').innerHTML = state.next.q.choices.map((c, k) =>
+                `<button onclick="answerNext(${k})" data-i="${k}" class="bg-slate-100 hover:bg-lime-100 border-2 border-slate-200 rounded-2xl py-4 font-black text-lg bounce-hover">${nameOf(c)}</button>`).join('');
+        }
+        function answerNext(k) {
+            const q = state.next.q;
+            if (!q || q.done) return;
+            const chosen = q.choices[k];
+            state.next.total++;
+            const msg = document.getElementById('next-msg');
+            if (chosen === q.ans) {
+                q.done = true;
+                state.next.ok++;
+                msg.innerHTML = `<span class="text-emerald-600">⭕ せいかい！ ${nameOf(q.from)} → ${nameOf(q.ans)}</span>`;
+                document.querySelectorAll('#next-choices button').forEach((b, j) => {
+                    if (q.choices[j] === q.ans) b.classList.add('bg-emerald-200', 'border-emerald-500');
+                });
+            } else {
+                const btn = document.querySelector(`#next-choices button[data-i="${k}"]`);
+                btn.classList.add('shake', 'bg-rose-100', 'border-rose-400');
+                setTimeout(() => btn.classList.remove('shake'), 320);
+                msg.innerHTML = `<span class="text-rose-500">ちがうよ。${nameOf(q.from)} の ${q.dir > 0 ? '内回り' : '外回り'} だよ</span>`;
+            }
+            document.getElementById('next-score').innerText = `せいかい ${state.next.ok} / ${state.next.total}`;
+        }
+
+        /* ===================== ③いちあてクイズ ===================== */
+        function newWhere() {
+            state.where.target = rnd(0, N - 1);
+            state.where.done = false;
+            document.getElementById('where-q').innerHTML = `<b class="text-lime-700">${nameOf(state.where.target)}</b> は どこ？`;
+            document.getElementById('where-msg').innerText = '';
+            document.getElementById('where-host').innerHTML = mapSVG('wp', { max: '58vh' });
+            paintMap('wp', { hideNames: true });
+            setDir(state.dir);
+            bindMap('wp', answerWhere);
+        }
+        function answerWhere(i) {
+            if (state.where.done) return;
+            state.where.total++;
+            const t = state.where.target;
+            const msg = document.getElementById('where-msg');
+            const colors = {};
+            if (i === t) {
+                state.where.done = true;
+                state.where.ok++;
+                colors[t] = { fill: '#86efac', stroke: '#15803d', r: 17 };
+                msg.innerHTML = `<span class="text-emerald-600">⭕ せいかい！ ${nameOf(t)}（${jy(t)}）</span>`;
+            } else {
+                colors[i] = { fill: '#fecaca', stroke: '#b91c1c' };
+                colors[t] = { fill: '#86efac', stroke: '#15803d', r: 17 };
+                state.where.done = true;
+                msg.innerHTML = `<span class="text-rose-500">✗ そこは ${nameOf(i)}。${nameOf(t)} は みどりの ところ</span>`;
+            }
+            paintMap('wp', { hideNames: true, colors });
+            document.getElementById('where-score').innerText = `せいかい ${state.where.ok} / ${state.where.total}`;
+        }
+
+        /* ===================== ④一周チャレンジ ===================== */
+        const LAP_KEY = 'kids-yamanote-best-v1';
+        function drawLap() {
+            document.getElementById('lap-host').innerHTML = mapSVG('lp', { max: '56vh' });
+            paintMap('lp', { hideNames: true });   // 名前は かくす（おぼえる れんしゅうなので）
+            setDir(state.dir);
+            bindMap('lp', tapLap);
+            showLapBest();
+        }
+        function showLapBest() {
+            try {
+                const v = localStorage.getItem(LAP_KEY);
+                state.lap.best = v ? +v : null;
+            } catch (e) { }
+            const m = document.getElementById('lap-msg');
+            if (m && !state.lap.on) m.innerHTML = state.lap.best
+                ? `いままでの さいこう記録：<span class="num text-lime-700">${state.lap.best.toFixed(1)}</span> びょう`
+                : 'スタートを おして はじめよう！';
+        }
+        function startLap() {
+            state.lap.on = true;
+            state.lap.from = rnd(0, N - 1);
+            state.lap.at = 0;
+            state.lap.miss = 0;
+            state.lap.start = performance.now();
+            document.getElementById('lap-msg').innerText = '';
+            updateLap();
+        }
+        function updateLap() {
+            const L = state.lap;
+            const cur = nextIdx(L.from, L.at * state.dir);
+            document.getElementById('lap-progress').innerText = `${L.at} / ${N}`;
+            document.getElementById('lap-next').innerHTML = L.on
+                ? `つぎは <b class="text-lime-700">${nameOf(cur)}</b> を タップ！`
+                : '';
+            const colors = {};
+            for (let k = 0; k < L.at; k++) colors[nextIdx(L.from, k * state.dir)] = { fill: '#bbf7d0', stroke: '#15803d' };
+            if (L.on) colors[cur] = { fill: '#fef08a', stroke: '#a16207', r: 16 };
+            paintMap('lp', { hideNames: true, colors });
+        }
+        function tapLap(i) {
+            const L = state.lap;
+            if (!L.on) return;
+            const want = nextIdx(L.from, L.at * state.dir);
+            if (i === want) {
+                L.at++;
+                if (L.at >= N) {
+                    L.on = false;
+                    const sec = (performance.now() - L.start) / 1000;
+                    const best = state.lap.best;
+                    if (best === null || sec < best) {
+                        state.lap.best = sec;
+                        try { localStorage.setItem(LAP_KEY, String(sec)); } catch (e) { }
+                    }
+                    document.getElementById('lap-msg').innerHTML =
+                        `<span class="text-emerald-600">🎉 一周 クリア！ ${sec.toFixed(1)}びょう（まちがい ${L.miss}回）</span>` +
+                        (best !== null && sec < best ? '<span class="block text-amber-600">さいこう記録こうしん！</span>' : '');
+                }
+                updateLap();
+            } else {
+                L.miss++;
+                document.getElementById('lap-msg').innerHTML =
+                    `<span class="text-rose-500">そこは ${nameOf(i)}。つぎは ${nameOf(want)} だよ</span>`;
+                const g = document.getElementById(`lp-st-${i}`);
+                if (g) { g.classList.add('shake'); setTimeout(() => g.classList.remove('shake'), 320); }
+            }
+        }
+
+        /* ===================== ⑤よみかたクイズ ===================== */
+        function newRead() {
+            const i = Math.random() < 0.5 ? pick(HARD) : rnd(0, N - 1);
+            const set = [i];
+            while (set.length < 4) { const r = rnd(0, N - 1); if (!set.includes(r)) set.push(r); }
+            state.read.q = { i, choices: shuffle(set) };
+            document.getElementById('read-q').innerText = nameOf(i);
+            document.getElementById('read-msg').innerText = '';
+            document.getElementById('read-choices').innerHTML = state.read.q.choices.map((c, k) =>
+                `<button onclick="answerRead(${k})" data-i="${k}" class="bg-slate-100 hover:bg-lime-100 border-2 border-slate-200 rounded-2xl py-4 font-black text-lg bounce-hover">${yomiOf(c)}</button>`).join('');
+        }
+        function answerRead(k) {
+            const q = state.read.q;
+            if (!q || q.done) return;
+            state.read.total++;
+            const chosen = q.choices[k];
+            const msg = document.getElementById('read-msg');
+            if (chosen === q.i) {
+                q.done = true;
+                state.read.ok++;
+                msg.innerHTML = `<span class="text-emerald-600">⭕ せいかい！ ${nameOf(q.i)} ＝ ${yomiOf(q.i)}</span>`;
+                document.querySelectorAll('#read-choices button').forEach((b, j) => {
+                    if (q.choices[j] === q.i) b.classList.add('bg-emerald-200', 'border-emerald-500');
+                });
+            } else {
+                const btn = document.querySelector(`#read-choices button[data-i="${k}"]`);
+                btn.classList.add('shake', 'bg-rose-100', 'border-rose-400');
+                setTimeout(() => btn.classList.remove('shake'), 320);
+                msg.innerHTML = `<span class="text-rose-500">それは 「${nameOf(chosen)}」の 読みかただよ</span>`;
+            }
+            document.getElementById('read-score').innerText = `せいかい ${state.read.ok} / ${state.read.total}`;
+        }
+
+        /* ===================== はじめ ===================== */
+        let last = 0;
+        function loop(ts) {
+            const dt = Math.min(0.05, (ts - last) / 1000 || 0);
+            last = ts;
+            trainStep(dt);
+            if (state.lap.on) {
+                document.getElementById('lap-time').innerText = ((performance.now() - state.lap.start) / 1000).toFixed(1);
+            }
+            requestAnimationFrame(loop);
+        }
+
+        // 画面の 大きさが 大きく かわったら 図を 作りなおす
+        let wasNarrow = null;
+        function buildMainMap() {
+            document.getElementById('map-host').innerHTML = mapSVG('mp');
+            bindMap('mp', showDetail);
+            setDir(state.dir);
+            showDetail(state.sel);
+        }
+        window.addEventListener('resize', () => {
+            if (isNarrow() === wasNarrow) return;
+            wasNarrow = isNarrow();
+            buildMainMap();
+            if (state.tab === 'where') newWhere();
+            if (state.tab === 'lap') drawLap();
+        });
+
+        window.addEventListener('load', () => {
+            wasNarrow = isNarrow();
+            document.getElementById('map-host').innerHTML = mapSVG('mp');
+            bindMap('mp', showDetail);
+            renderList();
+            renderNav();
+            setDir(1);
+            showDetail(0);
+            newNext();
+            newRead();
+            document.getElementById('hard-list').innerHTML = HARD.map(i =>
+                `<div class="bg-lime-50 border-2 border-lime-100 rounded-xl p-2 text-center">
+                    <p class="font-black">${nameOf(i)}</p>
+                    <p class="text-xs font-bold text-lime-700">${yomiOf(i)}</p></div>`).join('');
+            requestAnimationFrame(loop);
+        });
+    </script>
+</body>
+</html>
