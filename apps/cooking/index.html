@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>お料理ラボ</title>
+    <meta name="description" content="包丁の切り方12種を図解、加熱のしかたと温度でおきる変化、調味料の役割とさしすせその順番、給食の定番6レシピ（人数で分量が変わる）、クイズ。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums }
+        .bounce-hover { transition: transform .12s cubic-bezier(.175,.885,.32,1.275) }
+        .bounce-hover:active { transform: scale(.94) }
+        @keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.1) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275) }
+        @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+        .shake { animation: shake .3s ease-in-out }
+        svg text { font-family: inherit }
+        rt { font-size: .55em; font-weight: 700; color: #c2410c }
+        input[type=range] { accent-color: #ea580c; width: 100% }
+    </style>
+</head>
+<body class="bg-orange-50 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-orange-600 via-amber-500 to-yellow-500 text-white p-3 shadow-lg sticky top-0 z-30">
+        <div class="max-w-4xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">🍳</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">お料理ラボ</h1>
+                    <p class="text-xs text-orange-50 font-bold hidden sm:block">切る・熱する・味つけする の しくみ</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[64px] z-20 bg-orange-50/95 backdrop-blur border-b border-orange-200">
+        <div class="max-w-4xl mx-auto flex gap-2 p-3 overflow-x-auto" id="tab-nav"></div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto w-full p-3 sm:p-5 flex-grow space-y-4">
+
+        <!-- ===== ① 包丁 ===== -->
+        <section id="tab-cut" class="space-y-4">
+            <div class="bg-rose-50 rounded-3xl p-4 shadow-md border-2 border-rose-300">
+                <h2 class="font-black text-rose-800">⚠️ はじめに（いちばん 大事）</h2>
+                <ul id="safe-list" class="text-sm font-bold text-slate-700 mt-2 space-y-1 leading-relaxed"></ul>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-orange-100">
+                <h2 class="font-black">🔪 切り方で 味が かわる</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    切り方を そろえると <b class="text-orange-700">火の 通り方が そろう</b>。
+                    大きさが バラバラだと、かたい ところと くずれた ところが 混ざって しまう。
+                </p>
+                <div id="cut-chips" class="flex flex-wrap gap-1.5 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-orange-100">
+                <h2 id="cut-name" class="font-black text-lg"></h2>
+                <div id="cut-fig" class="mt-3"></div>
+                <div id="cut-how" class="bg-orange-50 border-2 border-orange-200 rounded-2xl p-3 text-sm font-bold leading-relaxed mt-2"></div>
+                <div id="cut-use" class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-3 text-sm font-bold leading-relaxed mt-2"></div>
+            </div>
+        </section>
+
+        <!-- ===== ② 加熱 ===== -->
+        <section id="tab-heat" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-orange-100">
+                <h2 class="font-black">🌡️ 温度で おきる こと</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    「加熱する」は <b class="text-orange-700">食べものの 中で 化学変化を おこす</b> こと。
+                    温度を 動かして、何℃で 何が おきるか 見て みよう。
+                </p>
+                <div class="mt-3"><input type="range" min="0" max="240" step="5" value="100" id="tp-v" oninput="tpDraw()">
+                    <p class="text-xs font-black text-slate-600 text-center"><span id="tp-vv" class="num">100</span> ℃</p></div>
+                <div id="tp-fig" class="mt-2"></div>
+                <div id="tp-info" class="bg-orange-50 border-2 border-orange-200 rounded-2xl p-3 text-sm font-bold leading-relaxed"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-orange-100">
+                <h2 class="font-black">🔥 7つの 加熱の しかた</h2>
+                <div id="ht-chips" class="flex flex-wrap gap-2 mt-3"></div>
+                <div id="ht-fig" class="mt-3"></div>
+                <div id="ht-body" class="mt-2 space-y-2"></div>
+            </div>
+        </section>
+
+        <!-- ===== ③ 調味料 ===== -->
+        <section id="tab-season" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-orange-100">
+                <h2 class="font-black">👅 味は 5つ</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    舌が 感じる 味は この 5つ だけ。「からい」は 味では なく <b>痛み</b>、
+                    「しぶい」は さわった 感じ、香りは 鼻で 感じて いる。
+                </p>
+                <div id="taste-list" class="grid sm:grid-cols-5 gap-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-orange-100">
+                <h2 class="font-black">🧂 「さしすせそ」の 順番</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    煮ものの 味つけは <b class="text-orange-700">入れる 順番</b>が 決まって いる。
+                    正しい 順に ならべて、⬆⬇で 直して みよう。
+                </p>
+                <div id="ss-list" class="space-y-2 mt-3"></div>
+                <div class="flex gap-2 mt-2">
+                    <button onclick="ssCheck()" class="bg-orange-600 text-white font-black px-4 py-2 rounded-full text-sm bounce-hover">✅ 入れて みる</button>
+                    <button onclick="ssShuffle()" class="bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-2 rounded-full text-sm bounce-hover">🎲 まぜる</button>
+                </div>
+                <div id="ss-res" class="mt-2"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-orange-100">
+                <h2 class="font-black">🍶 調味料の 役割{やくわり}</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    調味料は「味を つける」だけでは ない。やわらかくしたり、色を よくしたり、
+                    <b class="text-orange-700">くさりにくく する</b> はたらきも ある。
+                </p>
+                <div id="sea-chips" class="flex flex-wrap gap-1.5 mt-3"></div>
+                <div id="sea-body" class="mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ④ 給食レシピ ===== -->
+        <section id="tab-recipe" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-orange-100">
+                <h2 class="font-black">🍛 給食{きゅうしょく}の 定番{ていばん}レシピ</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    人数を 変えると 分量も 自動で かわる。<b class="text-orange-700">大人と いっしょに</b> 作ろう。
+                </p>
+                <div class="mt-3"><input type="range" min="1" max="12" step="1" value="4" id="rc-n" oninput="rcDraw()">
+                    <p class="text-xs font-black text-slate-600 text-center"><span id="rc-nv" class="num">4</span> 人分</p></div>
+                <div id="rc-chips" class="flex flex-wrap gap-1.5 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-orange-100">
+                <h2 id="rc-name" class="font-black text-lg"></h2>
+                <p id="rc-lead" class="text-sm font-bold text-slate-500 mt-1"></p>
+                <div class="grid sm:grid-cols-2 gap-3 mt-3">
+                    <div class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-3">
+                        <p class="font-black text-amber-800 text-sm">🧺 ざいりょう（<span id="rc-for" class="num"></span>人分）</p>
+                        <div id="rc-ing" class="text-sm font-bold text-slate-700 mt-2 space-y-1"></div>
+                    </div>
+                    <div class="bg-sky-50 border-2 border-sky-200 rounded-2xl p-3">
+                        <p class="font-black text-sky-800 text-sm">🔪 つかう 切り方・加熱</p>
+                        <div id="rc-tech" class="text-sm font-bold text-slate-700 mt-2 space-y-1"></div>
+                    </div>
+                </div>
+                <p class="font-black text-sm mt-4">👩‍🍳 作り方</p>
+                <div id="rc-steps" class="space-y-2 mt-2"></div>
+                <div id="rc-tip" class="bg-orange-50 border-2 border-orange-200 rounded-2xl p-3 text-sm font-bold leading-relaxed mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ⑤ クイズ ===== -->
+        <section id="tab-quiz" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-orange-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">❓ お料理クイズ</h2>
+                    <span id="qz-score" class="num bg-orange-100 text-orange-700 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newQuiz()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <div id="qz-fields" class="flex flex-wrap gap-2 mt-3"></div>
+                <p id="qz-q" class="font-black text-base sm:text-lg mt-3 leading-relaxed"></p>
+                <div id="qz-choices" class="grid gap-2 mt-3"></div>
+                <div id="qz-res" class="mt-3"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center text-xs text-slate-400 font-bold p-4">お料理ラボ © 2026</footer>
+
+<script>
+    /* ===================== きょうつう ===================== */
+    const rnd = n => Math.floor(Math.random() * n);
+    const pickOne = a => a[rnd(a.length)];
+    function shuffle(a) { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = rnd(i + 1); const t = b[i]; b[i] = b[j]; b[j] = t; } return b; }
+    function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    const W = 560;
+    function svg(w, h, body) {
+        return `<svg viewBox="0 0 ${w} ${h}" class="w-full h-auto block mx-auto" style="max-width:${w}px" role="img">${body}</svg>`;
+    }
+    function resultBox(ok, title, body) {
+        return `<div class="pop ${ok ? 'bg-green-50 border-green-300' : 'bg-amber-50 border-amber-300'} border-2 rounded-2xl p-3">
+            <p class="font-black ${ok ? 'text-green-700' : 'text-amber-700'}">${title}</p>
+            <div class="font-bold text-sm mt-1 leading-relaxed">${body}</div></div>`;
+    }
+    const S = { quiz: [0, 0] };
+    function scoreBox(id, s) { document.getElementById(id).innerText = `${s[0]} / ${s[1]}`; }
+    function markChoices(sel, isRight, picked, cls) {
+        document.querySelectorAll(sel).forEach((el, j) => {
+            el.className = `${isRight(j) ? 'bg-green-50 border-green-500' : (j === picked ? 'bg-red-50 border-red-400 shake' : 'bg-white border-slate-200 opacity-60')} border-2 ${cls}`;
+        });
+    }
+    const plain = t => String(t).replace(/\{[^{}]*\}/g, '');
+
+    /* 漢字{よみ} を ルビに */
+    const RUBY_RE = /([一-鿿々]+)\{([^{}]+)\}/g;
+    function rubySkip(el) {
+        for (let n = el; n; n = n.parentNode) {
+            const tag = n.nodeType === 1 ? n.tagName.toLowerCase() : '';
+            if (tag === 'script' || tag === 'style' || tag === 'svg' || tag === 'ruby') return true;
+        }
+        return false;
+    }
+    function rubifyText(node) {
+        const t = node.nodeValue;
+        if (t.indexOf('{') < 0 || !node.parentNode || rubySkip(node.parentNode)) return;
+        RUBY_RE.lastIndex = 0;
+        if (!RUBY_RE.test(t)) return;
+        RUBY_RE.lastIndex = 0;
+        const frag = document.createDocumentFragment();
+        let last = 0, m;
+        while ((m = RUBY_RE.exec(t))) {
+            if (m.index > last) frag.appendChild(document.createTextNode(t.slice(last, m.index)));
+            const ruby = document.createElement('ruby');
+            ruby.appendChild(document.createTextNode(m[1]));
+            const rt = document.createElement('rt');
+            rt.textContent = m[2];
+            ruby.appendChild(rt);
+            frag.appendChild(ruby);
+            last = m.index + m[0].length;
+        }
+        if (last < t.length) frag.appendChild(document.createTextNode(t.slice(last)));
+        node.parentNode.replaceChild(frag, node);
+    }
+    function rubify(root) {
+        if (root.nodeType === 3) return rubifyText(root);
+        if (root.nodeType !== 1 || rubySkip(root)) return;
+        const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        const list = [];
+        while (w.nextNode()) if (w.currentNode.nodeValue.indexOf('{') >= 0) list.push(w.currentNode);
+        list.forEach(rubifyText);
+    }
+    new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(rubify)))
+        .observe(document.body, { childList: true, subtree: true });
+
+    const TABS = { cut: '🔪 切り方', heat: '🔥 加熱', season: '🧂 調味料', recipe: '🍛 給食レシピ', quiz: '❓ クイズ' };
+    let tab = 'cut';
+    function renderNav() {
+        document.getElementById('tab-nav').innerHTML = Object.entries(TABS).map(([k, label]) =>
+            `<button onclick="setTab('${k}')" data-tab="${k}" class="${tab === k ? 'bg-orange-600 text-white' : 'bg-white border-2 border-orange-200 text-slate-600'} font-black px-4 py-2 rounded-full text-sm whitespace-nowrap bounce-hover">${label}</button>`).join('');
+    }
+    function setTab(k) {
+        tab = k;
+        Object.keys(TABS).forEach(t => document.getElementById('tab-' + t).classList.toggle('hidden', t !== k));
+        renderNav();
+        if (k === 'heat' && !heatReady) { tpDraw(); setHt(0); heatReady = true; }
+        if (k === 'season' && !seasonReady) { tasteDraw(); ssShuffle(); setSea(0); seasonReady = true; }
+        if (k === 'recipe' && !recipeReady) { setRc(0); recipeReady = true; }
+        if (k === 'quiz' && !qz) newQuiz();
+    }
+
+    /* =====================================================================
+       ① 包丁と 切り方
+       ===================================================================== */
+    const SAFE = [
+        ['🧑‍🍳', '<b>ひとりで つかわない</b>。包丁と 火は 必ず 大人に そばに いて もらう。'],
+        ['🐈', '<b>ねこの手</b>… 食材を おさえる 手は 指を 内がわに まるめ、つめを かくす。'],
+        ['🪵', 'まな板の 下に <b>ぬれた ふきん</b>を しくと すべらない。'],
+        ['✋', '包丁は <b>人に 向けない・持って 歩かない</b>。おくときは 刃を 自分の 反対に。'],
+        ['🧽', '生の 肉・魚を 切った あとは、まな板と 包丁を <b>洗って から</b> 野さいを 切る。'],
+        ['🧼', '料理の 前は <b>石けんで 20秒</b> 手洗い。つめは 短く。'],
+        ['🔥', '油に 水を 入れない。もし 油が 燃えたら <b>水を かけず</b>、火を 止めて ふたを する。']
+    ];
+    function safeDraw() {
+        document.getElementById('safe-list').innerHTML = SAFE.map(([e, t]) =>
+            `<li data-safe>${e} ${t}</li>`).join('');
+    }
+
+    // 絵の 部品
+    const CUTLINE = '#dc2626';
+    function dash(x1, y1, x2, y2) {
+        return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${CUTLINE}" stroke-width="2.5" stroke-dasharray="7 5"/>`;
+    }
+    // 1段めの 切り目（先に こう 切る）は 実線で 出して 順番が わかる ように する
+    function solid(x1, y1, x2, y2) {
+        return `<line data-stage="1" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${CUTLINE}" stroke-width="4"/>`;
+    }
+    function arrowR(x, y) {
+        return `<path d="M${x} ${y} h34 m-10 -9 l10 9 l-10 9" fill="none" stroke="#ea580c" stroke-width="4" stroke-linecap="round"/>`;
+    }
+    // ざいりょうの 形（切る 前）
+    function vegShape(kind, col) {
+        if (kind === 'rod') return `<rect x="36" y="86" width="196" height="68" rx="16" fill="${col}" stroke="#92400e" stroke-width="3"/>`;
+        if (kind === 'thin') return `<rect x="36" y="104" width="196" height="32" rx="14" fill="${col}" stroke="#166534" stroke-width="3"/>`;
+        if (kind === 'ball') return `<circle cx="134" cy="120" r="54" fill="${col}" stroke="#92400e" stroke-width="3"/>`;
+        return `<rect x="46" y="84" width="176" height="72" rx="6" fill="${col}" stroke="#92400e" stroke-width="3"/>`;
+    }
+    const CUTS = [
+        { id: 'wa', n: '輪切り{わぎり}', veg: 'rod', col: '#fb923c',
+          how: '丸くて 細長い ものを、はしから <b>まっすぐ 同じ あつさ</b>に 切る。切り口が 輪（丸）に なる。',
+          use: 'にんじん・大根・きゅうり・なす。みそ汁、煮もの、あえもの。あつさを そろえると 火の 通りも そろう。',
+          cuts: g => { for (let i = 1; i < 6; i++) g.push(dash(36 + i * 33, 76, 36 + i * 33, 164)); },
+          after: () => [0, 1, 2].map(i => `<circle cx="${330 + i * 74}" cy="120" r="30" fill="#fb923c" stroke="#92400e" stroke-width="3"/>`).join('') },
+        { id: 'han', n: '半月切り{はんげつぎり}', veg: 'rod', col: '#fb923c',
+          how: 'まず <b>たてに 半分</b>に 切って から、はしから 切る。切り口が 半分の 月の 形。',
+          use: '大根・にんじん。輪切りだと 大きすぎる とき。煮もの、みそ汁。',
+          pre: g => { g.push(solid(26, 120, 242, 120)); },
+          cuts: g => { for (let i = 1; i < 5; i++) g.push(dash(36 + i * 39, 76, 36 + i * 39, 164)); },
+          after: () => [0, 1, 2].map(i => `<path d="M${300 + i * 74} 134 a30 30 0 0 1 60 0 z" fill="#fb923c" stroke="#92400e" stroke-width="3"/>`).join('') },
+        { id: 'icho', n: 'いちょう切り', veg: 'rod', col: '#fb923c',
+          how: 'たてに <b>4つ割り</b>に して から、はしから 切る。いちょうの 葉の 形に なる。',
+          use: '大根・にんじん。みそ汁、炊きこみごはん、けんちん汁。小さいので 火が 早く 通る。',
+          pre: g => { g.push(solid(26, 120, 242, 120)); g.push(solid(134, 70, 134, 170)); },
+          cuts: g => { for (let i = 1; i < 5; i++) if (i !== 2.5) g.push(dash(36 + i * 39, 76, 36 + i * 39, 164)); },
+          after: () => [0, 1, 2].map(i => `<path d="M${312 + i * 74} 140 l0 -32 a32 32 0 0 1 32 32 z" fill="#fb923c" stroke="#92400e" stroke-width="3"/>`).join('') },
+        { id: 'koguchi', n: '小口切り{こぐちぎり}', veg: 'thin', col: '#86efac',
+          how: '細い ものを、はしから <b>うすく</b> 切る。「小口」は 切り口の こと。',
+          use: 'ねぎ・きゅうり・オクラ。みそ汁の うわもの、そばの 薬味{やくみ}、あえもの。',
+          cuts: g => { for (let i = 1; i < 12; i++) g.push(dash(36 + i * 16, 96, 36 + i * 16, 144)); },
+          after: () => [0, 1, 2, 3].map(i => `<g><circle cx="${320 + i * 56}" cy="120" r="17" fill="#86efac" stroke="#166534" stroke-width="2.5"/>
+              <circle cx="${320 + i * 56}" cy="120" r="8" fill="none" stroke="#166534" stroke-width="2"/></g>`).join('') },
+        { id: 'sen', n: 'せん切り（千切り）', veg: 'block', col: '#bbf7d0',
+          how: 'うすく 切って から かさねて、<b>細い 糸のように</b> 切る。1〜2mmを めざす。',
+          use: 'キャベツ・にんじん・きゅうり。サラダ、あえもの、そえもの。うすいので 生でも 食べやすい。',
+          pre: g => { for (let i = 1; i < 4; i++) g.push(solid(36, 84 + i * 18, 232, 84 + i * 18)); },
+          cuts: g => { for (let i = 1; i < 14; i++) g.push(dash(46 + i * 12.5, 74, 46 + i * 12.5, 166)); },
+          after: () => [0, 1, 2, 3, 4, 5].map(i => `<rect x="${306 + i * 22}" y="80" width="7" height="80" rx="3" fill="#bbf7d0" stroke="#166534" stroke-width="2"/>`).join('') },
+        { id: 'mijin', n: 'みじん切り', veg: 'ball', col: '#fef3c7',
+          how: 'せん切りに して から <b>向きを 変えて</b> さらに 細かく 切る。1〜2mmの つぶに。',
+          use: '玉ねぎ・にんにく・しょうが。ハンバーグ、カレー、チャーハン、ドレッシング。',
+          pre: g => { for (let i = 1; i < 7; i++) g.push(solid(80 + i * 15, 74, 80 + i * 15, 166)); },
+          cuts: g => { for (let i = 1; i < 7; i++) g.push(dash(80, 70 + i * 14, 188, 70 + i * 14)); },
+          after: () => { let s = ''; for (let r = 0; r < 5; r++) for (let c = 0; c < 8; c++) s += `<rect x="${304 + c * 24 + (r % 2) * 6}" y="${84 + r * 16}" width="11" height="11" rx="2" fill="#fef3c7" stroke="#92400e" stroke-width="1.5"/>`; return s; } },
+        { id: 'ran', n: '乱切り{らんぎり}', veg: 'rod', col: '#fb923c',
+          how: '包丁を ななめに 入れ、材料を <b>少し ずつ 回しながら</b> 切る。形は バラバラでも 大きさを そろえる。',
+          use: 'にんじん・じゃがいも・ごぼう。カレー、煮もの、酢ぶた。表面が 広いので 味が よく しみる。',
+          cuts: g => { for (let i = 0; i < 4; i++) g.push(dash(52 + i * 48, i % 2 ? 76 : 164, 88 + i * 48, i % 2 ? 164 : 76)); },
+          after: () => [[320, 0], [400, 1], [478, 0]].map(([x, f]) =>
+              `<path d="M${x} 96 l40 -12 l24 34 l-18 32 l-40 4 z" fill="#fb923c" stroke="#92400e" stroke-width="3" transform="rotate(${f ? 24 : -14} ${x + 20} 120)"/>`).join('') },
+        { id: 'kushi', n: 'くし形切り', veg: 'ball', col: '#fef3c7',
+          how: '丸い ものを <b>中心に むかって 放射{ほうしゃ}状</b>に 切る。くし（かみを とかす 道具）の 形。',
+          use: '玉ねぎ・トマト・レモン・じゃがいも。サラダ、炒めもの、みそ汁、そえもの。',
+          cuts: g => { for (let i = 0; i < 4; i++) { const a = i * Math.PI / 4; g.push(dash(134 - Math.cos(a) * 58, 120 - Math.sin(a) * 58, 134 + Math.cos(a) * 58, 120 + Math.sin(a) * 58)); } },
+          after: () => [0, 1, 2].map(i => `<path d="M${340 + i * 70} 84 a42 42 0 0 1 26 68 z" fill="#fef3c7" stroke="#92400e" stroke-width="3"/>`).join('') },
+        { id: 'tanzaku', n: '短冊切り{たんざくぎり}', veg: 'block', col: '#f8fafc',
+          how: 'はばを そろえて <b>うすい 長方形</b>に 切る。七夕の たんざくの 形。',
+          use: '大根・にんじん・たけのこ。あえもの、汁もの、サラダ。うすいので 火が すぐ 通る。',
+          pre: g => { g.push(solid(36, 100, 232, 100)); g.push(solid(36, 140, 232, 140)); },
+          cuts: g => { for (let i = 1; i < 5; i++) g.push(dash(46 + i * 35, 74, 46 + i * 35, 166)); },
+          after: () => [0, 1, 2].map(i => `<rect x="300" y="${86 + i * 26}" width="86" height="12" rx="2" fill="#f8fafc" stroke="#64748b" stroke-width="2.5"/>`).join('')
+              + [0, 1, 2].map(i => `<rect x="410" y="${86 + i * 26}" width="86" height="12" rx="2" fill="#f8fafc" stroke="#64748b" stroke-width="2.5"/>`).join('') },
+        { id: 'hyoshigi', n: '拍子木切り{ひょうしぎぎり}', veg: 'block', col: '#fde68a',
+          how: '<b>四角い ぼう</b>の 形に 切る。太さは 1cmくらい。拍子木（打ちあわせる 木）の 形。',
+          use: '大根・じゃがいも・にんじん。きんぴら、フライドポテト、サラダ。',
+          pre: g => { g.push(solid(36, 120, 232, 120)); },
+          cuts: g => { for (let i = 1; i < 5; i++) g.push(dash(46 + i * 35, 74, 46 + i * 35, 166)); },
+          after: () => [0, 1, 2, 3].map(i => `<rect x="${320 + i * 44}" y="80" width="20" height="80" rx="3" fill="#fde68a" stroke="#92400e" stroke-width="2.5"/>`).join('') },
+        { id: 'sainome', n: 'さいの目切り', veg: 'block', col: '#fef9c3',
+          how: '拍子木切りに して から <b>はしから 同じ はば</b>で 切る。さいころの 形（1cm角）。',
+          use: '豆腐・にんじん・じゃがいも・トマト。スープ、サラダ、あんかけ。',
+          pre: g => { for (let i = 1; i < 3; i++) g.push(solid(36, 84 + i * 24, 232, 84 + i * 24)); },
+          cuts: g => { for (let i = 1; i < 5; i++) g.push(dash(46 + i * 35, 74, 46 + i * 35, 166)); },
+          after: () => { let s = ''; for (let r = 0; r < 3; r++) for (let c = 0; c < 4; c++) s += `<rect x="${316 + c * 46}" y="${82 + r * 34}" width="28" height="28" rx="3" fill="#fef9c3" stroke="#92400e" stroke-width="2.5"/>`; return s; } },
+        { id: 'sogi', n: 'そぎ切り', veg: 'thin', col: '#86efac',
+          how: '包丁を <b>ねかせて ななめ</b>に 切る。切り口が 広く なる ので、火が 早く 通り 味も しみる。',
+          use: 'ねぎ・白菜の しん・鶏むね肉・ちくわ。鍋、炒めもの、煮もの。',
+          cuts: g => { for (let i = 0; i < 5; i++) g.push(dash(46 + i * 38, 92, 86 + i * 38, 148)); },
+          after: () => [0, 1, 2].map(i => `<ellipse cx="${340 + i * 76}" cy="120" rx="36" ry="17" fill="#86efac" stroke="#166534" stroke-width="2.5" transform="rotate(-28 ${340 + i * 76} 120)"/>`).join('') }
+    ];
+    let ci = 0;
+    function setCut(i) {
+        ci = i;
+        const c = CUTS[i];
+        document.getElementById('cut-chips').innerHTML = CUTS.map((x, j) =>
+            `<button onclick="setCut(${j})" data-cut="${x.id}" class="${j === i ? 'bg-orange-600 text-white' : 'bg-white border-2 border-orange-200 text-slate-600'} font-black px-2.5 py-1.5 rounded-xl text-xs bounce-hover">${plain(x.n)}</button>`).join('');
+        document.getElementById('cut-name').innerHTML = `🔪 ${c.n}`;
+        const H = c.pre ? 246 : 226;
+        let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="#fff7ed"/>`;
+        g += vegShape(c.veg, c.col);
+        const pre = []; if (c.pre) c.pre(pre); g += pre.join('');
+        const lines = []; c.cuts(lines); g += lines.join('');
+        g += arrowR(250, 120);
+        g += c.after();
+        if (c.pre) {
+            g += `<line x1="24" y1="192" x2="52" y2="192" stroke="${CUTLINE}" stroke-width="4"/>
+                  <text x="58" y="196" font-size="11" font-weight="900" fill="#c2410c">① 先に</text>
+                  <line x1="122" y1="192" x2="150" y2="192" stroke="${CUTLINE}" stroke-width="2.5" stroke-dasharray="7 5"/>
+                  <text x="156" y="196" font-size="11" font-weight="900" fill="#c2410c">② つぎに</text>`;
+            g += `<text x="134" y="222" text-anchor="middle" font-size="12" font-weight="900" fill="#c2410c">切る 前（赤い 線が 包丁）</text>`;
+        } else {
+            g += `<text x="134" y="200" text-anchor="middle" font-size="12" font-weight="900" fill="#c2410c">切る 前（赤い 点線が 包丁）</text>`;
+        }
+        g += `<text x="420" y="${c.pre ? 222 : 200}" text-anchor="middle" font-size="12" font-weight="900" fill="#c2410c">切った あとの 形</text>`;
+        document.getElementById('cut-fig').innerHTML = svg(W, H, g);
+        document.getElementById('cut-how').innerHTML = `🔪 <b>切り方</b>：${c.how}`;
+        document.getElementById('cut-use').innerHTML = `🍽️ <b>つかう 料理</b>：${c.use}`;
+    }
+
+    /* =====================================================================
+       ② 加熱
+       ===================================================================== */
+    let heatReady = false;
+    // 温度で おきる こと（目安）
+    const TEMPS = [
+        { t: 0, n: '水が こおる', d: '0℃で 水は 氷に なる。こおらせると いたみにくく なるが、細ぼうが こわれて 食感が 変わる。' },
+        { t: 40, n: 'ゼラチンが とける', d: '体温くらいで とけるので、ゼリーは 口の 中で とろける。' },
+        { t: 60, n: 'たんぱく質が 固まりはじめる', d: '卵の 白身が 白く なりはじめる 温度。肉の 赤い 色も 変わりはじめる。' },
+        { t: 75, n: '食中毒の 菌{きん}が 死ぬ', d: '<b>中心が 75℃で 1分以上</b>が めやす。ハンバーグや 鶏肉は 中まで しっかり 加熱する。' },
+        { t: 85, n: 'でんぷんが のり化する', d: 'かたい でんぷんが 水と 熱で やわらかく なり、消化できる ように なる（α化）。ごはんが たける のは この 変化。' },
+        { t: 100, n: '水が ふっとうする', d: 'ゆでる・煮る・蒸すは ここが 上限。水が ある かぎり 100℃より 上に ならないので こげない。' },
+        { t: 150, n: 'こうばしい 焼き色（メイラード反応）', d: 'たんぱく質と 糖が 結びついて 茶色に なり、よい 香りが 出る。パンの 皮、焼き肉、たまねぎの あめ色。' },
+        { t: 170, n: 'さとうが カラメルに なる', d: 'さとうだけを 熱すると とけて 茶色く なり、ほろ苦い 香りが 出る（カラメル化）。プリンの ソース。' },
+        { t: 180, n: '揚げものの 温度', d: '160〜180℃。水分が いっきに 水じょう気に なって 出て いく ので サクサクに なる。' },
+        { t: 220, n: 'こげて 炭に なる', d: '焼きすぎると 炭に なり、にがく なる。体にも よくない ので 黒い ところは 食べない。' }
+    ];
+    function tpDraw() {
+        const v = +document.getElementById('tp-v').value;
+        document.getElementById('tp-vv').innerText = v;
+        const H = 210, L = 46, R = 530, y = 96;
+        const px = t => L + t / 240 * (R - L);
+        let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="#fff7ed"/>`;
+        // 温度の おび（青→赤）
+        g += `<defs><linearGradient id="tpgrad" x1="0" x2="1"><stop offset="0" stop-color="#60a5fa"/><stop offset="0.42" stop-color="#fbbf24"/><stop offset="1" stop-color="#dc2626"/></linearGradient></defs>`;
+        g += `<rect x="${L}" y="${y - 12}" width="${R - L}" height="24" rx="12" fill="url(#tpgrad)"/>`;
+        for (let t = 0; t <= 240; t += 40) {
+            g += `<line x1="${px(t).toFixed(1)}" y1="${y + 14}" x2="${px(t).toFixed(1)}" y2="${y + 22}" stroke="#92400e" stroke-width="2"/>
+                  <text x="${px(t).toFixed(1)}" y="${y + 38}" text-anchor="middle" font-size="11" font-weight="800" fill="#92400e">${t}</text>`;
+        }
+        // 出来ごとの 印
+        TEMPS.forEach((e, i) => {
+            const on = Math.abs(e.t - v) <= 7;
+            g += `<circle cx="${px(e.t).toFixed(1)}" cy="${y}" r="${on ? 8 : 5}" fill="${on ? '#1e293b' : '#fff'}" stroke="#92400e" stroke-width="2"/>`;
+            if (i % 2 === 0) g += `<line x1="${px(e.t).toFixed(1)}" y1="${y - 14}" x2="${px(e.t).toFixed(1)}" y2="${y - 30}" stroke="#d6d3d1" stroke-width="1.5"/>`;
+        });
+        // いまの 温度の めじるし
+        g += `<polygon points="${px(v).toFixed(1)},${y - 20} ${(px(v) - 9).toFixed(1)},${y - 34} ${(px(v) + 9).toFixed(1)},${y - 34}" fill="#dc2626"/>`;
+        g += `<text x="${Math.min(Math.max(px(v), 40), W - 40).toFixed(1)}" y="${y - 40}" text-anchor="middle" font-size="14" font-weight="900" fill="#dc2626">${v}℃</text>`;
+        // 加熱法が つかえる はんい
+        const bands = [['ゆでる・煮る・蒸す', 60, 100, '#38bdf8'], ['焼く・炒める', 140, 220, '#f97316'], ['揚げる', 160, 180, '#dc2626']];
+        bands.forEach(([n, a, bb, col], i) => {
+            const yy = y + 52 + i * 22;
+            g += `<rect x="${px(a).toFixed(1)}" y="${yy}" width="${(px(bb) - px(a)).toFixed(1)}" height="14" rx="7" fill="${col}" opacity="${v >= a && v <= bb ? 1 : 0.35}"/>`;
+            g += `<text x="${(px(bb) + 8).toFixed(1)}" y="${yy + 12}" font-size="11" font-weight="900" fill="${col}">${n}</text>`;
+        });
+        document.getElementById('tp-fig').innerHTML = svg(W, H, g);
+        // いちばん 近い 出来ごと
+        const near = TEMPS.reduce((a, b) => Math.abs(b.t - v) < Math.abs(a.t - v) ? b : a);
+        const ms = bands.filter(([, a, bb]) => v >= a && v <= bb).map(([n]) => n);
+        document.getElementById('tp-info').innerHTML =
+            `<b class="text-orange-800">${near.t}℃ ${near.n}</b><br>${near.d}<br>
+             <span class="text-xs text-slate-600">この 温度で できる 加熱：${ms.length ? '<b>' + ms.join('／') + '</b>' : 'なし（低すぎる）'}
+             ${v > 180 ? '　⚠️ 高すぎると こげて にがく なる' : ''}</span>`;
+    }
+
+    const HEATS = [
+        { id: 'boil', e: '♨️', n: 'ゆでる', t: '100℃（水）', water: true,
+          how: 'たっぷりの お湯で 加熱する。味は つけずに「火を 通す」ことが 目的。',
+          good: 'かたい ものを やわらかく できる。アクや よごれ、よぶんな 油が お湯に 出る。',
+          bad: 'ビタミンCの ような 水に とける 栄養が お湯に にげる。ゆで汁も つかえると むだが ない。',
+          ex: 'ほうれんそう、パスタ、たまご、じゃがいも' },
+        { id: 'simmer', e: '🍲', n: '煮る', t: '100℃（だし・調味料）', water: true,
+          how: 'だしや 調味料の 入った 汁で ゆっくり 加熱する。ゆでると ちがい、<b>味を 中まで しみこませる</b>。',
+          good: '中まで 味が つく。かたい 肉も やわらかく なる。汁ごと 食べられる ので 栄養が むだに ならない。',
+          bad: '時間が かかる。強火に しすぎると くずれる（煮くずれ）。',
+          ex: 'カレー、肉じゃが、おでん、切り干し大根' },
+        { id: 'steam', e: '💨', n: '蒸す', t: '100℃（水じょう気）', water: true,
+          how: '水じょう気の 熱で 加熱する。お湯に つけない ので 形が くずれない。',
+          good: '栄養が お湯に にげにくい。ふんわり しあがる。こげない。',
+          bad: '時間が かかる。こうばしい 焼き色は つかない。',
+          ex: 'シュウマイ、茶わんむし、蒸しパン、さつまいも' },
+        { id: 'grill', e: '🔥', n: '焼く', t: '150〜250℃', water: false,
+          how: '直接 または フライパンの 熱で 加熱する。表面の 水分が とんで 温度が 高く なる。',
+          good: '<b>メイラード反応</b>で こうばしい 香りと 焼き色。よぶんな 油が 落ちる。',
+          bad: 'こげやすい。中まで 火が 通る 前に 外が こげる ことも。',
+          ex: '焼き魚、ハンバーグ、トースト、お好み焼き' },
+        { id: 'stirfry', e: '🍳', n: '炒める', t: '180〜250℃', water: false,
+          how: '少しの 油で <b>短い 時間・強い 火</b>で 動かしながら 加熱する。',
+          good: '早い。しゃきっとした 食感が のこる。油に とける ビタミンA・Dの 吸収が よく なる。',
+          bad: '油を つかう ぶん カロリーが 上がる。切り方を そろえないと 火が バラバラ。',
+          ex: '野さい炒め、チャーハン、焼きそば、きんぴら' },
+        { id: 'fry', e: '🍤', n: '揚げる', t: '160〜180℃（油）', water: false,
+          how: 'たっぷりの 油の 中で 加熱する。食材の 水分が 水じょう気に なって 出て いき、そこへ 油が 入る。',
+          good: '外は サクサク、中は ジューシー。短い 時間で 火が 通る。',
+          bad: 'とても あつく、油が はねる ので <b>いちばん 気をつける 加熱</b>。カロリーも 高い。',
+          ex: 'からあげ、コロッケ、天ぷら、揚げパン' },
+        { id: 'micro', e: '📡', n: '電子レンジ', t: '内がわから あたたまる', water: false,
+          how: 'マイクロ波で <b>食べものの 中の 水の つぶを ゆらして</b> 熱を 出させる。外から 熱を 伝えるのでは ない。',
+          good: 'とても 速い。油も 水も いらない。栄養の にげが 少ない。',
+          bad: '焼き色が つかない。水の 多い ところだけ 熱く なり ムラが できる。金ぞくは 火花が 出て 危険。',
+          ex: 'あたため直し、下ゆでの かわり、蒸し野さい' }
+    ];
+    let hi = 0;
+    function setHt(i) {
+        hi = i;
+        const h = HEATS[i];
+        document.getElementById('ht-chips').innerHTML = HEATS.map((x, j) =>
+            `<button onclick="setHt(${j})" data-heat="${x.id}" class="${j === i ? 'bg-orange-600 text-white' : 'bg-white border-2 border-orange-200 text-slate-600'} font-black px-3 py-2 rounded-2xl text-xs bounce-hover">${x.e} ${x.n}</button>`).join('');
+        const H = 180;
+        let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="#fff7ed"/>`;
+        // なべ か フライパン
+        if (h.water) {
+            g += `<path d="M170 60 L170 140 Q170 156 190 156 L370 156 Q390 156 390 140 L390 60 Z" fill="#e2e8f0" stroke="#475569" stroke-width="4"/>`;
+            const wl = h.id === 'steam' ? 132 : 78;
+            g += `<rect x="174" y="${wl}" width="212" height="${152 - wl}" fill="#7dd3fc" opacity="0.8"/>`;
+            if (h.id === 'steam') {
+                g += `<rect x="176" y="112" width="208" height="10" rx="3" fill="#94a3b8"/>`;
+                [0, 1, 2].forEach(i => g += `<ellipse cx="${216 + i * 64}" cy="102" rx="20" ry="12" fill="#fde68a" stroke="#92400e" stroke-width="2.5"/>`);
+                [0, 1, 2, 3].forEach(i => g += `<path d="M${200 + i * 52} 96 q8 -14 0 -26 q-8 -12 0 -22" fill="none" stroke="#cbd5e1" stroke-width="3"/>`);
+            } else {
+                [0, 1, 2].forEach(i => g += `<circle cx="${216 + i * 64}" cy="118" r="17" fill="#fdba74" stroke="#92400e" stroke-width="2.5"/>`);
+                [0, 1, 2, 3, 4].forEach(i => g += `<circle cx="${190 + i * 42}" cy="${96 + (i % 2) * 12}" r="5" fill="#fff" opacity="0.8"/>`);
+            }
+        } else if (h.id === 'fry') {
+            g += `<path d="M170 60 L170 140 Q170 156 190 156 L370 156 Q390 156 390 140 L390 60 Z" fill="#e2e8f0" stroke="#475569" stroke-width="4"/>`;
+            g += `<rect x="174" y="86" width="212" height="66" fill="#fbbf24" opacity="0.85"/>`;
+            [0, 1].forEach(i => g += `<rect x="${222 + i * 76}" y="104" width="46" height="26" rx="8" fill="#d97706" stroke="#92400e" stroke-width="2.5"/>`);
+            [0, 1, 2, 3, 4, 5].forEach(i => g += `<circle cx="${196 + i * 34}" cy="${80 - (i % 3) * 10}" r="4" fill="#fcd34d"/>`);
+        } else if (h.id === 'micro') {
+            g += `<rect x="150" y="50" width="260" height="110" rx="10" fill="#e2e8f0" stroke="#475569" stroke-width="4"/>`;
+            g += `<rect x="168" y="66" width="160" height="78" rx="6" fill="#0f172a" opacity="0.15" stroke="#475569" stroke-width="2"/>`;
+            g += `<circle cx="248" cy="112" r="22" fill="#fdba74" stroke="#92400e" stroke-width="2.5"/>`;
+            [0, 1, 2].forEach(i => g += `<path d="M${180 + i * 30} 84 q10 10 0 20 q-10 10 0 20" fill="none" stroke="#dc2626" stroke-width="2.5"/>`);
+            g += `<text x="348" y="112" font-size="11" font-weight="900" fill="#dc2626">マイクロ波</text>`;
+        } else {
+            g += `<path d="M160 118 L400 118 Q414 118 414 130 Q414 148 394 148 L180 148 Q160 148 160 130 Z" fill="#94a3b8" stroke="#475569" stroke-width="4"/>`;
+            g += `<line x1="414" y1="124" x2="520" y2="110" stroke="#475569" stroke-width="7" stroke-linecap="round"/>`;
+            [0, 1, 2].forEach(i => g += `<ellipse cx="${230 + i * 60}" cy="116" rx="24" ry="9" fill="#d97706" stroke="#92400e" stroke-width="2.5"/>`);
+            [0, 1, 2, 3, 4].forEach(i => g += `<path d="M${200 + i * 42} 160 q6 12 0 20" fill="none" stroke="#f97316" stroke-width="3"/>`);
+        }
+        g += `<text x="${W / 2}" y="34" text-anchor="middle" font-size="14" font-weight="900" fill="#c2410c">${h.e} ${h.n}　${h.t}</text>`;
+        document.getElementById('ht-fig').innerHTML = svg(W, H, g);
+        document.getElementById('ht-body').innerHTML = `
+            <div class="bg-orange-50 border-2 border-orange-200 rounded-2xl p-3" data-ht="how">
+                <p class="font-black text-sm text-orange-900">🔧 どう 加熱する？</p>
+                <p class="text-xs font-bold text-slate-600 mt-0.5 leading-relaxed">${h.how}</p></div>
+            <div class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-3" data-ht="good">
+                <p class="font-black text-sm text-emerald-800">😀 よい ところ</p>
+                <p class="text-xs font-bold text-slate-600 mt-0.5 leading-relaxed">${h.good}</p></div>
+            <div class="bg-rose-50 border-2 border-rose-200 rounded-2xl p-3" data-ht="bad">
+                <p class="font-black text-sm text-rose-800">😣 気をつける ところ</p>
+                <p class="text-xs font-bold text-slate-600 mt-0.5 leading-relaxed">${h.bad}</p></div>
+            <div class="bg-slate-50 border-2 border-slate-200 rounded-2xl p-3" data-ht="ex">
+                <p class="font-black text-sm">🍽️ 料理の 例</p>
+                <p class="text-xs font-bold text-slate-600 mt-0.5 leading-relaxed">${h.ex}</p></div>`;
+    }
+
+    /* =====================================================================
+       ③ 調味料
+       ===================================================================== */
+    let seasonReady = false;
+    const TASTES = [
+        ['🍬', '甘味{かんみ}', 'エネルギーの しるし', 'さとう・くだもの・みりん'],
+        ['🧂', '塩味{えんみ}', '体に 必要な ミネラルの しるし', '塩・しょうゆ・みそ'],
+        ['🍋', '酸味{さんみ}', 'くさって いないかの 見はり役', '酢・レモン・ヨーグルト'],
+        ['🥬', '苦味{にがみ}', '毒かも しれない と 知らせる 役', 'ピーマン・ゴーヤ・コーヒー'],
+        ['🍄', 'うま味', 'たんぱく質の しるし', '昆布・かつお節・トマト・チーズ']
+    ];
+    function tasteDraw() {
+        document.getElementById('taste-list').innerHTML = TASTES.map(([e, n, why, ex]) =>
+            `<div class="border-2 border-orange-200 bg-orange-50 rounded-2xl p-3" data-taste="${plain(n)}">
+                <p class="font-black text-sm">${e} ${n}</p>
+                <p class="text-xs font-bold text-slate-600 mt-1 leading-relaxed">${why}</p>
+                <p class="text-xs font-bold text-orange-700 mt-1">${ex}</p>
+            </div>`).join('') +
+            `<div class="sm:col-span-5 bg-amber-50 border-2 border-amber-200 rounded-2xl p-3 text-sm font-bold leading-relaxed">
+                💡 <b>うま味</b>は 日本人が 見つけた 味。1908年に 池田菊苗{いけだきくなえ}が 昆布から グルタミン酸を 取り出し、
+                「うま味」と 名づけた。いまでは 世界中で <b>UMAMI</b> と 呼ばれて いる。</div>`;
+    }
+
+    const SASI = [
+        ['さ', '砂糖{さとう}', 'つぶが 大きく しみこむのに 時間が かかる ので いちばん 先。あとから 入れても 中まで 入らない。'],
+        ['し', '塩{しお}', '食材の 水分を 外へ 出す（浸透圧{しんとうあつ}）。先に 入れると かたく なり、砂糖も 入れなく なる。'],
+        ['す', '酢{す}', '熱で 酸味と 香りが とぶ ので 後半に。早く 入れると さっぱりが 消える。'],
+        ['せ', 'しょうゆ（せうゆ）', '香りが とびやすい。<b>仕上げ</b>に 入れると 香りが 立つ。'],
+        ['そ', 'みそ', 'いちばん 香りが 弱い ので 最後。ぐつぐつ 煮ると 香りが とんで しまう。']
+    ];
+    let ssOrder = [0, 1, 2, 3, 4];
+    function ssShuffle() {
+        do { ssOrder = shuffle([0, 1, 2, 3, 4]); } while (ssOrder.join() === '0,1,2,3,4');
+        document.getElementById('ss-res').innerHTML = '';
+        ssDraw();
+    }
+    function ssDraw() {
+        document.getElementById('ss-list').innerHTML = ssOrder.map((v, i) =>
+            `<div class="flex items-center gap-2 bg-slate-50 border-2 border-slate-200 rounded-xl px-2 py-2" data-ss="${v}">
+                <span class="num font-black text-orange-700 w-6 text-center">${i + 1}</span>
+                <span class="font-black text-sm w-32">${SASI[v][1]}</span>
+                <span class="flex-grow"></span>
+                <button onclick="ssMove(${i},-1)" ${i === 0 ? 'disabled' : ''} class="w-8 h-8 rounded-full ${i === 0 ? 'bg-slate-100 text-slate-300' : 'bg-orange-100 text-orange-700'} font-black bounce-hover">⬆</button>
+                <button onclick="ssMove(${i},1)" ${i === 4 ? 'disabled' : ''} class="w-8 h-8 rounded-full ${i === 4 ? 'bg-slate-100 text-slate-300' : 'bg-orange-100 text-orange-700'} font-black bounce-hover">⬇</button>
+            </div>`).join('');
+    }
+    function ssMove(i, d) {
+        const j = i + d;
+        if (j < 0 || j >= ssOrder.length) return;
+        const t = ssOrder[i]; ssOrder[i] = ssOrder[j]; ssOrder[j] = t;
+        document.getElementById('ss-res').innerHTML = '';
+        ssDraw();
+    }
+    function ssCheck() {
+        const ok = ssOrder.join() === '0,1,2,3,4';
+        const body = ok
+            ? '「<b>さ・し・す・せ・そ</b>」＝ 砂糖 → 塩 → 酢 → しょうゆ → みそ。<br>'
+              + SASI.map(([k, n, d]) => `<b>${k}：${n}</b>… ${d}`).join('<br>')
+            : `正しい 順は <b>砂糖 → 塩 → 酢 → しょうゆ → みそ</b>。<br>`
+              + `いま ${ssOrder.map(v => SASI[v][1].replace(/\{[^}]*\}/g, '')).join(' → ')} に なって いるよ。⬆⬇で 直して みよう。`;
+        document.getElementById('ss-res').innerHTML = resultBox(ok, ok ? '🎉 味が ばっちり しみた！' : '💦 味が うまく しみない…', body);
+    }
+
+    const SEAS = [
+        { id: 'sugar', e: '🍬', n: '砂糖{さとう}',
+          roles: [['甘みを つける', 'いちばんの 役割。'], ['やわらかく する', '水を かかえこむ ので、パンや 卵焼きが しっとり する。'],
+                  ['つやを 出す', '照り焼きの ツヤ。'], ['こげ色と 香り', '150℃以上で メイラード反応・カラメル化が おきる。'],
+                  ['くさりにくく する', 'ジャムや あんこは 砂糖が 多いので 長く もつ。']] },
+        { id: 'salt', e: '🧂', n: '塩{しお}',
+          roles: [['塩味を つける', 'ほんの 少しで 甘みも 引き立つ（対比効果）。'], ['水分を 出す', '野さいの 塩もみ、魚の 塩ふり。'],
+                  ['たんぱく質を 固める', 'かまぼこや ハンバーグが まとまる。'], ['くさりにくく する', '塩づけ・干物は 昔からの 保存方法。'],
+                  ['小麦粉の こしを 強くする', 'うどんや パンの コシは 塩の おかげ。']] },
+        { id: 'vinegar', e: '🍶', n: '酢{す}',
+          roles: [['酸味・さっぱり', 'あぶらっこさを 消す。'], ['色を きれいに', 'れんこんや ごぼうが 白く なる。赤かぶは 赤が あざやかに。'],
+                  ['肉を やわらかく', 'たんぱく質を ほぐす。'], ['くさりにくく する', '酸に 弱い 菌が ふえにくい。すし飯や ピクルス。'],
+                  ['骨を やわらかく', '魚を 酢で 煮ると 小骨まで 食べられる。']] },
+        { id: 'soy', e: '🍚', n: 'しょうゆ',
+          roles: [['塩味＋うま味＋香り', '1本で 3役。大豆を 発酵させて つくる。'], ['色を つける', '煮ものの 茶色は しょうゆの 色。'],
+                  ['くさみを 消す', '魚や 肉の においを おさえる。'], ['香りは とびやすい', 'だから 仕上げに 入れると 香りが 立つ。']] },
+        { id: 'miso', e: '🥣', n: 'みそ',
+          roles: [['塩味＋うま味＋香り', '大豆に こうじと 塩を 加えて 発酵させた もの。'], ['地域で ちがう', '米みそ・麦みそ・豆みそ、白みそ・赤みそ。'],
+                  ['煮すぎない', 'ぐつぐつ 煮ると 香りが とぶ。火を 止めて から とかす。'], ['体に よい 菌', '発酵食品なので おなかの 調子を ととのえる。']] },
+        { id: 'mirin', e: '🍯', n: 'みりん',
+          roles: [['上品な 甘み', '砂糖より やわらかい 甘さ。'], ['てりと つやを 出す', '照り焼きの ぴかぴかは みりんの 力。'],
+                  ['くさみを 消す', 'アルコールが においを つれて とんで いく。'], ['煮くずれを ふせぐ', '表面を しめる ので 形が のこる。']] },
+        { id: 'sake', e: '🍶', n: '料理酒{りょうりしゅ}',
+          roles: [['くさみを 消す', 'アルコールが においと いっしょに とぶ。'], ['やわらかく する', '肉や 魚が ふっくら する。'],
+                  ['うま味を 足す', '米から できて いる ので うま味の 成分が 入って いる。'], ['火を 通して つかう', 'アルコールを とばす ため 早めに 入れる。']] },
+        { id: 'dashi', e: '🍵', n: 'だし',
+          roles: [['うま味の 土台', '味つけの 前に「おいしさの 下地」を つくる。'],
+                  ['昆布＝グルタミン酸', '水から ゆっくり 出す。ふっとうさせると ぬめりと 苦みが 出る。'],
+                  ['かつお節＝イノシン酸', 'お湯に 入れて すぐ こす。'],
+                  ['干ししいたけ＝グアニル酸', '水で もどす。もどし汁も だしに なる。'],
+                  ['合わせると 何倍にも', '種類の ちがう うま味を 合わせると、足し算 より ずっと 強く 感じる（相乗{そうじょう}効果）。']] },
+        { id: 'oil', e: '🫗', n: '油',
+          roles: [['熱を 伝える', '180℃まで 上げられる ので 水では できない 加熱が できる。'],
+                  ['くっつかなく する', 'フライパンに はりつくのを ふせぐ。'], ['こうばしさと コク', '香りと 口あたりを よく する。'],
+                  ['栄養の 吸収を 助ける', 'ビタミンA・D・E・Kは 油と いっしょだと 吸収されやすい。']] },
+        { id: 'spice', e: '🌶️', n: 'こしょう・香辛料{こうしんりょう}',
+          roles: [['香りを つける', '料理の 印象を 決める。'], ['くさみを 消す', '肉や 魚の においを おさえる。'],
+                  ['「からい」は 味では ない', '舌の <b>痛みの センサー</b>が 反応して いる。だから 冷やしても 消えにくい。'],
+                  ['食欲を 出す', '香りで だ液や 胃液が 出る。']] }
+    ];
+    let si = 0;
+    function setSea(i) {
+        si = i;
+        const s = SEAS[i];
+        document.getElementById('sea-chips').innerHTML = SEAS.map((x, j) =>
+            `<button onclick="setSea(${j})" data-sea="${x.id}" class="${j === i ? 'bg-orange-600 text-white' : 'bg-white border-2 border-orange-200 text-slate-600'} font-black px-2.5 py-1.5 rounded-xl text-xs bounce-hover">${x.e} ${plain(x.n)}</button>`).join('');
+        document.getElementById('sea-body').innerHTML =
+            `<p class="font-black text-base">${s.e} ${s.n} の はたらき（${s.roles.length}つ）</p>` +
+            `<div class="space-y-2 mt-2">` + s.roles.map(([t, d], k) =>
+                `<div class="bg-orange-50 border-2 border-orange-200 rounded-2xl p-3" data-searole="${k}">
+                    <p class="font-black text-sm text-orange-900">${k + 1}. ${t}</p>
+                    <p class="text-xs font-bold text-slate-600 mt-0.5 leading-relaxed">${d}</p></div>`).join('') + `</div>`;
+    }
+
+    /* =====================================================================
+       ④ 給食レシピ
+       ===================================================================== */
+    let recipeReady = false;
+    // 分量は 4人分。n は 数、u は 単位。人数を 変えると n だけ かわる
+    const RECIPES = [
+        { id: 'curry', e: '🍛', n: 'カレーライス',
+          lead: '給食の 王さま。切り方を そろえるのが おいしさの ひみつ。',
+          ing: [[2, '個', 'じゃがいも'], [1, '本', 'にんじん'], [2, '個', '玉ねぎ'], [200, 'g', '豚こま肉'],
+                [100, 'g', 'カレールー'], [750, 'mL', '水'], [1, '大さじ', 'サラダ油'], [4, 'はい', 'ごはん']],
+          tech: ['じゃがいも・にんじん → 乱切り', '玉ねぎ → くし形切り', '炒める → 煮る'],
+          steps: [['野さいを 切る', 'じゃがいもと にんじんは 乱切り、玉ねぎは くし形切り。大きさを そろえる。'],
+                  ['肉と 玉ねぎを 炒める', '油を ひいて 肉の 色が 変わるまで。玉ねぎが すきとおるまで 炒めると 甘みが 出る。'],
+                  ['水を 入れて 煮る', 'じゃがいも・にんじんを 入れ、ふっとうしたら アクを とって 15分ほど 弱火。'],
+                  ['ルーを とかす', '<b>いったん 火を 止めて</b> ルーを 入れる。とけたら また 弱火で 10分。'],
+                  ['ごはんに かける', '味を みて できあがり。']],
+          tip: '💡 ルーを 入れる とき 火を 止めるのは、<b>とろみの もと（でんぷん）が だまに ならない</b> ため。カレーは 一晩おくと 味が しみて もっと おいしく なる。' },
+        { id: 'miso', e: '🥣', n: 'とうふと わかめの みそ汁',
+          lead: 'だしを とって、みそは 最後に。「さしすせそ」の「そ」の 練習。',
+          ing: [[600, 'mL', '水'], [1, 'ふくろ', 'だしパック'], [3, '大さじ', 'みそ'],
+                [0.5, '丁', 'とうふ'], [2, 'g', '乾燥わかめ'], [0.25, '本', '長ねぎ']],
+          tech: ['とうふ → さいの目切り', 'ねぎ → 小口切り', '煮る（煮立てない）'],
+          steps: [['だしを とる', '水に だしパックを 入れて 火に かけ、ふっとうしたら 弱火で 3分。パックを 取り出す。'],
+                  ['具を 入れる', 'さいの目に 切った とうふと、水で もどした わかめを 入れて あたためる。'],
+                  ['みそを とかす', '<b>火を 止めて</b> おたまの 中で みそを だしで のばして 入れる。'],
+                  ['ねぎを のせる', '小口切りの ねぎを 入れて すぐ 火を 止める。']],
+          tip: '💡 <b>みそ汁は 煮立てない</b>。ぐつぐつ 煮ると みその 香りが とび、つぶつぶに なる。「煮えばな」＝ふつふつと する 手前が いちばん おいしい。' },
+        { id: 'agepan', e: '🍞', n: '揚げパン（きなこ）',
+          lead: '昭和の 給食から 続く 人気メニュー。油は 大人と いっしょに。',
+          ing: [[4, '個', 'コッペパン'], [4, '大さじ', '砂糖'], [2, '大さじ', 'きなこ'],
+                [1, 'つまみ', '塩（ひと つまみ）'], [400, 'mL', 'あげ油']],
+          tech: ['揚げる（170〜180℃・10〜20秒）', 'まぜる'],
+          steps: [['きなこ砂糖を 作る', 'ポリぶくろに 砂糖・きなこ・塩を 入れて ふりまぜる。'],
+                  ['油を 熱する', '170〜180℃。<b>パンを 入れると すぐ 泡が 出る</b>くらい。'],
+                  ['さっと 揚げる', '<b>10〜20秒</b>だけ。長く 揚げると 油を すいすぎて 重く なる。'],
+                  ['油を きって まぜる', 'あみに あげて 油を きり、あついうちに ふくろに 入れて まぜる。']],
+          tip: '⚠️ 油は いちばん 危ない 加熱。<b>ぬれた ものを 入れない</b>（はねる）。水を かけると 燃え広がるので、もし 燃えたら 火を 止めて ふたを する。' },
+        { id: 'abc', e: '🔤', n: 'ABCスープ',
+          lead: 'アルファベットの マカロニが 入った 定番スープ。野さいは 全部 さいの目で そろえる。',
+          ing: [[40, 'g', 'ABCマカロニ'], [100, 'g', 'キャベツ'], [0.3, '本', 'にんじん'],
+                [0.5, '個', '玉ねぎ'], [40, 'g', 'ベーコン'], [2, '小さじ', 'コンソメ'], [800, 'mL', '水']],
+          tech: ['野さい → さいの目切り', 'キャベツ → 短冊切り', '煮る'],
+          steps: [['野さいを 切る', 'にんじん・玉ねぎ・ベーコンは さいの目、キャベツは 短冊切り。'],
+                  ['煮る', '水と かたい 野さいを 入れて 火に かけ、やわらかく なるまで 8分ほど。'],
+                  ['マカロニを 入れる', 'マカロニと キャベツを 入れて 表示の 時間 煮る。'],
+                  ['味を つける', 'コンソメを 入れ、塩こしょうで ととのえる。']],
+          tip: '💡 かたい 野さい（にんじん）を 先に、やわらかい もの（キャベツ）を 後に 入れるのが コツ。<b>火の 通り方の 順番</b>を 考えると、ぜんぶが ちょうど よく 仕上がる。' },
+        { id: 'kiriboshi', e: '🥕', n: '切り干し大根の 煮もの',
+          lead: '干した 大根は うま味が ぎゅっと つまって いる。「さしすせそ」を ぜんぶ 使う 練習。',
+          ing: [[30, 'g', '切り干し大根'], [0.3, '本', 'にんじん'], [1, '枚', '油あげ'],
+                [200, 'mL', 'だし'], [1, '大さじ', '砂糖'], [1.5, '大さじ', 'しょうゆ'], [1, '大さじ', 'みりん']],
+          tech: ['にんじん・油あげ → せん切り', '煮る'],
+          steps: [['もどす', '切り干し大根を 水で 10分 もどして しぼる。<b>もどし汁は だしに つかえる</b>。'],
+                  ['切る', 'にんじんと 油あげを せん切りに する。'],
+                  ['煮る', 'だしと 全部の 具を 入れ、砂糖 → みりん → しょうゆの 順に 加えて 15分ほど 弱火。'],
+                  ['煮つめる', '汁が 少なく なったら 火を 止めて、あら熱を とると 味が しみる。']],
+          tip: '💡 大根を 干すと 水分が ぬけて <b>うま味と 栄養が こくなる</b>。カルシウムは 生の 大根の 20倍以上。日光の 力で おいしく なる 保存食。' },
+        { id: 'punch', e: '🍒', n: 'フルーツポンチ',
+          lead: '火を 使わない デザート。切り方と もりつけの 練習に ぴったり。',
+          ing: [[1, '缶', 'みかん缶'], [1, '缶', 'パイン缶'], [1, '缶', 'もも缶'],
+                [200, 'mL', 'サイダー'], [8, '個', '白玉']],
+          tech: ['もも → さいの目切り', 'パイン → くし形切り', '（加熱なし）'],
+          steps: [['くだものを 切る', 'ももは さいの目、パインは 食べやすい 大きさに。缶の シロップは とって おく。'],
+                  ['冷やす', 'ボウルに 入れて 冷蔵庫で 冷やす。'],
+                  ['白玉を ゆでる', '白玉を ゆでて 冷水に とる（大人と いっしょに）。'],
+                  ['仕上げ', '食べる 直前に サイダーを 注ぐ。先に 入れると 泡が ぬける。']],
+          tip: '💡 サイダーは <b>食べる 直前</b>に。泡（二酸化炭素）は 冷たいほど 水に とけて いられる ので、よく 冷やして おくと しゅわしゅわが 長もち する。' }
+    ];
+    let ri = 0;
+    function fmtNum(n) {
+        const r = Math.round(n * 100) / 100;
+        if (Math.abs(r - Math.round(r)) < 0.001) return String(Math.round(r));
+        if (Math.abs(r - 0.5) < 0.001) return '1/2';
+        if (Math.abs(r - 0.25) < 0.001) return '1/4';
+        if (Math.abs(r - 0.75) < 0.001) return '3/4';
+        if (Math.abs(r - 1.5) < 0.001) return '1と1/2';
+        return String(r);
+    }
+    function setRc(i) { ri = i; rcDraw(); }
+    function rcDraw() {
+        const people = +document.getElementById('rc-n').value;
+        document.getElementById('rc-nv').innerText = people;
+        const r = RECIPES[ri], k = people / 4;
+        document.getElementById('rc-chips').innerHTML = RECIPES.map((x, j) =>
+            `<button onclick="setRc(${j})" data-rc="${x.id}" class="${j === ri ? 'bg-orange-600 text-white' : 'bg-white border-2 border-orange-200 text-slate-600'} font-black px-2.5 py-1.5 rounded-xl text-xs bounce-hover">${x.e} ${x.n}</button>`).join('');
+        document.getElementById('rc-name').innerHTML = `${r.e} ${r.n}`;
+        document.getElementById('rc-lead').innerHTML = r.lead;
+        document.getElementById('rc-for').innerText = people;
+        // 「大さじ1」のように 単位を 先に 言う ものは 順番を 入れかえる
+        const amount = (n, u) => (u === '大さじ' || u === '小さじ') ? `${u} ${fmtNum(n)}` : `${fmtNum(n)} ${u}`;
+        document.getElementById('rc-ing').innerHTML = r.ing.map(([n, u, name]) =>
+            `<div class="flex justify-between gap-2" data-ing="${name}">
+                <span>${name}</span><span class="num font-black text-orange-700">${amount(n * k, u)}</span></div>`).join('');
+        document.getElementById('rc-tech').innerHTML = r.tech.map(t => `<div data-tech>・${t}</div>`).join('');
+        document.getElementById('rc-steps').innerHTML = r.steps.map(([t, d], j) =>
+            `<div class="bg-slate-50 border-2 border-slate-200 rounded-2xl p-3" data-step="${j}">
+                <p class="font-black text-sm">${j + 1}. ${t}</p>
+                <p class="text-xs font-bold text-slate-600 mt-0.5 leading-relaxed">${d}</p></div>`).join('');
+        document.getElementById('rc-tip').innerHTML = r.tip;
+    }
+
+    /* =====================================================================
+       ⑤ クイズ
+       ===================================================================== */
+    const QS = [
+        { f: '切り方', q: '丸い にんじんを はしから まっすぐ 切る 切り方は？', a: '輪切り', x: ['乱切り', 'みじん切り', 'せん切り'], e: '切り口が 輪に なる。あつさを そろえると 火の 通りも そろう。' },
+        { f: '切り方', q: 'ねぎを はしから うすく 切る 切り方は？', a: '小口切り', x: ['くし形切り', '拍子木切り', '短冊切り'], e: '「小口」は 切り口の こと。みそ汁の うわものや 薬味に。' },
+        { f: '切り方', q: 'たてに 4つ割りに して から 切ると どんな 形？', a: 'いちょう切り', x: ['半月切り', 'さいの目切り', 'そぎ切り'], e: 'いちょうの 葉の 形。半月切りは たて半分から。小さいので 火が 早く 通る。' },
+        { f: '切り方', q: '玉ねぎを 中心に むかって 放射状に 切る 切り方は？', a: 'くし形切り', x: ['みじん切り', '輪切り', '拍子木切り'], e: 'かみを とかす「くし」の 形。サラダや みそ汁に。' },
+        { f: '切り方', q: 'カレーの にんじんに よく つかう、回しながら ななめに 切る 切り方は？', a: '乱切り', x: ['短冊切り', '小口切り', 'せん切り'], e: '形は バラバラでも 大きさを そろえる。表面が 広く 味が しみやすい。' },
+        { f: '切り方', q: 'さいころの ような 形に 切るのは？', a: 'さいの目切り', x: ['短冊切り', 'そぎ切り', '半月切り'], e: '拍子木切りに して から 同じ はばで 切る。スープや サラダに。' },
+        { f: '切り方', q: '包丁を ねかせて ななめに 切る 切り方の よい ところは？', a: '切り口が 広く なり 火が 早く 通る', x: ['形が きれいに そろう', '皮が むける', '水分が ぬける'], e: 'そぎ切り。ねぎや 鶏肉、白菜の しんに つかう。' },
+        { f: '切り方', q: '切り方を そろえる いちばんの りゆうは？', a: '火の 通り方が そろう', x: ['見た目が よい だけ', '包丁が いたまない', '早く 切れる'], e: '大きさが バラバラだと、かたい ところと くずれた ところが 混ざる。' },
+        { f: '切り方', q: '食材を おさえる 手の 形「ねこの手」とは？', a: '指を 内がわに まるめて つめを かくす', x: ['指を のばして 広げる', '手をう しろに 回す', '2本の 指で つまむ'], e: '指の 関節を 包丁に あてる ように すると 指先が 切れない。' },
+        { f: '切り方', q: '生の 肉を 切った あと、野さいを 切る ときは？', a: 'まな板と 包丁を 洗って から 切る', x: ['そのまま 切って よい', 'ふきんで ふく だけ', '野さいを 先に すれば よい'], e: '肉の 菌が 生で 食べる 野さいに つくと 食中毒に なる。まな板を 使い分けても よい。' },
+
+        { f: '加熱', q: '水は 何℃で ふっとうする？', a: '100℃', x: ['60℃', '150℃', '180℃'], e: '水が ある かぎり それ 以上には ならない。だから ゆでる・煮る・蒸すでは こげない。' },
+        { f: '加熱', q: '揚げものの 油の 温度は ふつう 何℃くらい？', a: '160〜180℃', x: ['60〜80℃', '100℃', '250〜300℃'], e: '水では 出せない 温度。だから サクサクに なる。いちばん 気をつける 加熱。' },
+        { f: '加熱', q: '肉や 魚を 安全に 食べる ための 加熱の めやすは？', a: '中心が 75℃で 1分以上', x: ['表面が 焼ければ よい', '40℃で 10分', '100℃で 1秒'], e: '食中毒の 菌は 熱に 弱い。ハンバーグや 鶏肉は 中まで 火を 通す。' },
+        { f: '加熱', q: 'パンや 焼き肉の こうばしい 茶色と 香りを つくる 変化は？', a: 'メイラード反応', x: ['のり化', 'ふっとう', '発酵'], e: 'たんぱく質と 糖が 結びつく 反応。150℃くらいから おきる。' },
+        { f: '加熱', q: 'さとうだけを 熱すると 茶色く なって ほろ苦く なる 変化は？', a: 'カラメル化', x: ['メイラード反応', 'のり化', '酸化'], e: '170℃くらいから。プリンの ソースは これ。' },
+        { f: '加熱', q: 'かたい でんぷんが 水と 熱で やわらかく なる 変化は？', a: 'のり化（α化）', x: ['カラメル化', '発酵', '中和'], e: 'ごはんが たける、じゃがいもが ほくほくに なるのは この 変化。消化できる ように なる。' },
+        { f: '加熱', q: '「ゆでる」と「煮る」の いちばんの ちがいは？', a: '煮るは 味を つけた 汁で 中まで 味を しみこませる', x: ['煮るの ほうが 温度が 高い', 'ゆでるは 油を つかう', 'ちがいは ない'], e: 'ゆでるは「火を 通す」、煮るは「味を つける」。' },
+        { f: '加熱', q: '「蒸す」の よい ところは？', a: '栄養が お湯に にげにくく 形も くずれない', x: ['こうばしい 焼き色が つく', 'いちばん 速い', '油が いらないので 味が こい'], e: '水じょう気の 熱を つかう。茶わんむしや 蒸しパンに。' },
+        { f: '加熱', q: '電子レンジは どうやって あたためる？', a: '食べものの 中の 水を ゆらして 熱を 出させる', x: ['熱い 空気を 当てる', '電気の 線で 焼く', '光で 焼く'], e: 'だから 内がわからも あたたまり、水の 多い ところだけ 熱く なって ムラが できる。' },
+        { f: '加熱', q: '電子レンジに 入れては いけない ものは？', a: '金ぞく（アルミホイル・金の ふちの おさら）', x: ['ガラスの おさら', '水', '野さい'], e: '火花が 出て とても 危険。ラップは ふんわり かけて 使う。' },
+        { f: '加熱', q: '炒めものを おいしく する コツは？', a: '強い 火で 短い 時間、動かしながら', x: ['弱火で じっくり 30分', 'ふたを して 動かさない', '水を たっぷり 入れる'], e: '水が 出る 前に 仕上げると しゃきっと する。切り方を そろえるのも 大事。' },
+        { f: '加熱', q: '油が 燃えて しまった とき、してはいけない ことは？', a: '水を かける', x: ['火を 止める', 'ふたを する', '大人を 呼ぶ'], e: '水が いっきに 水じょう気に なって 油を 飛ばし、炎が 大きく なる。火を 止めて ふたを する。' },
+
+        { f: '調味料', q: '舌が 感じる 味の 数は？', a: '5つ（甘・塩・酸・苦・うま味）', x: ['3つ', '7つ', '10以上'], e: '「からい」は 痛み、「しぶい」は さわった 感じ、香りは 鼻で 感じて いる。' },
+        { f: '調味料', q: '日本人が 見つけた「5番めの 味」は？', a: 'うま味', x: ['からみ', 'しぶみ', 'こく'], e: '1908年に 池田菊苗が 昆布から 発見。いまは 世界で UMAMI と 呼ばれる。' },
+        { f: '調味料', q: '「さしすせそ」の 順番は？', a: '砂糖 → 塩 → 酢 → しょうゆ → みそ', x: ['塩 → 砂糖 → 酢 → みそ → しょうゆ', '酢 → 塩 → 砂糖 → しょうゆ → みそ', '決まって いない'], e: 'しみこみにくい ものを 先に、香りが とびやすい ものを 後に 入れる。' },
+        { f: '調味料', q: '砂糖を 塩より 先に 入れる りゆうは？', a: 'つぶが 大きく しみこむのに 時間が かかる から', x: ['あまい ほうが 好きだから', '塩が とけない から', '色が つく から'], e: '塩を 先に 入れると 食材の 水分が 出て かたく なり、砂糖が 中に 入れなく なる。' },
+        { f: '調味料', q: 'しょうゆや みそを 最後に 入れる りゆうは？', a: '香りが とびやすい から', x: ['色が こく なりすぎる から', 'とけにくい から', '高い から'], e: 'みそ汁は「煮立てない」のが きほん。ふつふつする 手前が おいしい。' },
+        { f: '調味料', q: '塩の はたらきで ないのは？', a: '食材を あまく する', x: ['水分を 出す', 'たんぱく質を 固める', 'くさりにくく する'], e: 'ただし ほんの 少しの 塩は 甘みを 引き立てる（対比効果）。すいかに 塩、あんこに 塩。' },
+        { f: '調味料', q: '照り焼きの ぴかぴかの ツヤを 出すのは？', a: 'みりん（と 砂糖）', x: ['酢', '塩', 'こしょう'], e: 'みりんは 上品な 甘み・てり・くさみ消し・煮くずれ防止の 4役。' },
+        { f: '調味料', q: '昆布の うま味の 成分は？', a: 'グルタミン酸', x: ['イノシン酸', 'グアニル酸', 'クエン酸'], e: 'かつお節は イノシン酸、干ししいたけは グアニル酸。合わせると うま味が ぐんと 強く なる。' },
+        { f: '調味料', q: 'ちがう 種類の だしを 合わせると どう なる？', a: 'うま味が 足し算 より ずっと 強く なる', x: ['味が けんかして 弱く なる', '何も 変わらない', '苦く なる'], e: 'これを 相乗効果と いう。昆布＋かつお節の「合わせだし」が 和食の 基本。' },
+        { f: '調味料', q: 'とうがらしの「からい」は なぜ 水を 飲んでも 消えにくい？', a: '味では なく 痛みで、水に とけにくい 成分だから', x: ['冷たいと 強く なる から', '舌が こわれる から', '水と まざると ふえる から'], e: 'あぶらや 牛にゅうの ほうが とけやすく、やわらぐ。' },
+        { f: '調味料', q: '酢の はたらきで 正しいのは？', a: 'くさりにくく し、れんこんを 白く する', x: ['甘みを 足す', '油を ふやす', '色を 茶色に する'], e: 'すし飯や ピクルスは 酢の 保存の 力を 使って いる。魚の 小骨も やわらかく なる。' },
+        { f: '調味料', q: '油と いっしょに とると 吸収が よく なる 栄養は？', a: 'ビタミンA・D・E・K', x: ['ビタミンC', 'カルシウム', '食物せんい'], e: 'にんじんや かぼちゃは 油で 炒めると 栄養を 取りやすい。' },
+
+        { f: '給食', q: 'カレーの ルーを 入れる とき 火を 止めるのは なぜ？', a: 'とろみの もとが だまに ならない ため', x: ['やけど しない ため', '早く できる ため', '色が よく なる ため'], e: 'でんぷんは 熱い ところで いっきに 固まる ので、かたまりに なりやすい。' },
+        { f: '給食', q: 'みそ汁の みそは いつ 入れる？', a: '火を 止めて から とかす', x: ['最初に だしと いっしょに', 'ふっとうさせながら 10分', '食べる 人が 自分で'], e: '煮立てると 香りが とんで、つぶつぶに なる。「煮えばな」が おいしい。' },
+        { f: '給食', q: '揚げパンを 油に 入れる 時間は およそ？', a: '10〜20秒', x: ['3分', '10分', '30分'], e: '長いと 油を すいすぎて 重く なる。あついうちに きなこ砂糖を まぜる。' },
+        { f: '給食', q: 'スープで にんじんと キャベツ、先に 入れるのは？', a: 'にんじん（かたい ほう）', x: ['キャベツ', '同時', 'どちらでも 同じ'], e: '火の 通りにくい ものから 入れると、ぜんぶが ちょうど よく 仕上がる。' },
+        { f: '給食', q: '切り干し大根を 干すと どう なる？', a: 'うま味と 栄養が こくなる', x: ['栄養が なくなる', '味が うすく なる', '色が 白く なる'], e: 'カルシウムは 生の 大根の 20倍以上。もどし汁も だしに つかえる。' },
+        { f: '給食', q: 'フルーツポンチに サイダーを 入れる タイミングは？', a: '食べる 直前', x: ['いちばん 最初', '前の 日', '冷やす 前'], e: '泡（二酸化炭素）が ぬける。冷たいほど よく とけて いられるので、よく 冷やして おく。' },
+        { f: '給食', q: '4人分の レシピで 6人分 作る とき、分量は？', a: '1.5倍に する', x: ['そのまま', '2倍に する', '半分に する'], e: '6 ÷ 4 ＝ 1.5。水や 調味料も 同じ 倍に する。ただし 鍋の 大きさにも 気をつける。' },
+        { f: '給食', q: '料理の 前に いちばん 先に する ことは？', a: '石けんで 20秒 手を 洗う', x: ['包丁を 出す', '火を つける', '味見を する'], e: 'つめは 短く。生の 肉や 魚を さわった あとも その たびに 洗う。' },
+        { f: '給食', q: '給食の こんだてが 主食・主菜・副菜・牛にゅうで 組まれて いる りゆうは？', a: '栄養の バランスを とる ため', x: ['見た目が よい から', '安く なる から', '作りやすい から'], e: '主食＝エネルギー、主菜＝たんぱく質、副菜＝ビタミンと ミネラル、牛にゅう＝カルシウム。' }
+    ];
+    let qz = null, qzField = 'all';
+    function newQuiz() {
+        const pool = qzField === 'all' ? QS : QS.filter(q => q.f === qzField);
+        const q = pool[rnd(pool.length)];
+        qz = { q, choices: shuffle([q.a].concat(q.x)), done: false };
+        const fields = ['all'].concat([...new Set(QS.map(x => x.f))]);
+        document.getElementById('qz-fields').innerHTML = fields.map(f =>
+            `<button onclick="setField('${f}')" data-qf="${f}" class="${qzField === f ? 'bg-orange-600 text-white' : 'bg-white border-2 border-orange-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${f === 'all' ? 'ぜんぶ ' + QS.length : f + ' ' + QS.filter(x => x.f === f).length}</button>`).join('');
+        document.getElementById('qz-q').innerHTML = `<span class="text-xs font-black text-orange-700 bg-orange-100 px-2 py-1 rounded-lg mr-2">${esc(q.f)}</span>${esc(q.q)}`;
+        document.getElementById('qz-choices').innerHTML = qz.choices.map((c, i) =>
+            `<button onclick="ansQuiz(${i})" data-qzc="${i}" class="bg-white border-2 border-slate-200 hover:border-orange-500 font-bold text-left px-4 py-3 rounded-2xl bounce-hover">${esc(c)}</button>`).join('');
+        document.getElementById('qz-res').innerHTML = '';
+        scoreBox('qz-score', S.quiz);
+    }
+    function setField(f) { qzField = f; newQuiz(); }
+    function ansQuiz(i) {
+        if (!qz || qz.done) return;
+        qz.done = true;
+        const ok = qz.choices[i] === qz.q.a;
+        S.quiz[1]++; if (ok) S.quiz[0]++;
+        markChoices('[data-qzc]', j => qz.choices[j] === qz.q.a, i, 'font-bold text-left px-4 py-3 rounded-2xl');
+        document.getElementById('qz-res').innerHTML = resultBox(ok, ok ? '⭕ せいかい！' : `❌ こたえは 「${esc(qz.q.a)}」`, qz.q.e);
+        scoreBox('qz-score', S.quiz);
+    }
+
+    /* ===================== 起動 ===================== */
+    renderNav();
+    safeDraw();
+    setCut(0);
+    rubify(document.body);
+</script>
+</body>
+</html>
