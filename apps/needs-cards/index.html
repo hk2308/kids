@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>きもち・ねがいカード</title>
+    <meta name="description" content="自分の気もちを言葉にして、その裏にある「ねがい（ニーズ）」を見つけるカード。見たこと・きもち・ねがい・おねがいの4ステップで、けんかにならない伝え方を練習できる。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums }
+        .bounce-hover { transition: transform .12s cubic-bezier(.175,.885,.32,1.275) }
+        .bounce-hover:active { transform: scale(.94) }
+        @keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.1) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275) }
+        rt { font-size: .55em; font-weight: 700; color: #be185d }
+        .card { transition: transform .12s cubic-bezier(.175,.885,.32,1.275) }
+        .card:active { transform: scale(.94) }
+    </style>
+</head>
+<body class="bg-rose-50 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-rose-500 via-pink-500 to-fuchsia-500 text-white p-3 shadow-lg sticky top-0 z-30">
+        <div class="max-w-4xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">💗</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">きもち・ねがいカード</h1>
+                    <p class="text-xs text-rose-50 font-bold hidden sm:block">気もちの うしろには かならず「ねがい」が ある</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[64px] z-20 bg-rose-50/95 backdrop-blur border-b border-rose-200">
+        <div class="max-w-4xl mx-auto flex gap-2 p-3 overflow-x-auto" id="tab-nav"></div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto w-full p-3 sm:p-5 flex-grow space-y-4">
+
+        <!-- ===== ① きもちカード ===== -->
+        <section id="tab-feel" class="space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-rose-100">
+                <h2 class="font-black">😊 きもちカード</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    気もちに <b class="text-rose-600">名前を つける</b>だけで、心は 少し 落ち着く。
+                    カードを タップすると、どんな ときの 気もちか・体は どう 感じるか・
+                    うしろに ある <b class="text-rose-600">ねがい</b>が 出るよ。
+                </p>
+                <div id="fe-chips" class="flex flex-wrap gap-2 mt-3"></div>
+                <input id="fe-search" type="search" placeholder="🔍 気もちを さがす"
+                    class="w-full border-2 border-rose-200 rounded-xl px-3 py-2 font-bold text-sm mt-3 focus:outline-none focus:border-rose-500">
+                <div id="fe-detail" class="mt-3"></div>
+                <div id="fe-grid" class="grid grid-cols-3 sm:grid-cols-5 gap-2 mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ② ねがいカード ===== -->
+        <section id="tab-need" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-rose-100">
+                <h2 class="font-black">🌱 ねがい（ニーズ）カード</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    <b class="text-rose-600">ねがい</b>は だれの 心にも ある、大事に したい こと。
+                    だれの せいでも なく、「わたしが こう したい」という 形で 言えるのが ねがい。
+                </p>
+                <div id="ne-chips" class="flex flex-wrap gap-2 mt-3"></div>
+                <div id="ne-list" class="grid sm:grid-cols-2 gap-2 mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ③ さがす ===== -->
+        <section id="tab-find" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-rose-100">
+                <h2 class="font-black">🔎 きもち から ねがいを さがす</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    「いやな 気もち」は わるい ものでは なく、
+                    <b class="text-rose-600">大事な ねがいが まだ かなって いない よ</b>と 教えて くれる サイン。
+                </p>
+                <p class="text-xs font-black text-slate-600 mt-3">① いまの 気もちは？</p>
+                <div id="fi-feels" class="flex flex-wrap gap-1.5 mt-1"></div>
+                <div id="fi-step2" class="mt-3"></div>
+                <div id="fi-result" class="mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ④ 4つのステップ ===== -->
+        <section id="tab-say" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-rose-100">
+                <h2 class="font-black">💬 けんかに ならない 伝え方（4つの ステップ）</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    ①見たこと → ②きもち → ③ねがい → ④おねがい の じゅんに 言うと、
+                    相手を せめずに 気もちが つたわる。
+                </p>
+                <div class="flex flex-wrap gap-2 mt-3" id="sa-presets"></div>
+                <div id="sa-steps" class="space-y-3 mt-3"></div>
+                <div class="bg-rose-100 border-2 border-rose-300 rounded-2xl p-4 mt-3">
+                    <p class="text-xs font-black text-rose-800">できた 伝え方</p>
+                    <p id="sa-out" class="font-black text-base sm:text-lg mt-1 leading-loose"></p>
+                </div>
+                <div id="sa-tips" class="space-y-2 mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ⑤ きょうの きもち ===== -->
+        <section id="tab-log" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-rose-100">
+                <h2 class="font-black">📔 きょうの きもち</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    きょうの 気もちを えらんで のこして おこう。
+                    あとで 見かえすと、自分の こころの くせが 見えて くる。
+                    （この ブラウザだけに ほぞんされる）
+                </p>
+                <p id="lo-date" class="font-black text-rose-700 mt-3"></p>
+                <div id="lo-pick" class="flex flex-wrap gap-1.5 mt-2"></div>
+                <div class="flex flex-wrap gap-2 mt-3">
+                    <button onclick="saveLog()" class="bg-gradient-to-r from-rose-500 to-pink-600 text-white font-black px-4 py-2 rounded-xl border-b-4 border-rose-800 bounce-hover text-sm">💾 きょうの きもちを のこす</button>
+                    <button onclick="clearLog()" class="bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-2 rounded-xl text-sm bounce-hover">きろくを ぜんぶ 消す</button>
+                </div>
+                <p id="lo-msg" class="font-black text-center mt-2 min-h-[1.5rem] text-sm"></p>
+                <div id="lo-hist" class="mt-3 space-y-1.5"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center text-xs text-slate-400 font-bold p-4">きもち・ねがいカード © 2026</footer>
+
+<script>
+    /* ===================== きょうつう ===================== */
+    const rnd = n => Math.floor(Math.random() * n);
+    function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+    /* 漢字{よみ} を ルビに */
+    const RUBY_RE = /([一-鿿々]+)\{([^{}]+)\}/g;
+    function rubySkip(el) {
+        for (let n = el; n; n = n.parentNode) {
+            const tag = n.nodeType === 1 ? n.tagName.toLowerCase() : '';
+            if (tag === 'script' || tag === 'style' || tag === 'svg' || tag === 'ruby' || tag === 'input' || tag === 'textarea') return true;
+        }
+        return false;
+    }
+    function rubifyText(node) {
+        const t = node.nodeValue;
+        if (t.indexOf('{') < 0 || !node.parentNode || rubySkip(node.parentNode)) return;
+        RUBY_RE.lastIndex = 0;
+        if (!RUBY_RE.test(t)) return;
+        RUBY_RE.lastIndex = 0;
+        const frag = document.createDocumentFragment();
+        let last = 0, m;
+        while ((m = RUBY_RE.exec(t))) {
+            if (m.index > last) frag.appendChild(document.createTextNode(t.slice(last, m.index)));
+            const ruby = document.createElement('ruby');
+            ruby.appendChild(document.createTextNode(m[1]));
+            const rt = document.createElement('rt');
+            rt.textContent = m[2];
+            ruby.appendChild(rt);
+            frag.appendChild(ruby);
+            last = m.index + m[0].length;
+        }
+        if (last < t.length) frag.appendChild(document.createTextNode(t.slice(last)));
+        node.parentNode.replaceChild(frag, node);
+    }
+    function rubify(root) {
+        if (root.nodeType === 3) return rubifyText(root);
+        if (root.nodeType !== 1 || rubySkip(root)) return;
+        const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        const list = [];
+        while (w.nextNode()) if (w.currentNode.nodeValue.indexOf('{') >= 0) list.push(w.currentNode);
+        list.forEach(rubifyText);
+    }
+    new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(rubify)))
+        .observe(document.body, { childList: true, subtree: true });
+
+    /* ===================== ねがい（ニーズ） ===================== */
+    const NGROUPS = [
+        ['つながり', '🤝', 'bg-rose-50 border-rose-200', 'bg-rose-600'],
+        ['からだ', '🍚', 'bg-amber-50 border-amber-200', 'bg-amber-600'],
+        ['あんしん', '🛡️', 'bg-sky-50 border-sky-200', 'bg-sky-600'],
+        ['じゆう', '🕊️', 'bg-teal-50 border-teal-200', 'bg-teal-600'],
+        ['いみ', '🌟', 'bg-violet-50 border-violet-200', 'bg-violet-600'],
+        ['たのしみ', '🎈', 'bg-lime-50 border-lime-200', 'bg-lime-600']
+    ];
+    const NEEDS = [
+        { g: 'つながり', w: '話を 聞いて ほしい', d: 'さいごまで だまって 聞いて もらえると うれしい。' },
+        { g: 'つながり', w: 'わかって ほしい', d: '「そう だったんだね」と 気もちを わかって もらいたい。' },
+        { g: 'つながり', w: 'いっしょに いたい', d: 'ひとりでは なく、だれかと 同じ 時間を すごしたい。' },
+        { g: 'つながり', w: 'なかよく したい', d: 'けんかの ままでは なく、また 仲よく なりたい。' },
+        { g: 'つながり', w: 'みとめて ほしい', d: 'がんばった ことに 気づいて もらいたい。' },
+        { g: 'つながり', w: '大切に されたい', d: '自分は ここに いて いいんだと 感じたい。' },
+        { g: 'つながり', w: 'ゆるして ほしい', d: 'まちがえた けれど、もう一度 やりなおしたい。' },
+        { g: 'からだ', w: 'ねたい・休みたい', d: 'つかれた からだを やすめたい。' },
+        { g: 'からだ', w: '食べたい', d: 'おなかが すいて いる。まず 食べる ことが 先。' },
+        { g: 'からだ', w: 'うごきたい', d: 'からだを 動かして すっきり したい。' },
+        { g: 'からだ', w: 'さわられたくない', d: '自分の からだの きょりを まもりたい。' },
+        { g: 'からだ', w: '元気に なりたい', d: 'いたい・くるしいのが なおって ほしい。' },
+        { g: 'あんしん', w: '安全で いたい', d: 'こわい ことが 起きないと 思って いたい。' },
+        { g: 'あんしん', w: 'はっきり させたい', d: 'どう なるのかを 知って おきたい。' },
+        { g: 'あんしん', w: 'いつもと 同じで いたい', d: '急に 変わらない ことで 落ち着きたい。' },
+        { g: 'あんしん', w: 'たすけて ほしい', d: 'ひとりでは むずかしい。手を かして ほしい。' },
+        { g: 'あんしん', w: '信じたい', d: 'やくそくが まもられると 思って いたい。' },
+        { g: 'じゆう', w: '自分で 決めたい', d: '人に 言われるのでは なく、自分で えらびたい。' },
+        { g: 'じゆう', w: 'ひとりに なりたい', d: '少しの あいだ、だれとも 話さず すごしたい。' },
+        { g: 'じゆう', w: 'じゆうに やりたい', d: '決められた やり方では なく、好きな やり方で。' },
+        { g: 'じゆう', w: '自分らしく いたい', d: 'むりに だれかの まねを しなくて いいと 感じたい。' },
+        { g: 'いみ', w: 'できるように なりたい', d: 'うまく なりたい。成長を 感じたい。' },
+        { g: 'いみ', w: '役に 立ちたい', d: 'だれかの ために なって いると 感じたい。' },
+        { g: 'いみ', w: 'わかりたい', d: 'なぜ そう なるのかを 知って すっきり したい。' },
+        { g: 'いみ', w: 'こうへいで いたい', d: 'みんなが 同じように あつかわれて ほしい。' },
+        { g: 'いみ', w: '目あてを はたしたい', d: '決めた ことを 最後まで やりきりたい。' },
+        { g: 'たのしみ', w: 'あそびたい', d: 'ただ 楽しい ことを したい。' },
+        { g: 'たのしみ', w: 'わらいたい', d: 'おかしくて 声を あげて わらいたい。' },
+        { g: 'たのしみ', w: 'あたらしい ことが したい', d: 'まだ 知らない ことに ふれて みたい。' },
+        { g: 'たのしみ', w: 'きれいな ものを 見たい', d: '心が うるおう ものに ふれたい。' }
+    ];
+    const needByWord = w => NEEDS.find(n => n.w === w);
+
+    /* ===================== きもち ===================== */
+    // pos:true = ねがいが かなって いる とき / false = まだ かなって いない とき
+    const FEELS = [
+        { w: 'うれしい', e: '😊', pos: true, when: 'ほしかった ことが かなった とき', body: 'むねが あたたかく なる', needs: ['みとめて ほしい', 'わかって ほしい'] },
+        { w: 'たのしい', e: '😄', pos: true, when: '好きな ことを して いる とき', body: 'からだが 軽く なる', needs: ['あそびたい', 'わらいたい'] },
+        { w: 'わくわく', e: '🤩', pos: true, when: '楽しみな ことが 近い とき', body: 'むねが どきどき する', needs: ['あたらしい ことが したい', 'あそびたい'] },
+        { w: 'あんしん', e: '😌', pos: true, when: 'こわい ことが ないと わかった とき', body: '肩の 力が ぬける', needs: ['安全で いたい', '信じたい'] },
+        { w: 'ほっとした', e: '😮‍💨', pos: true, when: 'しんぱいが なくなった とき', body: '大きく いきが できる', needs: ['はっきり させたい', '安全で いたい'] },
+        { w: 'しあわせ', e: '🥰', pos: true, when: '大切な 人と いる とき', body: 'むねが いっぱいに なる', needs: ['いっしょに いたい', '大切に されたい'] },
+        { w: 'げんき', e: '💪', pos: true, when: 'よく ねて よく 食べた とき', body: 'からだが 軽い', needs: ['ねたい・休みたい', 'うごきたい'] },
+        { w: 'ありがたい', e: '🙏', pos: true, when: 'だれかに 助けて もらった とき', body: 'むねが じんと する', needs: ['たすけて ほしい', 'いっしょに いたい'] },
+        { w: 'ほこらしい', e: '😤', pos: true, when: 'がんばりが みのった とき', body: 'せなかが のびる', needs: ['できるように なりたい', 'みとめて ほしい', '役に 立ちたい'] },
+        { w: 'まんぞく', e: '😋', pos: true, when: 'やりたい ことを やりきった とき', body: 'おなかの あたりが 落ち着く', needs: ['目あてを はたしたい', '食べたい'] },
+        { w: 'きょうみしんしん', e: '🤔', pos: true, when: '知らない ことに 出あった とき', body: '目が ひらく', needs: ['わかりたい', 'あたらしい ことが したい'] },
+        { w: 'やる気が ある', e: '🔥', pos: true, when: '目あてが はっきり した とき', body: '手に 力が 入る', needs: ['目あてを はたしたい', 'できるように なりたい'] },
+        { w: 'のびのび', e: '🕊️', pos: true, when: 'じゆうに して いい とき', body: 'からだが ゆるむ', needs: ['じゆうに やりたい', '自分らしく いたい'] },
+        { w: 'かんどうした', e: '🥲', pos: true, when: '心を 打つ ものに ふれた とき', body: '目が あつく なる', needs: ['きれいな ものを 見たい', 'わかって ほしい'] },
+        { w: 'おちついた', e: '🧘', pos: true, when: 'しずかに すごせた とき', body: 'こきゅうが ゆっくりに なる', needs: ['ひとりに なりたい', 'ねたい・休みたい'] },
+
+        { w: 'かなしい', e: '😢', pos: false, when: '大事な ものを なくした とき', body: 'むねが きゅっと なる', needs: ['わかって ほしい', '大切に されたい'] },
+        { w: 'さみしい', e: '🥺', pos: false, when: 'ひとりに された とき', body: 'むねに あなが あく ような 感じ', needs: ['いっしょに いたい', '話を 聞いて ほしい'] },
+        { w: 'くやしい', e: '😣', pos: false, when: 'もう少しで できそうだった とき', body: '歯を かみしめる', needs: ['できるように なりたい', '目あてを はたしたい'] },
+        { w: 'はらが立つ', e: '😠', pos: false, when: '大事に して いる ことを こわされた とき', body: '顔が あつく なる', needs: ['こうへいで いたい', '大切に されたい'] },
+        { w: 'いらいら', e: '😤', pos: false, when: '思うように すすまない とき', body: '肩が こわばる', needs: ['自分で 決めたい', 'ねたい・休みたい'] },
+        { w: 'こわい', e: '😨', pos: false, when: 'なにか わるい ことが 起きそうな とき', body: 'こしが ふるえる', needs: ['安全で いたい', 'たすけて ほしい'] },
+        { w: 'しんぱい', e: '😟', pos: false, when: '先が どう なるか わからない とき', body: 'おなかが きゅっと なる', needs: ['はっきり させたい', '安全で いたい', 'いつもと 同じで いたい'] },
+        { w: 'きんちょう', e: '😬', pos: false, when: 'はっぴょうや しあいの 前', body: 'のどが かわく', needs: ['できるように なりたい', 'たすけて ほしい'] },
+        { w: 'はずかしい', e: '😳', pos: false, when: 'みんなの 前で まちがえた とき', body: '顔が 赤く なる', needs: ['みとめて ほしい', 'ゆるして ほしい'] },
+        { w: 'がっかり', e: '😞', pos: false, when: '楽しみが なくなった とき', body: 'からだが おもく なる', needs: ['信じたい', 'はっきり させたい'] },
+        { w: 'つまらない', e: '🥱', pos: false, when: 'やる ことが ない とき', body: 'ぼーっと する', needs: ['あそびたい', 'あたらしい ことが したい'] },
+        { w: 'つかれた', e: '😮‍💨', pos: false, when: 'ずっと がんばった あと', body: 'まぶたが おもい', needs: ['ねたい・休みたい', 'ひとりに なりたい', '元気に なりたい'] },
+        { w: 'もやもや', e: '😕', pos: false, when: '言いたい ことが 言えなかった とき', body: 'むねに なにか つまる', needs: ['話を 聞いて ほしい', 'わかって ほしい'] },
+        { w: 'こんらん', e: '😵‍💫', pos: false, when: '何を したら いいか わからない とき', body: 'あたまが ぐるぐる する', needs: ['わかりたい', 'はっきり させたい'] },
+        { w: 'きずついた', e: '💔', pos: false, when: 'ひどい ことを 言われた とき', body: 'むねが いたい', needs: ['大切に されたい', 'わかって ほしい'] },
+        { w: 'うらやましい', e: '😔', pos: false, when: '人が もって いる ものが ほしい とき', body: 'むねが ざわざわ する', needs: ['こうへいで いたい', 'みとめて ほしい'] },
+        { w: 'あせる', e: '😰', pos: false, when: '時間が たりない とき', body: 'むねが 早く うつ', needs: ['たすけて ほしい', '目あてを はたしたい'] },
+        { w: 'ひとりぼっち', e: '😶', pos: false, when: 'なかまに 入れなかった とき', body: 'からだが 冷たく なる', needs: ['なかよく したい', 'いっしょに いたい'] },
+        { w: 'いやだ', e: '🙁', pos: false, when: 'したくない ことを させられた とき', body: 'からだが かたく なる', needs: ['自分で 決めたい', 'じゆうに やりたい', 'さわられたくない'] },
+        { w: 'ざんねん', e: '😔', pos: false, when: 'うまく いかなかった とき', body: 'ため息が 出る', needs: ['目あてを はたしたい', 'できるように なりたい'] }
+    ];
+
+    const TABS = { feel: '😊 きもちカード', need: '🌱 ねがいカード', find: '🔎 さがす', say: '💬 つたえ方', log: '📔 きょうの きもち' };
+    let tab = 'feel';
+    function renderNav() {
+        document.getElementById('tab-nav').innerHTML = Object.entries(TABS).map(([k, label]) =>
+            `<button onclick="setTab('${k}')" data-tab="${k}" class="${tab === k ? 'bg-rose-600 text-white' : 'bg-white border-2 border-rose-200 text-slate-600'} font-black px-4 py-2 rounded-full text-sm whitespace-nowrap bounce-hover">${label}</button>`).join('');
+    }
+    function setTab(k) {
+        tab = k;
+        Object.keys(TABS).forEach(t => document.getElementById('tab-' + t).classList.toggle('hidden', t !== k));
+        renderNav();
+        if (k === 'need' && !neReady) { drawNeeds(); neReady = true; }
+        if (k === 'find' && !fiReady) { drawFind(); fiReady = true; }
+        if (k === 'say' && !saReady) { drawSay(); saReady = true; }
+        if (k === 'log' && !loReady) { drawLog(); loReady = true; }
+    }
+
+    /* =====================================================================
+       ① きもちカード
+       ===================================================================== */
+    let feKind = 'all', feQ = '', feSel = null;
+    function drawFeels() {
+        const kinds = [['all', 'ぜんぶ', 'bg-slate-700'], ['pos', '🌞 かなって いる とき', 'bg-emerald-600'], ['neg', '🌧️ まだ かなって いない とき', 'bg-indigo-600']];
+        document.getElementById('fe-chips').innerHTML = kinds.map(([k, label, col]) => {
+            const n = k === 'all' ? FEELS.length : FEELS.filter(f => (k === 'pos') === f.pos).length;
+            return `<button onclick="setFe('${k}')" data-fe="${k}" class="${feKind === k ? col + ' text-white' : 'bg-white border-2 border-slate-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${label} <span class="num opacity-80">${n}</span></button>`;
+        }).join('');
+        const list = FEELS.filter(f =>
+            (feKind === 'all' || (feKind === 'pos') === f.pos) &&
+            (!feQ || (f.w + f.when + f.body + f.needs.join('')).indexOf(feQ) >= 0));
+        document.getElementById('fe-grid').innerHTML = list.map(f =>
+            `<button onclick="openFeel('${encodeURIComponent(f.w)}')" data-feel="${esc(f.w)}"
+                class="card ${feSel === f.w ? (f.pos ? 'bg-emerald-100 border-emerald-500' : 'bg-indigo-100 border-indigo-500') : (f.pos ? 'bg-emerald-50 border-emerald-200' : 'bg-indigo-50 border-indigo-200')} border-2 rounded-2xl p-2 text-center">
+                <span class="text-2xl sm:text-3xl block">${f.e}</span>
+                <span class="font-black text-[11px] sm:text-xs leading-tight block mt-1">${esc(f.w)}</span>
+            </button>`).join('') || `<p class="col-span-full text-center font-black text-slate-400 py-6">見つかりませんでした</p>`;
+        const f = FEELS.find(x => x.w === feSel);
+        document.getElementById('fe-detail').innerHTML = f
+            ? `<div class="pop ${f.pos ? 'bg-emerald-50 border-emerald-300' : 'bg-indigo-50 border-indigo-300'} border-2 rounded-2xl p-4">
+                <p class="font-black text-xl">${f.e} ${esc(f.w)}
+                    <span class="text-xs ml-2 ${f.pos ? 'text-emerald-700' : 'text-indigo-700'}">${f.pos ? 'ねがいが かなって いる とき' : 'ねがいが まだ かなって いない とき'}</span></p>
+                <p class="text-sm font-bold text-slate-600 mt-2">🕐 こんな とき … ${esc(f.when)}</p>
+                <p class="text-sm font-bold text-slate-600">🫀 からだの 感じ … ${esc(f.body)}</p>
+                <p class="text-sm font-black text-rose-700 mt-2">🌱 うしろに ある ねがい</p>
+                <div class="flex flex-wrap gap-1.5 mt-1">
+                    ${f.needs.map(n => `<span class="bg-white border-2 border-rose-200 text-rose-800 font-black px-2.5 py-1 rounded-lg text-xs" data-fneed="${esc(n)}">${esc(n)}</span>`).join('')}
+                </div>
+               </div>`
+            : `<p class="text-sm font-bold text-slate-400">カードを タップして みよう。</p>`;
+    }
+    function setFe(k) { feKind = k; drawFeels(); }
+    function openFeel(enc) {
+        const w = decodeURIComponent(enc);
+        feSel = feSel === w ? null : w;
+        drawFeels();
+    }
+
+    /* =====================================================================
+       ② ねがいカード
+       ===================================================================== */
+    let neReady = false, neGroup = 'all';
+    function drawNeeds() {
+        const chips = [['all', '🌱 ぜんぶ', 'bg-slate-700']].concat(NGROUPS.map(g => [g[0], g[1] + ' ' + g[0], g[3]]));
+        document.getElementById('ne-chips').innerHTML = chips.map(([k, label, col]) => {
+            const n = k === 'all' ? NEEDS.length : NEEDS.filter(x => x.g === k).length;
+            return `<button onclick="setNe('${k}')" data-ne="${k}" class="${neGroup === k ? col + ' text-white' : 'bg-white border-2 border-slate-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${label} <span class="num opacity-80">${n}</span></button>`;
+        }).join('');
+        const list = NEEDS.filter(n => neGroup === 'all' || n.g === neGroup);
+        document.getElementById('ne-list').innerHTML = list.map(n => {
+            const g = NGROUPS.find(x => x[0] === n.g);
+            return `<div class="${g[2]} border-2 rounded-2xl p-3" data-need="${esc(n.w)}">
+                <p class="font-black">${g[1]} ${esc(n.w)}</p>
+                <p class="text-sm font-bold text-slate-600 mt-0.5 leading-relaxed">${esc(n.d)}</p>
+                <p class="text-[10px] font-black text-slate-400 mt-1">#${esc(n.g)}</p>
+            </div>`;
+        }).join('');
+    }
+    function setNe(k) { neGroup = k; drawNeeds(); }
+
+    /* =====================================================================
+       ③ さがす
+       ===================================================================== */
+    let fiReady = false, fiFeel = null, fiNeed = null;
+    function drawFind() {
+        document.getElementById('fi-feels').innerHTML = FEELS.map(f =>
+            `<button onclick="pickFiFeel('${encodeURIComponent(f.w)}')" data-fif="${esc(f.w)}"
+                class="${fiFeel === f.w ? 'bg-rose-600 text-white border-rose-700' : 'bg-white border-slate-200 text-slate-600'} border-2 font-black px-2.5 py-1.5 rounded-xl text-xs bounce-hover">${f.e} ${esc(f.w)}</button>`).join('');
+        const f = FEELS.find(x => x.w === fiFeel);
+        document.getElementById('fi-step2').innerHTML = f
+            ? `<p class="text-xs font-black text-slate-600">② この 気もちの うしろに ある ねがいは どれ？</p>
+               <div class="flex flex-wrap gap-1.5 mt-1">
+                 ${f.needs.map(n => `<button onclick="pickFiNeed('${encodeURIComponent(n)}')" data-fin="${esc(n)}"
+                    class="${fiNeed === n ? 'bg-rose-600 text-white border-rose-700' : 'bg-white border-rose-200 text-rose-800'} border-2 font-black px-3 py-2 rounded-xl text-xs bounce-hover">🌱 ${esc(n)}</button>`).join('')}
+                 <button onclick="pickFiNeed('other')" data-fin="other"
+                    class="${fiNeed === 'other' ? 'bg-slate-700 text-white border-slate-800' : 'bg-white border-slate-200 text-slate-500'} border-2 font-black px-3 py-2 rounded-xl text-xs bounce-hover">ほかにも ありそう</button>
+               </div>`
+            : `<p class="text-sm font-bold text-slate-400">まず 気もちを えらんでね。</p>`;
+        if (f && fiNeed) {
+            const nd = fiNeed === 'other' ? null : needByWord(fiNeed);
+            document.getElementById('fi-result').innerHTML =
+                `<div class="pop bg-rose-100 border-2 border-rose-300 rounded-2xl p-4">
+                    <p class="font-black text-base sm:text-lg leading-loose">
+                        わたしは いま <b class="text-rose-700">${f.e} ${esc(f.w)}</b>。<br>
+                        それは <b class="text-rose-700">${fiNeed === 'other' ? '大事な ねがい' : '「' + esc(fiNeed) + '」'}</b> が
+                        まだ かなって いないから。</p>
+                    ${nd ? `<p class="text-sm font-bold text-slate-600 mt-2">🌱 ${esc(nd.d)}</p>` : ''}
+                    <p class="text-sm font-bold text-slate-600 mt-2">
+                        ここまで わかれば、つぎは「どう して ほしいか」を ことばに して みよう。
+                        <b>💬 つたえ方</b>タブの 4ステップが 使えるよ。</p>
+                    ${f.pos ? '' : `<p class="text-xs font-bold text-slate-500 mt-2">
+                        気もちは わるい ものでは ない。ねがいを 教えて くれる サインだよ。</p>`}
+                 </div>`;
+        } else {
+            document.getElementById('fi-result').innerHTML = '';
+        }
+    }
+    function pickFiFeel(enc) { fiFeel = decodeURIComponent(enc); fiNeed = null; drawFind(); }
+    function pickFiNeed(enc) { fiNeed = enc === 'other' ? 'other' : decodeURIComponent(enc); drawFind(); }
+
+    /* =====================================================================
+       ④ つたえ方（4ステップ）
+       ===================================================================== */
+    let saReady = false;
+    const PRESETS = [
+        { n: '🧸 おもちゃを かってに つかわれた',
+          see: 'わたしが つくって いた ブロックを、だんまりで くずされた とき',
+          feel: 'かなしい', need: '大切に されたい', ask: 'つかう 前に ひとこと 聞いて' },
+        { n: '🎮 遊ぶ やくそくが 消えた',
+          see: '日よう日に 遊ぶ やくそくが、前の 日に なくなった とき',
+          feel: 'がっかり', need: '信じたい', ask: 'できなく なったら 早めに 教えて' },
+        { n: '🙋 なかまに 入れなかった',
+          see: '休み時間に わたしだけ さそわれなかった とき',
+          feel: 'ひとりぼっち', need: 'なかよく したい', ask: 'つぎは わたしも さそって' },
+        { n: '📝 宿題を せかされた',
+          see: '帰って すぐ「宿題は？」と 3回 言われた とき',
+          feel: 'いらいら', need: '自分で 決めたい', ask: 'おやつの あとで やる から、それまで 待って' },
+        { n: '😤 わるく 言われた',
+          see: 'みんなの 前で「へただね」と 言われた とき',
+          feel: 'きずついた', need: 'みとめて ほしい', ask: '気に なる ところは ふたりの ときに 教えて' }
+    ];
+    const say = { see: '', feel: '', need: '', ask: '' };
+    function drawSay() {
+        document.getElementById('sa-presets').innerHTML =
+            `<span class="text-xs font-black text-slate-500 self-center">れいから えらぶ：</span>` +
+            PRESETS.map((p, i) =>
+                `<button onclick="loadPreset(${i})" data-preset="${i}" class="bg-white border-2 border-rose-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${p.n}</button>`).join('');
+        document.getElementById('sa-steps').innerHTML = `
+            <div>
+                <p class="text-xs font-black text-slate-600">① 見たこと（カメラに うつる ことだけ。「いじわる」などの 決めつけは 書かない）</p>
+                <input id="sa-see" type="text" value="${esc(say.see)}" oninput="sayIn('see', this.value)"
+                    placeholder="れい: わたしの ブロックを だんまりで くずされた とき"
+                    class="w-full border-2 border-rose-200 rounded-xl px-3 py-2 font-bold text-sm mt-1 focus:outline-none focus:border-rose-500">
+            </div>
+            <div>
+                <p class="text-xs font-black text-slate-600">② きもち</p>
+                <div class="flex flex-wrap gap-1.5 mt-1 max-h-32 overflow-y-auto">
+                    ${FEELS.filter(f => !f.pos).map(f =>
+                        `<button onclick="sayIn('feel','${encodeURIComponent(f.w)}')" data-sfeel="${esc(f.w)}"
+                            class="${say.feel === f.w ? 'bg-indigo-600 text-white border-indigo-700' : 'bg-white border-slate-200 text-slate-600'} border-2 font-black px-2.5 py-1.5 rounded-xl text-xs bounce-hover">${f.e} ${esc(f.w)}</button>`).join('')}
+                </div>
+            </div>
+            <div>
+                <p class="text-xs font-black text-slate-600">③ ねがい</p>
+                <div class="flex flex-wrap gap-1.5 mt-1 max-h-32 overflow-y-auto">
+                    ${NEEDS.map(n =>
+                        `<button onclick="sayIn('need','${encodeURIComponent(n.w)}')" data-sneed="${esc(n.w)}"
+                            class="${say.need === n.w ? 'bg-rose-600 text-white border-rose-700' : 'bg-white border-rose-200 text-rose-800'} border-2 font-black px-2.5 py-1.5 rounded-xl text-xs bounce-hover">${esc(n.w)}</button>`).join('')}
+                </div>
+            </div>
+            <div>
+                <p class="text-xs font-black text-slate-600">④ おねがい（「〜しないで」では なく「〜して」の 形で。相手が えらべる たのみ方に する）</p>
+                <input id="sa-ask" type="text" value="${esc(say.ask)}" oninput="sayIn('ask', this.value)"
+                    placeholder="れい: つかう 前に ひとこと 聞いて"
+                    class="w-full border-2 border-rose-200 rounded-xl px-3 py-2 font-bold text-sm mt-1 focus:outline-none focus:border-rose-500">
+            </div>`;
+        drawSayOut();
+        document.getElementById('sa-tips').innerHTML = TIPS.map(([bad, good, why]) =>
+            `<div class="border-2 border-slate-200 rounded-2xl p-3" data-tip="${esc(bad)}">
+                <p class="text-sm font-black text-rose-600">✗ ${esc(bad)}</p>
+                <p class="text-sm font-black text-emerald-700 mt-0.5">○ ${esc(good)}</p>
+                <p class="text-xs font-bold text-slate-500 mt-1">${esc(why)}</p>
+            </div>`).join('');
+    }
+    const TIPS = [
+        ['きみは いじわるだ', 'だんまりで くずされて、わたしは かなしかった', '「きみは〜だ」は 決めつけ。見た ことと 自分の 気もちに 分けて 言う。'],
+        ['いつも わたしばかり', '今週 3回 わたしが かたづけた', '「いつも」「ぜんぜん」は 言いすぎに なりやすい。数や 回数で 言う。'],
+        ['きみの せいで はらが立つ', 'こうへいで いたいから、はらが立った', '気もちの もとは 相手では なく 自分の ねがい。そこを 言うと せめずに すむ。'],
+        ['ちゃんと して', 'ぬいだ くつを げた箱に 入れて', '「ちゃんと」は 人に よって ちがう。やって ほしい ことを 具体的に。'],
+        ['ぜったいに 〜しないで', '〜して くれると うれしい', '命令では なく たのみ方に すると、相手も「うん」と 言いやすい。']
+    ];
+    function loadPreset(i) {
+        const p = PRESETS[i];
+        say.see = p.see; say.feel = p.feel; say.need = p.need; say.ask = p.ask;
+        drawSay();
+    }
+    function drawSayOut() {
+        const f = FEELS.find(x => x.w === say.feel);
+        const miss = t => `<span class="text-slate-400">（${t}）</span>`;
+        document.getElementById('sa-out').innerHTML =
+            (say.see ? `<b>${esc(say.see)}</b>、` : miss('① 見たこと') + '、') +
+            `わたしは ${f ? `<b class="text-indigo-700">${f.e} ${esc(say.feel)}</b>` : miss('② きもち')} 。<br>` +
+            (say.need ? `<b class="text-rose-700">${esc(say.need)}</b>から、` : miss('③ ねがい') + 'から、') +
+            (say.ask ? `<b>${esc(say.ask)}</b> くれる？` : miss('④ おねがい') + ' くれる？');
+    }
+    function sayIn(k, v) {
+        say[k] = (k === 'feel' || k === 'need') ? decodeURIComponent(v) : v;
+        if (k === 'feel' || k === 'need') drawSay(); else drawSayOut();
+    }
+
+    /* =====================================================================
+       ⑤ きょうの きもち
+       ===================================================================== */
+    const KEY = 'needs-cards-v1';
+    let store = { log: {} };
+    try { const j = JSON.parse(localStorage.getItem(KEY)); if (j && j.log) store = j; } catch (e) { }
+    function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) { } }
+    const today = () => new Date().toISOString().slice(0, 10);
+    let loReady = false, loPick = [];
+    function drawLog() {
+        const d = today();
+        loPick = (store.log[d] || []).slice();
+        document.getElementById('lo-date').innerText = `${d}（きょう）`;
+        document.getElementById('lo-pick').innerHTML = FEELS.map(f =>
+            `<button onclick="togglePick('${encodeURIComponent(f.w)}')" data-lop="${esc(f.w)}"
+                class="${loPick.indexOf(f.w) >= 0 ? 'bg-rose-600 text-white border-rose-700' : 'bg-white border-slate-200 text-slate-600'} border-2 font-black px-2.5 py-1.5 rounded-xl text-xs bounce-hover">${f.e} ${esc(f.w)}</button>`).join('');
+        drawHist();
+    }
+    function drawHist() {
+        const days = Object.keys(store.log).sort().reverse().slice(0, 14);
+        document.getElementById('lo-hist').innerHTML = days.length
+            ? `<p class="text-xs font-black text-slate-600">さいきんの きろく（${days.length}日ぶん）</p>` +
+              days.map(d => {
+                  const fs = store.log[d].map(w => FEELS.find(f => f.w === w)).filter(Boolean);
+                  const nPos = fs.filter(f => f.pos).length;
+                  return `<div class="flex items-center gap-2 border-2 border-rose-100 rounded-xl px-3 py-2" data-day="${d}">
+                    <span class="num font-black text-xs w-20 shrink-0 text-slate-500">${d.slice(5)}</span>
+                    <span class="text-lg">${fs.map(f => f.e).join('')}</span>
+                    <span class="ml-auto text-[10px] font-black ${nPos >= fs.length - nPos ? 'text-emerald-600' : 'text-indigo-600'}">${nPos} / ${fs.length}</span>
+                  </div>`;
+              }).join('')
+            : `<p class="text-sm font-bold text-slate-400">まだ きろくが ないよ。</p>`;
+    }
+    function togglePick(enc) {
+        const w = decodeURIComponent(enc);
+        const i = loPick.indexOf(w);
+        if (i >= 0) loPick.splice(i, 1); else loPick.push(w);
+        document.querySelectorAll('[data-lop]').forEach(el => {
+            const on = loPick.indexOf(el.dataset.lop) >= 0;
+            el.className = `${on ? 'bg-rose-600 text-white border-rose-700' : 'bg-white border-slate-200 text-slate-600'} border-2 font-black px-2.5 py-1.5 rounded-xl text-xs bounce-hover`;
+        });
+    }
+    function saveLog() {
+        const d = today();
+        if (!loPick.length) {
+            document.getElementById('lo-msg').innerHTML = `<span class="text-slate-500">気もちを 1つ以上 えらんでね</span>`;
+            return;
+        }
+        store.log[d] = loPick.slice();
+        save();
+        document.getElementById('lo-msg').innerHTML = `<span class="text-rose-700">💾 ${d} の きもちを のこしたよ（${loPick.length}こ）</span>`;
+        drawHist();
+    }
+    function clearLog() {
+        store.log = {};
+        save();
+        loPick = [];
+        drawLog();
+        document.getElementById('lo-msg').innerHTML = `<span class="text-slate-500">きろくを ぜんぶ 消したよ</span>`;
+    }
+
+    /* ===================== 起動 ===================== */
+    renderNav();
+    drawFeels();
+    document.getElementById('fe-search').addEventListener('input', e => { feQ = e.target.value.trim(); drawFeels(); });
+    rubify(document.body);
+</script>
+</body>
+</html>
