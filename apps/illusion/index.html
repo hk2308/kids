@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>だまし絵ラボ</title>
+    <meta name="description" content="ミュラー・リヤー錯視やカフェウォール錯視など11の錯視を「たしかめる」ボタンで検証。ありえない図形、2つに見える絵、自分でかけるトリックアートの手順、クイズ。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums }
+        .bounce-hover { transition: transform .12s cubic-bezier(.175,.885,.32,1.275) }
+        .bounce-hover:active { transform: scale(.94) }
+        @keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.1) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275) }
+        @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+        .shake { animation: shake .3s ease-in-out }
+        svg text { font-family: inherit }
+        rt { font-size: .55em; font-weight: 700; color: #7c3aed }
+        input[type=range] { accent-color: #7c3aed; width: 100% }
+    </style>
+</head>
+<body class="bg-violet-50 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-violet-700 via-purple-600 to-fuchsia-500 text-white p-3 shadow-lg sticky top-0 z-30">
+        <div class="max-w-4xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">👁️</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">だまし絵ラボ</h1>
+                    <p class="text-xs text-violet-50 font-bold hidden sm:block">見えて いるのは 目では なく「脳が 作った 絵」</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[64px] z-20 bg-violet-50/95 backdrop-blur border-b border-violet-200">
+        <div class="max-w-4xl mx-auto flex gap-2 p-3 overflow-x-auto" id="tab-nav"></div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto w-full p-3 sm:p-5 flex-grow space-y-4">
+
+        <!-- ===== ① さっかく ===== -->
+        <section id="tab-illu" class="space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-violet-100">
+                <h2 class="font-black">👀 目を うたがって みよう</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    <b class="text-violet-700">錯覚{さっかく}（錯視{さくし}）</b>は、目の 病気でも 気の せいでも ない。
+                    脳が「まわりの ようす」から 勝手に 直して しまう から おきる。
+                    <b>たしかめる</b>を おすと、ほんとうの 形が 出るよ。
+                </p>
+                <div id="il-chips" class="flex flex-wrap gap-1.5 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-violet-100">
+                <h2 id="il-name" class="font-black text-lg"></h2>
+                <p id="il-q" class="text-sm font-bold text-violet-700 mt-1"></p>
+                <div id="il-fig" class="mt-3"></div>
+                <div class="flex flex-wrap gap-2 mt-2">
+                    <button onclick="ilProof(true)" data-pf="1" class="font-black px-4 py-2 rounded-full text-sm bounce-hover">🔍 たしかめる</button>
+                    <button onclick="ilProof(false)" data-pf="0" class="font-black px-4 py-2 rounded-full text-sm bounce-hover">🙈 もとに もどす</button>
+                </div>
+                <div id="il-ans" class="bg-violet-50 border-2 border-violet-200 rounded-2xl p-3 text-sm font-bold leading-relaxed mt-2"></div>
+                <div id="il-why" class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-3 text-sm font-bold leading-relaxed mt-2"></div>
+            </div>
+        </section>
+
+        <!-- ===== ② ありえない 図形 ===== -->
+        <section id="tab-imp" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-violet-100">
+                <h2 class="font-black">🔺 ありえない 図形</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    絵の <b class="text-violet-700">一部分ずつを 見ると どこも 正しい</b>のに、
+                    ぜんたいを つなぐと 作れない 立体に なる。脳が「部分」から 立体を 想像する くせを 利用した もの。
+                </p>
+                <div id="im-chips" class="flex flex-wrap gap-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-violet-100">
+                <h2 id="im-name" class="font-black text-lg"></h2>
+                <div id="im-fig" class="mt-3"></div>
+                <div id="im-ctrl" class="flex flex-wrap gap-2 mt-2"></div>
+                <div id="im-why" class="bg-violet-50 border-2 border-violet-200 rounded-2xl p-3 text-sm font-bold leading-relaxed mt-2"></div>
+            </div>
+        </section>
+
+        <!-- ===== ③ 2つに 見える ===== -->
+        <section id="tab-amb" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-violet-100">
+                <h2 class="font-black">🎭 2つに 見える絵・ない ものが 見える絵</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    同じ 絵なのに 見え方が 切りかわる。脳が いちどに 1つの 答えしか 選べない から。
+                </p>
+                <div id="am-chips" class="flex flex-wrap gap-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-violet-100">
+                <h2 id="am-name" class="font-black text-lg"></h2>
+                <div id="am-fig" class="mt-3"></div>
+                <div id="am-ctrl" class="flex flex-wrap gap-2 mt-2"></div>
+                <div id="am-why" class="bg-violet-50 border-2 border-violet-200 rounded-2xl p-3 text-sm font-bold leading-relaxed mt-2"></div>
+            </div>
+        </section>
+
+        <!-- ===== ④ かいて みよう ===== -->
+        <section id="tab-draw" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-violet-100">
+                <h2 class="font-black">✏️ 一点透視{いってんとうし}で 穴を あける</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    紙の 上の 1点（<b class="text-violet-700">消点{しょうてん}</b>）に 線を あつめると、
+                    おくに 続いて いる ように 見える。消点を 動かして みよう。
+                </p>
+                <div class="grid sm:grid-cols-2 gap-3 mt-3">
+                    <div><input type="range" min="110" max="450" step="10" value="280" id="pv-x" oninput="pvDraw()">
+                        <p class="text-xs font-black text-slate-600 text-center">消点 よこ <span id="pv-xv" class="num">280</span></p></div>
+                    <div><input type="range" min="80" max="230" step="10" value="150" id="pv-y" oninput="pvDraw()">
+                        <p class="text-xs font-black text-slate-600 text-center">消点 たて <span id="pv-yv" class="num">150</span></p></div>
+                </div>
+                <div id="pv-fig" class="mt-2"></div>
+                <div id="pv-info" class="bg-violet-50 border-2 border-violet-200 rounded-2xl p-3 text-sm font-bold leading-relaxed"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-violet-100">
+                <h2 class="font-black">🪞 ななめから 見ると 正しく 見える絵</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    地面に かく トリックアートは、<b class="text-violet-700">わざと たてに のばして</b> かいて ある。
+                    ボタンで 見る 角度を 変えて みよう。
+                </p>
+                <div id="an-fig" class="mt-3"></div>
+                <div id="an-ctrl" class="flex flex-wrap gap-2 mt-2"></div>
+                <div id="an-info" class="bg-violet-50 border-2 border-violet-200 rounded-2xl p-3 text-sm font-bold leading-relaxed mt-2"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-violet-100">
+                <h2 class="font-black">🖍️ かく ときの コツ</h2>
+                <div id="dr-tips" class="space-y-2 mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ⑤ クイズ ===== -->
+        <section id="tab-quiz" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-violet-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">❓ だまし絵クイズ</h2>
+                    <span id="qz-score" class="num bg-violet-100 text-violet-700 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newQuiz()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <div id="qz-fields" class="flex flex-wrap gap-2 mt-3"></div>
+                <p id="qz-q" class="font-black text-base sm:text-lg mt-3 leading-relaxed"></p>
+                <div id="qz-choices" class="grid gap-2 mt-3"></div>
+                <div id="qz-res" class="mt-3"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center text-xs text-slate-400 font-bold p-4">だまし絵ラボ © 2026</footer>
+
+<script>
+    /* ===================== きょうつう ===================== */
+    const rnd = n => Math.floor(Math.random() * n);
+    const pickOne = a => a[rnd(a.length)];
+    function shuffle(a) { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = rnd(i + 1); const t = b[i]; b[i] = b[j]; b[j] = t; } return b; }
+    function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    function svg(w, h, body) {
+        return `<svg viewBox="0 0 ${w} ${h}" class="w-full h-auto block mx-auto" style="max-width:${w}px" role="img">${body}</svg>`;
+    }
+    function resultBox(ok, title, body) {
+        return `<div class="pop ${ok ? 'bg-green-50 border-green-300' : 'bg-amber-50 border-amber-300'} border-2 rounded-2xl p-3">
+            <p class="font-black ${ok ? 'text-green-700' : 'text-amber-700'}">${title}</p>
+            <div class="font-bold text-sm mt-1 leading-relaxed">${body}</div></div>`;
+    }
+    const S = { quiz: [0, 0] };
+    function scoreBox(id, s) { document.getElementById(id).innerText = `${s[0]} / ${s[1]}`; }
+    function markChoices(sel, isRight, picked, cls) {
+        document.querySelectorAll(sel).forEach((el, j) => {
+            el.className = `${isRight(j) ? 'bg-green-50 border-green-500' : (j === picked ? 'bg-red-50 border-red-400 shake' : 'bg-white border-slate-200 opacity-60')} border-2 ${cls}`;
+        });
+    }
+    // 点を なめらかに つなぐ（カトマル-ロム曲線 → ベジエ）
+    function smoothPath(pts) {
+        let d = `M${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+        for (let i = 0; i < pts.length - 1; i++) {
+            const p0 = pts[i === 0 ? 0 : i - 1], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2 < pts.length ? i + 2 : pts.length - 1];
+            const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6];
+            const c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+            d += ` C${c1[0].toFixed(1)} ${c1[1].toFixed(1)}, ${c2[0].toFixed(1)} ${c2[1].toFixed(1)}, ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+        }
+        return d;
+    }
+
+    function chipRow(host, list, cur, fn, key) {
+        document.getElementById(host).innerHTML = list.map((x, j) =>
+            `<button onclick="${fn}(${j})" data-${key}="${x.id}" class="${j === cur ? 'bg-violet-700 text-white' : 'bg-white border-2 border-violet-200 text-slate-600'} font-black px-2.5 py-1.5 rounded-xl text-xs bounce-hover">${x.n.replace(/\{[^}]*\}/g, '')}</button>`).join('');
+    }
+
+    /* 漢字{よみ} を ルビに */
+    const RUBY_RE = /([一-鿿々]+)\{([^{}]+)\}/g;
+    function rubySkip(el) {
+        for (let n = el; n; n = n.parentNode) {
+            const tag = n.nodeType === 1 ? n.tagName.toLowerCase() : '';
+            if (tag === 'script' || tag === 'style' || tag === 'svg' || tag === 'ruby') return true;
+        }
+        return false;
+    }
+    function rubifyText(node) {
+        const t = node.nodeValue;
+        if (t.indexOf('{') < 0 || !node.parentNode || rubySkip(node.parentNode)) return;
+        RUBY_RE.lastIndex = 0;
+        if (!RUBY_RE.test(t)) return;
+        RUBY_RE.lastIndex = 0;
+        const frag = document.createDocumentFragment();
+        let last = 0, m;
+        while ((m = RUBY_RE.exec(t))) {
+            if (m.index > last) frag.appendChild(document.createTextNode(t.slice(last, m.index)));
+            const ruby = document.createElement('ruby');
+            ruby.appendChild(document.createTextNode(m[1]));
+            const rt = document.createElement('rt');
+            rt.textContent = m[2];
+            ruby.appendChild(rt);
+            frag.appendChild(ruby);
+            last = m.index + m[0].length;
+        }
+        if (last < t.length) frag.appendChild(document.createTextNode(t.slice(last)));
+        node.parentNode.replaceChild(frag, node);
+    }
+    function rubify(root) {
+        if (root.nodeType === 3) return rubifyText(root);
+        if (root.nodeType !== 1 || rubySkip(root)) return;
+        const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        const list = [];
+        while (w.nextNode()) if (w.currentNode.nodeValue.indexOf('{') >= 0) list.push(w.currentNode);
+        list.forEach(rubifyText);
+    }
+    new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(rubify)))
+        .observe(document.body, { childList: true, subtree: true });
+
+    const TABS = { illu: '👀 さっかく', imp: '🔺 ありえない 図形', amb: '🎭 2つに 見える', draw: '✏️ かいて みよう', quiz: '❓ クイズ' };
+    let tab = 'illu';
+    function renderNav() {
+        document.getElementById('tab-nav').innerHTML = Object.entries(TABS).map(([k, label]) =>
+            `<button onclick="setTab('${k}')" data-tab="${k}" class="${tab === k ? 'bg-violet-700 text-white' : 'bg-white border-2 border-violet-200 text-slate-600'} font-black px-4 py-2 rounded-full text-sm whitespace-nowrap bounce-hover">${label}</button>`).join('');
+    }
+    function setTab(k) {
+        tab = k;
+        Object.keys(TABS).forEach(t => document.getElementById('tab-' + t).classList.toggle('hidden', t !== k));
+        renderNav();
+        if (k === 'imp' && !impReady) { setImp(0); impReady = true; }
+        if (k === 'amb' && !ambReady) { setAmb(0); ambReady = true; }
+        if (k === 'draw' && !drawReady) { pvDraw(); anDraw(); drTips(); drawReady = true; }
+        if (k === 'quiz' && !qz) newQuiz();
+    }
+
+    /* =====================================================================
+       ① さっかく（たしかめる と ほんとうの 形が 出る）
+       ===================================================================== */
+    const W = 560;
+    const GRAY = '#94a3b8', PROOF = '#dc2626';
+    // どの 絵も「同じ 長さ・同じ 大きさ・同じ 色」を 変数 1つで かいて いる。
+    // だから たしかめる と 必ず ぴったり 重なる。
+    const ILLU = [
+        {
+            id: 'muller', n: 'ミュラー・リヤー錯視',
+            q: '2本の よこ線、どちらが 長い？',
+            ans: 'どちらも <b>まったく 同じ 長さ（180）</b>。矢羽{やばね}が 外を むいて いる ほうが 長く 見える。',
+            why: '矢羽が 外を むくと「遠い かべの すみ」、内を むくと「近い 建物の 角」に 見える。脳は 遠い ものを 大きめに 直すので、外むきの ほうが 長く 感じる。',
+            draw: pf => {
+                const L = 180, x0 = (W - L) / 2, a = 26;
+                let g = '';
+                [[80, 1], [170, -1]].forEach(([y, s], k) => {
+                    g += `<line data-measure="${k ? 'b' : 'a'}" data-len="${L}" x1="${x0}" y1="${y}" x2="${x0 + L}" y2="${y}" stroke="#1e293b" stroke-width="4"/>`;
+                    [[x0, 1], [x0 + L, -1]].forEach(([x, d]) => {
+                        g += `<line x1="${x}" y1="${y}" x2="${x + d * s * a}" y2="${y - a}" stroke="#1e293b" stroke-width="4"/>
+                              <line x1="${x}" y1="${y}" x2="${x + d * s * a}" y2="${y + a}" stroke="#1e293b" stroke-width="4"/>`;
+                    });
+                });
+                if (pf) g += `<line x1="${x0}" y1="40" x2="${x0}" y2="210" stroke="${PROOF}" stroke-width="2" stroke-dasharray="6 4"/>
+                              <line x1="${x0 + L}" y1="40" x2="${x0 + L}" y2="210" stroke="${PROOF}" stroke-width="2" stroke-dasharray="6 4"/>
+                              <text x="${W / 2}" y="32" text-anchor="middle" font-size="13" font-weight="900" fill="${PROOF}">はしが ぴったり そろって いる ＝ 同じ 長さ</text>`;
+                return svg(W, 230, g);
+            }
+        },
+        {
+            id: 'ponzo', n: 'ポンゾ錯視',
+            q: '黄色い 2本の ぼう、どちらが 長い？',
+            ans: 'どちらも <b>同じ 長さ（150）</b>。おくの（上の）ほうが 長く 見える。',
+            why: '細く なって いく 2本の 線を 脳は「遠くまで 続く 線路」だと 思う。上の ぼうは「遠くに ある」ことに なり、遠いのに 同じ 大きさに 見える＝じつは 大きい、と 直して しまう。',
+            draw: pf => {
+                const L = 150, H = 250;
+                let g = `<line x1="150" y1="${H - 10}" x2="265" y2="30" stroke="${GRAY}" stroke-width="4"/>
+                         <line x1="410" y1="${H - 10}" x2="295" y2="30" stroke="${GRAY}" stroke-width="4"/>`;
+                [[70, 'a'], [190, 'b']].forEach(([y, k]) => {
+                    g += `<rect data-measure="${k}" data-len="${L}" x="${(W - L) / 2}" y="${y}" width="${L}" height="14" rx="3" fill="#f59e0b"/>`;
+                });
+                if (pf) g += `<line x1="${(W - L) / 2}" y1="50" x2="${(W - L) / 2}" y2="220" stroke="${PROOF}" stroke-width="2" stroke-dasharray="6 4"/>
+                              <line x1="${(W + L) / 2}" y1="50" x2="${(W + L) / 2}" y2="220" stroke="${PROOF}" stroke-width="2" stroke-dasharray="6 4"/>
+                              <text x="${W / 2}" y="238" text-anchor="middle" font-size="13" font-weight="900" fill="${PROOF}">はしが そろって いる ＝ 同じ 長さ</text>`;
+                return svg(W, H, g);
+            }
+        },
+        {
+            id: 'ebbing', n: 'エビングハウス錯視',
+            q: 'まん中の オレンジの 円、どちらが 大きい？',
+            ans: 'どちらも <b>同じ 大きさ（半径 30）</b>。小さい 円に かこまれた ほうが 大きく 見える。',
+            why: '脳は 大きさを「まわりと くらべて」決める。大きい ものに かこまれると 小さく、小さい ものに かこまれると 大きく 感じる。身長を くらべる ときと 同じ こと。',
+            draw: pf => {
+                const r = 30, H = 230;
+                let g = '';
+                const ring = (cx, cy, R, rr, n) => {
+                    let s = '';
+                    for (let i = 0; i < n; i++) {
+                        const a = i * 2 * Math.PI / n;
+                        s += `<circle cx="${(cx + Math.cos(a) * R).toFixed(1)}" cy="${(cy + Math.sin(a) * R).toFixed(1)}" r="${rr}" fill="#cbd5e1"/>`;
+                    }
+                    return s;
+                };
+                g += ring(150, 115, 72, 34, 6) + ring(410, 115, 54, 12, 8);
+                g += `<circle data-measure="a" data-len="${r}" cx="150" cy="115" r="${r}" fill="#f97316"/>`;
+                g += `<circle data-measure="b" data-len="${r}" cx="410" cy="115" r="${r}" fill="#f97316"/>`;
+                if (pf) {
+                    g += `<line x1="120" y1="115" x2="180" y2="115" stroke="${PROOF}" stroke-width="3"/>
+                          <line x1="380" y1="115" x2="440" y2="115" stroke="${PROOF}" stroke-width="3"/>
+                          <text x="150" y="212" text-anchor="middle" font-size="12" font-weight="900" fill="${PROOF}">直径 60</text>
+                          <text x="410" y="212" text-anchor="middle" font-size="12" font-weight="900" fill="${PROOF}">直径 60</text>`;
+                }
+                return svg(W, H, g);
+            }
+        },
+        {
+            id: 'delboeuf', n: 'デルブーフ錯視',
+            q: '青い 円、どちらが 大きい？',
+            ans: 'どちらも <b>同じ 大きさ（半径 40）</b>。大きな わに 入って いる ほうが 小さく 見える。',
+            why: 'まわりの わとの「すきま」で 大きさを 判断して しまう。<b>大きい おさらに のせると 料理が 少なく 見える</b>のは この 錯視。ダイエットに つかわれる ことも ある。',
+            draw: pf => {
+                const r = 40, H = 220;
+                let g = `<circle cx="150" cy="110" r="52" fill="none" stroke="${GRAY}" stroke-width="3"/>
+                         <circle cx="410" cy="110" r="90" fill="none" stroke="${GRAY}" stroke-width="3"/>`;
+                g += `<circle data-measure="a" data-len="${r}" cx="150" cy="110" r="${r}" fill="#3b82f6"/>`;
+                g += `<circle data-measure="b" data-len="${r}" cx="410" cy="110" r="${r}" fill="#3b82f6"/>`;
+                if (pf) g += `<circle cx="150" cy="110" r="${r}" fill="none" stroke="${PROOF}" stroke-width="3" stroke-dasharray="6 4"/>
+                              <circle cx="410" cy="110" r="${r}" fill="none" stroke="${PROOF}" stroke-width="3" stroke-dasharray="6 4"/>
+                              <text x="${W / 2}" y="206" text-anchor="middle" font-size="13" font-weight="900" fill="${PROOF}">同じ 大きさの わを かさねた</text>`;
+                return svg(W, H, g);
+            }
+        },
+        {
+            id: 'vh', n: '垂直水平{すいちょくすいへい}錯視',
+            q: 'たての 線と よこの 線、どちらが 長い？',
+            ans: 'どちらも <b>同じ 長さ（150）</b>。たての 線が 1割ほど 長く 見える 人が 多い。',
+            why: '目は よこに ならんで いるので、よこ方向は 広く 見わたせる。そのため 同じ 長さでも たての ほうが「がんばって 見る」ぶん 長く 感じると 考えられて いる。',
+            draw: pf => {
+                const L = 150, H = 230, cx = W / 2, by = 200;
+                let g = `<line data-measure="a" data-len="${L}" x1="${cx - L / 2}" y1="${by}" x2="${cx + L / 2}" y2="${by}" stroke="#1e293b" stroke-width="5"/>
+                         <line data-measure="b" data-len="${L}" x1="${cx}" y1="${by}" x2="${cx}" y2="${by - L}" stroke="#1e293b" stroke-width="5"/>`;
+                if (pf) g += `<line x1="${cx - L / 2}" y1="${by - L}" x2="${cx + L / 2}" y2="${by - L}" stroke="${PROOF}" stroke-width="2" stroke-dasharray="6 4"/>
+                              <line x1="${cx - L / 2}" y1="${by}" x2="${cx - L / 2}" y2="${by - L}" stroke="${PROOF}" stroke-width="2" stroke-dasharray="6 4"/>
+                              <text x="${cx + L / 2 + 8}" y="${by - L / 2}" font-size="12" font-weight="900" fill="${PROOF}">同じ 150</text>
+                              <text x="${cx}" y="${by - L - 10}" text-anchor="middle" font-size="12" font-weight="900" fill="${PROOF}">正方形に ぴったり 入る</text>`;
+                return svg(W, H, g);
+            }
+        },
+        {
+            id: 'cafe', n: 'カフェウォール錯視',
+            q: 'よこの 線は 平行？ ななめ？',
+            ans: 'ぜんぶ <b>完全な 平行</b>。1段ごとに 四角を 半分ずつ ずらすと、線が くさび形に 見える。',
+            why: '白と 黒の あいだに 灰色の 線が あると、脳の 中の「かどを 見つける 細ぼう」が だまされ、四角の ずれを 線の かたむきだと 感じて しまう。イギリスの カフェの タイル張りから 見つかった。',
+            draw: pf => {
+                const cw = 44, ch = 34, rows = 6, cols = 12, H = rows * ch + 40, y0 = 20;
+                let g = `<rect x="0" y="0" width="${W}" height="${H}" fill="#9ca3af"/>`;
+                for (let r = 0; r < rows; r++) {
+                    const off = (r % 2) * cw / 2;
+                    for (let c = -1; c < cols; c++) {
+                        const x = c * cw + off;
+                        g += `<rect x="${x}" y="${y0 + r * ch}" width="${cw}" height="${ch - 3}" fill="${c % 2 === 0 ? '#111827' : '#f8fafc'}"/>`;
+                    }
+                }
+                if (pf) for (let r = 0; r <= rows; r++)
+                    g += `<line data-measure="line${r}" x1="0" y1="${y0 + r * ch - 1.5}" x2="${W}" y2="${y0 + r * ch - 1.5}" stroke="${PROOF}" stroke-width="2.5"/>`;
+                if (pf) g += `<text x="${W / 2}" y="${H - 8}" text-anchor="middle" font-size="13" font-weight="900" fill="${PROOF}">赤い 線は ぜんぶ まっすぐな 平行線</text>`;
+                return svg(W, H, g);
+            }
+        },
+        {
+            id: 'zollner', n: 'ツェルナー錯視',
+            q: 'ななめの 長い 線は 平行？',
+            ans: '<b>ぜんぶ 平行</b>。短い はねの 向きで 開いたり 閉じたり して 見える。',
+            why: '交わる 線の 角度を 脳は 実際より 大きく 見る くせが ある。その ずれが 線ぜんたいの かたむきに 感じられて しまう。',
+            draw: pf => {
+                const H = 240, n = 4, gap = 52;
+                let g = '';
+                for (let i = 0; i < n; i++) {
+                    const y = 40 + i * gap;
+                    g += `<line data-measure="l${i}" x1="40" y1="${y}" x2="520" y2="${y + 24}" stroke="#1e293b" stroke-width="4"/>`;
+                    for (let k = 0; k < 10; k++) {
+                        const x = 60 + k * 48, yy = y + (x - 40) * 24 / 480, d = i % 2 ? -1 : 1;
+                        g += `<line x1="${x - 10 * d}" y1="${(yy - 14).toFixed(1)}" x2="${x + 10 * d}" y2="${(yy + 14).toFixed(1)}" stroke="#6366f1" stroke-width="3"/>`;
+                    }
+                }
+                if (pf) for (let i = 0; i < n; i++) {
+                    const y = 40 + i * gap;
+                    g += `<line x1="40" y1="${y}" x2="520" y2="${y + 24}" stroke="${PROOF}" stroke-width="2.5" stroke-dasharray="7 5"/>`;
+                }
+                if (pf) g += `<text x="${W / 2}" y="${H - 6}" text-anchor="middle" font-size="13" font-weight="900" fill="${PROOF}">4本 ぜんぶ 同じ かたむき（480 すすんで 24 下がる）</text>`;
+                return svg(W, H, g);
+            }
+        },
+        {
+            id: 'contrast', n: '明るさの 対比{たいひ}',
+            q: 'まん中の 四角、どちらが 明るい？',
+            ans: '<b>まったく 同じ 灰色（#808080）</b>。暗い 背景の ほうが 明るく 見える。',
+            why: '脳は 明るさを「絶対の 量」では なく「まわりとの 差」で 見て いる。おかげで 晴れの 日でも 曇りの 日でも 同じ 紙を「白い 紙」と わかる。その べんりな しくみの 副作用。',
+            draw: pf => {
+                const H = 210, g0 = '#808080';
+                let g = `<rect x="30" y="30" width="230" height="150" fill="#1f2937"/>
+                         <rect x="300" y="30" width="230" height="150" fill="#f1f5f9"/>`;
+                g += `<rect data-measure="a" data-fill="${g0}" x="95" y="70" width="100" height="70" fill="${g0}"/>`;
+                g += `<rect data-measure="b" data-fill="${g0}" x="365" y="70" width="100" height="70" fill="${g0}"/>`;
+                if (pf) g += `<rect data-measure="bridge" data-fill="${g0}" x="95" y="95" width="370" height="20" fill="${g0}"/>
+                              <text x="${W / 2}" y="198" text-anchor="middle" font-size="13" font-weight="900" fill="${PROOF}">同じ 灰色の おびで つないだ ＝ ぜんぶ 同じ 色</text>`;
+                return svg(W, H, g);
+            }
+        },
+        {
+            id: 'white', n: 'ホワイト錯視',
+            q: '2つの 灰色の ぼう、どちらが 明るい？',
+            ans: '<b>同じ 灰色</b>。黒い しま の 上に ある ほうが 明るく 見える ことが 多い。',
+            why: '「まわりとの 差」だけでは 説明できず、脳が「同じ しまの 仲間か どうか」も 見て いる ため。どう 見て いるかは いまも 研究が つづいて いる。',
+            draw: pf => {
+                const H = 220, sh = 22, g0 = '#8b8b8b';
+                let g = `<rect x="30" y="20" width="500" height="${sh * 8}" fill="#f8fafc"/>`;
+                for (let i = 0; i < 8; i += 2) g += `<rect x="30" y="${20 + i * sh}" width="500" height="${sh}" fill="#111827"/>`;
+                g += `<rect data-measure="a" data-fill="${g0}" x="120" y="${20 + 2 * sh}" width="90" height="${sh}" fill="${g0}"/>`;
+                g += `<rect data-measure="b" data-fill="${g0}" x="350" y="${20 + 3 * sh}" width="90" height="${sh}" fill="${g0}"/>`;
+                if (pf) g += `<rect data-measure="bridge" data-fill="${g0}" x="120" y="${20 + 8 * sh + 14}" width="320" height="26" fill="${g0}"/>
+                              <text x="${W / 2}" y="${H - 6}" text-anchor="middle" font-size="12" font-weight="900" fill="${PROOF}">↑ しま の 外に 出して ならべると 同じ 色</text>`;
+                return svg(W, H, g);
+            }
+        },
+        {
+            id: 'jastrow', n: 'ジャストロー錯視',
+            q: '2つの 曲がった 形、どちらが 大きい？',
+            ans: '<b>まったく 同じ 形</b>（同じ 絵を 下に ずらして おいた だけ）。下の ほうが 大きく 見える。',
+            why: '2つの 形が となりあう ところで、上の 形の「短い ふち」と 下の 形の「長い ふち」を くらべて しまう。ならべ方を 変えれば 錯視は 消える。',
+            draw: pf => {
+                const H = 230;
+                // 同じ path を 2回 つかう（形は 完全に 同一）
+                const shape = 'M0 0 A 130 130 0 0 1 176 0 L 150 38 A 92 92 0 0 0 26 38 Z';
+                let g = `<g transform="translate(192,60)"><path data-measure="a" data-d="${shape}" d="${shape}" fill="#22d3ee" stroke="#0e7490" stroke-width="3"/></g>`;
+                g += `<g transform="translate(192,136)"><path data-measure="b" data-d="${shape}" d="${shape}" fill="#f472b6" stroke="#be185d" stroke-width="3"/></g>`;
+                if (pf) {
+                    g += `<g transform="translate(192,60)"><path d="${shape}" fill="none" stroke="${PROOF}" stroke-width="3" stroke-dasharray="6 4"/></g>`;
+                    g += `<g transform="translate(192,136)"><path d="${shape}" fill="none" stroke="${PROOF}" stroke-width="3" stroke-dasharray="6 4"/></g>`;
+                    g += `<text x="${W / 2}" y="222" text-anchor="middle" font-size="13" font-weight="900" fill="${PROOF}">同じ 形の データを 2回 つかって います</text>`;
+                }
+                return svg(W, H, g);
+            }
+        },
+        {
+            id: 'hermann', n: 'ヘルマン格子{こうし}',
+            q: '白い 道の 交差点に「灰色の しみ」が 見える？',
+            ans: '交差点は <b>まっ白</b>。目を 動かすと しみも にげる。',
+            why: '目の 細ぼうは「まわりが 明るいと 自分の 出力を 下げる」しくみ（側抑制{そくよくせい}）を 持つ。交差点は まわりの 白が 多いので よけいに おさえられ、暗く 感じる。',
+            draw: pf => {
+                const s = 56, gapw = 14, n = 8, m = 4, H = m * (s + gapw) + gapw + 30;
+                let g = `<rect x="0" y="0" width="${W}" height="${H}" fill="#f8fafc"/>`;
+                for (let r = 0; r < m; r++) for (let c = 0; c < n; c++)
+                    g += `<rect x="${gapw + c * (s + gapw)}" y="${gapw + r * (s + gapw)}" width="${s}" height="${s}" fill="#111827"/>`;
+                if (pf) {
+                    const cx = gapw + 2 * (s + gapw) - gapw / 2, cy = gapw + 2 * (s + gapw) - gapw / 2;
+                    g += `<circle data-measure="spot" cx="${cx}" cy="${cy}" r="22" fill="none" stroke="${PROOF}" stroke-width="3"/>
+                          <line x1="${cx}" y1="${cy}" x2="${cx + 120}" y2="${cy + 80}" stroke="${PROOF}" stroke-width="2" stroke-dasharray="5 4"/>
+                          <text x="${cx + 126}" y="${cy + 86}" font-size="13" font-weight="900" fill="${PROOF}">ここは #f8fafc（まっ白）</text>`;
+                }
+                return svg(W, H, g);
+            }
+        }
+    ];
+    let ii = 0, proof = false;
+    function setIllu(i) { ii = i; proof = false; drawIllu(); }
+    function ilProof(v) { proof = v; drawIllu(); }
+    function drawIllu() {
+        const x = ILLU[ii];
+        chipRow('il-chips', ILLU, ii, 'setIllu', 'illu');
+        document.getElementById('il-name').innerHTML = x.n;
+        document.getElementById('il-q').innerHTML = '🤔 ' + x.q;
+        document.getElementById('il-fig').innerHTML = x.draw(proof);
+        document.querySelectorAll('[data-pf]').forEach(b => {
+            const on = (b.dataset.pf === '1') === proof;
+            b.className = `${on ? 'bg-violet-700 text-white' : 'bg-white border-2 border-violet-200 text-slate-600'} font-black px-4 py-2 rounded-full text-sm bounce-hover`;
+        });
+        document.getElementById('il-ans').innerHTML = proof ? `✅ <b>こたえ</b>：${x.ans}` : '🔍 「たしかめる」を おすと こたえが 出るよ。';
+        document.getElementById('il-why').innerHTML = proof ? `💡 <b>なぜ？</b> ${x.why}` : '';
+    }
+
+    /* =====================================================================
+       ② ありえない 図形
+       ===================================================================== */
+    let impReady = false;
+    const IMP = [
+        {
+            id: 'fork', n: '悪魔{あくま}の フォーク',
+            why: '上は <b>3本</b>の 角ばった 柱、下は <b>2本</b>の 平らな 板。上だけ 見ても 下だけ 見ても おかしく ないのに、まん中で つじつまが 合わない。指で 上半分を かくすと ふしぎさが 消える。',
+            draw: () => {
+                const H = 230;
+                let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="#f5f3ff"/>`;
+                // 上の 3本（角柱）
+                for (let i = 0; i < 3; i++) {
+                    const x = 160 + i * 60;
+                    g += `<rect x="${x}" y="40" width="34" height="90" fill="#ddd6fe" stroke="#5b21b6" stroke-width="3"/>
+                          <line x1="${x + 17}" y1="40" x2="${x + 17}" y2="130" stroke="#5b21b6" stroke-width="2"/>`;
+                }
+                // 下の 2本（板）＋ まん中の あいまいな ところ
+                g += `<rect x="160" y="130" width="94" height="60" fill="#ddd6fe" stroke="#5b21b6" stroke-width="3"/>
+                      <rect x="254" y="130" width="94" height="60" fill="#c4b5fd" stroke="#5b21b6" stroke-width="3"/>`;
+                g += `<rect x="160" y="126" width="188" height="8" fill="#f5f3ff" stroke="none"/>`;
+                g += `<text x="176" y="30" font-size="12" font-weight="900" fill="#5b21b6">上は 3本</text>
+                      <text x="176" y="212" font-size="12" font-weight="900" fill="#5b21b6">下は 2本</text>`;
+                return svg(W, H, g);
+            }
+        },
+        {
+            id: 'cube', n: 'ありえない 立方体',
+            why: '手前を 通る はずの 辺{へん}と、おくを 通る はずの 辺が <b>とちゅうで 入れかわって</b> いる。だから 立体としては 作れない。エッシャーの 絵で 有名。',
+            draw: () => {
+                const H = 250, o = 60;
+                const A = [180, 70], B = [380, 70], C = [380, 200], D = [180, 200];
+                const a = [A[0] + o, A[1] - 40], b = [B[0] + o, B[1] - 40], c = [C[0] + o, C[1] - 40], d = [D[0] + o, D[1] - 40];
+                const L = (p, q, col, w) => `<line x1="${p[0]}" y1="${p[1]}" x2="${q[0]}" y2="${q[1]}" stroke="${col || '#5b21b6'}" stroke-width="${w || 4}" stroke-linecap="round"/>`;
+                let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="#f5f3ff"/>`;
+                g += L(A, B) + L(B, C) + L(C, D) + L(D, A);
+                g += L(a, b) + L(b, c) + L(c, d) + L(d, a);
+                g += L(A, a) + L(B, b) + L(C, c);
+                // D-d の 辺だけ「手前を 通る」ように かき、交差する ところで 相手を 切る
+                g += `<line x1="${D[0]}" y1="${D[1]}" x2="${d[0]}" y2="${d[1]}" stroke="#5b21b6" stroke-width="4"/>`;
+                g += `<circle cx="${(D[0] + d[0]) / 2 + 6}" cy="${(D[1] + d[1]) / 2 - 4}" r="9" fill="#f5f3ff"/>`;
+                g += L(D, d, '#5b21b6', 4);
+                g += `<text x="${W / 2}" y="238" text-anchor="middle" font-size="12" font-weight="900" fill="#5b21b6">○の ところで 手前と おくが 入れかわって いる</text>`;
+                g += `<circle cx="${(D[0] + d[0]) / 2 + 6}" cy="${(D[1] + d[1]) / 2 - 4}" r="14" fill="none" stroke="#dc2626" stroke-width="2.5"/>`;
+                return svg(W, H, g);
+            }
+        },
+        {
+            id: 'tri', n: 'ペンローズの 三角形',
+            why: '3本の ぼうを 三角に つないだ 形。よく 見ると、<b>1が 3の 上、3が 2の 上、2が 1の 上</b>に なって いる。'
+                 + '「Aが Bより 上で、Bが Cより 上なら、Aは Cより 上」の はずなのに、ぐるっと 一周して しまう。'
+                 + 'だから <b>紙の 上（2次元）でしか 存在できない 立体</b>。',
+            draw: () => {
+                const H = 300, w = 36, e = w * 0.95;
+                // 三角の 3つの かど
+                const P = [[280, 62], [452, 252], [108, 252]];
+                // ぼう1: かど0→1、ぼう2: かど1→2、ぼう3: かど2→0
+                const bar = (a, b) => {
+                    const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy);
+                    const ux = dx / L, uy = dy / L, nx = -uy, ny = ux;
+                    const p0 = [a[0] - ux * e, a[1] - uy * e], p1 = [b[0] + ux * e, b[1] + uy * e];
+                    const pts = [
+                        [p0[0] + nx * w / 2, p0[1] + ny * w / 2], [p1[0] + nx * w / 2, p1[1] + ny * w / 2],
+                        [p1[0] - nx * w / 2, p1[1] - ny * w / 2], [p0[0] - nx * w / 2, p0[1] - ny * w / 2]
+                    ].map(q => q.map(v => v.toFixed(1)).join(',')).join(' ');
+                    // まん中の すじで「角ばった ぼう」に 見せる
+                    const m0 = [p0[0] + nx * w * 0.12, p0[1] + ny * w * 0.12], m1 = [p1[0] + nx * w * 0.12, p1[1] + ny * w * 0.12];
+                    return `<polygon points="${pts}" fill="#ddd6fe" stroke="#5b21b6" stroke-width="3.5" stroke-linejoin="round"/>
+                            <line x1="${m0[0].toFixed(1)}" y1="${m0[1].toFixed(1)}" x2="${m1[0].toFixed(1)}" y2="${m1[1].toFixed(1)}" stroke="#5b21b6" stroke-width="2" opacity="0.6"/>`;
+                };
+                const b1 = bar(P[0], P[1]), b2 = bar(P[1], P[2]), b3 = bar(P[2], P[0]);
+                let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="#f5f3ff"/>`;
+                // かど0の まわりだけ ぼう1を あとから かさねる ＝ 上下の 関係が 一周して しまう
+                g += `<defs><clipPath id="pt-corner0"><circle cx="${P[0][0]}" cy="${P[0][1]}" r="${w * 1.9}"/></clipPath></defs>`;
+                g += b1 + b2 + b3;                                   // ここまでは かど0で 3が 1の 上
+                g += `<g clip-path="url(#pt-corner0)">${b1}</g>`;     // かど0だけ 1を 3の 上に する
+                // どこが どの ぼうか わかる ように 番号を つける
+                [[P[0], P[1], '1'], [P[1], P[2], '2'], [P[2], P[0], '3']].forEach(([a, b, n]) => {
+                    const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
+                    const cx = (P[0][0] + P[1][0] + P[2][0]) / 3, cy = (P[0][1] + P[1][1] + P[2][1]) / 3;
+                    const ox = (mx - cx) * -0.5, oy = (my - cy) * -0.5;   // 三角の 内がわに おく
+                    g += `<circle cx="${(mx + ox).toFixed(0)}" cy="${(my + oy).toFixed(0)}" r="13" fill="#fff" stroke="#5b21b6" stroke-width="2"/>
+                          <text x="${(mx + ox).toFixed(0)}" y="${(my + oy + 5).toFixed(0)}" text-anchor="middle" font-size="14" font-weight="900" fill="#5b21b6">${n}</text>`;
+                });
+                g += `<text x="${W / 2}" y="${H - 12}" text-anchor="middle" font-size="12" font-weight="900" fill="#5b21b6">1は 3の 上 → 3は 2の 上 → なのに 2が 1の 上</text>`;
+                return svg(W, H, g);
+            }
+        },
+        {
+            id: 'necker', n: 'ネッカーの 立方体',
+            why: '線だけで かいた 立方体は、<b>どの 面が 手前か 決められない</b>。だから 見て いる うちに ぱたんと 切りかわる。「手前を 決める」ボタンを おすと、脳の 迷いが 消える。',
+            ctrl: [['なし（迷う）', 0], ['左下が 手前', 1], ['右上が 手前', 2]],
+            draw: (mode) => {
+                const H = 250, o = 64;
+                const A = [190, 90], B = [370, 90], C = [370, 210], D = [190, 210];
+                const a = [A[0] + o, A[1] - 44], b = [B[0] + o, B[1] - 44], c = [C[0] + o, C[1] - 44], d = [D[0] + o, D[1] - 44];
+                const L = (p, q, dash) => `<line x1="${p[0]}" y1="${p[1]}" x2="${q[0]}" y2="${q[1]}" stroke="#5b21b6" stroke-width="3.5" ${dash ? 'stroke-dasharray="7 5" opacity="0.45"' : ''} stroke-linecap="round"/>`;
+                let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="#f5f3ff"/>`;
+                if (mode === 1) g += `<polygon points="${A[0]},${A[1]} ${B[0]},${B[1]} ${C[0]},${C[1]} ${D[0]},${D[1]}" fill="#c4b5fd" opacity="0.85"/>`;
+                if (mode === 2) g += `<polygon points="${a[0]},${a[1]} ${b[0]},${b[1]} ${c[0]},${c[1]} ${d[0]},${d[1]}" fill="#c4b5fd" opacity="0.85"/>`;
+                const backFront = mode === 2;
+                g += L(a, b, mode === 1) + L(b, c, mode === 1) + L(c, d, mode === 1) + L(d, a, mode === 1);
+                g += L(A, B, backFront) + L(B, C, backFront) + L(C, D, backFront) + L(D, A, backFront);
+                g += L(A, a, false) + L(B, b, false) + L(C, c, false) + L(D, d, false);
+                const lbl = ['どちらが 手前？', '左下の 面が 手前', '右上の 面が 手前'][mode];
+                g += `<text x="${W / 2}" y="238" text-anchor="middle" font-size="13" font-weight="900" fill="#5b21b6">${lbl}</text>`;
+                return svg(W, H, g);
+            }
+        },
+        {
+            id: 'stairs', n: 'シュレーダーの 階段',
+            why: 'そのまま 見ると <b>上から 下りて くる 階段</b>、絵を さかさまに すると <b>下から 見上げた 階段</b>に なる。どちらも 正しい 見え方で、絵じたいは 同じ。',
+            ctrl: [['そのまま', 0], ['さかさま', 1]],
+            draw: (flip) => {
+                const H = 240;
+                let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="#f5f3ff"/>`;
+                let pts = [];
+                const x0 = 150, y0 = 50, sw = 44, sh = 26;
+                for (let i = 0; i < 6; i++) { pts.push([x0 + i * sw, y0 + i * sh]); pts.push([x0 + (i + 1) * sw, y0 + i * sh]); }
+                let path = `M${x0 - 40} ${y0} L${pts.map(p => p.join(' ')).join(' L')} L${x0 + 6 * sw + 40} ${y0 + 6 * sh}`;
+                const inner = `<path d="${path}" fill="none" stroke="#5b21b6" stroke-width="4" stroke-linejoin="round"/>
+                    <path d="M${x0 - 40} ${y0} L${x0 - 40} ${y0 + 150} L${x0 + 6 * sw + 40} ${y0 + 6 * sh + 150} L${x0 + 6 * sw + 40} ${y0 + 6 * sh} Z" fill="#ddd6fe" opacity="0.7" stroke="#5b21b6" stroke-width="3"/>
+                    <path d="${path}" fill="none" stroke="#5b21b6" stroke-width="4" stroke-linejoin="round"/>`;
+                g += `<g transform="${flip ? `rotate(180 ${W / 2} ${H / 2})` : ''}">${inner}</g>`;
+                g += `<text x="${W / 2}" y="${H - 8}" text-anchor="middle" font-size="13" font-weight="900" fill="#5b21b6">${flip ? 'さかさま：下から 見上げた 階段' : 'そのまま：上から 下りる 階段'}</text>`;
+                return svg(W, H, g);
+            }
+        }
+    ];
+    let mi = 0, mmode = 0;
+    function setImp(i) { mi = i; mmode = 0; drawImp(); }
+    function impMode(v) { mmode = v; drawImp(); }
+    function drawImp() {
+        const x = IMP[mi];
+        chipRow('im-chips', IMP, mi, 'setImp', 'imp');
+        document.getElementById('im-name').innerHTML = x.n;
+        document.getElementById('im-fig').innerHTML = x.draw(mmode);
+        document.getElementById('im-ctrl').innerHTML = (x.ctrl || []).map(([label, v]) =>
+            `<button onclick="impMode(${v})" data-immode="${v}" class="${mmode === v ? 'bg-violet-700 text-white' : 'bg-white border-2 border-violet-200 text-slate-600'} font-black px-3 py-2 rounded-2xl text-xs bounce-hover">${label}</button>`).join('');
+        document.getElementById('im-why').innerHTML = `💡 ${x.why}`;
+    }
+
+    /* =====================================================================
+       ③ 2つに 見える絵
+       ===================================================================== */
+    let ambReady = false;
+    const AMB = [
+        {
+            id: 'rubin', n: 'ルビンの 壺{つぼ}',
+            why: '白い ところを「もの」として 見ると <b>壺</b>、黒い ところを「もの」として 見ると <b>向かいあう 2人の 顔</b>。'
+                 + '脳は「もの（図）」と「背景（地）」を 同時に 入れかえられない。これを 図{ず}と 地{じ}の 反転と いう。',
+            ctrl: [['そのまま', 0], ['壺を 教えて', 1], ['顔を 教えて', 2]],
+            draw: (mode) => {
+                const H = 280, cx = W / 2, top = 24;
+                // 横顔の りんかく。y ごとの「中心からの きょり」で 決める。
+                // 近い（きょりが 小さい）ところ ＝ 鼻や あご が 前に 出て いる ところ
+                const PROF = [
+                    [0, 38], [14, 27], [30, 24], [44, 21],      // 頭の 上 → ひたい
+                    [56, 13], [64, 11],                          // 鼻（いちばん 前）
+                    [74, 23], [82, 19],                          // 鼻の 下 → 上くちびる
+                    [90, 25], [98, 20],                          // 口 → 下くちびる
+                    [110, 15], [118, 16],                        // あご
+                    [134, 34], [150, 46],                        // あごの 下 → 首（壺の ふくらみ）
+                    [172, 42], [188, 30], [200, 33], [208, 44]   // 肩 → 壺の 台
+                ];
+                const smooth = smoothPath;
+                const leftPts = PROF.map(([y, w]) => [cx - w, top + y]);
+                const rightPts = PROF.slice().reverse().map(([y, w]) => [cx + w, top + y]);
+                const vase = smooth(leftPts) + ' L' + rightPts[0].map(v => v.toFixed(1)).join(' ')
+                    + smooth(rightPts).slice(smooth(rightPts).indexOf('C') - 1) + ' Z';
+                // 色は いつも「黒い 背景＝顔／白い 形＝壺」。
+                // 顔を 教える ときも 色は 変えず、線と 目を 足す だけ（色を 入れかえたら 壺を なぞる だけに なって しまう）
+                let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="#1f2937"/>`;
+                g += `<path data-measure="vase" d="${vase}" fill="#f8fafc"/>`;
+                if (mode === 1) {
+                    g += `<path d="${vase}" fill="none" stroke="#f59e0b" stroke-width="4"/>`;
+                    g += `<text x="${cx}" y="${H - 12}" text-anchor="middle" font-size="13" font-weight="900" fill="#fbbf24">白い ところ ＝ 壺</text>`;
+                }
+                if (mode === 2) {
+                    g += `<path d="${smooth(leftPts)}" fill="none" stroke="#f59e0b" stroke-width="4"/>`;
+                    g += `<path d="${smooth(PROF.map(([y, w]) => [cx + w, top + y]))}" fill="none" stroke="#f59e0b" stroke-width="4"/>`;
+                    // 目を 1つ ずつ 足すと 顔だと わかりやすい
+                    g += `<circle cx="${cx - 46}" cy="${top + 46}" r="5" fill="#f59e0b"/>`;
+                    g += `<circle cx="${cx + 46}" cy="${top + 46}" r="5" fill="#f59e0b"/>`;
+                    g += `<text x="${cx - 120}" y="${top + 70}" text-anchor="end" font-size="12" font-weight="900" fill="#fbbf24">鼻</text>`;
+                    g += `<line x1="${cx - 116}" y1="${top + 66}" x2="${cx - 24}" y2="${top + 64}" stroke="#fbbf24" stroke-width="2" stroke-dasharray="4 3"/>`;
+                    g += `<text x="${cx}" y="${H - 12}" text-anchor="middle" font-size="13" font-weight="900" fill="#fbbf24">黒い ところ ＝ 向かいあう 2人の 顔</text>`;
+                }
+                if (mode === 0) g += `<text x="${cx}" y="${H - 12}" text-anchor="middle" font-size="13" font-weight="900" fill="#f8fafc">壺？ それとも 顔が 2つ？</text>`;
+                return svg(W, H, g);
+            }
+        },
+        {
+            id: 'kanizsa', n: 'カニッツァの 三角形',
+            why: '<b>三角形は どこにも かいて いない</b>。なのに 白い 三角形が 見え、しかも 紙より 明るく 感じる。'
+                 + '脳は「丸が 欠けて いるのは 何かが 上に かさなって いる から」と 考え、<b>ない ものを 作り出す</b>（主観的{しゅかんてき}輪郭{りんかく}）。',
+            ctrl: [['そのまま', 0], ['どこにも 線が ない ことを 見る', 1]],
+            draw: (mode) => {
+                const H = 260, cx = W / 2, R = 34;
+                const cs = [[cx, 50], [cx - 88, 200], [cx + 88, 200]];
+                const angs = [-90, 150, 30];
+                let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="#f8fafc"/>`;
+                cs.forEach(([x, y], i) => {
+                    // パックマン形（三角形の 内がわに 口を 向ける）
+                    const a0 = (angs[i] - 30) * Math.PI / 180, a1 = (angs[i] + 30) * Math.PI / 180;
+                    const p0 = [x + Math.cos(a0) * R, y + Math.sin(a0) * R], p1 = [x + Math.cos(a1) * R, y + Math.sin(a1) * R];
+                    g += `<path data-measure="pac${i}" d="M${x} ${y} L${p0[0].toFixed(1)} ${p0[1].toFixed(1)} A ${R} ${R} 0 1 1 ${p1[0].toFixed(1)} ${p1[1].toFixed(1)} Z" fill="#1e293b"/>`;
+                });
+                if (mode === 1) {
+                    g += `<polygon points="${cs.map(c => c.join(',')).join(' ')}" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-dasharray="8 6"/>`;
+                    g += `<text x="${cx}" y="248" text-anchor="middle" font-size="12" font-weight="900" fill="#dc2626">赤い 点線が「見えて いた 三角形」。ほんとうは 何も かかれて いない</text>`;
+                } else {
+                    g += `<text x="${cx}" y="248" text-anchor="middle" font-size="13" font-weight="900" fill="#475569">白い 三角形が 見える？</text>`;
+                }
+                return svg(W, H, g);
+            }
+        },
+        {
+            id: 'duck', n: 'うさぎ？ かも？',
+            why: '同じ 絵なのに、<b>左の 2本を くちばしだと 思えば かも</b>（右が 頭のうしろ）、'
+                 + '<b>左の 2本を 耳だと 思えば うさぎ</b>（右が 顔）に なる。'
+                 + 'どちらが 正しいのでは なく、脳が えらんだ ほうに 見える。',
+            ctrl: [['そのまま', 0], ['かもだと 思って 見る', 1], ['うさぎだと 思って 見る', 2]],
+            draw: (mode) => {
+                const H = 250;
+                // 左の 2本＝くちばし／耳、右の ふくらみ＝頭のうしろ／うさぎの 顔
+                const OUT = [
+                    [44, 104],                                   // 上の とんがりの 先
+                    [140, 92], [240, 76], [332, 74],             // 頭の 上
+                    [418, 92], [462, 130],                       // 右がわ
+                    [468, 152], [438, 158], [452, 176],          // うさぎの 鼻と 口
+                    [400, 198], [300, 210], [212, 202],          // 下がわ
+                    [140, 190], [50, 178],                       // 下の とんがりの 先
+                    [140, 168], [214, 150],                      // 下の とんがりの 上がわ → V の 谷
+                    [140, 128], [44, 104]                        // 上の とんがりの 下がわ → もどる
+                ];
+                let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="#f5f3ff"/>`;
+                g += `<path data-measure="body" d="${smoothPath(OUT)} Z" fill="#fde68a" stroke="#92400e" stroke-width="3.5" stroke-linejoin="round"/>`;
+                const eye = mode === 2 ? [396, 118] : mode === 1 ? [252, 124] : [312, 122];
+                g += `<circle data-eye cx="${eye[0]}" cy="${eye[1]}" r="8" fill="#1e293b"/>`;
+                if (mode === 1) {
+                    g += `<path d="${smoothPath([[44, 104], [140, 128], [214, 150], [140, 168], [50, 178]])}" fill="none" stroke="#dc2626" stroke-width="4"/>`;
+                    g += `<text x="96" y="216" font-size="12" font-weight="900" fill="#dc2626">開いた くちばし</text>`;
+                    g += `<text x="${W / 2}" y="${H - 10}" text-anchor="middle" font-size="13" font-weight="900" fill="#b45309">左が 前 ＝ かも 🦆（右は 頭の うしろ）</text>`;
+                }
+                if (mode === 2) {
+                    g += `<path d="${smoothPath([[44, 104], [140, 92], [240, 76]])}" fill="none" stroke="#dc2626" stroke-width="4"/>`;
+                    g += `<path d="${smoothPath([[50, 178], [140, 190], [212, 202]])}" fill="none" stroke="#dc2626" stroke-width="4"/>`;
+                    g += `<text x="60" y="76" font-size="12" font-weight="900" fill="#dc2626">2本の 耳</text>`;
+                    g += `<path d="${smoothPath([[462, 130], [468, 152], [438, 158], [452, 176]])}" fill="none" stroke="#dc2626" stroke-width="4"/>`;
+                    g += `<text x="484" y="186" text-anchor="end" font-size="12" font-weight="900" fill="#dc2626">鼻と 口</text>`;
+                    g += `<text x="${W / 2}" y="${H - 10}" text-anchor="middle" font-size="13" font-weight="900" fill="#b45309">右が 顔 ＝ うさぎ 🐰（左は 耳）</text>`;
+                }
+                if (mode === 0) g += `<text x="${W / 2}" y="${H - 10}" text-anchor="middle" font-size="13" font-weight="900" fill="#5b21b6">きみには どちらに 見える？</text>`;
+                return svg(W, H, g);
+            }
+        }
+    ];
+    let ai = 0, amode = 0;
+    function setAmb(i) { ai = i; amode = 0; drawAmb(); }
+    function ambMode(v) { amode = v; drawAmb(); }
+    function drawAmb() {
+        const x = AMB[ai];
+        chipRow('am-chips', AMB, ai, 'setAmb', 'amb');
+        document.getElementById('am-name').innerHTML = x.n;
+        document.getElementById('am-fig').innerHTML = x.draw(amode);
+        document.getElementById('am-ctrl').innerHTML = (x.ctrl || []).map(([label, v]) =>
+            `<button onclick="ambMode(${v})" data-ambmode="${v}" class="${amode === v ? 'bg-violet-700 text-white' : 'bg-white border-2 border-violet-200 text-slate-600'} font-black px-3 py-2 rounded-2xl text-xs bounce-hover">${label}</button>`).join('');
+        document.getElementById('am-why').innerHTML = `💡 ${x.why}`;
+    }
+
+    /* =====================================================================
+       ④ かいて みよう
+       ===================================================================== */
+    let drawReady = false;
+    function pvDraw() {
+        const vx = +document.getElementById('pv-x').value, vy = +document.getElementById('pv-y').value;
+        document.getElementById('pv-xv').innerText = vx;
+        document.getElementById('pv-yv').innerText = vy;
+        const H = 300;
+        let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="#faf5ff"/>`;
+        // 手前の 四角（穴の ふち）から 消点へ 線を あつめる
+        const x0 = 90, y0 = 60, x1 = 470, y1 = 250;
+        const corners = [[x0, y0], [x1, y0], [x1, y1], [x0, y1]];
+        // おくの 小さい 四角（消点へ 7割 すすんだ ところ）
+        const t = 0.62;
+        const inner = corners.map(([x, y]) => [x + (vx - x) * t, y + (vy - y) * t]);
+        g += `<polygon points="${inner.map(p => p.map(v => v.toFixed(1)).join(',')).join(' ')}" fill="#1e1b4b"/>`;
+        corners.forEach((c, i) => {
+            g += `<line data-vp="${i}" x1="${c[0]}" y1="${c[1]}" x2="${inner[i][0].toFixed(1)}" y2="${inner[i][1].toFixed(1)}" stroke="#7c3aed" stroke-width="3"/>`;
+        });
+        // かべの もよう（消点に あつまる 線）
+        for (let k = 1; k < 8; k++) {
+            const px = x0 + (x1 - x0) * k / 8;
+            g += `<line x1="${px}" y1="${y0}" x2="${(px + (vx - px) * t).toFixed(1)}" y2="${(y0 + (vy - y0) * t).toFixed(1)}" stroke="#c4b5fd" stroke-width="1.5"/>`;
+            g += `<line x1="${px}" y1="${y1}" x2="${(px + (vx - px) * t).toFixed(1)}" y2="${(y1 + (vy - y1) * t).toFixed(1)}" stroke="#c4b5fd" stroke-width="1.5"/>`;
+        }
+        g += `<rect x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" fill="none" stroke="#4c1d95" stroke-width="4"/>`;
+        g += `<circle data-vpdot cx="${vx}" cy="${vy}" r="6" fill="#dc2626"/>
+              <text x="${vx + 10}" y="${vy - 8}" font-size="12" font-weight="900" fill="#dc2626">消点</text>`;
+        document.getElementById('pv-fig').innerHTML = svg(W, H, g);
+        const mid = Math.abs(vx - (x0 + x1) / 2) < 30 && Math.abs(vy - (y0 + y1) / 2) < 30;
+        document.getElementById('pv-info').innerHTML =
+            `消点が <b>${vx < 200 ? '左' : vx > 360 ? '右' : 'まん中'}${vy < 120 ? 'の 上' : vy > 190 ? 'の 下' : ''}</b>に あるので、
+             穴の おくが その 方向に のびて 見える。${mid ? '<b>まん中に すると まっすぐ 下に 落ちる 穴</b>に 見えるよ。' : ''}<br>
+             <span class="text-xs text-slate-600">💡 かき方… ①手前の 四角を かく ②紙に 消点を 1つ 決める
+             ③四角の 4つの 角から 消点へ うすく 線を 引く ④その 線の 上に おくの 四角を かく
+             ⑤おくを 暗く ぬると 深さが 出る。</span>`;
+    }
+
+    let anang = 0;
+    function anSet(v) { anang = v; anDraw(); }
+    function anDraw() {
+        const H = 290, STRETCH = 2.4;              // たてに のばす わりあい
+        const cx = W / 2, cy = 150, r = 44;
+        // 地面に かいて ある 絵は いつも「たてに のばした だえん」。
+        // 真上から 見れば のびた まま、ななめから 見ると たてが ちぢんで 丸く なる。
+        const ry = anang === 0 ? r * STRETCH : r;
+        let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="#faf5ff"/>`;
+        if (anang === 1) {                          // ゆかの ますめ（ななめから 見た ようす）
+            for (let k = 0; k <= 8; k++) {
+                const t = k / 8;
+                g += `<line x1="${(60 + t * 140).toFixed(0)}" y1="60" x2="${(20 + t * 220).toFixed(0)}" y2="250" stroke="#ddd6fe" stroke-width="1.5"/>`;
+            }
+            for (let k = 0; k <= 6; k++) {
+                const y = 60 + Math.pow(k / 6, 1.6) * 190, w = 80 + Math.pow(k / 6, 1.6) * 200;
+                g += `<line x1="${(cx - w).toFixed(0)}" y1="${y.toFixed(0)}" x2="${(cx + w).toFixed(0)}" y2="${y.toFixed(0)}" stroke="#ddd6fe" stroke-width="1.5"/>`;
+            }
+        }
+        g += `<ellipse data-hole cx="${cx}" cy="${cy}" rx="${r}" ry="${ry.toFixed(1)}" fill="#1e1b4b"/>`;
+        g += `<ellipse cx="${cx}" cy="${(cy - ry * 0.18).toFixed(1)}" rx="${r - 12}" ry="${(ry - ry * 0.3).toFixed(1)}" fill="#4c1d95" opacity="0.45"/>`;
+        // たて・よこの 長さを 見せる
+        g += `<line x1="${cx - r}" y1="${cy + ry + 14}" x2="${cx + r}" y2="${cy + ry + 14}" stroke="#7c3aed" stroke-width="2"/>
+              <text x="${cx}" y="${cy + ry + 30}" text-anchor="middle" font-size="11" font-weight="900" fill="#7c3aed">よこ ${r * 2}</text>
+              <line x1="${cx + r + 16}" y1="${cy - ry}" x2="${cx + r + 16}" y2="${cy + ry}" stroke="#dc2626" stroke-width="2"/>
+              <text x="${cx + r + 22}" y="${cy}" font-size="11" font-weight="900" fill="#dc2626">たて ${(ry * 2).toFixed(0)}</text>`;
+        g += `<text x="${cx}" y="${H - 12}" text-anchor="middle" font-size="13" font-weight="900" fill="#5b21b6">${
+            anang === 0 ? '👆 真上{まうえ}から 見ると… たてに のびた だえん' : '👀 ななめから 見ると… きれいな 丸！'}</text>`;
+        g += `<text x="18" y="26" font-size="12" font-weight="900" fill="#7c3aed">地面に かいた 絵（たてに ${STRETCH}倍 のばして ある）</text>`;
+        document.getElementById('an-fig').innerHTML = svg(W, H, g);
+        document.getElementById('an-ctrl').innerHTML = [['👆 真上から 見る', 0], ['👀 ななめから 見る', 1]].map(([label, v]) =>
+            `<button onclick="anSet(${v})" data-an="${v}" class="${anang === v ? 'bg-violet-700 text-white' : 'bg-white border-2 border-violet-200 text-slate-600'} font-black px-3 py-2 rounded-2xl text-xs bounce-hover">${label}</button>`).join('');
+        document.getElementById('an-info').innerHTML =
+            `地面を ななめから 見ると、おくゆきの 方向は <b>ちぢんで</b> 見える。
+             だから <b>先に たてへ ${STRETCH}倍 のばして かいて おく</b>と、決められた 場所から 見た ときに ちょうど 正しい 形に なる。
+             これを <b>アナモルフォーシス</b>と いう。<br>
+             <span class="text-xs text-slate-600">💡 道路の「止まれ」の 文字も、運転席から 読みやすい ように たてに のばして かかれて いる。</span>`;
+    }
+
+    const DRTIPS = [
+        ['①「見る 場所」を 先に 決める', 'トリックアートは 1か所から 見た ときだけ 成りたつ。スマホを おく 位置を 決めて、そこから 見ながら かくのが コツ。'],
+        ['② 影{かげ}を つけると 浮く・沈む', '手前が 明るく、おくが 暗いと へこんで 見える。物の 下に 濃い 影を つけると 浮き上がって 見える。'],
+        ['③ 紙の ふちを またぐ', '絵が 紙の ふちから はみ出して いる ように かくと、飛び出して 見える。線を 紙の ふちで わざと 切るのが ポイント。'],
+        ['④ ほんものを となりに おく', 'えんぴつや 消しゴムを 絵の となりに おくと、大きさを くらべて しまい 絵が ほんものらしく 見える。'],
+        ['⑤ ますめの 紙を つかう', 'ますを たてに のばした「のばしたます」に かき写すと、アナモルフォーシスが かんたんに つくれる。']
+    ];
+    function drTips() {
+        document.getElementById('dr-tips').innerHTML = DRTIPS.map(([t, d]) =>
+            `<div class="border-2 border-violet-200 bg-violet-50 rounded-2xl p-3" data-drtip="${t.slice(0, 3)}">
+                <p class="font-black text-sm text-violet-900">${t}</p>
+                <p class="text-xs font-bold text-slate-600 mt-0.5 leading-relaxed">${d}</p></div>`).join('');
+    }
+
+    /* =====================================================================
+       ⑤ クイズ
+       ===================================================================== */
+    const QS = [
+        { f: 'ことば', q: '見えて いる ものが 実際と ちがって 見える ことを 何と いう？', a: '錯視（錯覚）', x: ['近視', '乱視', '色覚'], e: '目の 病気でも 気の せいでも なく、だれの 脳でも 同じように おきる しくみ。' },
+        { f: 'ことば', q: '一点透視図法で、線が あつまる 1点を 何と いう？', a: '消点（消失点）', x: ['中心点', '原点', '焦点'], e: 'ここに 線を あつめると、おくへ 続いて いる ように 見える。' },
+        { f: 'ことば', q: 'ななめから 見た ときだけ 正しく 見える ように、のばして かく 絵を 何と いう？', a: 'アナモルフォーシス', x: ['モザイク', 'コラージュ', 'シルエット'], e: '道路の 文字や 地面の トリックアートに つかわれて いる。' },
+        { f: 'ことば', q: 'ルビンの 壺で 入れかわる、「もの」と「背景」の 関係を 何と いう？', a: '図と 地', x: ['明と 暗', '線と 面', '前と 後'], e: '脳は 図（もの）と 地（背景）を 同時に 入れかえられないので、交代で 見える。' },
+        { f: 'ことば', q: 'カニッツァの 三角形の ように、かいて いないのに 見える ふちを 何と いう？', a: '主観的輪郭', x: ['補色', '残像', '遠近法'], e: '「丸が 欠けて いるのは 上に 何か かさなって いる から」と 脳が 考えて 作り出す。' },
+
+        { f: 'しくみ', q: 'ミュラー・リヤー錯視で、長く 見えるのは どちら？', a: '矢羽が 外を むいて いる ほう', x: ['矢羽が 内を むいて いる ほう', 'どちらも 同じに 見える', '色が こい ほう'], e: '外むきは「部屋の すみ（遠い）」、内むきは「建物の 角（近い）」に 見え、遠い ものを 大きく 直す くせが 出る。' },
+        { f: 'しくみ', q: 'ポンゾ錯視で 上の ぼうが 長く 見える りゆうは？', a: '線路の ように 見えて「遠い」と 思う から', x: ['上の ほうが 明るい から', '線が 太い から', '目が 上を 見にくい から'], e: '遠い ものが 同じ 大きさに 見えたら、本当は 大きい はず＝脳が そう 直して しまう（大きさの 恒常性{こうじょうせい}）。' },
+        { f: 'しくみ', q: 'エビングハウス錯視は 何を くらべて しまう 錯視？', a: 'まわりの 円の 大きさ', x: ['円の 色', '円の 位置', '紙の 大きさ'], e: '大きい ものに かこまれると 小さく、小さい ものに かこまれると 大きく 見える。' },
+        { f: 'しくみ', q: '大きい おさらに 料理を のせると 少なく 見える。これは どの 錯視？', a: 'デルブーフ錯視', x: ['カフェウォール錯視', 'ヘルマン格子', 'ホワイト錯視'], e: 'まわりの わとの すきまで 大きさを 判断する ため。小さい おさらに すると 満足しやすい。' },
+        { f: 'しくみ', q: 'カフェウォール錯視で、よこの 線は じつは？', a: '完全な 平行', x: ['少し ななめ', '波打って いる', '長さが ちがう'], e: '1段ごとに 四角を 半分 ずらすと、平行な 線が くさび形に 見える。' },
+        { f: 'しくみ', q: 'ヘルマン格子で 交差点に 灰色の しみが 見える りゆうは？', a: 'まわりが 明るいと 細ぼうが 出力を おさえる から', x: ['インクが うすい から', '紙が よごれて いる から', '目が つかれて いる から'], e: 'これを 側抑制と いう。目を 動かすと しみも 動くので、紙の 上に は ない ことが わかる。' },
+        { f: 'しくみ', q: '同じ 灰色が 暗い 背景で 明るく 見えるのは、脳が 何で 見て いる から？', a: 'まわりとの 明るさの 差', x: ['絶対の 明るさ', '色の 名前', '形の 大きさ'], e: 'この しくみの おかげで、晴れでも 曇りでも 同じ 紙を「白い 紙」と 判断できる。' },
+        { f: 'しくみ', q: '垂直水平錯視では どちらが 長く 感じる？', a: 'たての 線', x: ['よこの 線', 'どちらも 同じ', '太い 線'], e: '同じ 長さなのに たてが 1割ほど 長く 感じる 人が 多い。' },
+        { f: 'しくみ', q: 'ジャストロー錯視で、2つの 形は？', a: 'まったく 同じ 形', x: ['下の ほうが 大きい', '上の ほうが 大きい', '角度が ちがう'], e: 'となりあう ふちを くらべて しまう ため。ならべ方を 変えると 錯視は 消える。' },
+        { f: 'しくみ', q: 'ネッカーの 立方体が ぱたんと 切りかわる りゆうは？', a: 'どの 面が 手前か 絵から 決められない から', x: ['絵が 動いて いる から', '目が つかれる から', '線の 太さが ちがう から'], e: '脳は いちどに 1つの 答えしか 選べないので、答えを 行ったり 来たり する。' },
+        { f: 'しくみ', q: '悪魔の フォークが ありえないのは、上と 下で 何が ちがう から？', a: '柱の 数（上は 3本、下は 2本）', x: ['色が ちがう', '長さが ちがう', '角度が ちがう'], e: '一部分ずつは 正しいのに、ぜんたいで つじつまが 合わない。指で かくすと ふしぎさが 消える。' },
+        { f: 'しくみ', q: 'ペンローズの 三角形は どこに 存在できる？', a: '紙の 上（2次元）だけ', x: ['木で 作れる', '金ぞくなら 作れる', '大きく すれば 作れる'], e: 'どの 角も 直角に 見えるが、3つ ぜんぶを 直角に した 三角形は 立体としては 作れない。' },
+        { f: 'しくみ', q: 'シュレーダーの 階段を さかさまに すると？', a: '見上げた 階段に 変わる', x: ['何も 変わらない', '消えて しまう', '色が 変わる'], e: 'どちらの 見え方も 正しく、絵じたいは まったく 同じ。' },
+
+        { f: 'かくコツ', q: 'トリックアートを かく とき、いちばん 先に 決める ことは？', a: 'どこから 見る かの 位置', x: ['色', '紙の 大きさ', 'かく 時間'], e: '1か所から 見た ときだけ 成りたつので、見る 場所を 決めて そこから 確かめながら かく。' },
+        { f: 'かくコツ', q: '絵を 浮き上がって 見せる ために つけると よい ものは？', a: '濃い 影', x: ['明るい 白', '細い 点線', '文字'], e: '影が あると 脳は「物が ういて いる」と 判断する。影の 向きは そろえる。' },
+        { f: 'かくコツ', q: '飛び出して 見せる ための くふうは？', a: '絵を 紙の ふちから はみ出させる', x: ['まん中に 小さく かく', 'わくで かこむ', '線を 太くする'], e: '紙の ふちを またぐと「絵の 外に 出て きた」と 感じる。' },
+        { f: 'かくコツ', q: '地面に かく トリックアートは どう かく？', a: 'たてに のばして かく', x: ['よこに のばして かく', '小さく かく', 'さかさまに かく'], e: 'ななめから 見ると おくゆきが ちぢむので、先に のばして おく（アナモルフォーシス）。' },
+        { f: 'かくコツ', q: '絵の となりに えんぴつや 消しゴムを おくと どうなる？', a: '大きさを くらべて ほんものらしく 見える', x: ['じゃまに なる だけ', '絵が 小さく 見える', '色が 変わる'], e: '見る 人は 知って いる ものと くらべて 大きさを 判断する。' },
+        { f: 'かくコツ', q: '一点透視で 穴を かく とき、おくを どう ぬる？', a: '暗く ぬる', x: ['白く のこす', '赤く ぬる', '何も ぬらない'], e: 'おくが 暗いと 深く 見える。手前を 明るく すると さらに 深さが 出る。' },
+
+        { f: 'ふしぎ', q: 'なぜ 錯視は「目が わるい」わけでは ないと 言える？', a: 'だれの 脳でも 同じように おきる から', x: ['めがねを かけると 消える から', '子どもだけ おきる から', '写真では おきない から'], e: 'むしろ 脳が うまく 働いて いる 証拠。ふだんは 役に 立つ しくみの 副作用。' },
+        { f: 'ふしぎ', q: '遠くの 人が 小さく 見えても「小さい 人」と 思わないのは？', a: '大きさの 恒常性が はたらく から', x: ['目が ズームする から', '記おくで 見て いる から', '空気が すんで いる から'], e: '距離を 手がかりに 脳が 自動で 直して いる。ポンゾ錯視は この しくみに 便乗した もの。' },
+        { f: 'ふしぎ', q: '白い 紙が 夕方でも「白い」と わかるのは？', a: '明るさや 色の 恒常性が はたらく から', x: ['紙が 光る から', '目が 光を ためる から', '色が 変わらない から'], e: '脳が まわりの 光を 考えて 色を 直して いる。だから 明るさの 対比錯視も おきる。' },
+        { f: 'ふしぎ', q: '錯視が 研究されて 役に 立って いる 例は？', a: '道路の 文字・標識や おさらの 大きさなど', x: ['何の 役にも 立たない', '手品だけ', 'ゲームだけ'], e: 'カーブの 手前に 間かくを つめた 線を かいて「速い」と 感じさせ、速度を おさえる くふうも ある。' },
+        { f: 'ふしぎ', q: 'だまし絵を 見る とき、いちばん 大事な 心がまえは？', a: 'ものさしで 実際に はかって たしかめる', x: ['じっと 見つめつづける', '人の 意見に あわせる', 'すぐ あきらめる'], e: '「見えた こと」と「本当の こと」は ちがう ことが ある。たしかめる くせが 科学の 出発点。' }
+    ];
+    let qz = null, qzField = 'all';
+    function newQuiz() {
+        const pool = qzField === 'all' ? QS : QS.filter(q => q.f === qzField);
+        const q = pool[rnd(pool.length)];
+        qz = { q, choices: shuffle([q.a].concat(q.x)), done: false };
+        const fields = ['all'].concat([...new Set(QS.map(x => x.f))]);
+        document.getElementById('qz-fields').innerHTML = fields.map(f =>
+            `<button onclick="setField('${f}')" data-qf="${f}" class="${qzField === f ? 'bg-violet-700 text-white' : 'bg-white border-2 border-violet-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${f === 'all' ? 'ぜんぶ ' + QS.length : f + ' ' + QS.filter(x => x.f === f).length}</button>`).join('');
+        document.getElementById('qz-q').innerHTML = `<span class="text-xs font-black text-violet-700 bg-violet-100 px-2 py-1 rounded-lg mr-2">${esc(q.f)}</span>${esc(q.q)}`;
+        document.getElementById('qz-choices').innerHTML = qz.choices.map((c, i) =>
+            `<button onclick="ansQuiz(${i})" data-qzc="${i}" class="bg-white border-2 border-slate-200 hover:border-violet-500 font-bold text-left px-4 py-3 rounded-2xl bounce-hover">${esc(c)}</button>`).join('');
+        document.getElementById('qz-res').innerHTML = '';
+        scoreBox('qz-score', S.quiz);
+    }
+    function setField(f) { qzField = f; newQuiz(); }
+    function ansQuiz(i) {
+        if (!qz || qz.done) return;
+        qz.done = true;
+        const ok = qz.choices[i] === qz.q.a;
+        S.quiz[1]++; if (ok) S.quiz[0]++;
+        markChoices('[data-qzc]', j => qz.choices[j] === qz.q.a, i, 'font-bold text-left px-4 py-3 rounded-2xl');
+        document.getElementById('qz-res').innerHTML = resultBox(ok, ok ? '⭕ せいかい！' : `❌ こたえは 「${esc(qz.q.a)}」`, qz.q.e);
+        scoreBox('qz-score', S.quiz);
+    }
+
+    /* ===================== 起動 ===================== */
+    renderNav();
+    setIllu(0);
+    rubify(document.body);
+</script>
+</body>
+</html>
