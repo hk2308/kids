@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>のりもの しくみラボ</title>
+    <meta name="description" content="自転車・車・電車・新幹線・リニア・飛行機・船・ロケットがどう動くのかを図で解説。メリットとデメリットの比較、翼の揚力や浮力やギアやブレーキのうごく実験、どの乗り物を選ぶかクイズ。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums }
+        .bounce-hover { transition: transform .12s cubic-bezier(.175,.885,.32,1.275) }
+        .bounce-hover:active { transform: scale(.94) }
+        @keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.1) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275) }
+        @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+        .shake { animation: shake .3s ease-in-out }
+        svg text { font-family: inherit }
+        rt { font-size: .55em; font-weight: 700; color: #0369a1 }
+        input[type=range] { accent-color: #0284c7; width: 100% }
+    </style>
+</head>
+<body class="bg-sky-50 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-sky-700 via-cyan-600 to-teal-500 text-white p-3 shadow-lg sticky top-0 z-30">
+        <div class="max-w-4xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">🚄</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">のりもの しくみラボ</h1>
+                    <p class="text-xs text-sky-50 font-bold hidden sm:block">どうして 進む・浮く・飛ぶ？ よい ところと 苦手な ところ</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[64px] z-20 bg-sky-50/95 backdrop-blur border-b border-sky-200">
+        <div class="max-w-4xl mx-auto flex gap-2 p-3 overflow-x-auto" id="tab-nav"></div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto w-full p-3 sm:p-5 flex-grow space-y-4">
+
+        <!-- ===== ① しくみ ===== -->
+        <section id="tab-how" class="space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-sky-100">
+                <h2 class="font-black">🔧 どうやって 動いて いるの？</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    どの のりものも <b class="text-sky-700">エネルギー → 力に かえる → 車輪や はねに つたえる → 進む</b>
+                    という 同じ ながれで 動いて いる。のりものを タップして みよう。
+                </p>
+                <div id="ve-chips" class="flex flex-wrap gap-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-sky-100">
+                <h2 id="ve-name" class="font-black text-lg"></h2>
+                <p id="ve-lead" class="text-sm font-bold text-slate-500 mt-1"></p>
+                <div id="ve-fig" class="mt-3"></div>
+                <p class="font-black text-sm mt-3">⚡ 力の ながれ</p>
+                <div id="ve-chain" class="mt-2"></div>
+                <div id="ve-steps" class="space-y-2 mt-3"></div>
+                <div class="grid sm:grid-cols-2 gap-3 mt-3">
+                    <div class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-3">
+                        <p class="font-black text-emerald-800 text-sm">😀 よい ところ</p>
+                        <ul id="ve-pro" class="text-xs font-bold text-slate-600 mt-1 space-y-1 leading-relaxed"></ul>
+                    </div>
+                    <div class="bg-rose-50 border-2 border-rose-200 rounded-2xl p-3">
+                        <p class="font-black text-rose-800 text-sm">😣 苦手な ところ</p>
+                        <ul id="ve-con" class="text-xs font-bold text-slate-600 mt-1 space-y-1 leading-relaxed"></ul>
+                    </div>
+                </div>
+                <div id="ve-spec" class="flex flex-wrap gap-2 mt-3"></div>
+                <div id="ve-trivia" class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-3 text-sm font-bold mt-3 leading-relaxed"></div>
+            </div>
+        </section>
+
+        <!-- ===== ② くらべる ===== -->
+        <section id="tab-cmp" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-sky-100">
+                <h2 class="font-black">📊 数で くらべて みよう</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    くらべる ものを えらぶと、ぼうグラフに なる。
+                    <b class="text-sky-700">「いちばん いい のりもの」は ない</b>。どれも とくいと 苦手が ある。
+                </p>
+                <div id="cm-tabs" class="flex flex-wrap gap-2 mt-3"></div>
+                <div id="cm-fig" class="mt-3"></div>
+                <div id="cm-note" class="bg-sky-50 border-2 border-sky-200 rounded-2xl p-3 text-sm font-bold leading-relaxed"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-sky-100">
+                <h2 class="font-black">⚖️ よい ところ・苦手な ところ 一覧</h2>
+                <div id="cm-table" class="mt-3 space-y-2"></div>
+            </div>
+        </section>
+
+        <!-- ===== ③ じっけん ===== -->
+        <section id="tab-lab" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-sky-100">
+                <h2 class="font-black">✈️ なぜ 飛行機は 飛べるの？（揚力{ようりょく}）</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    はねが 空気を <b class="text-sky-700">下へ ながす</b>と、その はんたいの 力で はねは 上に おされる。
+                    はねの 角度（迎え角{むかえかく}）を 変えて みよう。
+                </p>
+                <div class="mt-3"><input type="range" min="-4" max="22" step="1" value="6" id="wg-a" oninput="wingDraw()">
+                    <p class="text-xs font-black text-slate-600 text-center">はねの 角度 <span id="wg-av" class="num">6</span>°</p></div>
+                <div id="wg-fig" class="mt-2"></div>
+                <div id="wg-info" class="bg-sky-50 border-2 border-sky-200 rounded-2xl p-3 text-sm font-bold leading-relaxed"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-sky-100">
+                <h2 class="font-black">🚢 なぜ 鉄の 船が 浮くの？（浮力{ふりょく}）</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    水に 入れた ぶんだけ 水を おしのける。<b class="text-sky-700">おしのけた 水の 重さ ＝ 浮かせる 力</b>。
+                    だから 中が 空どうの 鉄の 船は 浮く。荷物を のせて みよう。
+                </p>
+                <div class="mt-3"><input type="range" min="0" max="140" step="5" value="40" id="bo-w" oninput="boatDraw()">
+                    <p class="text-xs font-black text-slate-600 text-center">のせる 重さ <span id="bo-wv" class="num">40</span> トン</p></div>
+                <div id="bo-fig" class="mt-2"></div>
+                <div id="bo-info" class="bg-sky-50 border-2 border-sky-200 rounded-2xl p-3 text-sm font-bold leading-relaxed"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-sky-100">
+                <h2 class="font-black">🚲 自転車の ギアの ひみつ</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    前の 歯車が 大きく、後ろが 小さいほど、1回 こぐ ごとに たくさん 進む。
+                    そのかわり ペダルは <b class="text-sky-700">重く</b> なる。これが てこと 同じ「力と 距離の こうかん」。
+                </p>
+                <div class="grid sm:grid-cols-2 gap-3 mt-3">
+                    <div><input type="range" min="28" max="52" step="2" value="48" id="gr-f" oninput="gearDraw()">
+                        <p class="text-xs font-black text-slate-600 text-center">前の 歯の 数 <span id="gr-fv" class="num">48</span></p></div>
+                    <div><input type="range" min="11" max="28" step="1" value="16" id="gr-r" oninput="gearDraw()">
+                        <p class="text-xs font-black text-slate-600 text-center">後ろの 歯の 数 <span id="gr-rv" class="num">16</span></p></div>
+                </div>
+                <div id="gr-fig" class="mt-2"></div>
+                <div id="gr-info" class="bg-sky-50 border-2 border-sky-200 rounded-2xl p-3 text-sm font-bold leading-relaxed"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-sky-100">
+                <h2 class="font-black">🛑 止まるには どれくらい 進む？</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    電車の 鉄の 車輪は すべりやすいので、少しの 力で 進める かわりに
+                    <b class="text-rose-700">止まるのに とても 長い 距離</b>が いる。だから 線路に とびだすと 間にあわない。
+                </p>
+                <div class="mt-3"><input type="range" min="20" max="320" step="10" value="60" id="bk-v" oninput="brakeDraw()">
+                    <p class="text-xs font-black text-slate-600 text-center">はやさ 時速 <span id="bk-vv" class="num">60</span> km</p></div>
+                <div id="bk-fig" class="mt-2"></div>
+                <div id="bk-info" class="bg-sky-50 border-2 border-sky-200 rounded-2xl p-3 text-sm font-bold leading-relaxed"></div>
+            </div>
+        </section>
+
+        <!-- ===== ④ どれで 行く？ ===== -->
+        <section id="tab-pick" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-sky-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">🗺️ どの のりもので 行く？</h2>
+                    <span id="pk-score" class="num bg-sky-100 text-sky-700 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newPick()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    きょり・人数・荷物・天気・お金…じょうけんに よって いちばん よい のりものは かわる。
+                </p>
+                <p id="pk-q" class="font-black text-base sm:text-lg mt-3 leading-relaxed"></p>
+                <div id="pk-choices" class="grid gap-2 mt-3"></div>
+                <div id="pk-res" class="mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ⑤ クイズ ===== -->
+        <section id="tab-quiz" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-sky-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">❓ のりものクイズ</h2>
+                    <span id="qz-score" class="num bg-sky-100 text-sky-700 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newQuiz()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <div id="qz-fields" class="flex flex-wrap gap-2 mt-3"></div>
+                <p id="qz-q" class="font-black text-base sm:text-lg mt-3 leading-relaxed"></p>
+                <div id="qz-choices" class="grid gap-2 mt-3"></div>
+                <div id="qz-res" class="mt-3"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center text-xs text-slate-400 font-bold p-4">のりもの しくみラボ © 2026</footer>
+
+<script>
+    /* ===================== きょうつう ===================== */
+    const rnd = n => Math.floor(Math.random() * n);
+    const pickOne = a => a[rnd(a.length)];
+    function shuffle(a) { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = rnd(i + 1); const t = b[i]; b[i] = b[j]; b[j] = t; } return b; }
+    function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    function svg(w, h, body) {
+        return `<svg viewBox="0 0 ${w} ${h}" class="w-full h-auto block mx-auto" style="max-width:${w}px" role="img">${body}</svg>`;
+    }
+    function resultBox(ok, title, body) {
+        return `<div class="pop ${ok ? 'bg-green-50 border-green-300' : 'bg-amber-50 border-amber-300'} border-2 rounded-2xl p-3">
+            <p class="font-black ${ok ? 'text-green-700' : 'text-amber-700'}">${title}</p>
+            <div class="font-bold text-sm mt-1 leading-relaxed">${body}</div></div>`;
+    }
+    const S = { pick: [0, 0], quiz: [0, 0] };
+    function scoreBox(id, s) { document.getElementById(id).innerText = `${s[0]} / ${s[1]}`; }
+    function markChoices(sel, isRight, picked, cls) {
+        document.querySelectorAll(sel).forEach((el, j) => {
+            el.className = `${isRight(j) ? 'bg-green-50 border-green-500' : (j === picked ? 'bg-red-50 border-red-400 shake' : 'bg-white border-slate-200 opacity-60')} border-2 ${cls}`;
+        });
+    }
+
+    /* 漢字{よみ} を ルビに */
+    const RUBY_RE = /([一-鿿々]+)\{([^{}]+)\}/g;
+    function rubySkip(el) {
+        for (let n = el; n; n = n.parentNode) {
+            const tag = n.nodeType === 1 ? n.tagName.toLowerCase() : '';
+            if (tag === 'script' || tag === 'style' || tag === 'svg' || tag === 'ruby') return true;
+        }
+        return false;
+    }
+    function rubifyText(node) {
+        const t = node.nodeValue;
+        if (t.indexOf('{') < 0 || !node.parentNode || rubySkip(node.parentNode)) return;
+        RUBY_RE.lastIndex = 0;
+        if (!RUBY_RE.test(t)) return;
+        RUBY_RE.lastIndex = 0;
+        const frag = document.createDocumentFragment();
+        let last = 0, m;
+        while ((m = RUBY_RE.exec(t))) {
+            if (m.index > last) frag.appendChild(document.createTextNode(t.slice(last, m.index)));
+            const ruby = document.createElement('ruby');
+            ruby.appendChild(document.createTextNode(m[1]));
+            const rt = document.createElement('rt');
+            rt.textContent = m[2];
+            ruby.appendChild(rt);
+            frag.appendChild(ruby);
+            last = m.index + m[0].length;
+        }
+        if (last < t.length) frag.appendChild(document.createTextNode(t.slice(last)));
+        node.parentNode.replaceChild(frag, node);
+    }
+    function rubify(root) {
+        if (root.nodeType === 3) return rubifyText(root);
+        if (root.nodeType !== 1 || rubySkip(root)) return;
+        const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        const list = [];
+        while (w.nextNode()) if (w.currentNode.nodeValue.indexOf('{') >= 0) list.push(w.currentNode);
+        list.forEach(rubifyText);
+    }
+    new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(rubify)))
+        .observe(document.body, { childList: true, subtree: true });
+
+    const TABS = { how: '🔧 しくみ', cmp: '📊 くらべる', lab: '🧪 じっけん', pick: '🗺️ どれで 行く？', quiz: '❓ クイズ' };
+    let tab = 'how';
+    function renderNav() {
+        document.getElementById('tab-nav').innerHTML = Object.entries(TABS).map(([k, label]) =>
+            `<button onclick="setTab('${k}')" data-tab="${k}" class="${tab === k ? 'bg-sky-700 text-white' : 'bg-white border-2 border-sky-200 text-slate-600'} font-black px-4 py-2 rounded-full text-sm whitespace-nowrap bounce-hover">${label}</button>`).join('');
+    }
+    function setTab(k) {
+        tab = k;
+        Object.keys(TABS).forEach(t => document.getElementById('tab-' + t).classList.toggle('hidden', t !== k));
+        renderNav();
+        if (k === 'cmp' && !cmpReady) { cmDraw(); cmTable(); cmpReady = true; }
+        if (k === 'lab' && !labReady) { wingDraw(); boatDraw(); gearDraw(); brakeDraw(); labReady = true; }
+        if (k === 'pick' && !pk) newPick();
+        if (k === 'quiz' && !qz) newQuiz();
+    }
+
+    /* =====================================================================
+       SVG の 部品
+       ===================================================================== */
+    const SW = 560;
+    function bg(h, fill) { return `<rect x="0" y="0" width="${SW}" height="${h}" rx="14" fill="${fill || '#e0f2fe'}"/>`; }
+    function wheel(cx, cy, r, spokes) {
+        let g = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#334155" stroke-width="${r > 20 ? 5 : 4}"/>
+                 <circle cx="${cx}" cy="${cy}" r="3" fill="#334155"/>`;
+        if (spokes) for (let i = 0; i < 8; i++) {
+            const a = i * Math.PI / 4;
+            g += `<line x1="${cx}" y1="${cy}" x2="${(cx + Math.cos(a) * r).toFixed(1)}" y2="${(cy + Math.sin(a) * r).toFixed(1)}" stroke="#94a3b8" stroke-width="1.5"/>`;
+        }
+        return g;
+    }
+    // 部品の 名前を 外に 出して 引き出し線で つなぐ
+    function tag(x, y, tx, ty, text, col) {
+        const c = col || '#0369a1';
+        const anchor = tx < x ? 'end' : 'start';
+        return `<line x1="${x}" y1="${y}" x2="${tx}" y2="${ty}" stroke="${c}" stroke-width="1.5" stroke-dasharray="3 3"/>
+                <circle cx="${x}" cy="${y}" r="3" fill="${c}"/>
+                <text x="${tx + (anchor === 'end' ? -4 : 4)}" y="${ty + 4}" text-anchor="${anchor}" font-size="11" font-weight="900" fill="${c}">${text}</text>`;
+    }
+    function arrow(x1, y1, x2, y2, col, w) {
+        const a = Math.atan2(y2 - y1, x2 - x1), L = 9;
+        return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="${w || 3}" stroke-linecap="round"/>
+                <polygon points="${x2},${y2} ${(x2 - Math.cos(a - .45) * L).toFixed(1)},${(y2 - Math.sin(a - .45) * L).toFixed(1)} ${(x2 - Math.cos(a + .45) * L).toFixed(1)},${(y2 - Math.sin(a + .45) * L).toFixed(1)}" fill="${col}"/>`;
+    }
+
+    /* =====================================================================
+       ① のりものの しくみ
+       ===================================================================== */
+    const VE = [
+        {
+            id: 'bike', e: '🚲', n: '自転車{じてんしゃ}', lead: '人の 足の 力だけで 進む、いちばん エネルギーの むだが 少ない のりもの。',
+            chain: [['🦵', '足の 力'], ['⚙️', 'ペダルと ギア'], ['⛓️', 'チェーン'], ['🛞', '後ろの 車輪']],
+            steps: [
+                ['ペダルを ふむ', 'ペダルは クランクと いう うでに ついて いて、まわす 力（トルク）に なる。'],
+                ['チェーンで 後ろへ', '前の 歯車の 回転を チェーンが 後ろの 小さい 歯車に つたえる。'],
+                ['車輪が まわって 進む', 'タイヤと 地面の まさつが あるので、まわると 体ごと 前に すすむ。'],
+                ['たおれない りくつ', 'ハンドルを たおれる ほうへ 少し きると 体が おき上がる。止まって いると たおれるのは、この 直しが できない から。']
+            ],
+            pro: ['ガソリンも 電気も いらない（CO2 ゼロ）', 'せまい 道や 近い ところに 強い', '買う のも とめる のも 安い', '運動に なって 体に よい'],
+            con: ['長い きょりは つかれる', '雨や 雪、坂道は 大変', '荷物や 人を たくさん 運べない', '車と ぶつかると けがが 大きい'],
+            spec: [['ふつうの はやさ', '時速 15km'], ['のれる 人', '1人'], ['CO2', '0 g/人km']],
+            trivia: '同じ きょりを 進む ときに つかう エネルギーが、生きものも 機械も ふくめて いちばん 少ないのが 自転車。人間は 自転車に のると「もっとも 燃費の よい 動物」に なる。'
+        },
+        {
+            id: 'car', e: '🚗', n: 'ガソリン自動車{じどうしゃ}', lead: 'ガソリンを エンジンの 中で 爆発{ばくはつ}させ、その 力で ピストンを 動かして 走る。',
+            chain: [['⛽', 'ガソリン'], ['💥', 'エンジン（爆発）'], ['🔄', '回転に かえる'], ['🛞', '4つの タイヤ']],
+            steps: [
+                ['① 吸{す}う', 'ガソリンの きりと 空気を シリンダーに すいこむ。'],
+                ['② ちぢめる', 'ピストンが 上がって ぎゅっと おしちぢめる。ちぢめると よく 燃える。'],
+                ['③ 燃やす', 'プラグの 火花で 爆発。ピストンが いきおいよく おし下げられる。ここだけが 力を 出す。'],
+                ['④ 出す', '燃えた ガスを 外に 出す。この 4つを 1秒に 何十回も くりかえす。'],
+                ['回転を つたえる', '上下の 動きを クランクが 回転に かえ、ギア（トランスミッション）で 力の 強さを 変えて タイヤへ。']
+            ],
+            pro: ['ドアから ドアまで 乗りかえ なしで 行ける', '好きな 時間に 出発できる', '荷物を たくさん のせられる', 'どこへでも 行ける（道が あれば）'],
+            con: ['1人あたりの CO2が いちばん 多い', 'じゅうたい・駐車場・事こが 多い', 'ガソリン代・税金・保険で お金が かかる', '運転する 人が 必要（つかれる）'],
+            spec: [['街の はやさ', '時速 40〜60km'], ['のれる 人', '5人くらい'], ['CO2', 'やく 130 g/人km']],
+            trivia: 'ガソリンの エネルギーの うち、じっさいに 車を 動かすのに つかわれるのは 3〜4割ほど。のこりは 熱に なって にげて しまう。だから 車は 走ると あつく なる。'
+        },
+        {
+            id: 'ev', e: '🔌', n: '電気自動車{でんきじどうしゃ}（EV）', lead: '大きな 電池（バッテリー）の 電気で モーターを まわして 走る。エンジンが ない。',
+            chain: [['🔋', 'バッテリー'], ['🧲', 'モーター'], ['🔄', '歯車'], ['🛞', 'タイヤ']],
+            steps: [
+                ['電気を ためる', 'コンセントや 充電器{じゅうでんき}から バッテリーに 電気を ためる。'],
+                ['モーターが まわる', '電気を 流すと 磁石{じしゃく}の 力で 軸が まわる。爆発が ないので とても しずか。'],
+                ['すぐ 力が 出る', 'モーターは 止まって いる ときから いちばん 強い 力が 出せるので 発進が するどい。'],
+                ['ブレーキで 電気を 作る', 'ブレーキを かけると モーターが 発電機に なり、電気を バッテリーに もどす（回生{かいせい}ブレーキ）。']
+            ],
+            pro: ['走る とき 排気ガスを 出さない', 'とても しずかで ゆれが 少ない', 'エネルギーの むだが ガソリン車より 少ない', '部品が 少なく こしょうしにくい'],
+            con: ['1回の 充電で 走れる きょりが 短め', '充電に 時間が かかる（急速でも 30分ほど）', '車の ねだんが 高い', '電気を 作る ときの CO2は のこる'],
+            spec: [['街の はやさ', '時速 40〜60km'], ['のれる 人', '5人くらい'], ['CO2', '走行中は 0（発電では 出る）']],
+            trivia: '電気自動車は じつは ガソリン車より 古い。1900年ごろの アメリカでは 走って いる 車の 3分の1 以上が 電気自動車だった。電池が 重かった ため 一度 すたれて、いま 電池の 進歩で よみがえった。'
+        },
+        {
+            id: 'train', e: '🚃', n: '電車{でんしゃ}', lead: '空中の 電線から 電気を とり、モーターで 鉄の 車輪を まわす。鉄と 鉄は すべるので とても 効率が よい。',
+            chain: [['🏭', '発電所の 電気'], ['〰️', '架線{かせん}'], ['🧲', 'モーター'], ['🛤️', '鉄の 車輪と レール']],
+            steps: [
+                ['パンタグラフで 電気を とる', '屋根の上の わくを 架線に おしつけて、走りながら 電気を 受けとる。'],
+                ['モーターが 車輪を まわす', '床下の モーターが 歯車を 通して 車輪を まわす。'],
+                ['まさつが 小さい', '鉄の 車輪と 鉄の レールは、ゴムタイヤと 道路の 10分の1 ほどしか まさつが ない。だから 少ない 力で 重い 車両を 運べる。'],
+                ['どうして 曲がれる？', '車輪は 内側が 少し 太い（円すい形）。カーブの 外側の 車輪が 太い ところに のると 進む きょりが のびて、自然に 曲がれる。'],
+                ['どうして 線路から 落ちない？', '車輪の 内側に「フランジ」という つばが あって、レールの 内側から 支えて いる。']
+            ],
+            pro: ['1人あたりの CO2が いちばん 少ない', '時間に 正かくで じゅうたいが ない', '一度に とても たくさんの 人を 運べる', '運転しなくて よいので 本を 読める'],
+            con: ['線路の ある ところしか 行けない', '時刻表の 時間に あわせないと いけない', 'ラッシュは とても こむ', 'レール・駅を 作る お金が ぼう大'],
+            spec: [['はやさ', '時速 40〜120km'], ['10両で', '1500人くらい'], ['CO2', 'やく 17 g/人km']],
+            trivia: '電車が ブレーキを かけると、モーターが 発電機に なって 電気を 架線に もどす。その 電気は 近くを 走って いる べつの 電車が つかって いる。'
+        },
+        {
+            id: 'shinkansen', e: '🚄', n: '新幹線{しんかんせん}', lead: '電車の なかまだが、「せんようの まっすぐな 線路」と「全車両で 力を 出す しくみ」で とても 速い。',
+            chain: [['⚡', '高い 電圧の 電気'], ['🧲', '全車両の モーター'], ['🛤️', 'せんようの 線路'], ['💨', '流線形の からだ']],
+            steps: [
+                ['ぜんぶの 車両が エンジン', '先頭だけが 引っぱるのでは なく、ほとんどの 車両に モーターが ついて いる（動力分散{どうりょくぶんさん}）。だから 加速が 速く、線路も いためにくい。'],
+                ['せんようの 線路', 'ふみきりが なく、カーブも ゆるやか。ほかの 電車と 線路を 分けて いるので 全速力で 走れる。'],
+                ['空気を きりさく 鼻', '速く なるほど 空気の ていこうは 強く なる（速さの 2乗で ふえる）。長い 鼻は トンネルに 入る ときの ドンという 音も おさえる。'],
+                ['止まる くふう', '時速 300kmから 止まるには 何kmも 必要。だから 地震を 感じたら すぐ 電気を 切る 装置が ついて いる。']
+            ],
+            pro: ['駅から 駅まで 飛行機より 速い ことが 多い', '天気に つよく おくれにくい', '街の 中心に 直接 入れる', '飛行機の 半分 以下の CO2'],
+            con: ['線路が ある 街しか 行けない', '運賃が 高い', '作る のに 何十年も かかる', '在来線より 音や しんどうが 大きい'],
+            spec: [['最高 はやさ', '時速 320km（東北新幹線）'], ['16両で', '1300人くらい'], ['CO2', 'やく 17 g/人km']],
+            trivia: '1964年の 開業から いままで、列車の 中の お客さんが 事こで なくなった ことは 一度も ない。ふみきりを ぜんぶ なくした ことが 大きな りゆう。'
+        },
+        {
+            id: 'maglev', e: '🧲', n: 'リニアモーターカー', lead: '磁石{じしゃく}の 力で 10cm ほど 浮いて 走る。車輪が ないので まさつが ゼロに なる。',
+            chain: [['❄️', '超電導{ちょうでんどう}磁石'], ['🧲', '壁{かべ}の コイル'], ['⬆️', '浮く'], ['➡️', '前に 引かれる']],
+            steps: [
+                ['つめたく して 強い 磁石に', '車両の 磁石を −269℃ まで 冷やすと、電気の ていこうが ゼロに なって とても 強い 磁石に なる（超電導）。'],
+                ['浮く', '走り出すと、壁の コイルに 電気が 生まれ、はんぱつする 力で 車両が 10cm ほど 浮く。'],
+                ['前に 進む', '壁の 電磁石の N極・S極を 次々に 切りかえて、磁石を 引っぱりつづける。「まわる モーターを まっすぐに のばした もの」なので リニア（直線の）モーター。'],
+                ['車輪は 低速のとき だけ', '浮く 前と 止まる ときは ゴムタイヤで 走る。飛行機の ように 車輪を しまう。']
+            ],
+            pro: ['ものすごく 速い（東京〜名古屋 40分の 計画）', 'まさつが ないので ゆれが 少ない', '急な 坂や カーブに つよい', '地震の ときも レールに ふれて いない'],
+            con: ['電気を たくさん つかう（新幹線の 3倍ほど）', '作る お金が とても 高い', 'ほとんどが トンネルで 景色が 見えない', 'まだ 営業{えいぎょう}して いない'],
+            spec: [['計画の はやさ', '時速 505km'], ['世界記録', '時速 603km（2015年）'], ['浮く 高さ', '10cm ほど']],
+            trivia: '2015年に 山梨の 実験線で 人を のせて 時速 603kmを 記録し、鉄道の 世界最高速度と なった。1秒で 167m＝25mプールを 7つ 分 進む はやさ。'
+        },
+        {
+            id: 'plane', e: '✈️', n: '飛行機{ひこうき}', lead: 'エンジンで 前に 進み、はねが 空気を 下へ ながして その 反作用{はんさよう}で 浮き上がる。',
+            chain: [['🛢️', 'ジェット燃料'], ['🌀', 'ジェットエンジン'], ['➡️', '前に 進む'], ['🪽', 'はねで 上に']],
+            steps: [
+                ['エンジンで 前へ', 'ファンで 空気を すいこみ、ちぢめて 燃料と 燃やし、うしろに いきおいよく ふき出す。出した ぶんと 同じ 力で 機体は 前に おされる（作用・反作用）。'],
+                ['はねが 上に おされる', 'はねは 前が 太く 後ろが うすい 形で、少し 上を むいて いる。ぶつかった 空気を 下へ ながすので、はんたいに はねは 上へ おされる。'],
+                ['上の 気圧が 下がる', 'はねの 上側は 空気が 速く 流れ、気圧が 下がる。下から おされる 形に なり、これも 浮く 力に なる。'],
+                ['角度が 大きすぎると 落ちる', '上を むきすぎると 空気の 流れが はねから はがれ、浮く 力が きゅうに なくなる（失速{しっそく}）。'],
+                ['向きを かえる', '後ろの はねや 立った はね（尾翼{びよく}）を 動かして、上下・左右の 向きを かえる。']
+            ],
+            pro: ['遠い ところに だんぜん 速く 着ける', '海を こえられる', '道路も 線路も いらない', '長い きょりでは 時間の 差が 大きい'],
+            con: ['CO2が 多い（鉄道の 6倍ほど）', '空港が 街から 遠く 待ち時間も 長い', '運賃が 高い ことが 多い', '天気で 欠航・おくれが 出る'],
+            spec: [['巡航{じゅんこう} はやさ', '時速 800〜900km'], ['大きい 機体', '300〜500人'], ['CO2', 'やく 98 g/人km']],
+            trivia: '飛行機が 高い ところ（1万m）を 飛ぶのは、空気が うすくて ていこうが 少なく、燃料が 節約できる から。外は −50℃ ほどで、そのかわり 機内は 空気を おしこんで 気圧を たもって いる。'
+        },
+        {
+            id: 'heli', e: '🚁', n: 'ヘリコプター', lead: '「まわる はね」が 飛行機の はねの 役わり。止まった まま 空に いる ことが できる。',
+            chain: [['🛢️', '燃料'], ['⚙️', 'エンジン'], ['🔄', 'ローター（回転翼）'], ['⬆️', '上に 浮く']],
+            steps: [
+                ['はねを まわす', '飛行機は 機体ごと 前に 走って はねに 風を あてるが、ヘリは はねだけを まわして 風を 作る。だから 走らずに 浮ける。'],
+                ['はねの 角度で 上下', 'はね全体の 角度を 大きくすると 上に、小さくすると 下に。'],
+                ['かたむけて 進む', '回転する 面を 前に かたむけると、力の 向きが ななめに なり 前に 進む。'],
+                ['しっぽの はねの 役わり', '大きな はねを まわすと 機体は 反対に まわろうとする。しっぽの 小さな はねが それを おさえて いる。']
+            ],
+            pro: ['せまい ところに まっすぐ 降りられる', '止まって 空中に いられる（ホバリング）', '救助や 消火、取材に 強い', '空港が いらない'],
+            con: ['はやさは 飛行機の 4分の1 ほど', '燃料を たくさん つかう', '音が とても 大きい', '風に 弱く、しくみが ふくざつで 整備が 大変'],
+            spec: [['はやさ', '時速 200〜250km'], ['のれる 人', '4〜15人くらい'], ['とくい わざ', '空中で 止まる']],
+            trivia: '大きな はねの 回転が 止まって しまっても、落ちながら 下から くる 風で はねを まわして、ゆっくり 降りる ことが できる（オートローテーション）。'
+        },
+        {
+            id: 'ship', e: '🚢', n: '船{ふね}', lead: '水を おしのける 力（浮力）で 浮き、スクリューで 水を 後ろへ おして 進む。',
+            chain: [['🛢️', '燃料'], ['⚙️', 'エンジン'], ['🌀', 'スクリュー'], ['🌊', '水を 後ろへ おす']],
+            steps: [
+                ['浮く りくつ', '水に しずんだ ぶんの 水の 重さと 同じ 力で 上に おされる（アルキメデスの 原理）。船の 中は ほとんど 空気なので、鉄でも 全体では 水より 軽い。'],
+                ['スクリューで 進む', 'ねじの ような はねを まわして 水を 後ろに おし出す。その 反作用で 船が 前に 進む。'],
+                ['かじで 曲がる', 'うしろの かじ（ラダー）を かたむけると、水の 流れが 曲がり、船尾{せんび}が おされて 向きが かわる。'],
+                ['ゆっくりだけど 大量に', '水の ていこうは 大きいので 速くは 進めない。そのかわり、重い ものを 運ぶ ときの 燃料は 1トンあたり いちばん 少ない。']
+            ],
+            pro: ['重い ものを いちばん 安く 大量に 運べる', '荷物 1トンあたりの CO2が 少ない', '道路も 線路も いらない', '大きな ものも そのまま のせられる'],
+            con: ['とても おそい', '港が ある ところしか 行けない', '波や 台風で ゆれる・止まる', '海が よごれる 事こが おきると 大きい'],
+            spec: [['フェリーの はやさ', '時速 30〜40km'], ['大きな フェリー', '数百〜千人'], ['とくい', '重い 荷物']],
+            trivia: '日本が 外国から 買って いる ものの 99.6%（重さで）は 船で 運ばれて いる。食べものも 服も 石油も、ほとんどが 船に のって やって きた もの。'
+        },
+        {
+            id: 'rocket', e: '🚀', n: 'ロケット', lead: '燃料と「燃やす ための 酸素{さんそ}」を 自分で 持って いるので、空気の ない 宇宙でも 進める。',
+            chain: [['🛢️', '燃料＋酸素'], ['🔥', '燃焼室で 燃やす'], ['⬇️', 'ガスを 下に ふき出す'], ['⬆️', '反作用で 上へ']],
+            steps: [
+                ['自分で 酸素を 持つ', 'ジェットエンジンは 空気の 酸素を つかうので 宇宙では 動かない。ロケットは 液体酸素も タンクに 積んで いる。'],
+                ['ガスを 下に すてて 上がる', '燃やした ガスを ノズルから ものすごい 速さで 下に ふき出す。その 反作用で 機体が 上がる。風を うける ものは いらない。'],
+                ['空の タンクは すてる', '重いと 上がれないので、つかい終わった 段は 切りはなす（多段式{ただんしき}）。だから ロケットは 細長く 段に 分かれて いる。'],
+                ['ぐるぐる まわって 落ちない', '横に 秒速 約8km（時速 約28,000km）まで 加速すると、落ちる 曲がりと 地球の 丸みが つりあって 落ちつづけながら まわる。これが 人工衛星{じんこうえいせい}。']
+            ],
+            pro: ['宇宙に 行ける ただ 1つの 方法', '空気が なくても 進める', '人工衛星で 天気予報や 地図が つかえる'],
+            con: ['ほとんどが 燃料で、運べる 荷物は 全体の 数%', '費用が とても 高い', '1回しか つかえない ものが 多い（さいきん 再利用も）', '打ち上げには 天気の 条件が きびしい'],
+            spec: [['必要な はやさ', '秒速 7.9km＝時速 28,000km'], ['重さの わけ', '9割ほどが 燃料'], ['行ける ところ', '宇宙']],
+            trivia: '人工衛星は 落ちつづけて いる。ただし 横に 速く 進みすぎて いて、落ちても 落ちても 地面が にげて いくので いつまでも 地面に つかない。宇宙で ふわふわ するのは この「落ちつづけ」の せい。'
+        }
+    ];
+
+    /* --- のりものの 絵（部品に 名前を つける） --- */
+    const FIGS = {
+        bike: () => {
+            // 右へ 進む むき。後ろの 車輪（チェーンの ある がわ）が 左
+            const RH = [186, 158], BB = [292, 158], ST = [272, 92], HT = [374, 88], FH = [428, 158];
+            let g = bg(230) + `<line x1="20" y1="196" x2="540" y2="196" stroke="#94a3b8" stroke-width="3"/>`;
+            g += wheel(RH[0], RH[1], 38, true) + wheel(FH[0], FH[1], 38, true);
+            const fr = (a, b) => `<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="#0ea5e9" stroke-width="6" stroke-linecap="round"/>`;
+            g += fr(RH, BB) + fr(RH, ST) + fr(BB, ST) + fr(ST, HT) + fr(BB, HT) + fr(HT, FH);
+            g += `<circle cx="${BB[0]}" cy="${BB[1]}" r="17" fill="none" stroke="#475569" stroke-width="4"/>`;   // 前の ギア
+            g += `<circle cx="${RH[0]}" cy="${RH[1]}" r="10" fill="none" stroke="#475569" stroke-width="3.5"/>`; // 後ろの ギア
+            g += `<line x1="${BB[0]}" y1="141" x2="${RH[0]}" y2="148" stroke="#64748b" stroke-width="3"/>
+                  <line x1="${BB[0]}" y1="175" x2="${RH[0]}" y2="168" stroke="#64748b" stroke-width="3"/>`;
+            g += `<line x1="${BB[0]}" y1="${BB[1]}" x2="${BB[0] + 20}" y2="176" stroke="#f59e0b" stroke-width="5"/>
+                  <circle cx="${BB[0] + 20}" cy="176" r="6" fill="#f59e0b"/>`;
+            g += `<path d="M${ST[0] - 20} 84 q20 -8 40 0" fill="none" stroke="#334155" stroke-width="7" stroke-linecap="round"/>`; // サドル
+            g += `<line x1="${HT[0] - 14}" y1="72" x2="${HT[0] + 8}" y2="72" stroke="#334155" stroke-width="6" stroke-linecap="round"/>
+                  <line x1="${HT[0]}" y1="88" x2="${HT[0]}" y2="72" stroke="#334155" stroke-width="5"/>`;
+            g += tag(BB[0] + 20, 176, 372, 210, 'ペダル', '#b45309') + tag(240, 152, 150, 120, 'チェーン');
+            g += tag(RH[0], 148, 130, 86, '後ろの ギア') + tag(RH[0] + 10, 186, 176, 218, '後ろの 車輪');
+            g += tag(ST[0], 84, 300, 48, 'サドル', '#334155') + tag(HT[0] - 6, 72, 420, 46, 'ハンドル', '#334155');
+            g += arrow(472, 158, 528, 158, '#16a34a', 4) + `<text x="500" y="146" text-anchor="middle" font-size="11" font-weight="900" fill="#16a34a">進む</text>`;
+            return svg(SW, 230, g);
+        },
+        car: () => {
+            let g = bg(240) + `<line x1="20" y1="196" x2="540" y2="196" stroke="#94a3b8" stroke-width="3"/>`;
+            g += `<path d="M120 170 L120 138 Q120 128 132 128 L190 128 L215 96 L320 96 L340 128 L420 128 Q436 128 436 144 L436 170 Z" fill="#38bdf8" stroke="#0369a1" stroke-width="3"/>`;
+            g += `<path d="M222 104 L250 104 L250 126 L206 126 Z M262 104 L312 104 L330 126 L262 126 Z" fill="#e0f2fe" stroke="#0369a1" stroke-width="2"/>`;
+            g += wheel(175, 172, 24) + wheel(390, 172, 24);
+            // エンジン（ピストン）
+            g += `<rect x="130" y="136" width="52" height="34" rx="4" fill="#fff" stroke="#dc2626" stroke-width="2.5"/>
+                  <rect x="142" y="146" width="28" height="12" rx="2" fill="#dc2626"/>
+                  <line x1="156" y1="158" x2="156" y2="170" stroke="#dc2626" stroke-width="3"/>`;
+            g += tag(156, 150, 90, 96, 'エンジン', '#dc2626') + tag(300, 130, 470, 96, '客が のる ところ');
+            g += tag(390, 172, 470, 212, 'タイヤ（4つ）', '#334155');
+            g += arrow(460, 172, 530, 172, '#16a34a', 4);
+            g += `<text x="140" y="228" font-size="11" font-weight="900" fill="#dc2626">吸う → ちぢめる → 燃やす → 出す を くりかえす</text>`;
+            return svg(SW, 240, g);
+        },
+        ev: () => {
+            let g = bg(240) + `<line x1="20" y1="196" x2="540" y2="196" stroke="#94a3b8" stroke-width="3"/>`;
+            g += `<path d="M120 170 L120 138 Q120 126 134 126 L196 126 L220 94 L330 94 L352 126 L420 126 Q436 126 436 144 L436 170 Z" fill="#5eead4" stroke="#0f766e" stroke-width="3"/>`;
+            g += `<path d="M228 102 L258 102 L258 124 L212 124 Z M270 102 L322 102 L340 124 L270 124 Z" fill="#f0fdfa" stroke="#0f766e" stroke-width="2"/>`;
+            g += wheel(175, 172, 24) + wheel(390, 172, 24);
+            g += `<rect x="196" y="150" width="170" height="20" rx="4" fill="#fff" stroke="#16a34a" stroke-width="2.5"/>`;
+            for (let i = 0; i < 6; i++) g += `<rect x="${203 + i * 27}" y="155" width="20" height="10" rx="2" fill="#16a34a" opacity="0.8"/>`;
+            g += `<circle cx="398" cy="150" r="15" fill="#fff" stroke="#7c3aed" stroke-width="2.5"/><text x="398" y="156" text-anchor="middle" font-size="13" font-weight="900" fill="#7c3aed">M</text>`;
+            g += `<rect x="108" y="140" width="12" height="16" rx="2" fill="#f59e0b"/>`;
+            g += tag(281, 150, 240, 222, 'バッテリー（床下）', '#16a34a') + tag(398, 150, 490, 112, 'モーター', '#7c3aed');
+            g += tag(114, 140, 150, 64, '充電の さしこみ', '#b45309');
+            g += arrow(460, 172, 530, 172, '#16a34a', 4);
+            g += `<text x="470" y="150" text-anchor="middle" font-size="11" font-weight="900" fill="#0f766e">しずか</text>`;
+            return svg(SW, 240, g);
+        },
+        train: () => {
+            let g = bg(250);
+            g += `<line x1="0" y1="40" x2="560" y2="40" stroke="#475569" stroke-width="3"/>`;            // 架線
+            g += `<line x1="70" y1="20" x2="70" y2="40" stroke="#94a3b8" stroke-width="3"/><line x1="470" y1="20" x2="470" y2="40" stroke="#94a3b8" stroke-width="3"/>`;
+            g += `<rect x="100" y="92" width="340" height="76" rx="10" fill="#bae6fd" stroke="#0369a1" stroke-width="3"/>`;
+            g += `<rect x="112" y="100" width="316" height="8" rx="4" fill="#0ea5e9"/>`;
+            for (let i = 0; i < 5; i++) g += `<rect x="${124 + i * 62}" y="116" width="44" height="28" rx="4" fill="#e0f2fe" stroke="#0369a1" stroke-width="2"/>`;
+            g += `<path d="M230 92 L250 64 L300 64 L320 92" fill="none" stroke="#334155" stroke-width="3"/><line x1="250" y1="64" x2="300" y2="64" stroke="#dc2626" stroke-width="4"/>`;
+            g += `<line x1="275" y1="64" x2="275" y2="40" stroke="#dc2626" stroke-width="2" stroke-dasharray="4 3"/>`;
+            g += wheel(160, 178, 16) + wheel(210, 178, 16) + wheel(330, 178, 16) + wheel(380, 178, 16);
+            // モーターは 床下（車体の 下、車輪の あいだ）
+            g += `<circle cx="270" cy="178" r="13" fill="#fff" stroke="#7c3aed" stroke-width="2.5"/><text x="270" y="183" text-anchor="middle" font-size="12" font-weight="900" fill="#7c3aed">M</text>`;
+            g += `<line x1="40" y1="196" x2="520" y2="196" stroke="#64748b" stroke-width="5"/>`;
+            for (let x = 60; x < 520; x += 40) g += `<rect x="${x}" y="200" width="26" height="8" rx="2" fill="#a16207"/>`;
+            g += tag(275, 66, 420, 46, 'パンタグラフ', '#dc2626') + tag(0 + 80, 40, 130, 24, '架線（電線）', '#334155');
+            g += tag(270, 178, 430, 158, 'モーター（床下）', '#7c3aed') + tag(330, 178, 430, 220, '鉄の 車輪', '#334155');
+            g += tag(140, 196, 60, 228, 'レール', '#64748b');
+            return svg(SW, 250, g);
+        },
+        shinkansen: () => {
+            let g = bg(230);
+            g += `<line x1="0" y1="36" x2="560" y2="36" stroke="#475569" stroke-width="3"/>`;
+            g += `<path d="M60 150 Q150 92 260 88 L470 88 Q486 88 486 104 L486 150 Z" fill="#f8fafc" stroke="#0369a1" stroke-width="3"/>`;
+            g += `<path d="M62 140 Q150 100 262 96 L470 96 L470 112 L64 148 Z" fill="#0ea5e9" opacity="0.25"/>`;
+            g += `<rect x="70" y="120" width="410" height="9" rx="4" fill="#0284c7"/>`;
+            for (let i = 0; i < 6; i++) g += `<rect x="${170 + i * 52}" y="100" width="34" height="16" rx="3" fill="#e0f2fe" stroke="#0369a1" stroke-width="1.5"/>`;
+            g += `<path d="M300 88 L316 62 L360 62 L376 88" fill="none" stroke="#334155" stroke-width="2.5"/><line x1="316" y1="62" x2="360" y2="62" stroke="#dc2626" stroke-width="4"/><line x1="338" y1="62" x2="338" y2="36" stroke="#dc2626" stroke-width="2" stroke-dasharray="4 3"/>`;
+            g += wheel(180, 160, 14) + wheel(228, 160, 14) + wheel(390, 160, 14) + wheel(438, 160, 14);
+            g += `<line x1="30" y1="176" x2="530" y2="176" stroke="#64748b" stroke-width="5"/>`;
+            // 空気の 流れ
+            [0, 1, 2].forEach(i => { g += arrow(150 - i * 4, 108 + i * 14, 60 - i * 8, 96 + i * 18, '#94a3b8', 2); });
+            g += tag(90, 132, 142, 184, '長い 鼻（空気を きる）') + tag(338, 64, 470, 52, 'パンタグラフ', '#dc2626');
+            g += tag(228, 160, 268, 208, 'ほぼ 全車両に モーター', '#7c3aed');
+            g += `<text x="490" y="176" text-anchor="end" font-size="11" font-weight="900" fill="#0369a1">ふみきりの ない せんようの 線路</text>`;
+            return svg(SW, 230, g);
+        },
+        maglev: () => {
+            let g = bg(230);
+            g += `<path d="M120 138 Q170 92 250 90 L440 90 Q456 90 456 106 L456 138 Z" fill="#f1f5f9" stroke="#1d4ed8" stroke-width="3"/>`;
+            g += `<rect x="140" y="112" width="300" height="8" rx="4" fill="#2563eb"/>`;
+            for (let i = 0; i < 5; i++) g += `<rect x="${190 + i * 50}" y="98" width="30" height="14" rx="3" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.5"/>`;
+            // 車両の 磁石
+            [0, 1, 2].forEach(i => g += `<rect x="${170 + i * 100}" y="130" width="60" height="12" rx="3" fill="#1d4ed8"/>`);
+            // ガイドウェイ（U字の みち）
+            g += `<path d="M90 166 L90 96 M470 166 L470 96" stroke="#64748b" stroke-width="8" stroke-linecap="round"/>`;
+            g += `<line x1="70" y1="166" x2="490" y2="166" stroke="#64748b" stroke-width="8"/>`;
+            [0, 1, 2, 3, 4, 5, 6].forEach(i => g += `<rect x="${96 + i * 54}" y="132" width="26" height="14" rx="3" fill="none" stroke="#dc2626" stroke-width="2.5"/>`);
+            // 浮いて いる すきま
+            g += `<line x1="140" y1="152" x2="140" y2="164" stroke="#16a34a" stroke-width="2"/><line x1="134" y1="152" x2="146" y2="152" stroke="#16a34a" stroke-width="2"/><line x1="134" y1="164" x2="146" y2="164" stroke="#16a34a" stroke-width="2"/>`;
+            [0, 1, 2].forEach(i => g += arrow(200 + i * 90, 160, 200 + i * 90, 146, '#16a34a', 2.5));
+            g += tag(200, 136, 250, 68, '車両の 超電導磁石', '#1d4ed8') + tag(340, 139, 416, 200, '壁の コイル（電磁石）', '#dc2626');
+            g += tag(140, 158, 132, 204, '10cm 浮いて いる', '#16a34a');
+            g += arrow(480, 120, 545, 120, '#16a34a', 4);
+            return svg(SW, 230, g);
+        },
+        plane: () => {
+            let g = bg(250, '#dbeafe');
+            // はねの だんめん
+            g += `<path d="M150 150 Q240 112 340 132 Q250 150 150 150 Z" fill="#f8fafc" stroke="#1e40af" stroke-width="3"/>`;
+            // 空気の 流れ（上は 速い）
+            [0, 1].forEach(i => {
+                g += `<path d="M60 ${118 - i * 16} Q180 ${100 - i * 14} 400 ${120 - i * 14}" fill="none" stroke="#2563eb" stroke-width="2.5"/>`;
+                g += arrow(370, 119 - i * 14, 404, 120 - i * 14, '#2563eb', 2.5);
+            });
+            g += `<path d="M60 168 Q200 166 330 186" fill="none" stroke="#64748b" stroke-width="2.5"/>` + arrow(300, 181, 336, 188, '#64748b', 2.5);
+            g += arrow(250, 132, 250, 76, '#16a34a', 5) + `<text x="250" y="68" text-anchor="middle" font-size="13" font-weight="900" fill="#16a34a">揚力（上に おされる 力）</text>`;
+            [0, 1, 2].forEach(i => g += arrow(300 + i * 34, 150, 316 + i * 34, 196, '#b45309', 2.5));
+            g += `<text x="418" y="206" font-size="11" font-weight="900" fill="#b45309">空気を 下へ ながす</text>`;
+            g += tag(200, 124, 130, 84, '上は 速く 気圧が 低い', '#2563eb') + tag(214, 152, 156, 192, '下は おそく 気圧が 高い', '#64748b');
+            // ジェットエンジン
+            g += `<ellipse cx="90" cy="216" rx="26" ry="14" fill="#fff" stroke="#334155" stroke-width="2.5"/>
+                  <line x1="72" y1="206" x2="72" y2="226" stroke="#334155" stroke-width="3"/>` + arrow(118, 216, 160, 216, '#dc2626', 3);
+            g += `<text x="166" y="220" font-size="11" font-weight="900" fill="#dc2626">ガスを 後ろへ → 機体は 前へ</text>`;
+            return svg(SW, 250, g);
+        },
+        heli: () => {
+            let g = bg(230, '#dbeafe');
+            g += `<ellipse cx="250" cy="150" rx="86" ry="42" fill="#f8fafc" stroke="#0f766e" stroke-width="3"/>`;
+            g += `<path d="M330 150 L470 146 L470 158 L330 162 Z" fill="#f8fafc" stroke="#0f766e" stroke-width="3"/>`;
+            g += `<ellipse cx="206" cy="146" rx="34" ry="26" fill="#cffafe" stroke="#0f766e" stroke-width="2"/>`;
+            g += `<line x1="250" y1="108" x2="250" y2="82" stroke="#334155" stroke-width="5"/>`;
+            g += `<line x1="110" y1="80" x2="390" y2="80" stroke="#334155" stroke-width="7" stroke-linecap="round"/>`;
+            g += `<path d="M120 70 q130 -8 260 0" fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="5 4"/>`;
+            g += `<line x1="470" y1="120" x2="470" y2="176" stroke="#334155" stroke-width="5" stroke-linecap="round"/>`;
+            g += `<path d="M215 192 L215 206 L300 206 M290 192 L290 206" stroke="#334155" stroke-width="4" fill="none"/>`;
+            [0, 1, 2, 3].forEach(i => g += arrow(160 + i * 60, 96, 160 + i * 60, 128, '#b45309', 2.5));
+            g += arrow(250, 76, 250, 34, '#16a34a', 5) + `<text x="250" y="28" text-anchor="middle" font-size="12" font-weight="900" fill="#16a34a">浮く 力</text>`;
+            g += tag(330, 80, 398, 52, 'まわる はね（ローター）', '#334155') + tag(470, 148, 442, 198, 'しっぽの はね', '#0f766e');
+            g += `<text x="330" y="140" font-size="11" font-weight="900" fill="#b45309">はねが 空気を 下に おす</text>`;
+            return svg(SW, 230, g);
+        },
+        ship: () => {
+            let g = bg(240, '#e0f2fe');
+            g += `<rect x="0" y="150" width="560" height="90" fill="#7dd3fc" opacity="0.6"/>`;
+            g += `<path d="M120 150 L440 150 L410 208 L150 208 Z" fill="#f1f5f9" stroke="#0369a1" stroke-width="3"/>`;
+            g += `<rect x="250" y="104" width="120" height="46" rx="6" fill="#f8fafc" stroke="#0369a1" stroke-width="2.5"/>`;
+            for (let i = 0; i < 4; i++) g += `<rect x="${258 + i * 28}" y="114" width="18" height="14" rx="2" fill="#bae6fd" stroke="#0369a1" stroke-width="1.5"/>`;
+            g += `<rect x="150" y="126" width="80" height="24" rx="4" fill="#fcd34d" stroke="#b45309" stroke-width="2"/><rect x="160" y="112" width="60" height="16" rx="3" fill="#fcd34d" stroke="#b45309" stroke-width="2"/>`;
+            g += `<line x1="0" y1="150" x2="560" y2="150" stroke="#0284c7" stroke-width="3"/>`;
+            g += `<circle cx="432" cy="190" r="14" fill="none" stroke="#334155" stroke-width="3"/><path d="M432 176 L440 190 L432 204 L424 190 Z" fill="#334155"/>`;
+            [0, 1, 2].forEach(i => g += arrow(450, 176 + i * 14, 512, 176 + i * 14, '#1d4ed8', 2.5));
+            [0, 1, 2].forEach(i => g += arrow(200 + i * 80, 214, 200 + i * 80, 176, '#16a34a', 3));
+            g += tag(432, 190, 500, 226, 'スクリュー', '#334155') + tag(310, 106, 430, 82, '客や 荷物');
+            g += `<text x="140" y="234" font-size="11" font-weight="900" fill="#16a34a">↑ 浮力（おしのけた 水の 重さ）</text>`;
+            g += `<text x="526" y="164" text-anchor="end" font-size="11" font-weight="900" fill="#1d4ed8">水を 後ろへ</text>`;
+            g += `<text x="14" y="142" font-size="11" font-weight="900" fill="#0284c7">水面</text>`;
+            return svg(SW, 240, g);
+        },
+        rocket: () => {
+            let g = bg(250, '#e0e7ff');
+            const cx = 220;
+            g += `<path d="M${cx} 22 L${cx + 26} 74 L${cx + 26} 150 L${cx - 26} 150 L${cx - 26} 74 Z" fill="#f8fafc" stroke="#1e3a8a" stroke-width="3"/>`;
+            g += `<rect x="${cx - 26}" y="150" width="52" height="56" fill="#f8fafc" stroke="#1e3a8a" stroke-width="3"/>`;
+            g += `<path d="M${cx - 26} 206 L${cx - 40} 206 L${cx - 26} 182 Z M${cx + 26} 206 L${cx + 40} 206 L${cx + 26} 182 Z" fill="#1e3a8a"/>`;
+            g += `<path d="M${cx - 18} 206 L${cx - 28} 232 L${cx + 28} 232 L${cx + 18} 206 Z" fill="#475569"/>`;
+            g += `<rect x="${cx - 18}" y="86" width="36" height="30" rx="3" fill="#f59e0b" opacity="0.8"/><text x="${cx}" y="106" text-anchor="middle" font-size="11" font-weight="900" fill="#7c2d12">燃料</text>`;
+            g += `<rect x="${cx - 18}" y="120" width="36" height="26" rx="3" fill="#38bdf8" opacity="0.8"/><text x="${cx}" y="137" text-anchor="middle" font-size="11" font-weight="900" fill="#075985">酸素</text>`;
+            g += `<line x1="${cx - 26}" y1="150" x2="${cx + 26}" y2="150" stroke="#1e3a8a" stroke-width="3" stroke-dasharray="5 4"/>`;
+            [0, 1, 2].forEach(i => g += `<path d="M${cx - 20 + i * 20} 234 q ${-6 + i * 6} 26 0 44" fill="none" stroke="#f97316" stroke-width="${7 - i}" stroke-linecap="round"/>`);
+            g += arrow(cx, 240, cx, 246, '#f97316', 3);
+            g += arrow(cx + 90, 150, cx + 90, 60, '#16a34a', 5) + `<text x="${cx + 90}" y="50" text-anchor="middle" font-size="12" font-weight="900" fill="#16a34a">上へ 進む</text>`;
+            g += arrow(cx + 90, 190, cx + 90, 236, '#f97316', 5) + `<text x="${cx + 96}" y="212" font-size="12" font-weight="900" fill="#f97316">ガスを 下へ</text>`;
+            g += tag(cx, 100, cx - 90, 72, '燃料タンク', '#b45309') + tag(cx, 132, cx - 90, 140, '酸素タンク', '#075985');
+            g += tag(cx, 152, cx - 34, 200, 'つかい終わったら すてる 段', '#1e3a8a');
+            g += `<text x="30" y="238" font-size="11" font-weight="900" fill="#4338ca">空気が なくても 進める（作用・反作用）</text>`;
+            return svg(SW, 250, g);
+        }
+    };
+
+    let vi = 0;
+    function setVe(i) {
+        vi = i;
+        const v = VE[i];
+        document.getElementById('ve-chips').innerHTML = VE.map((x, j) =>
+            `<button onclick="setVe(${j})" data-ve="${x.id}" class="${j === i ? 'bg-sky-700 text-white' : 'bg-white border-2 border-sky-200 text-slate-600'} font-black px-3 py-2 rounded-2xl text-xs bounce-hover">${x.e} ${x.n.replace(/\{[^}]*\}/g, '')}</button>`).join('');
+        document.getElementById('ve-name').innerHTML = `${v.e} ${v.n}`;
+        document.getElementById('ve-lead').innerHTML = v.lead;
+        document.getElementById('ve-fig').innerHTML = FIGS[v.id]();
+        // 力の ながれ
+        const W = SW, H = 96, bw = 116, gap = 20;
+        const x0 = (W - (bw * 4 + gap * 3)) / 2;
+        let g = bg(H, '#f0f9ff');
+        v.chain.forEach(([e, t], k) => {
+            const x = x0 + k * (bw + gap);
+            g += `<rect x="${x}" y="16" width="${bw}" height="62" rx="12" fill="#fff" stroke="#38bdf8" stroke-width="2.5"/>
+                  <text x="${x + bw / 2}" y="44" text-anchor="middle" font-size="20">${e}</text>
+                  <text x="${x + bw / 2}" y="68" text-anchor="middle" font-size="11" font-weight="900" fill="#0c4a6e">${t}</text>`;
+            if (k < 3) g += `<text x="${x + bw + gap / 2}" y="54" text-anchor="middle" font-size="18" font-weight="900" fill="#0284c7">➡</text>`;
+        });
+        document.getElementById('ve-chain').innerHTML = svg(W, H, g);
+        document.getElementById('ve-steps').innerHTML = v.steps.map(([t, d], k) =>
+            `<div class="bg-sky-50 border-2 border-sky-200 rounded-2xl p-3" data-step="${k}">
+                <p class="font-black text-sm text-sky-900">${k + 1}. ${t}</p>
+                <p class="text-xs font-bold text-slate-600 mt-0.5 leading-relaxed">${d}</p></div>`).join('');
+        document.getElementById('ve-pro').innerHTML = v.pro.map(t => `<li data-pro>😀 ${t}</li>`).join('');
+        document.getElementById('ve-con').innerHTML = v.con.map(t => `<li data-con>😣 ${t}</li>`).join('');
+        document.getElementById('ve-spec').innerHTML = v.spec.map(([k, val]) =>
+            `<span class="bg-slate-100 rounded-2xl px-3 py-1.5 text-xs font-black" data-spec="${k}">${k}：<span class="num text-sky-800">${val}</span></span>`).join('');
+        document.getElementById('ve-trivia').innerHTML = `💡 ${v.trivia}`;
+    }
+
+    /* =====================================================================
+       ② くらべる
+       ===================================================================== */
+    let cmpReady = false;
+    // 数字は 日本の おおよその 代表値。CO2は 国土交通省の 資料（1人を 1km 運ぶ ときの g-CO2、コロナ前の 年度）
+    const CM = [
+        { e: '🚶', n: '歩く', speed: 4, people: 1, co2: 0 },
+        { e: '🚲', n: '自転車', speed: 15, people: 1, co2: 0 },
+        { e: '🚌', n: 'バス', speed: 30, people: 70, co2: 57 },
+        { e: '🚗', n: '自動車', speed: 60, people: 5, co2: 130 },
+        { e: '🚢', n: 'フェリー', speed: 35, people: 800 },
+        { e: '🚃', n: '電車（10両）', speed: 90, people: 1500, co2: 17 },
+        { e: '🚄', n: '新幹線', speed: 320, people: 1300, co2: 17 },
+        { e: '🚁', n: 'ヘリコプター', speed: 220, people: 10 },
+        { e: '🧲', n: 'リニア', speed: 505 },
+        { e: '✈️', n: '飛行機', speed: 900, people: 400, co2: 98 }
+    ];
+    const METRICS = {
+        speed: { label: '⚡ はやさ', unit: 'km/h', fmt: v => '時速 ' + v.toLocaleString('ja-JP') + 'km', col: '#0284c7', good: 'high',
+            note: '速いほど 遠くへ 早く 着ける。ただし 速い のりものは 駅や 空港までの 時間・待ち時間も かかるので、近い ところでは 自転車が いちばん 早い ことも ある。' },
+        people: { label: '👨‍👩‍👧‍👦 一度に 運べる 人', unit: '人', fmt: v => v.toLocaleString('ja-JP') + '人', col: '#7c3aed', good: 'high',
+            note: 'たくさん のせられる のりものは、1人あたりの エネルギーも お金も 少なく なる。だから 都会では 電車が 大かつやく。（電車は 10両、新幹線は 16両で 計算）' },
+        co2: { label: '🌍 1人1kmの CO2', unit: 'g', fmt: v => v + ' g', col: '#16a34a', good: 'low',
+            note: '1人を 1km 運ぶ ときに 出る 二酸化炭素。国土交通省の 資料より（コロナ前の 年度）。鉄道は 自家用車の およそ 8分の1。船・リニア・ヘリは 条件で 大きく かわる ため のせて いない。' }
+    };
+    let metric = 'speed';
+    function setMetric(k) { metric = k; cmDraw(); }
+    function cmDraw() {
+        const m = METRICS[metric];
+        document.getElementById('cm-tabs').innerHTML = Object.entries(METRICS).map(([k, v]) =>
+            `<button onclick="setMetric('${k}')" data-metric="${k}" class="${k === metric ? 'bg-sky-700 text-white' : 'bg-white border-2 border-sky-200 text-slate-600'} font-black px-3 py-2 rounded-2xl text-xs bounce-hover">${v.label}</button>`).join('');
+        const rows = CM.filter(c => typeof c[metric] === 'number')
+            .sort((a, b) => m.good === 'low' ? a[metric] - b[metric] : b[metric] - a[metric]);
+        const maxV = Math.max(...rows.map(r => r[metric]));
+        const L = 132, R = 500, rowH = 30, T = 14;
+        const H = T + rows.length * rowH + 22;
+        let g = bg(H, '#f0f9ff');
+        rows.forEach((r, i) => {
+            const y = T + i * rowH;
+            const w = maxV === 0 ? 0 : (r[metric] / maxV) * (R - L);
+            g += `<text x="${L - 8}" y="${y + 19}" text-anchor="end" font-size="12" font-weight="900" fill="#334155">${r.e} ${r.n}</text>`;
+            g += `<rect x="${L}" y="${y + 6}" width="${Math.max(2, w).toFixed(1)}" height="18" rx="4" fill="${m.col}" opacity="${0.45 + 0.55 * (maxV ? r[metric] / maxV : 0)}"/>`;
+            g += `<text x="${L + Math.max(2, w) + 6}" y="${y + 20}" font-size="11" font-weight="900" fill="${m.col}">${m.fmt(r[metric])}</text>`;
+        });
+        g += `<text x="${L}" y="${H - 6}" font-size="10" font-weight="700" fill="#94a3b8">${m.good === 'low' ? '※ 少ない ほうが 地球に やさしい（上が よい）' : '※ 大きい ほうが 上'}</text>`;
+        document.getElementById('cm-fig').innerHTML = svg(SW, H, g);
+        document.getElementById('cm-note').innerHTML = m.note;
+    }
+    function cmTable() {
+        document.getElementById('cm-table').innerHTML = VE.map(v =>
+            `<div class="border-2 border-sky-200 rounded-2xl p-3" data-cmrow="${v.id}">
+                <p class="font-black text-sm">${v.e} ${v.n}</p>
+                <div class="grid sm:grid-cols-2 gap-2 mt-1">
+                    <p class="text-xs font-bold text-emerald-800 leading-relaxed">😀 ${v.pro[0]}／${v.pro[1]}</p>
+                    <p class="text-xs font-bold text-rose-800 leading-relaxed">😣 ${v.con[0]}／${v.con[1]}</p>
+                </div>
+            </div>`).join('');
+    }
+
+    /* =====================================================================
+       ③ じっけん
+       ===================================================================== */
+    let labReady = false;
+
+    /* --- 揚力 --- */
+    function wingDraw() {
+        const a = +document.getElementById('wg-a').value;
+        document.getElementById('wg-av').innerText = a;
+        const stall = a > 15;
+        // 揚力は 角度に ほぼ 比例して ふえ、15°を こえると 失速して 落ちる
+        const lift = stall ? Math.max(0.25, 1 - (a - 15) * 0.12) * 0.55 : Math.max(0, (a + 4) / 19);
+        const W = SW, H = 230, cx = 260, cy = 132;
+        const r = -a * Math.PI / 180;
+        const rot = (x, y) => [cx + (x * Math.cos(r) - y * Math.sin(r)), cy + (x * Math.sin(r) + y * Math.cos(r))];
+        const pt = (x, y) => rot(x, y).map(v => v.toFixed(1)).join(' ');
+        let g = bg(H, '#dbeafe');
+        // 空気の 流れ
+        for (let i = 0; i < 4; i++) {
+            const y = 56 + i * 30;
+            const up = y < cy;
+            if (stall && up) {
+                g += `<path d="M40 ${y} Q180 ${y - 6} 250 ${y - 2} q20 14 40 -8 q20 16 40 -6" fill="none" stroke="#dc2626" stroke-width="2"/>`;
+            } else {
+                const bend = up ? -10 - a * 0.7 : 8 + a * 0.5;
+                g += `<path d="M40 ${y} Q200 ${y + bend} 460 ${y + (up ? 0 : a * 0.9)}" fill="none" stroke="${up ? '#2563eb' : '#64748b'}" stroke-width="2"/>`;
+                g += arrow(430, y + (up ? 0 : a * 0.85), 462, y + (up ? 0 : a * 0.9), up ? '#2563eb' : '#64748b', 2);
+            }
+        }
+        // はね（だんめん）
+        g += `<path d="M ${pt(-80, 0)} Q ${pt(-20, -22)} ${pt(40, -8)} Q ${pt(0, 6)} ${pt(-80, 0)} Z" fill="#f8fafc" stroke="#1e40af" stroke-width="3"/>`;
+        // 揚力の やじるし
+        const h = 18 + lift * 82;
+        g += arrow(cx, cy - 16, cx, cy - 16 - h, stall ? '#dc2626' : '#16a34a', 5);
+        g += `<text x="${cx}" y="${cy - 24 - h}" text-anchor="middle" font-size="12" font-weight="900" fill="${stall ? '#dc2626' : '#16a34a'}">揚力 ${Math.round(lift * 100)}</text>`;
+        g += `<line x1="${cx - 100}" y1="${cy}" x2="${cx + 70}" y2="${cy}" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+        g += `<text x="40" y="${H - 10}" font-size="11" font-weight="900" fill="#1e40af">← 空気が この 向きに あたる</text>`;
+        document.getElementById('wg-fig').innerHTML = svg(W, H, g);
+        let msg;
+        if (a < 0) msg = `<b>下を むいて いる</b>ので 浮く 力は ほとんど 出ない。着陸で 高度を 下げる ときの 形。`;
+        else if (a <= 15) msg = `角度を 大きくすると 空気を 下へ ながす 量が ふえ、<b class="text-green-700">浮く 力が 強く</b> なる。
+            離陸{りりく}の ときは この 角度を 大きく とる。`;
+        else msg = `⚠️ <b class="text-rose-700">失速{しっそく}！</b> 角度が 大きすぎて 空気の 流れが はねから はがれ、浮く 力が きゅうに 落ちた。
+            じっさいの 飛行機は ここに 入らない ように 警報が 鳴る。`;
+        document.getElementById('wg-info').innerHTML = msg + `<br><span class="text-xs text-slate-600">
+            はねの 上は 流れが 速く 気圧が 低い、下は おそく 気圧が 高い。
+            この 差と「空気を 下へ ながした 反作用」は、同じ 1つの ことを ちがう 見方で 説明した もの。</span>`;
+    }
+
+    /* --- 浮力 --- */
+    const HULL = { L: 10, W: 4, H: 3, empty: 20 };   // 10m × 4m × 高さ3m、船じたい 20トン
+    function boatDraw() {
+        const load = +document.getElementById('bo-w').value;
+        document.getElementById('bo-wv').innerText = load;
+        const total = HULL.empty + load;
+        const area = HULL.L * HULL.W;                // 40 m²
+        const draft = total / area;                  // 水に しずむ 深さ（m）… 水 1m³ ＝ 1トン
+        const sink = draft > HULL.H + 1e-9;          // 船の 高さを こえたら 水が 入る
+        const limit = !sink && draft > HULL.H - 1e-9;// ちょうど ぎりぎり
+        const W = SW, H = 240;
+        const px = 34;                               // 1m = 34px
+        const bw = HULL.L * px / 1.6, bh = HULL.H * px;
+        const wl = 150;                              // 水面
+        const bx = (W - bw) / 2;
+        const d = Math.min(draft, HULL.H) * px;
+        const by = wl - (bh - d);                    // 船の 上ばしの y
+        let g = bg(H, '#e0f2fe');
+        g += `<rect x="0" y="${wl}" width="${W}" height="${H - wl}" fill="#7dd3fc" opacity="0.6"/>`;
+        g += `<line x1="0" y1="${wl}" x2="${W}" y2="${wl}" stroke="#0284c7" stroke-width="3"/>`;
+        g += `<text x="12" y="${wl - 8}" font-size="11" font-weight="900" fill="#0284c7">水面</text>`;
+        g += `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="4" fill="${sink ? '#fecaca' : '#f8fafc'}" stroke="${sink ? '#dc2626' : '#0369a1'}" stroke-width="3"/>`;
+        if (load > 0) {
+            const boxes = Math.min(8, Math.ceil(load / 20));
+            for (let i = 0; i < boxes; i++) g += `<rect x="${bx + 10 + i * 22}" y="${by - 20}" width="18" height="18" rx="3" fill="#fcd34d" stroke="#b45309" stroke-width="2"/>`;
+        }
+        // しずんだ 深さの 目じるし
+        g += `<line x1="${bx - 14}" y1="${wl}" x2="${bx - 14}" y2="${wl + d}" stroke="#16a34a" stroke-width="2"/>
+              <line x1="${bx - 20}" y1="${wl}" x2="${bx - 8}" y2="${wl}" stroke="#16a34a" stroke-width="2"/>
+              <line x1="${bx - 20}" y1="${wl + d}" x2="${bx - 8}" y2="${wl + d}" stroke="#16a34a" stroke-width="2"/>
+              <text x="${bx - 24}" y="${wl + d / 2 + 4}" text-anchor="end" font-size="11" font-weight="900" fill="#16a34a">${Math.min(draft, HULL.H).toFixed(2)}m</text>`;
+        [0, 1, 2].forEach(i => g += arrow(bx + bw * (i + 1) / 4, wl + d + 32, bx + bw * (i + 1) / 4, wl + d - 4, '#16a34a', 3));
+        g += arrow(bx + bw / 2, by - 34, bx + bw / 2, by - 4, '#dc2626', 3);
+        g += `<text x="${bx + bw / 2 + 8}" y="${by - 20}" font-size="11" font-weight="900" fill="#dc2626">重さ ${total}トン</text>`;
+        g += `<text x="${bx + bw / 2}" y="${wl + d + 48}" text-anchor="middle" font-size="11" font-weight="900" fill="#16a34a">浮力 ＝ おしのけた 水の 重さ</text>`;
+        document.getElementById('bo-fig').innerHTML = svg(W, H, g);
+        const maxLoad = area * HULL.H - HULL.empty;
+        document.getElementById('bo-info').innerHTML = sink
+            ? `⚠️ <b class="text-rose-700">しずむ！</b> 合計 ${total}トンを 浮かせるには ${draft.toFixed(2)}m しずむ 必要が あるけれど、
+               船の 高さは ${HULL.H}m しか ない。水が 中に 入って しまう。<br>
+               <span class="text-xs text-slate-600">この 船に のせられるのは <b>${maxLoad}トン</b>まで。船に 書いて ある 線（満載{まんさい}喫水線{きっすいせん}）は、この ぎりぎりを しめして いる。</span>`
+            : `${limit ? '⚠️ <b class="text-amber-700">ぎりぎり！</b> これ以上 のせると しずむ。<br>' : ''}
+               船（${HULL.empty}トン）＋ 荷物（${load}トン）＝ <b>${total}トン</b>。<br>
+               ${HULL.L}m × ${HULL.W}m ＝ ${area}m² の 底が <b class="num">${draft.toFixed(2)}m</b> しずむと、
+               おしのけた 水は ${area} × ${draft.toFixed(2)} ＝ <b class="num">${total}</b> m³ ＝ ${total}トン。
+               重さと ぴったり つりあう ので 浮く。（のせられるのは <b>${maxLoad}トン</b>まで）<br>
+               <span class="text-xs text-slate-600">水 1m³ は 1トン。鉄は 水より 重いのに 船が 浮くのは、
+               <b>中に 空気が いっぱい</b> あって「船ぜんたい」では 水より 軽い から。</span>`;
+    }
+
+    /* --- 自転車の ギア --- */
+    const TIRE = 2.1;                                 // 26インチ タイヤの まわりの 長さ（m）
+    function gearDraw() {
+        const f = +document.getElementById('gr-f').value, r = +document.getElementById('gr-r').value;
+        document.getElementById('gr-fv').innerText = f;
+        document.getElementById('gr-rv').innerText = r;
+        const ratio = f / r, dist = ratio * TIRE;
+        const W = SW, H = 210;
+        const fr = 22 + f * 0.9, rr = 14 + r * 0.9;   // 歯の 数を 大きさで あらわす
+        const fx = 180, rx = 420, cy = 110;
+        let g = bg(H, '#f0f9ff');
+        const cog = (cx, cyy, rad, teeth, col) => {
+            let s = `<circle cx="${cx}" cy="${cyy}" r="${rad}" fill="#fff" stroke="${col}" stroke-width="3"/>`;
+            for (let i = 0; i < Math.min(teeth, 30); i++) {
+                const a = i * 2 * Math.PI / Math.min(teeth, 30);
+                s += `<line x1="${(cx + Math.cos(a) * rad).toFixed(1)}" y1="${(cyy + Math.sin(a) * rad).toFixed(1)}" x2="${(cx + Math.cos(a) * (rad + 5)).toFixed(1)}" y2="${(cyy + Math.sin(a) * (rad + 5)).toFixed(1)}" stroke="${col}" stroke-width="2.5"/>`;
+            }
+            return s + `<circle cx="${cx}" cy="${cyy}" r="4" fill="${col}"/>`;
+        };
+        g += `<line x1="${fx}" y1="${cy - fr}" x2="${rx}" y2="${cy - rr}" stroke="#64748b" stroke-width="3"/>
+              <line x1="${fx}" y1="${cy + fr}" x2="${rx}" y2="${cy + rr}" stroke="#64748b" stroke-width="3"/>`;
+        g += cog(fx, cy, fr, f, '#0284c7') + cog(rx, cy, rr, r, '#7c3aed');
+        g += `<text x="${fx}" y="${cy + 5}" text-anchor="middle" font-size="14" font-weight="900" fill="#0284c7">${f}</text>`;
+        g += `<text x="${rx}" y="${cy + 5}" text-anchor="middle" font-size="13" font-weight="900" fill="#7c3aed">${r}</text>`;
+        g += `<text x="${fx}" y="${cy + fr + 26}" text-anchor="middle" font-size="11" font-weight="900" fill="#0284c7">前（ペダル側）</text>`;
+        g += `<text x="${rx}" y="${cy + Math.max(rr, 30) + 26}" text-anchor="middle" font-size="11" font-weight="900" fill="#7c3aed">後ろ（車輪側）</text>`;
+        g += `<text x="${(fx + rx) / 2}" y="34" text-anchor="middle" font-size="12" font-weight="900" fill="#334155">ペダル 1回転で 後ろの 歯車は ${ratio.toFixed(2)} 回転</text>`;
+        document.getElementById('gr-fig').innerHTML = svg(W, H, g);
+        const kmh = dist * 60 / 1000 * 60;            // 1秒に 1回転（ケイデンス60回転/分）で 走る 速さ
+        const heavy = ratio >= 3 ? '重い（坂は つらい）' : ratio >= 2 ? 'ふつう' : '軽い（坂に つよい）';
+        document.getElementById('gr-info').innerHTML =
+            `ギア比 ＝ ${f} ÷ ${r} ＝ <b class="num">${ratio.toFixed(2)}</b>。<br>
+             ペダルを 1回転させると 車輪も ${ratio.toFixed(2)} 回転するので、進む きょりは
+             ${ratio.toFixed(2)} × ${TIRE}m ＝ <b class="num">${dist.toFixed(1)}m</b>。<br>
+             1分に 60回 こぐと 時速 <b class="num">${kmh.toFixed(0)}km</b> くらい。ペダルの 重さは <b>${heavy}</b>。<br>
+             <span class="text-xs text-slate-600">💡 ギアを 軽く すると、同じ きょりを 進むのに こぐ 回数は ふえる。
+             「力 × 動く きょり」は かわらない＝これが てこや かっ車と 同じ きまり。</span>`;
+    }
+
+    /* --- ブレーキ --- */
+    function brakeDraw() {
+        const kmh = +document.getElementById('bk-v').value;
+        document.getElementById('bk-vv').innerText = kmh;
+        const v = kmh / 3.6;
+        // 空走距離（気づいて ブレーキを ふむまで）は はやさに 比例、
+        // ブレーキ距離は はやさの 2乗に 比例
+        const carR = v * 1, carB = v * v / (2 * 7);   // 車: 1秒 ＋ へらす 力 7m/s²
+        const trainR = v * 2, trainB = v * v / (2 * 1); // 電車: 2秒 ＋ ゆるい ブレーキ 1m/s²
+        const carD = carR + carB, trainD = trainR + trainB;
+        const W = SW, H = 200, L = 60, R = 540;
+        const maxD = Math.max(carD, trainD);
+        const scale = (R - L) / maxD;
+        let g = bg(H, '#f0f9ff');
+        const row = (y, emoji, name, d, col) => {
+            let s = `<text x="20" y="${y + 6}" font-size="20">${emoji}</text>`;
+            s += `<line x1="${L}" y1="${y}" x2="${(L + d * scale).toFixed(1)}" y2="${y}" stroke="${col}" stroke-width="10" stroke-linecap="round" opacity="0.35"/>`;
+            s += `<circle cx="${L}" cy="${y}" r="5" fill="${col}"/>`;
+            s += `<line x1="${(L + d * scale).toFixed(1)}" y1="${y - 14}" x2="${(L + d * scale).toFixed(1)}" y2="${y + 14}" stroke="${col}" stroke-width="3"/>`;
+            const tx = L + d * scale;
+            s += `<text x="${tx > 440 ? tx - 8 : tx + 8}" y="${y - 20}" text-anchor="${tx > 440 ? 'end' : 'start'}" font-size="12" font-weight="900" fill="${col}">${name} ${d < 1000 ? Math.round(d) + 'm' : (d / 1000).toFixed(1) + 'km'}</text>`;
+            return s;
+        };
+        g += row(64, '🚗', '自動車', carD, '#dc2626') + row(138, '🚃', '電車', trainD, '#0284c7');
+        g += `<line x1="${L}" y1="30" x2="${L}" y2="172" stroke="#94a3b8" stroke-width="2" stroke-dasharray="5 4"/>`;
+        g += `<text x="${L}" y="24" text-anchor="middle" font-size="11" font-weight="900" fill="#64748b">ブレーキ！</text>`;
+        g += `<text x="${R}" y="188" text-anchor="end" font-size="10" font-weight="700" fill="#94a3b8">※ おおよその 目安（路面や 車両で かわる）</text>`;
+        document.getElementById('bk-fig').innerHTML = svg(W, H, g);
+        const school = 25;                            // 25mプール
+        const m = d => d < 1000 ? Math.round(d) + 'm' : (d / 1000).toFixed(2) + 'km';
+        document.getElementById('bk-info').innerHTML =
+            `時速 ${kmh}km（秒速 ${v.toFixed(1)}m）で 走って いて「あぶない！」と 気づいて から…<br>
+             🚗 自動車 <b class="num text-rose-700">${m(carD)}</b>
+             （気づいて ふむまで ${m(carR)} ＋ ブレーキ ${m(carB)}。25mプール <b>${(carD / school).toFixed(1)}</b> こぶん）<br>
+             🚃 電車 <b class="num text-sky-700">${m(trainD)}</b>
+             （${m(trainR)} ＋ ブレーキ ${m(trainB)}。25mプール <b>${(trainD / school).toFixed(1)}</b> こぶん）<br>
+             <span class="text-xs text-slate-600">💡 <b>ブレーキの ぶん</b>は はやさが 2倍に なると <b>4倍</b>に なる（2乗で ふえる）。
+             気づくまでに 進む ぶんは 2倍なので、合計では 2〜4倍の あいだに なる。
+             電車が とくに 長いのは、鉄の 車輪が すべりやすく 重さも ものすごい から。
+             だから ふみきりでは ぜったいに 止まらない。</span>`;
+    }
+
+    /* =====================================================================
+       ④ どれで 行く？
+       ===================================================================== */
+    const PICKS = [
+        { q: '🏫 家から 2km の 学校へ、晴れた 日に 1人で 行く。', a: '🚲 自転車',
+          x: ['✈️ 飛行機', '🚢 フェリー', '🚄 新幹線'],
+          e: '2kmなら 自転車で 10分ほど。近い きょりでは、駅までの 歩きや 待ち時間が ない のりものが いちばん 早い。お金も CO2も ゼロ。' },
+        { q: '🗼 東京から 大阪（500km）へ 1人で 出かける。いちばん 街の 中心に 早く 着けるのは？', a: '🚄 新幹線',
+          x: ['🚲 自転車', '🚌 高速バス', '🚗 自動車'],
+          e: '飛行機は 空が 速いが、空港までの 移動と 手つづきで 時間が かかる。500kmくらいまでは 駅から 駅へ 直接 入れる 新幹線が 有利と 言われる。' },
+        { q: '🌏 日本から アメリカへ 行きたい。', a: '✈️ 飛行機',
+          x: ['🚄 新幹線', '🚗 自動車', '🚲 自転車'],
+          e: '海を こえるには 船か 飛行機。船だと 何週間も かかるので、人が 行くなら 飛行機。' },
+        { q: '📦 外国から 自動車 1000台を 日本へ 運ぶ。', a: '🚢 船',
+          x: ['✈️ 飛行機', '🚁 ヘリコプター', '🚄 新幹線'],
+          e: '重くて かさばる ものを 大量に 運ぶなら 船が だんぜん 安い。日本の 輸入品は 重さの 99%以上が 船で 来て いる。' },
+        { q: '⛰️ 山で けがを した 人を、道の ない ところから 病院へ 運ぶ。', a: '🚁 ヘリコプター',
+          x: ['🚌 バス', '🚃 電車', '🚲 自転車'],
+          e: 'せまい ところに まっすぐ 降りられて、空中で 止まれるのが ヘリの 強み。道路が いらない。' },
+        { q: '👨‍👩‍👧‍👦 家族 5人で 大きな 荷物を 持って、電車の ない 田舎の 温泉へ。', a: '🚗 自動車',
+          x: ['🚲 自転車', '✈️ 飛行機', '🚄 新幹線'],
+          e: '人数が いて 荷物が 多く、線路や 空港が ない ところへは 車が 強い。5人で 分けると 1人あたりの 費用も 下がる。' },
+        { q: '🏙️ 朝の こんだ 都会で、20km 先の 会社へ 時間どおりに 着きたい。', a: '🚃 電車',
+          x: ['🚗 自動車', '🚌 バス', '🚁 ヘリコプター'],
+          e: '都会の 朝は じゅうたいで 車も バスも おくれやすい。線路を 走る 電車は じゅうたいが なく 時間が 正かく。' },
+        { q: '🌍 CO2を いちばん 出さずに 30km 先へ 行きたい（体力は ある）。', a: '🚲 自転車',
+          x: ['🚗 自動車', '✈️ 飛行機', '🚌 バス'],
+          e: '自転車は 走る ときの CO2が ゼロ。つぎに 少ないのは 鉄道。どうしても 車を つかうなら 何人かで のりあうと 1人あたりが へる。' },
+        { q: '🛰️ 天気予報の ための 人工衛星を 宇宙へ とどける。', a: '🚀 ロケット',
+          x: ['✈️ 飛行機', '🚁 ヘリコプター', '🧲 リニア'],
+          e: '宇宙には 空気が ないので、はねも ジェットエンジンも つかえない。自分で 酸素を 持つ ロケットだけが 行ける。' },
+        { q: '🧳 40人の クラス 全員で 50km 先の 工場を 見学に 行く。', a: '🚌 バス',
+          x: ['🚗 自動車 10台', '🚁 ヘリコプター', '🚲 自転車'],
+          e: 'まとまって 動く ときは バスが 便利。車 10台に 分かれるより 1人あたりの CO2も 費用も 少なく、はぐれる 心配も ない。' },
+        { q: '🏔️ 雪が たくさん ふった 日に、10km 先の 駅前へ 行く。', a: '🚃 電車や バスなど 公共の のりもの',
+          x: ['🚲 自転車', '🚁 ヘリコプター', '🛴 キックボード'],
+          e: '雪の 日は 自転車は すべって あぶない。雪に つよいのは 除雪された 道を 走る バスや、地下や 高い ところを 走る 電車。' },
+        { q: '💰 お金を いちばん かけずに 3km 先の 公園へ 行く（体力 ふつう）。', a: '🚶 歩く か 🚲 自転車',
+          x: ['🚗 タクシー', '🚄 新幹線', '✈️ 飛行機'],
+          e: '3kmは 歩いて 40分、自転車で 12分ほど。お金 0円で 運動にも なる。近い きょりは じつは 足が いちばん 得。' }
+    ];
+    let pk = null;
+    function newPick() {
+        const s = pickOne(PICKS);
+        pk = { s, choices: shuffle([s.a].concat(s.x)), done: false };
+        document.getElementById('pk-q').innerText = s.q;
+        document.getElementById('pk-choices').innerHTML = pk.choices.map((c, i) =>
+            `<button onclick="ansPick(${i})" data-pkc="${i}" class="bg-white border-2 border-slate-200 hover:border-sky-500 font-bold text-left px-4 py-3 rounded-2xl bounce-hover text-sm leading-relaxed">${esc(c)}</button>`).join('');
+        document.getElementById('pk-res').innerHTML = '';
+        scoreBox('pk-score', S.pick);
+    }
+    function ansPick(i) {
+        if (!pk || pk.done) return;
+        pk.done = true;
+        const ok = pk.choices[i] === pk.s.a;
+        S.pick[1]++; if (ok) S.pick[0]++;
+        markChoices('[data-pkc]', j => pk.choices[j] === pk.s.a, i, 'font-bold text-left px-4 py-3 rounded-2xl text-sm leading-relaxed');
+        document.getElementById('pk-res').innerHTML = resultBox(ok, ok ? '⭕ そのとおり！' : `❌ いちばん よいのは 「${esc(pk.s.a)}」`, pk.s.e);
+        scoreBox('pk-score', S.pick);
+    }
+
+    /* =====================================================================
+       ⑤ クイズ
+       ===================================================================== */
+    const QS = [
+        { f: 'しくみ', q: '自転車の ペダルの 力を 後ろの 車輪に つたえて いるのは？', a: 'チェーン', x: ['ブレーキ', 'ハンドル', 'サドル'], e: '前の 歯車 → チェーン → 後ろの 歯車 → 車輪の 順に つたわる。' },
+        { f: 'しくみ', q: 'ガソリンエンジンで 力を 出して いるのは 4つの うち どれ？', a: '燃やす（爆発）', x: ['吸う', 'ちぢめる', '出す'], e: '吸う → ちぢめる → 燃やす → 出す の くりかえし。力を 出すのは 燃やす ときだけ。' },
+        { f: 'しくみ', q: 'ピストンの 上下の 動きを 回転に かえる 部品は？', a: 'クランク', x: ['ラジエーター', 'ハンドル', 'ブレーキ'], e: '自転車の ペダルも クランク。まっすぐな 動きと 回転を 行き来させる しくみ。' },
+        { f: 'しくみ', q: '電気自動車が 走る ために 使う ものは？', a: 'バッテリーの 電気と モーター', x: ['ガソリンと エンジン', '石炭と じょうきき', '風と ほ'], e: '爆発が ないので とても しずか。止まって いる ときから 強い 力が 出せる。' },
+        { f: 'しくみ', q: 'ブレーキの ときに モーターを 発電機に して 電気を もどす しくみは？', a: '回生ブレーキ', x: ['パンタグラフ', '回転翼', 'スクリュー'], e: '電車や 電気自動車で つかわれて いる。エネルギーを すてずに 使いまわす くふう。' },
+        { f: 'しくみ', q: '電車が 屋根の上で 電気を 受けとる 部品は？', a: 'パンタグラフ', x: ['クランク', 'ローター', 'ラダー'], e: 'ばねで 架線に おしつけながら 走る。電気は 発電所から 架線を 通って きて いる。' },
+        { f: 'しくみ', q: '電車の 車輪が レールから 落ちない ように なって いる つばの 名前は？', a: 'フランジ', x: ['ノズル', 'スクリュー', 'ペダル'], e: '車輪の 内側に ついた つば。さらに 車輪が 円すい形なので カーブも 自然に 曲がれる。' },
+        { f: 'しくみ', q: '新幹線が 速く 走れる りゆうで 正しいのは？', a: 'ほとんどの 車両に モーターが ついて いる', x: ['先頭車だけが 引っぱる', 'はねで 浮いて いる', 'ガソリンで 走る'], e: '動力分散方式。加速が よく、1つの 車両に かかる 重さも 小さいので 線路を いためにくい。' },
+        { f: 'しくみ', q: 'リニアモーターカーが 浮く のに つかう 力は？', a: '磁石の 力', x: ['はねの 揚力', '水の 浮力', '空気を 下に ふき出す 力'], e: '超電導磁石と 壁の コイルの あいだに はんぱつする 力が はたらき、10cmほど 浮く。' },
+        { f: 'しくみ', q: 'リニアの 磁石を とても つめたく する りゆうは？', a: '電気の ていこうが ゼロに なり、強い 磁石に なる', x: ['こわれない ように 冷やす', 'お客さんを すずしく する', '空気を かためる'], e: 'これが 超電導。−269℃ ほどまで 液体ヘリウムで 冷やして いる。' },
+        { f: 'しくみ', q: 'ジェットエンジンが 前に 進む 力を 得る 方法は？', a: 'ガスを 後ろに ふき出した 反作用', x: ['はねを 上下に 動かす', '空気を 前に すいこむ だけ', '車輪を まわす'], e: '「おした ぶんだけ おし返される」作用・反作用の きまり。ロケットも 同じ。' },
+        { f: 'しくみ', q: 'ヘリコプターの しっぽの 小さい はねの 役わりは？', a: '機体が 反対に まわるのを おさえる', x: ['前に 進む ため', '着陸の ため', 'かざり'], e: '大きな はねを まわすと 機体は 反対に まわろうとする（反作用）。それを おさえて 向きを 保つ。' },
+        { f: 'しくみ', q: '船が 進む ために 水を 後ろへ おす 部品は？', a: 'スクリュー', x: ['フランジ', 'パンタグラフ', 'クランク'], e: 'ねじの ような はね。水を 後ろに おし出した 反作用で 船が 前に 進む。' },
+        { f: 'しくみ', q: 'ロケットが 宇宙でも 進める りゆうは？', a: '燃やす ための 酸素も 自分で 持って いる', x: ['はねが 大きい から', '空気が うすいと 速く なる から', '地球の 磁石で 引っぱられる から'], e: '空気の 酸素を つかう ジェットエンジンは 宇宙では 動かない。' },
+        { f: 'しくみ', q: 'ロケットが つかい終わった タンクを 切りはなす りゆうは？', a: '重いと 上がれないので すてる', x: ['地球に 返す ため', '中で 休む ため', '音を 小さくする ため'], e: 'これが 多段式。ロケットの 重さの 9割ほどは 燃料で、運べる 荷物は わずか 数%。' },
+
+        { f: '理科', q: '飛行機の はねが 上に おされる いちばんの りくつは？', a: '空気を 下へ ながした 反作用', x: ['空気より 軽い から', '磁石の 力', 'エンジンが 上を むいて いる から'], e: 'はねの 上側の 気圧が 下がる ことも 同時に おきて いる。どちらも 同じ ことの べつの 見方。' },
+        { f: '理科', q: 'はねの 角度を 大きくしすぎると おきる ことは？', a: '失速（浮く 力が きゅうに なくなる）', x: ['もっと 浮く', '速く なる', '音が 消える'], e: '空気の 流れが はねから はがれて しまう。飛行機には 近づくと 知らせる 警報が ある。' },
+        { f: '理科', q: '鉄の 船が 浮く いちばんの りゆうは？', a: '中が 空どうで、船ぜんたいでは 水より 軽い', x: ['鉄は 水より 軽い', 'スクリューで おし上げて いる', '空気を 入れた ふうせんが ある'], e: 'おしのけた 水の 重さと 同じ 力で 上に おされる（アルキメデスの 原理）。' },
+        { f: '理科', q: '船に 荷物を のせすぎると どう なる？', a: 'しずむ 深さが ふえ、こえると しずむ', x: ['軽く なって 浮く', '速く なる', '何も かわらない'], e: '船の よこに かいて ある 線（満載喫水線）は、ここまでしか しずめては いけないと いう しるし。' },
+        { f: '理科', q: '自転車の 前の 歯車を 大きく、後ろを 小さく すると？', a: '1回 こぐと 遠くへ 進むが、ペダルは 重く なる', x: ['遠くへ 進んで ペダルも 軽く なる', '進まなく なる', 'ブレーキが きかなく なる'], e: '「力 × きょり」は かわらない。これは てこや かっ車と 同じ きまり。' },
+        { f: '理科', q: '坂道を のぼる とき えらぶと よい ギアは？', a: '軽い ギア（前が 小さく 後ろが 大きい）', x: ['重い ギア', 'ブレーキを かける', 'ギアは かんけいない'], e: 'こぐ 回数は ふえるが、1回の 力は 小さくて すむ。' },
+        { f: '理科', q: 'はやさが 2倍に なると、ブレーキが きき始めてから 止まるまでに 進む きょりは？', a: 'およそ 4倍', x: ['2倍', '半分', 'かわらない'], e: 'ブレーキの きょりは はやさの 2乗で ふえる（2×2＝4倍）。だから スピードの 出しすぎは とても きけん。' },
+        { f: '理科', q: '電車の 止まる きょりが 長い りゆうは？', a: '鉄の 車輪は すべりやすく、とても 重い から', x: ['ブレーキが ない から', 'わざと ゆっくり 止まって いる だけ', '電気が 足りない から'], e: '少ない 力で 動かせる のと、止まりにくい のは 同じ 理由（まさつが 小さい）の 裏表。' },
+        { f: '理科', q: '鉄の 車輪と レールの まさつは、ゴムタイヤと 道路と くらべて？', a: 'ずっと 小さい', x: ['ずっと 大きい', '同じ', '雨の 日だけ 大きい'], e: '10分の1 ほど。だから 1人の 力で 貨車を 動かせる ほど 効率が よい。' },
+        { f: '理科', q: '飛行機が 高い ところ（1万m）を 飛ぶ りゆうは？', a: '空気が うすくて ていこうが 少なく 燃料が 節約できる', x: ['太陽の 光を あびる ため', '雲の 上が あたたかい から', '地球の 回転を つかう ため'], e: '外は −50℃ ほど。機内は 空気を おしこんで 気圧を たもって いる。' },
+        { f: '理科', q: '人工衛星が 落ちて こない りゆうは？', a: '横に とても 速く 進んで いて、落ちても 地面が にげて いく', x: ['重さが ゼロに なる から', '空気に 支えられて いる から', 'エンジンを ずっと ふかして いる から'], e: '秒速 約8km。じつは ずっと 落ちつづけて いる（だから ふわふわ する）。' },
+
+        { f: 'くらべる', q: '1人を 1km 運ぶ ときの CO2が いちばん 少ない のりものは？', a: '鉄道', x: ['自家用車', '飛行機', 'バス'], e: '国土交通省の 資料では 鉄道 やく17g、バス 57g、航空 98g、自家用乗用車 130g。鉄道は 車の およそ 8分の1。' },
+        { f: 'くらべる', q: '日本の 新幹線の 最高 はやさは およそ？', a: '時速 320km', x: ['時速 120km', '時速 500km', '時速 900km'], e: '東北新幹線で 時速 320km。リニアは 時速 505kmを めざして いる。' },
+        { f: 'くらべる', q: '有人走行の 鉄道の 世界最高速度（2015年・リニア）は？', a: '時速 603km', x: ['時速 320km', '時速 405km', '時速 900km'], e: '山梨の 実験線で 記録。1秒で 167m＝25mプール 7つ分 進む はやさ。' },
+        { f: 'くらべる', q: 'ジェット旅客機が とんで いる ときの はやさは およそ？', a: '時速 800〜900km', x: ['時速 300km', '時速 2000km', '時速 100km'], e: '音の 速さ（時速 約1200km）より 少し おそい。音を こえると ドンという 音が 出て しまう。' },
+        { f: 'くらべる', q: '重い ものを 大量に 運ぶ とき、1トンあたり いちばん 安い のりものは？', a: '船', x: ['飛行機', 'ヘリコプター', '自動車'], e: 'おそいが、一度に けたちがいの 量を 運べる。日本の 輸入品は 重さの 99%以上が 船。' },
+        { f: 'くらべる', q: '空港が なくても、せまい ところに まっすぐ 降りられる のりものは？', a: 'ヘリコプター', x: ['飛行機', '新幹線', 'リニア'], e: '空中で 止まれる（ホバリング）のも 大きな とくちょう。救助や 消火で 活やくする。' },
+        { f: 'くらべる', q: '朝の こんだ 都会で 時間が いちばん 正かくなのは？', a: '電車', x: ['自動車', 'バス', 'タクシー'], e: '道路を つかう のりものは じゅうたいの えいきょうを 受ける。線路は 自分たち だけの 道。' },
+        { f: 'くらべる', q: '2kmの お出かけで いちばん 早く 着く ことが 多いのは？', a: '自転車', x: ['新幹線', '飛行機', 'フェリー'], e: '速い のりものほど、駅や 空港までの 移動と 待ち時間が かかる。近い きょりでは それが ひびく。' },
+        { f: 'くらべる', q: '電気自動車の 苦手な ところは？', a: '充電に 時間が かかり、走れる きょりが 短め', x: ['音が 大きい', '排気ガスが 多い', '発進が おそい'], e: 'しずかで 排気ガスを 出さず 発進は するどい。電池の 進歩で きょりは のびつづけて いる。' },
+        { f: 'くらべる', q: 'のりものを えらぶ とき いちばん 正しい 考え方は？', a: 'きょり・人数・荷物・天気・お金に あわせて えらぶ', x: ['いつも いちばん 速い ものを えらぶ', 'いつも いちばん 安い ものを えらぶ', 'すべて 自動車で よい'], e: '「いちばん いい のりもの」は ない。とくいと 苦手を 知って 組みあわせるのが かしこい つかい方。' }
+    ];
+    let qz = null, qzField = 'all';
+    function newQuiz() {
+        const pool = qzField === 'all' ? QS : QS.filter(q => q.f === qzField);
+        const q = pool[rnd(pool.length)];
+        qz = { q, choices: shuffle([q.a].concat(q.x)), done: false };
+        const fields = ['all'].concat([...new Set(QS.map(x => x.f))]);
+        document.getElementById('qz-fields').innerHTML = fields.map(f =>
+            `<button onclick="setField('${f}')" data-qf="${f}" class="${qzField === f ? 'bg-sky-700 text-white' : 'bg-white border-2 border-sky-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${f === 'all' ? 'ぜんぶ ' + QS.length : f + ' ' + QS.filter(x => x.f === f).length}</button>`).join('');
+        document.getElementById('qz-q').innerHTML = `<span class="text-xs font-black text-sky-700 bg-sky-100 px-2 py-1 rounded-lg mr-2">${esc(q.f)}</span>${esc(q.q)}`;
+        document.getElementById('qz-choices').innerHTML = qz.choices.map((c, i) =>
+            `<button onclick="ansQuiz(${i})" data-qzc="${i}" class="bg-white border-2 border-slate-200 hover:border-sky-500 font-bold text-left px-4 py-3 rounded-2xl bounce-hover">${esc(c)}</button>`).join('');
+        document.getElementById('qz-res').innerHTML = '';
+        scoreBox('qz-score', S.quiz);
+    }
+    function setField(f) { qzField = f; newQuiz(); }
+    function ansQuiz(i) {
+        if (!qz || qz.done) return;
+        qz.done = true;
+        const ok = qz.choices[i] === qz.q.a;
+        S.quiz[1]++; if (ok) S.quiz[0]++;
+        markChoices('[data-qzc]', j => qz.choices[j] === qz.q.a, i, 'font-bold text-left px-4 py-3 rounded-2xl');
+        document.getElementById('qz-res').innerHTML = resultBox(ok, ok ? '⭕ せいかい！' : `❌ こたえは 「${esc(qz.q.a)}」`, qz.q.e);
+        scoreBox('qz-score', S.quiz);
+    }
+
+    /* ===================== 起動 ===================== */
+    renderNav();
+    setVe(0);
+    rubify(document.body);
+</script>
+</body>
+</html>
