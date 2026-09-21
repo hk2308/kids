@@ -296,6 +296,7 @@
     const PATTERN = [0, 0, 1, 2, 2, 1, 0, 2, 3, 2, 1, 0, 1, 2, 3, 4];
     const TEMPOS = [['ゆっくり', 88], ['ふつう', 108], ['はやい', 132]];
     let songI = 0, bpm = 108, sound = true;
+    const MASTER_VOL = 0.85;                 // 全体の 音量（ここ 1か所で 決める）
     let ctx = null, master = null, timeline = null, raf = 0, t0 = 0, playing = false;
     let stGoro = -1, stMora = -2, stYear = -2;
 
@@ -305,7 +306,7 @@
         if (!AC) return null;
         ctx = new AC();
         master = ctx.createGain();
-        master.gain.value = 0.5;
+        master.gain.value = MASTER_VOL;
         master.connect(ctx.destination);
         return ctx;
     }
@@ -342,10 +343,10 @@
     }
     function scheduleAudio(tl, at) {
         tl.ev.forEach(e => {
-            if (e.type === 'mora') beep(at + e.t, e.f, e.dur * 0.9, 'triangle', 0.2);
-            if (e.type === 'goro') beep(at + e.t, SCALE[0] / 2, 0.5, 'sine', 0.24);
+            if (e.type === 'mora') beep(at + e.t, e.f, e.dur * 0.9, 'triangle', 0.4);
+            if (e.type === 'goro') beep(at + e.t, SCALE[0] / 2, 0.5, 'sine', 0.32);
             if (e.type === 'year') {
-                [0, 1, 2].forEach(k => beep(at + e.t + k * 0.13, SCALE[3 + k], 0.18, 'square', 0.14));
+                [0, 1, 2].forEach(k => beep(at + e.t + k * 0.13, SCALE[3 + k], 0.18, 'square', 0.22));
             }
         });
     }
@@ -421,7 +422,7 @@
         if (raf) cancelAnimationFrame(raf);
         raf = 0;
         if (ctx) { try { master.gain.setTargetAtTime(0, ctx.currentTime, 0.02); } catch (e) { } }
-        if (ctx) setTimeout(() => { try { master.gain.setTargetAtTime(0.5, ctx.currentTime, 0.02); } catch (e) { } }, 60);
+        if (ctx) setTimeout(() => { try { master.gain.setTargetAtTime(MASTER_VOL, ctx.currentTime, 0.02); } catch (e) { } }, 60);
         const pb = document.getElementById('so-play');
         if (pb) pb.innerText = '▶ うたう';
         document.getElementById('ka-bar').style.width = '0%';
