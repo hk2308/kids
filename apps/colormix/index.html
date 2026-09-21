@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>いろみず ラボ 色をまぜてみよう</title>
+    <meta name="description" content="絵の具の色水を混ぜるとどんな色になるかを試せる実験アプリ。光の三原色との違い、まぜかたクイズ、色あてチャレンジつき。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums }
+        .bounce-hover { transition: transform .12s cubic-bezier(.175,.885,.32,1.275) }
+        .bounce-hover:active { transform: scale(.94) }
+        @keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.1) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275) }
+        @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+        .shake { animation: shake .3s ease-in-out }
+        @keyframes drop { 0% { transform: translateY(-40px) scale(.5); opacity: 0 } 60% { opacity: 1 } 100% { transform: translateY(0) scale(1); opacity: 1 } }
+        .dropin { animation: drop .35s ease-out }
+        .water { transition: background-color .45s ease, height .45s ease }
+        .lamp { mix-blend-mode: screen }
+        rt { font-size: .55em; font-weight: 700; color: #be185d }
+    </style>
+</head>
+<body class="bg-pink-50 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-rose-500 via-fuchsia-500 to-indigo-500 text-white p-3 shadow-lg sticky top-0 z-30">
+        <div class="max-w-4xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">🎨</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">いろみず ラボ</h1>
+                    <p class="text-xs text-pink-100 font-bold hidden sm:block">まぜたら なに色に なる？</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[64px] z-20 bg-pink-50/95 backdrop-blur border-b border-pink-200">
+        <div class="max-w-4xl mx-auto flex gap-2 p-3 overflow-x-auto" id="tab-nav"></div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto w-full p-3 sm:p-5 flex-grow space-y-4">
+
+        <!-- ===== ① えのぐ ===== -->
+        <section id="tab-paint" class="space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-pink-100">
+                <h2 class="font-black">🧪 えのぐの 色水を まぜる</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">色を タップすると 1てき ずつ 入るよ。</p>
+                <div id="paint-palette" class="grid grid-cols-4 sm:grid-cols-8 gap-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-pink-100">
+                <div class="flex items-end justify-center gap-4 sm:gap-8">
+                    <div class="text-center">
+                        <div class="relative w-24 h-36 sm:w-28 sm:h-44 mx-auto rounded-b-3xl rounded-t-lg border-4 border-slate-300 bg-white overflow-hidden shadow-inner">
+                            <div id="beaker" class="water absolute bottom-0 left-0 right-0" style="height:0%;background:#ffffff"></div>
+                            <div class="absolute inset-x-0 top-1/3 border-t-2 border-dashed border-slate-200"></div>
+                            <div class="absolute inset-x-0 top-2/3 border-t-2 border-dashed border-slate-200"></div>
+                        </div>
+                        <p class="text-xs font-black text-slate-400 mt-1">ビーカー</p>
+                    </div>
+                    <div class="flex-1 max-w-xs">
+                        <p class="text-xs font-black text-slate-400">できた色</p>
+                        <p id="paint-name" class="text-2xl sm:text-3xl font-black">—</p>
+                        <p id="paint-recipe" class="text-sm font-bold text-slate-500 mt-1 leading-relaxed"></p>
+                        <div id="paint-swatch" class="h-10 rounded-xl border-2 border-slate-200 mt-2" style="background:#fff"></div>
+                    </div>
+                </div>
+                <div class="flex gap-2 mt-4">
+                    <button onclick="clearMix()" class="flex-1 bg-white border-2 border-slate-200 text-slate-600 font-black py-2.5 rounded-xl bounce-hover text-sm">🚿 あらう（からっぽ）</button>
+                    <button onclick="undoDrop()" class="flex-1 bg-white border-2 border-pink-200 text-pink-600 font-black py-2.5 rounded-xl bounce-hover text-sm">↩ 1てき もどす</button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-pink-100">
+                <p class="font-black text-sm">🔎 よく ある まぜかた（タップで ためす）</p>
+                <div id="paint-examples" class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2"></div>
+                <p class="text-xs font-bold text-slate-400 mt-2">
+                    えのぐは まぜるほど <b>くらく</b> なる（減法混色・げんぽうこんしょく）。3色 ぜんぶ まぜると 黒っぽい 茶色に。
+                </p>
+            </div>
+        </section>
+
+        <!-- ===== ② ひかり ===== -->
+        <section id="tab-light" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-pink-100">
+                <h2 class="font-black">🔦 ひかりを かさねる</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    ひかりは まぜるほど <b>あかるく</b> なる（加法混色・かほうこんしょく）。テレビや スマホの 画面も この しくみ。
+                </p>
+            </div>
+            <div class="bg-white rounded-3xl p-3 shadow-md border-2 border-pink-100">
+                <div class="relative mx-auto bg-slate-900 rounded-2xl overflow-hidden" style="max-width:420px;aspect-ratio:1/1" id="light-stage">
+                    <div id="lamp-r" class="lamp absolute rounded-full" style="background:#ff0000"></div>
+                    <div id="lamp-g" class="lamp absolute rounded-full" style="background:#00ff00"></div>
+                    <div id="lamp-b" class="lamp absolute rounded-full" style="background:#0000ff"></div>
+                </div>
+                <div class="grid grid-cols-3 gap-2 mt-3">
+                    <button onclick="toggleLamp('r')" data-lamp="r" class="font-black py-2.5 rounded-xl bounce-hover text-sm">🔴 あか</button>
+                    <button onclick="toggleLamp('g')" data-lamp="g" class="font-black py-2.5 rounded-xl bounce-hover text-sm">🟢 みどり</button>
+                    <button onclick="toggleLamp('b')" data-lamp="b" class="font-black py-2.5 rounded-xl bounce-hover text-sm">🔵 あお</button>
+                </div>
+                <div class="mt-3 text-center">
+                    <p class="text-xs font-black text-slate-400">まん中の 色</p>
+                    <p id="light-name" class="text-2xl font-black">—</p>
+                </div>
+            </div>
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-pink-100">
+                <p class="font-black text-sm mb-2">ひかりの 3原色</p>
+                <div id="light-table" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
+            </div>
+        </section>
+
+        <!-- ===== ③ クイズ ===== -->
+        <section id="tab-quiz" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-pink-100">
+                <div class="flex justify-between items-center">
+                    <h2 class="font-black">❓ まぜたら なに色？</h2>
+                    <span id="quiz-score" class="num bg-amber-100 text-amber-700 font-black px-3 py-1 rounded-full text-xs">せいかい 0 / 0</span>
+                </div>
+                <p id="quiz-q" class="text-center text-lg font-black mt-4"></p>
+                <div id="quiz-mix" class="flex items-center justify-center gap-2 mt-3"></div>
+                <div id="quiz-choices" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4"></div>
+                <p id="quiz-msg" class="text-center font-black mt-3 min-h-[2rem]"></p>
+                <button onclick="newQuiz()" class="w-full bg-gradient-to-r from-rose-500 to-fuchsia-600 text-white font-black py-3 rounded-2xl border-b-4 border-fuchsia-700 bounce-hover">つぎの もんだい →</button>
+            </div>
+        </section>
+
+        <!-- ===== ④ チャレンジ ===== -->
+        <section id="tab-target" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-pink-100">
+                <h2 class="font-black">🎯 この色を つくろう</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">えのぐを まぜて、おなじ色に ちかづけよう。</p>
+                <div class="flex items-center gap-3 mt-3">
+                    <div class="flex-1 text-center">
+                        <p class="text-xs font-black text-slate-400">おてほん</p>
+                        <div id="target-swatch" class="h-20 rounded-2xl border-4 border-slate-200"></div>
+                    </div>
+                    <div class="text-center">
+                        <p id="target-pct" class="num text-3xl font-black text-fuchsia-600">0%</p>
+                        <p class="text-[11px] font-black text-slate-400">にている ど</p>
+                    </div>
+                    <div class="flex-1 text-center">
+                        <p class="text-xs font-black text-slate-400">きみの 色</p>
+                        <div id="target-mine" class="h-20 rounded-2xl border-4 border-slate-200" style="background:#fff"></div>
+                    </div>
+                </div>
+                <div id="target-palette" class="grid grid-cols-4 sm:grid-cols-8 gap-2 mt-3"></div>
+                <p id="target-msg" class="text-center font-black mt-2 min-h-[1.75rem]"></p>
+                <div class="flex gap-2">
+                    <button onclick="clearTarget()" class="flex-1 bg-white border-2 border-slate-200 text-slate-600 font-black py-2.5 rounded-xl bounce-hover text-sm">🚿 あらう</button>
+                    <button onclick="newTarget()" class="flex-1 bg-white border-2 border-fuchsia-200 text-fuchsia-600 font-black py-2.5 rounded-xl bounce-hover text-sm">🎯 つぎの おてほん</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="text-center py-3 text-xs text-slate-400 font-bold">いろみず ラボ © 2026</footer>
+
+    <script>
+        const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+        const pick = l => l[Math.floor(Math.random() * l.length)];
+        const shuffle = l => [...l].sort(() => 0.5 - Math.random());
+
+        /* ===================== えのぐの まざりかた（RYBモデル） =====================
+           えのぐは 赤・黄・青 が 三原色。RGBの かけ算だと 青＋黄が 黒に なって
+           しまうので、RYB立方体の 8すみを まぜあわせる やり方（三線形補間）を つかう。 */
+        const RYB_CORNERS = [
+            [1.000, 1.000, 1.000],   // 000 なにも 入れない → しろ
+            [0.163, 0.373, 0.600],   // 001 青
+            [1.000, 1.000, 0.000],   // 010 黄
+            [0.000, 0.660, 0.200],   // 011 黄+青 → みどり
+            [1.000, 0.000, 0.000],   // 100 赤
+            [0.500, 0.000, 0.500],   // 101 赤+青 → むらさき
+            [1.000, 0.500, 0.000],   // 110 赤+黄 → だいだい
+            [0.200, 0.094, 0.000]    // 111 ぜんぶ → くろっぽい 茶
+        ];
+        function rybToRgb(r, y, b) {
+            const f = [];
+            for (let k = 0; k < 3; k++) {
+                let v = 0;
+                for (let i = 0; i < 8; i++) {
+                    const wr = (i & 4) ? r : 1 - r;
+                    const wy = (i & 2) ? y : 1 - y;
+                    const wb = (i & 1) ? b : 1 - b;
+                    v += wr * wy * wb * RYB_CORNERS[i][k];
+                }
+                f.push(Math.round(Math.max(0, Math.min(1, v)) * 255));
+            }
+            return f;
+        }
+
+        // えのぐ（RYBの りょう と、白を まぜる ぶん）
+        const PAINTS = {
+            aka: { name: 'あか', ryb: [1, 0, 0], emoji: '🔴' },
+            ki: { name: 'きいろ', ryb: [0, 1, 0], emoji: '🟡' },
+            ao: { name: 'あお', ryb: [0, 0, 1], emoji: '🔵' },
+            midori: { name: 'みどり', ryb: [0, 1, 1], emoji: '🟢' },
+            daidai: { name: 'だいだい', ryb: [1, 1, 0], emoji: '🟠' },
+            murasaki: { name: 'むらさき', ryb: [1, 0, 1], emoji: '🟣' },
+            shiro: { name: 'しろ', ryb: [0, 0, 0], emoji: '⚪' },
+            kuro: { name: 'くろ', ryb: [1, 1, 1], emoji: '⚫' }
+        };
+        const PAINT_KEYS = Object.keys(PAINTS);
+        const paintRgb = k => rybToRgb(...PAINTS[k].ryb);
+
+        // てきすう の ぶんだけ まぜる。
+        // 「どの 色を どれだけ」（＝いろあい）と「えのぐの こさ」を 分けて 考える。
+        // 赤1てき＋青1てき は うすい むらさき では なく、こい むらさき に なるのが ただしい。
+        function mixPaint(drops) {
+            const total = drops.reduce((a, d) => a + d.n, 0);
+            if (!total) return [255, 255, 255];
+            const v = [0, 0, 0];
+            let pigment = 0;                       // しろ以外（色の もと）の てきすう
+            drops.forEach(d => {
+                const p = PAINTS[d.key].ryb;
+                if (Math.max(...p) > 0) pigment += d.n;
+                for (let i = 0; i < 3; i++) v[i] += p[i] * d.n;
+            });
+            const mx = Math.max(...v);
+            if (mx <= 0) return [255, 255, 255];   // しろだけ
+            const conc = pigment / total;          // しろを たすと うすく なる
+            return rybToRgb(...v.map(x => x / mx * conc));
+        }
+
+        /* ===================== ひかりの まざりかた（RGB・たし算） ===================== */
+        function mixLight(on) {
+            return [on.r ? 255 : 0, on.g ? 255 : 0, on.b ? 255 : 0];
+        }
+
+        /* ===================== 色の 名まえ ===================== */
+        function rgbToHsl(r, g, b) {
+            r /= 255; g /= 255; b /= 255;
+            const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+            let h = 0;
+            if (d) {
+                if (mx === r) h = ((g - b) / d) % 6;
+                else if (mx === g) h = (b - r) / d + 2;
+                else h = (r - g) / d + 4;
+                h *= 60;
+                if (h < 0) h += 360;
+            }
+            const l = (mx + mn) / 2;
+            const s = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+            return [h, s, l];
+        }
+        const HUES = [
+            [15, 'あか'], [42, 'だいだい'], [70, 'きいろ'], [90, 'きみどり'], [160, 'みどり'],
+            [200, 'みずいろ'], [248, 'あお'], [320, 'むらさき'], [345, 'ピンク'], [360, 'あか']
+        ];
+        function colorName(rgb) {
+            const [h, s, l] = rgbToHsl(...rgb);
+            if (l > 0.95) return 'しろ';
+            if (l < 0.09) return 'くろ';
+            if (s < 0.12) return l > 0.7 ? 'うすい はいいろ' : l > 0.35 ? 'はいいろ' : 'こい はいいろ';
+            // 赤〜黄の くらい色は「ちゃいろ」
+            if (h >= 10 && h < 50 && l < 0.42) return l < 0.25 ? 'こげちゃ' : 'ちゃいろ';
+            // うすい 赤は「ピンク」と よぶのが しぜん
+            if ((h < 15 || h >= 345) && l > 0.74) return 'ピンク';
+            let base = 'あか';
+            for (const [lim, nm] of HUES) { if (h < lim) { base = nm; break; } }
+            if (l > 0.78) return 'うすい ' + base;
+            if (l < 0.3) return 'こい ' + base;
+            return base;
+        }
+        const css = rgb => `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
+        const textOn = rgb => (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) > 150 ? '#1e293b' : '#ffffff';
+        const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+
+        /* ===================== タブ ===================== */
+        const TABS = { paint: '🧪 えのぐ', light: '🔦 ひかり', quiz: '❓ クイズ', target: '🎯 チャレンジ' };
+        const state = {
+            tab: 'paint', drops: [], lamps: { r: true, g: false, b: false },
+            quiz: { ok: 0, total: 0, q: null },
+            target: { rgb: [0, 0, 0], drops: [], recipe: '' }
+        };
+
+        function renderNav() {
+            document.getElementById('tab-nav').innerHTML = Object.entries(TABS).map(([k, label]) => {
+                const on = state.tab === k;
+                return `<button onclick="setTab('${k}')" data-tab="${k}" class="${on ? 'bg-fuchsia-600 text-white' : 'bg-white border-2 border-pink-200 text-slate-600'} font-black px-4 py-2 rounded-full text-sm whitespace-nowrap bounce-hover">${label}</button>`;
+            }).join('');
+        }
+        function setTab(k) {
+            state.tab = k;
+            Object.keys(TABS).forEach(t => document.getElementById('tab-' + t).classList.toggle('hidden', t !== k));
+            renderNav();
+            if (k === 'light') layoutLamps();
+        }
+
+        /* ===================== ① えのぐ ===================== */
+        function renderPalette(hostId, fn) {
+            document.getElementById(hostId).innerHTML = PAINT_KEYS.map(k => {
+                const rgb = paintRgb(k);
+                return `<button onclick="${fn}('${k}')" data-paint="${k}" class="border-2 border-slate-200 rounded-xl py-2 font-black text-xs bounce-hover"
+                    style="background:${css(rgb)};color:${textOn(rgb)}">${PAINTS[k].name}</button>`;
+            }).join('');
+        }
+        function addDrop(k) {
+            const last = state.drops.find(d => d.key === k);
+            if (last) last.n++;
+            else state.drops.push({ key: k, n: 1 });
+            renderMix();
+        }
+        function undoDrop() {
+            if (!state.drops.length) return;
+            const last = state.drops[state.drops.length - 1];
+            last.n--;
+            if (last.n <= 0) state.drops.pop();
+            renderMix();
+        }
+        function clearMix() { state.drops = []; renderMix(); }
+        function setMix(list) { state.drops = list.map(([key, n]) => ({ key, n })); renderMix(); }
+
+        function renderMix() {
+            const total = state.drops.reduce((a, d) => a + d.n, 0);
+            const rgb = mixPaint(state.drops);
+            const beaker = document.getElementById('beaker');
+            beaker.style.height = Math.min(92, total * 11) + '%';
+            beaker.style.background = css(rgb);
+            beaker.classList.remove('dropin'); void beaker.offsetWidth;
+            if (total) beaker.classList.add('dropin');
+            document.getElementById('paint-swatch').style.background = css(rgb);
+            document.getElementById('paint-name').innerText = total ? colorName(rgb) : '—';
+            document.getElementById('paint-name').style.color = total ? css(rgb.map(v => Math.max(0, v - 40))) : '#94a3b8';
+            document.getElementById('paint-recipe').innerText = total
+                ? state.drops.map(d => `${PAINTS[d.key].name} ${d.n}てき`).join(' ＋ ')
+                : '色を タップして 入れてね';
+        }
+
+        const EXAMPLES = [
+            [['aka', 1], ['ki', 1]], [['ki', 1], ['ao', 1]], [['aka', 1], ['ao', 1]],
+            [['aka', 1], ['ki', 1], ['ao', 1]], [['aka', 1], ['shiro', 3]], [['ao', 1], ['shiro', 3]],
+            [['aka', 2], ['ki', 1]], [['midori', 1], ['aka', 1]]
+        ];
+        function renderExamples() {
+            document.getElementById('paint-examples').innerHTML = EXAMPLES.map((ex, i) => {
+                const rgb = mixPaint(ex.map(([key, n]) => ({ key, n })));
+                const label = ex.map(([k, n]) => `${PAINTS[k].name}${n > 1 ? '×' + n : ''}`).join(' ＋ ');
+                return `<button onclick="setMix(${JSON.stringify(ex).replace(/"/g, '&quot;')})" data-ex="${i}"
+                    class="flex items-center gap-2 bg-slate-50 hover:bg-pink-50 border-2 border-slate-200 rounded-xl p-2 font-black text-sm bounce-hover">
+                    <span class="w-8 h-8 rounded-lg border-2 border-white shadow" style="background:${css(rgb)}"></span>
+                    <span class="flex-1 text-left">${label}</span>
+                    <span class="text-xs text-slate-500">→ ${colorName(rgb)}</span></button>`;
+            }).join('');
+        }
+
+        /* ===================== ② ひかり ===================== */
+        function layoutLamps() {
+            const st = document.getElementById('light-stage');
+            const w = st.clientWidth || 380;
+            const r = w * 0.34;
+            const cx = w / 2, cy = w * 0.47;
+            const pos = {
+                r: [cx, cy - r * 0.52],
+                g: [cx - r * 0.45, cy + r * 0.4],
+                b: [cx + r * 0.45, cy + r * 0.4]
+            };
+            Object.entries(pos).forEach(([k, [x, y]]) => {
+                const el = document.getElementById('lamp-' + k);
+                el.style.width = el.style.height = (r * 2) + 'px';
+                el.style.left = (x - r) + 'px';
+                el.style.top = (y - r) + 'px';
+                el.style.display = state.lamps[k] ? '' : 'none';
+            });
+            document.querySelectorAll('[data-lamp]').forEach(b => {
+                const on = state.lamps[b.dataset.lamp];
+                b.className = `${on ? 'bg-slate-800 text-white border-slate-900' : 'bg-white border-slate-200 text-slate-400'} border-2 font-black py-2.5 rounded-xl bounce-hover text-sm`;
+            });
+            const rgb = mixLight(state.lamps);
+            const nm = document.getElementById('light-name');
+            const anyOn = state.lamps.r || state.lamps.g || state.lamps.b;
+            nm.innerText = anyOn ? colorName(rgb) : 'まっくら（くろ）';
+            nm.style.color = anyOn ? css(rgb.map(v => Math.min(200, v))) : '#334155';
+        }
+        function toggleLamp(k) { state.lamps[k] = !state.lamps[k]; layoutLamps(); }
+
+        const LIGHT_TABLE = [
+            [{ r: 1, g: 1, b: 0 }, 'あか ＋ みどり'], [{ r: 0, g: 1, b: 1 }, 'みどり ＋ あお'],
+            [{ r: 1, g: 0, b: 1 }, 'あか ＋ あお'], [{ r: 1, g: 1, b: 1 }, '3つ ぜんぶ']
+        ];
+        function renderLightTable() {
+            document.getElementById('light-table').innerHTML = LIGHT_TABLE.map(([on, label]) => {
+                const rgb = mixLight(on);
+                return `<div class="rounded-xl border-2 border-slate-200 p-2 text-center">
+                    <div class="h-10 rounded-lg" style="background:${css(rgb)}"></div>
+                    <p class="text-xs font-black mt-1">${label}</p>
+                    <p class="text-sm font-black" style="color:${css(rgb.map(v => Math.min(180, v)))}">${colorName(rgb)}</p></div>`;
+            }).join('');
+        }
+
+        /* ===================== ③ クイズ ===================== */
+        const QUIZ_MIXES = [
+            [['aka', 1], ['ki', 1]], [['ki', 1], ['ao', 1]], [['aka', 1], ['ao', 1]],
+            [['aka', 1], ['shiro', 3]], [['ao', 1], ['shiro', 3]], [['ki', 1], ['aka', 2]],
+            [['aka', 1], ['ki', 1], ['ao', 1]], [['kuro', 1], ['shiro', 3]],
+            [['midori', 1], ['ki', 1]], [['murasaki', 1], ['shiro', 2]]
+        ];
+        function newQuiz() {
+            const isLight = Math.random() < 0.3;
+            let ansRgb, label;
+            if (isLight) {
+                const sets = [[{ r: 1, g: 1, b: 0 }, 'ひかりの あか ＋ みどり'],
+                [{ r: 0, g: 1, b: 1 }, 'ひかりの みどり ＋ あお'],
+                [{ r: 1, g: 0, b: 1 }, 'ひかりの あか ＋ あお'],
+                [{ r: 1, g: 1, b: 1 }, 'ひかりの あか ＋ みどり ＋ あお']];
+                const [on, lb] = pick(sets);
+                ansRgb = mixLight(on); label = lb;
+                state.quiz.q = { kind: 'light', on, label };
+            } else {
+                const mix = pick(QUIZ_MIXES);
+                ansRgb = mixPaint(mix.map(([key, n]) => ({ key, n })));
+                label = 'えのぐの ' + mix.map(([k, n]) => `${PAINTS[k].name}${n > 1 ? '×' + n : ''}`).join(' ＋ ');
+                state.quiz.q = { kind: 'paint', mix, label };
+            }
+            // まちがいは ほかの まぜかたの けっか（見た目が にすぎない ものを えらぶ）
+            const pool = [...QUIZ_MIXES.map(m => mixPaint(m.map(([key, n]) => ({ key, n })))),
+            ...PAINT_KEYS.map(k => paintRgb(k)),
+            [255, 255, 0], [0, 255, 255], [255, 0, 255], [255, 255, 255]];
+            const wrongs = [];
+            shuffle(pool).forEach(c => {
+                if (wrongs.length >= 3) return;
+                if (dist(c, ansRgb) < 60) return;
+                if (wrongs.some(w => dist(w, c) < 60)) return;
+                wrongs.push(c);
+            });
+            state.quiz.q.ans = ansRgb;
+            state.quiz.q.choices = shuffle([ansRgb, ...wrongs]);
+            state.quiz.q.done = false;
+
+            document.getElementById('quiz-q').innerText = `${label} を まぜると なに色？`;
+            document.getElementById('quiz-mix').innerHTML = (state.quiz.q.kind === 'paint'
+                ? state.quiz.q.mix.map(([k, n]) => ({ rgb: paintRgb(k), n }))
+                : Object.entries(state.quiz.q.on).filter(([, v]) => v)
+                    .map(([k]) => ({ rgb: mixLight({ r: k === 'r', g: k === 'g', b: k === 'b' }), n: 1 })))
+                .map((c, i) => `${i ? '<span class="font-black text-xl">＋</span>' : ''}
+                    <span class="w-10 h-10 rounded-full border-2 border-white shadow" style="background:${css(c.rgb)}"></span>`).join('');
+            document.getElementById('quiz-msg').innerText = '';
+            document.getElementById('quiz-choices').innerHTML = state.quiz.q.choices.map((c, i) =>
+                `<button onclick="answerQuiz(${i})" data-i="${i}" class="border-2 border-slate-200 rounded-2xl p-2 bounce-hover">
+                    <span class="block h-14 rounded-xl" style="background:${css(c)}"></span>
+                    <span class="block text-xs font-black mt-1">${colorName(c)}</span></button>`).join('');
+        }
+        function answerQuiz(i) {
+            const q = state.quiz.q;
+            if (!q || q.done) return;
+            state.quiz.total++;
+            const chosen = q.choices[i];
+            const msg = document.getElementById('quiz-msg');
+            if (dist(chosen, q.ans) < 1) {
+                q.done = true;
+                state.quiz.ok++;
+                msg.innerHTML = `<span class="text-emerald-600">⭕ せいかい！ ${colorName(q.ans)} に なるよ</span>`;
+                document.querySelectorAll('#quiz-choices button').forEach((b, j) => {
+                    if (dist(q.choices[j], q.ans) < 1) b.classList.add('ring-4', 'ring-emerald-400');
+                });
+            } else {
+                const btn = document.querySelector(`#quiz-choices button[data-i="${i}"]`);
+                btn.classList.add('shake');
+                setTimeout(() => btn.classList.remove('shake'), 320);
+                msg.innerHTML = `<span class="text-rose-500">ちがうよ。もう いちど 考えてみよう</span>`;
+            }
+            document.getElementById('quiz-score').innerText = `せいかい ${state.quiz.ok} / ${state.quiz.total}`;
+        }
+
+        /* ===================== ④ チャレンジ ===================== */
+        const TARGETS = [
+            [['aka', 1], ['ki', 1]], [['ki', 2], ['ao', 1]], [['aka', 1], ['ao', 2]],
+            [['aka', 1], ['shiro', 2]], [['ao', 1], ['ki', 3]], [['aka', 2], ['ki', 1]],
+            [['ao', 2], ['shiro', 1]], [['ki', 1], ['shiro', 1]], [['aka', 1], ['ki', 2], ['ao', 1]]
+        ];
+        function newTarget() {
+            const t = pick(TARGETS);
+            state.target.rgb = mixPaint(t.map(([key, n]) => ({ key, n })));
+            state.target.recipe = t.map(([k, n]) => `${PAINTS[k].name}${n > 1 ? '×' + n : ''}`).join(' ＋ ');
+            state.target.drops = [];
+            document.getElementById('target-swatch').style.background = css(state.target.rgb);
+            document.getElementById('target-msg').innerText = '';
+            renderTarget();
+        }
+        function addTargetDrop(k) {
+            const last = state.target.drops.find(d => d.key === k);
+            if (last) last.n++; else state.target.drops.push({ key: k, n: 1 });
+            renderTarget();
+        }
+        function clearTarget() { state.target.drops = []; renderTarget(); }
+        function matchPct(a, b) {
+            return Math.max(0, Math.round(100 - dist(a, b) / 441.67 * 100 * 2.2));
+        }
+        function renderTarget() {
+            const rgb = state.target.drops.length ? mixPaint(state.target.drops) : [255, 255, 255];
+            document.getElementById('target-mine').style.background = css(rgb);
+            const pct = state.target.drops.length ? matchPct(rgb, state.target.rgb) : 0;
+            document.getElementById('target-pct').innerText = pct + '%';
+            const msg = document.getElementById('target-msg');
+            if (!state.target.drops.length) msg.innerText = '';
+            else if (pct >= 97) msg.innerHTML = `<span class="text-emerald-600">🎉 ぴったり！（おてほんは ${state.target.recipe}）</span>`;
+            else if (pct >= 85) msg.innerHTML = `<span class="text-lime-600">おしい！ もう ちょっと</span>`;
+            else if (pct >= 60) msg.innerHTML = `<span class="text-amber-600">ちかづいてきた</span>`;
+            else msg.innerHTML = `<span class="text-slate-400">まだ ちがう色かも</span>`;
+        }
+
+        /* ===================== はじめ ===================== */
+        window.addEventListener('load', () => {
+            renderNav();
+            renderPalette('paint-palette', 'addDrop');
+            renderPalette('target-palette', 'addTargetDrop');
+            renderExamples();
+            renderLightTable();
+            renderMix();
+            newQuiz();
+            newTarget();
+            layoutLamps();
+            window.addEventListener('resize', () => { if (state.tab === 'light') layoutLamps(); });
+        });
+    </script>
+</body>
+</html>
