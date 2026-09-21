@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>からだ たんけんラボ</title>
+    <meta name="description" content="脳・心臓・肺・胃・小腸・肝臓・じん臓など19の臓器と器官のはたらきを図で解説。食べものの旅と血液の流れをうごく図でたどり、自分の体の数字を計算、クイズで確認。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums }
+        .bounce-hover { transition: transform .12s cubic-bezier(.175,.885,.32,1.275) }
+        .bounce-hover:active { transform: scale(.94) }
+        @keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.1) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275) }
+        @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+        .shake { animation: shake .3s ease-in-out }
+        svg text { font-family: inherit }
+        rt { font-size: .55em; font-weight: 700; color: #be123c }
+        input[type=range] { accent-color: #e11d48; width: 100% }
+        .organ { cursor: pointer }
+    </style>
+</head>
+<body class="bg-rose-50 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-rose-600 via-pink-600 to-orange-500 text-white p-3 shadow-lg sticky top-0 z-30">
+        <div class="max-w-4xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">🫀</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">からだ たんけんラボ</h1>
+                    <p class="text-xs text-rose-50 font-bold hidden sm:block">きみの 中で 今も はたらいて いる なかまたち</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[64px] z-20 bg-rose-50/95 backdrop-blur border-b border-rose-200">
+        <div class="max-w-4xl mx-auto flex gap-2 p-3 overflow-x-auto" id="tab-nav"></div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto w-full p-3 sm:p-5 flex-grow space-y-4">
+
+        <!-- ===== ① からだの 地図 ===== -->
+        <section id="tab-map" class="space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-rose-100">
+                <h2 class="font-black">🗺️ からだの 地図</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    <b class="text-rose-700">臓器{ぞうき}</b>を タップすると、その はたらきが 出るよ。
+                    左右は「きみが 前から 見た とき」の 向き（絵の 左が きみの 右がわ）。
+                </p>
+                <div class="grid sm:grid-cols-[minmax(0,320px)_1fr] gap-4 mt-3">
+                    <div id="bd-fig"></div>
+                    <div>
+                        <div id="og-chips" class="flex flex-wrap gap-1.5"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-rose-100">
+                <h2 id="og-name" class="font-black text-lg"></h2>
+                <p id="og-short" class="text-sm font-bold text-rose-700 mt-1"></p>
+                <div id="og-detail" class="space-y-2 mt-3"></div>
+                <div id="og-data" class="flex flex-wrap gap-2 mt-3"></div>
+                <div id="og-fact" class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-3 text-sm font-bold mt-3 leading-relaxed"></div>
+                <div id="og-care" class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-3 text-sm font-bold mt-2 leading-relaxed"></div>
+            </div>
+        </section>
+
+        <!-- ===== ② 食べものの 旅 ===== -->
+        <section id="tab-food" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-rose-100">
+                <h2 class="font-black">🍚 食べものの 旅（消化{しょうか}）</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    口から 入った ごはんが、体に 取りこめる 形まで 細かく される 旅。
+                    ぜんぶ 通りぬけるのに <b class="text-rose-700">1〜2日</b> かかる。
+                </p>
+                <div id="dg-fig" class="mt-3"></div>
+                <div class="flex flex-wrap items-center gap-2 mt-2">
+                    <button onclick="dgPlay()" class="bg-rose-600 text-white font-black px-4 py-2 rounded-full text-sm bounce-hover">▶ 旅に 出る</button>
+                    <button onclick="dgStep()" class="bg-white border-2 border-rose-300 text-rose-700 font-black px-4 py-2 rounded-full text-sm bounce-hover">⏭ つぎへ</button>
+                    <button onclick="dgReset()" class="bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-2 rounded-full text-sm bounce-hover">↩ さいしょから</button>
+                    <span id="dg-count" class="num ml-auto bg-rose-100 text-rose-700 font-black px-3 py-1 rounded-full text-xs">1 / 7</span>
+                </div>
+                <div id="dg-info" class="bg-rose-50 border-2 border-rose-200 rounded-2xl p-3 text-sm font-bold leading-relaxed mt-2"></div>
+                <div id="dg-list" class="space-y-2 mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ③ 血液の 流れ ===== -->
+        <section id="tab-blood" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-rose-100">
+                <h2 class="font-black">🩸 血液{けつえき}の 大ぼうけん</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    赤い 丸を 目で 追って みよう。<b class="text-rose-700">赤＝酸素{さんそ}を たっぷり 持って いる</b>、
+                    <b class="text-blue-700">青＝酸素を わたして しまった</b>血。体を 1周するのに およそ 1分。
+                </p>
+                <div id="cr-fig" class="mt-3"></div>
+                <div class="flex flex-wrap items-center gap-2 mt-2">
+                    <button onclick="crPlay()" class="bg-rose-600 text-white font-black px-4 py-2 rounded-full text-sm bounce-hover">▶ 1周 まわる</button>
+                    <button onclick="crStep()" class="bg-white border-2 border-rose-300 text-rose-700 font-black px-4 py-2 rounded-full text-sm bounce-hover">⏭ つぎの 場所へ</button>
+                    <button onclick="crStop()" class="bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-2 rounded-full text-sm bounce-hover">⏸ とめる</button>
+                    <span id="cr-count" class="num ml-auto bg-rose-100 text-rose-700 font-black px-3 py-1 rounded-full text-xs">1 / 10</span>
+                </div>
+                <div id="cr-info" class="bg-rose-50 border-2 border-rose-200 rounded-2xl p-3 text-sm font-bold leading-relaxed mt-2"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-rose-100">
+                <h2 class="font-black">💡 まちがえやすい ところ</h2>
+                <div id="cr-tips" class="space-y-2 mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ④ 自分の からだの 数字 ===== -->
+        <section id="tab-me" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-rose-100">
+                <h2 class="font-black">📐 きみの からだを 計算して みよう</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    身長・体重・年れいを 入れると、体の 中の 数字が わかる。
+                    （目安{めやす}の 計算なので、ぴったりでは ないよ）
+                </p>
+                <div id="me-ctrl" class="space-y-3 mt-3"></div>
+                <div id="me-cards" class="grid sm:grid-cols-2 gap-3 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-rose-100">
+                <h2 class="font-black">🔢 からだの びっくり 数字</h2>
+                <div id="me-facts" class="space-y-2 mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ⑤ クイズ ===== -->
+        <section id="tab-quiz" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-rose-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">❓ からだクイズ</h2>
+                    <span id="qz-score" class="num bg-rose-100 text-rose-700 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newQuiz()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <div id="qz-fields" class="flex flex-wrap gap-2 mt-3"></div>
+                <p id="qz-q" class="font-black text-base sm:text-lg mt-3 leading-relaxed"></p>
+                <div id="qz-choices" class="grid gap-2 mt-3"></div>
+                <div id="qz-res" class="mt-3"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center text-xs text-slate-400 font-bold p-4">からだ たんけんラボ © 2026</footer>
+
+<script>
+    /* ===================== きょうつう ===================== */
+    const rnd = n => Math.floor(Math.random() * n);
+    const pickOne = a => a[rnd(a.length)];
+    function shuffle(a) { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = rnd(i + 1); const t = b[i]; b[i] = b[j]; b[j] = t; } return b; }
+    function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    function svg(w, h, body, cls) {
+        return `<svg viewBox="0 0 ${w} ${h}" class="w-full h-auto block mx-auto ${cls || ''}" style="max-width:${w}px" role="img">${body}</svg>`;
+    }
+    function resultBox(ok, title, body) {
+        return `<div class="pop ${ok ? 'bg-green-50 border-green-300' : 'bg-amber-50 border-amber-300'} border-2 rounded-2xl p-3">
+            <p class="font-black ${ok ? 'text-green-700' : 'text-amber-700'}">${title}</p>
+            <div class="font-bold text-sm mt-1 leading-relaxed">${body}</div></div>`;
+    }
+    const S = { quiz: [0, 0] };
+    function scoreBox(id, s) { document.getElementById(id).innerText = `${s[0]} / ${s[1]}`; }
+    function markChoices(sel, isRight, picked, cls) {
+        document.querySelectorAll(sel).forEach((el, j) => {
+            el.className = `${isRight(j) ? 'bg-green-50 border-green-500' : (j === picked ? 'bg-red-50 border-red-400 shake' : 'bg-white border-slate-200 opacity-60')} border-2 ${cls}`;
+        });
+    }
+    const nf = n => n.toLocaleString('ja-JP');
+
+    /* 漢字{よみ} を ルビに */
+    const RUBY_RE = /([一-鿿々]+)\{([^{}]+)\}/g;
+    function rubySkip(el) {
+        for (let n = el; n; n = n.parentNode) {
+            const tag = n.nodeType === 1 ? n.tagName.toLowerCase() : '';
+            if (tag === 'script' || tag === 'style' || tag === 'svg' || tag === 'ruby') return true;
+        }
+        return false;
+    }
+    function rubifyText(node) {
+        const t = node.nodeValue;
+        if (t.indexOf('{') < 0 || !node.parentNode || rubySkip(node.parentNode)) return;
+        RUBY_RE.lastIndex = 0;
+        if (!RUBY_RE.test(t)) return;
+        RUBY_RE.lastIndex = 0;
+        const frag = document.createDocumentFragment();
+        let last = 0, m;
+        while ((m = RUBY_RE.exec(t))) {
+            if (m.index > last) frag.appendChild(document.createTextNode(t.slice(last, m.index)));
+            const ruby = document.createElement('ruby');
+            ruby.appendChild(document.createTextNode(m[1]));
+            const rt = document.createElement('rt');
+            rt.textContent = m[2];
+            ruby.appendChild(rt);
+            frag.appendChild(ruby);
+            last = m.index + m[0].length;
+        }
+        if (last < t.length) frag.appendChild(document.createTextNode(t.slice(last)));
+        node.parentNode.replaceChild(frag, node);
+    }
+    function rubify(root) {
+        if (root.nodeType === 3) return rubifyText(root);
+        if (root.nodeType !== 1 || rubySkip(root)) return;
+        const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        const list = [];
+        while (w.nextNode()) if (w.currentNode.nodeValue.indexOf('{') >= 0) list.push(w.currentNode);
+        list.forEach(rubifyText);
+    }
+    new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(rubify)))
+        .observe(document.body, { childList: true, subtree: true });
+
+    const TABS = { map: '🗺️ からだの 地図', food: '🍚 食べものの 旅', blood: '🩸 血液の 流れ', me: '📐 きみの 数字', quiz: '❓ クイズ' };
+    let tab = 'map';
+    function renderNav() {
+        document.getElementById('tab-nav').innerHTML = Object.entries(TABS).map(([k, label]) =>
+            `<button onclick="setTab('${k}')" data-tab="${k}" class="${tab === k ? 'bg-rose-600 text-white' : 'bg-white border-2 border-rose-200 text-slate-600'} font-black px-4 py-2 rounded-full text-sm whitespace-nowrap bounce-hover">${label}</button>`).join('');
+    }
+    function setTab(k) {
+        tab = k;
+        crStop(); dgStopTimer();
+        Object.keys(TABS).forEach(t => document.getElementById('tab-' + t).classList.toggle('hidden', t !== k));
+        renderNav();
+        if (k === 'food' && !foodReady) { dgReset(); dgList(); foodReady = true; }
+        if (k === 'blood' && !bloodReady) { crDraw(); crTips(); bloodReady = true; }
+        if (k === 'me' && !meReady) { meDraw(); meFacts(); meReady = true; }
+        if (k === 'quiz' && !qz) newQuiz();
+    }
+
+    /* =====================================================================
+       ① からだの 地図
+       ===================================================================== */
+    // 絵の 中の 位置は「前から 見た 図」。絵の 左＝きみの 右がわ
+    const ORGANS = [
+        { id: 'brain', e: '🧠', n: '脳{のう}', where: 'head',
+          short: 'からだ ぜんたいに めいれいを 出す 司令室{しれいしつ}',
+          detail: [
+            ['考える・おぼえる', '見た もの 聞いた ことを まとめて 考え、記おくとして しまう。'],
+            ['体を 動かす めいれい', '「手を あげよう」と 思うと、脳から 神経{しんけい}を 通って 電気の 信号が 筋肉に とどく。'],
+            ['知らない うちに はたらく', '心臓を 動かす、息を する、体温を 一定に たもつ。ねて いる あいだも 休まない。']
+          ],
+          data: [['重さ', 'やく 1.3kg'], ['体重の', 'やく 2%'], ['つかう 酸素', '全体の 20%以上']],
+          fact: '体重の たった 2%ほどの 重さなのに、体が つかう 酸素と 栄養の 5分の1 以上を 一人で つかって いる。だから 朝ごはんを ぬくと 頭が はたらきにくく なる。',
+          care: 'よく ねる こと。ねて いる あいだに 記おくが せいりされて、おぼえた ことが 頭に のこる。' },
+        { id: 'eye', e: '👁️', n: '目{め}', where: 'head',
+          short: '光を 受けとって 見た ものを 脳に おくる カメラ',
+          detail: [
+            ['レンズで ピントを あわせる', '水晶体{すいしょうたい}という レンズの あつさを 筋肉で 変えて、近くも 遠くも はっきり 見る。'],
+            ['光を 電気の 信号に', 'いちばん おくの 網膜{もうまく}で 光を 信号に かえ、神経で 脳に おくる。'],
+            ['まぶたと なみだ', 'まばたきで 目の 表面を あらい、ごみや かんそうから まもる。']
+          ],
+          data: [['まばたき', '1分に やく 20回'], ['見える 色', '3種の センサーで'], ['ピント調節', '筋肉で レンズを 変える']],
+          fact: '「見て いる」のは じつは 脳。目から きた 信号を 脳が 組みたてて 絵に して いる。だから 目の さっかくが おきる。',
+          care: '近くを 長く 見つづけると ピントの 筋肉が つかれる。30分ごとに 遠くを 見て 休ませよう。' },
+        { id: 'ear', e: '👂', n: '耳{みみ}', where: 'head',
+          short: '音を 聞く だけでなく、体の バランスも とって いる',
+          detail: [
+            ['音を あつめて ふるわせる', '耳の 形で 音を あつめ、おくの うすい まく（鼓膜{こまく}）を ふるわせる。'],
+            ['小さな 骨で 大きく する', '3つの とても 小さな 骨が ふるえを 大きくして おくへ つたえる。'],
+            ['バランスの センサー', 'おくの 三半規管{さんはんきかん}という わっかで、体の かたむきや 回転を 感じる。だから 目を つぶっても 立てる。']
+          ],
+          data: [['耳の 中の 骨', '3つ（体で 最小）'], ['バランス', '三半規管'], ['聞こえる 高さ', '20〜20000Hz']],
+          fact: 'ぐるぐる まわると 目が まわるのは、三半規管の 中の 液が まだ 回りつづけて いて「まだ まわって いる」と 脳に つたえて しまう から。',
+          care: 'イヤホンで 大きな 音を 長く 聞くと、音の センサーの 毛が こわれて もどらない。音は 小さめに。' },
+        { id: 'trachea', e: '🌬️', n: '気管{きかん}', where: 'body',
+          short: '鼻や 口から 肺まで 空気を 運ぶ トンネル',
+          detail: [
+            ['空気の 通り道', 'のどから 胸の 中まで まっすぐ のび、2つに 分かれて 左右の 肺に 入る（気管支{きかんし}）。'],
+            ['つぶれない ように', 'まわりに C字の かたい 輪（軟骨{なんこつ}）が ならんで いて、くびを 曲げても つぶれない。'],
+            ['ごみを 外へ', '内がわに 小さな 毛が ならび、ほこりを ねんえきに つけて のどへ おし返す。それが せき。']
+          ],
+          data: [['長さ', 'やく 10cm'], ['分かれる 数', '23回ほど 枝分かれ'], ['守る しくみ', 'せき・小さな 毛']],
+          fact: '食べものの 通り道（食道）と 空気の 通り道（気管）は のどで 交差して いる。飲みこむ ときは ふたが 気管を ふさぐ。しゃべりながら 食べると ふたが おくれて むせる。',
+          care: 'あわてて 食べない。よく かんで、口の 中が 空に なって から しゃべる。' },
+        { id: 'lung', e: '🫁', n: '肺{はい}', where: 'body',
+          short: '空気の 酸素を 血に 入れ、二酸化炭素を 外に すてる',
+          detail: [
+            ['小さな ふくろが たくさん', 'おくは 肺胞{はいほう}という 直径 0.2mmほどの ふくろの あつまり。数は 数億こ。'],
+            ['ふくろの まわりを 血が 通る', 'うすい かべ ごしに、酸素は 血へ、二酸化炭素は 息へ、しぜんに 入れかわる。'],
+            ['自分では ふくらめない', '肺に 筋肉は ない。下の 横隔膜{おうかくまく}と ろっ骨の 筋肉が 胸を 広げて 空気を すいこむ。']
+          ],
+          data: [['肺胞の 数', 'やく 3〜6億こ'], ['広げた 面積', 'テニスコート 半分ほど'], ['呼吸（子ども）', '1分に 20〜25回']],
+          fact: '肺胞を ぜんぶ 広げると 60〜70m²。たたんで 胸に しまって あるので、小さな 体でも たくさんの 酸素を 取りこめる。',
+          care: 'たばこの けむりは 肺胞の かべを こわす。こわれた 肺胞は もとに もどらない。' },
+        { id: 'heart', e: '🫀', n: '心臓{しんぞう}', where: 'body',
+          short: '一生 休まず 血を おし出す ポンプ',
+          detail: [
+            ['4つの へや', '右心房{うしんぼう}・右心室{うしんしつ}・左心房・左心室。右は 肺へ、左は 全身へ 血を おくる。'],
+            ['ぎゃくに 流れない ように', 'へやの あいだに ある 弁{べん}が しまる 音が「ドクン」。'],
+            ['自分で リズムを 作る', '心臓には 電気の リズムを 作る 場所が あり、脳から 切りはなしても しばらく 動く。']
+          ],
+          data: [['大きさ', 'にぎりこぶしくらい'], ['1分の 回数', '子ども 80〜100回'], ['1日に おくる 血', 'やく 8000L']],
+          fact: '1日 およそ 10万回、80年で 30億回 以上 うちつづける。1回で コップ 半分ほどの 血を おし出して いる。',
+          care: '運動すると 心臓の 筋肉が 強く なり、少ない 回数で たくさん おくれる ように なる。' },
+        { id: 'esophagus', e: '🥤', n: '食道{しょくどう}', where: 'body',
+          short: '飲みこんだ ものを 胃まで はこぶ 25cmの 管',
+          detail: [
+            ['重力では なく 筋肉で 運ぶ', 'かべの 筋肉が 波の ように しめつけて、食べものを 下へ おし進める（ぜん動運動）。'],
+            ['さかだちでも 届く', '筋肉で 運ぶので、寝て いても さかだちしても 食べものは 胃に 着く。'],
+            ['入り口は しまって いる', '胃の 入り口は ふだん しまって いて、胃の 酸が 上がって こない ように して いる。']
+          ],
+          data: [['長さ', 'やく 25cm'], ['通る 時間', '数秒'], ['運び方', '筋肉の 波']],
+          fact: '宇宙で 重力が なくても、宇宙飛行士は ふつうに 食事が できる。食道が 筋肉で おし運んで くれる から。',
+          care: 'あついものを 急に 飲みこむと かべを いためる。少し さましてから 食べよう。' },
+        { id: 'stomach', e: '🫙', n: '胃{い}', where: 'body',
+          short: '強い 酸で とかし、おかゆの ように して ためて おく ふくろ',
+          detail: [
+            ['強い 酸で 消化', '胃酸{いさん}は 金ぞくも とかす ほど 強い 酸。たんぱく質を 細かく し、食べものと いっしょに 入った 細きんも やっつける。'],
+            ['ためて 少しずつ 出す', '2〜4時間 ためて、少しずつ 小腸へ おくる。だから まとめて 食べても 平気。'],
+            ['自分は とけない くふう', 'かべから ねんえきを 出して 守って いる。かべの 細ぼうは 数日で 新しく 入れかわる。']
+          ],
+          data: [['空の とき', 'やく 100mL'], ['いっぱいの とき', '1.5〜2L'], ['ためる 時間', '2〜4時間']],
+          fact: '胃は 食べものを「消化して 吸収する」ところだと 思われがちだが、栄養を 体に 取りこむ のは ほとんど 小腸の 仕事。胃は 下ごしらえと 保管の 係。',
+          care: '強い ストレスや ねぶそくで ねんえきが へると、自分の 酸で かべが きずつく。' },
+        { id: 'liver', e: '🧪', n: '肝臓{かんぞう}', where: 'body',
+          short: '体の 化学工場。500 以上の 仕事を こなす いちばん 大きな 臓器',
+          detail: [
+            ['栄養を つくりかえる', '小腸から きた 栄養を 体で つかえる 形に 変え、あまりを ためて おく。'],
+            ['毒を 無害に する', '体に わるい ものを 分解して、おしっこや 便で すてられる 形に する。'],
+            ['たんじゅうを つくる', 'あぶらを こまかい つぶに する 液を つくり、たんのうに ためて 小腸に 出す。']
+          ],
+          data: [['重さ', 'やく 1.2〜1.5kg'], ['仕事の 数', '500 以上'], ['とくちょう', '切っても 再生する']],
+          fact: '肝臓は 一部を 切りとっても もとの 大きさまで もどる、ふしぎな 力を 持つ。そのかわり わるく なっても 痛みを 感じにくく「もくもくと はたらく 臓器」と 言われる。',
+          care: 'バランスの よい 食事。おさけは 肝臓の 仕事を ふやすので 大人でも 量に 気をつける。' },
+        { id: 'pancreas', e: '💧', n: 'すいぞう（膵臓{すいぞう}）', where: 'body',
+          short: '消化の 液と、血の 中の 糖を 調節する ホルモンを つくる',
+          detail: [
+            ['強力な 消化液', 'でんぷん・たんぱく質・あぶらの 3つ ぜんぶを 分解できる 液（すい液）を 小腸に 出す。'],
+            ['血の 中の 糖を 調節', 'インスリンという ホルモンを 出して、血の 中の 糖を ちょうど よい 量に たもつ。'],
+            ['胃の うしろに かくれて いる', '長さ 15cmほどの 細長い 形で、胃の うらがわに ある。']
+          ],
+          data: [['長さ', 'やく 15cm'], ['出す 液', '1日 1L以上'], ['ホルモン', 'インスリン など']],
+          fact: 'すいぞうが インスリンを うまく つくれなく なると 糖尿病{とうにょうびょう}に なる。消化と ホルモン、2つの 仕事を 兼ねて いる めずらしい 臓器。',
+          care: 'あまい ものと あぶらの とりすぎ、運動ぶそくは すいぞうに 負たんを かける。' },
+        { id: 'small', e: '🧵', n: '小腸{しょうちょう}', where: 'body',
+          short: '栄養を 体に 取りこむ 本番の 場所。長さ 6〜7m',
+          detail: [
+            ['さらに 細かく する', '胃から きた おかゆに、たんじゅうと すい液を まぜて、吸収できる 大きさまで 分解する。'],
+            ['ひだと 毛で 面積を かせぐ', '内がわは こまかい ひだ、その 上に 柔毛{じゅうもう}という 毛が びっしり。広げると テニスコート 1面 ほどの 面積。'],
+            ['血の 中へ', '取りこんだ 栄養は 血に のって まず 肝臓へ 運ばれる。']
+          ],
+          data: [['長さ', '6〜7m'], ['通る 時間', '5〜8時間'], ['広げた 面積', 'テニスコート 1面ほど']],
+          fact: '身長 130cmの 子でも、小腸は その <b>5倍ちかく</b>の 長さ。おなかの 中で おりたたまれて 入って いる。',
+          care: 'よく かむと 小腸の 仕事が らくに なる。冷たい ものの とりすぎは 動きを わるく する。' },
+        { id: 'large', e: '💦', n: '大腸{だいちょう}', where: 'body',
+          short: '水を 吸って 便を つくる。すみついた 細きんの 住みか',
+          detail: [
+            ['水分を 取りもどす', '小腸から きた どろどろから 水と 塩分を 吸収し、だんだん かたい 便に する。'],
+            ['腸内細菌{ちょうないさいきん}の 住みか', '100兆こ ほどの 細きんが すんで いて、消化を 助け、ビタミンを つくり、体を まもる 力も 高める。'],
+            ['ためて 出す', 'たまると 脳に 信号が 行き、「トイレに 行きたい」と 感じる。']
+          ],
+          data: [['長さ', 'やく 1.5m'], ['通る 時間', '10〜20時間'], ['細きんの 数', 'やく 100兆こ']],
+          fact: '体の 中の 細きんを ぜんぶ あつめると 1〜2kg。その ほとんどが 大腸に すんで いる。いい 細きんが ふえると おなかの 調子も 気分も よく なる。',
+          care: '野さい・海そう・はっこう食品（ヨーグルト・なっとう）と、しっかり 水分。' },
+        { id: 'kidney', e: '🫘', n: 'じん臓（腎臓{じんぞう}）', where: 'body',
+          short: '血を こして きれいに し、おしっこを つくる フィルター',
+          detail: [
+            ['1日に 150L以上 こす', '心臓から きた 血を こまかい フィルターで こし、いらない ものと 水を 分ける。'],
+            ['必要な ものは もどす', 'こした 液の 99%は 体に もどし、のこりが おしっこに なる（1日 1〜1.5L）。'],
+            ['水と 塩の バランス係', '汗を たくさん かいた 日は おしっこが こい。体の 水と 塩分の 量を 一定に たもつ。']
+          ],
+          data: [['形と 大きさ', 'そらまめ形・こぶし大'], ['数', '2つ（左右）'], ['1日に こす 血', '150〜180L']],
+          fact: '2つ ある ので、1つに なっても 生きて いける。だから 家族に 提供する 移植{いしょく}が できる。',
+          care: '水分を きちんと とる。しおの とりすぎは じん臓を 働かせすぎる。' },
+        { id: 'bladder', e: '🚽', n: 'ぼうこう（膀胱{ぼうこう}）', where: 'body',
+          short: 'おしっこを ためて おく、のびちぢみする ふくろ',
+          detail: [
+            ['のびる ふくろ', 'からの ときは ぺったんこ。たまると ふくらんで 400〜500mLほど 入る。'],
+            ['たまると 知らせが 行く', '200mLほど たまると かべの センサーが 脳に 知らせ、「トイレに 行きたい」と 感じる。'],
+            ['出口は 自分で 開ける', '出口の 筋肉を ゆるめる ことで 出す。がまんできるのは この 筋肉の おかげ。']
+          ],
+          data: [['入る 量', '400〜500mL'], ['1日の 回数', '5〜7回ほど'], ['1日の 量', '1〜1.5L']],
+          fact: 'おしっこは じん臓で つくられて すぐ ぼうこうに たまる。がまんしすぎると 細きんが ふえやすく なるので、行きたく なったら 行こう。',
+          care: 'がまんしすぎない。水分を へらすのでは なく、こまめに トイレへ。' },
+        { id: 'bone', e: '🦴', n: '骨{ほね}', where: 'all',
+          short: '体を ささえ、内がわを まもり、血を つくる 工場でも ある',
+          detail: [
+            ['ささえて まもる', '頭の 骨は 脳を、ろっ骨は 心臓と 肺を かこんで まもって いる。'],
+            ['中で 血を つくる', '骨の 中の 骨髄{こつずい}で 赤血球や 白血球が 毎日 つくられて いる。'],
+            ['カルシウムの ちょ金箱', '体の カルシウムの 99%は 骨の 中。足りなく なると 骨から かし出される。']
+          ],
+          data: [['大人の 数', '206本'], ['赤ちゃんの 数', 'やく 300本'], ['いちばん 長い 骨', 'ふとももの 骨']],
+          fact: '赤ちゃんの 骨は 約300本 あるのに、大人は 206本。へったのでは なく、育つ あいだに となりの 骨と <b>くっついて 1つに なる</b> から。',
+          care: '牛にゅうや 小魚（カルシウム）＋日光（ビタミンD）＋運動。じょうぶな 骨は 子どもの うちに つくられる。' },
+        { id: 'muscle', e: '💪', n: '筋肉{きんにく}', where: 'all',
+          short: 'ちぢむ ことで 体を 動かす。熱を つくって 体温も たもつ',
+          detail: [
+            ['引っぱる ことしか できない', '筋肉は ちぢんで「引く」だけ。だから 骨の 両がわに ペアで ついて いて、かわりばんこに 引いて 曲げのばしする。'],
+            ['2しゅるいの 筋肉', '自分の 意思で 動かせる 筋肉（手足）と、心臓や 胃のように 勝手に 動く 筋肉が ある。'],
+            ['熱を つくる', '体温の ほとんどは 筋肉が 出す 熱。寒いと ふるえるのは、筋肉を 動かして 熱を つくって いる。']
+          ],
+          data: [['数', 'やく 400〜600こ'], ['体重の', 'やく 30〜40%'], ['いちばん 強い', 'あごの 筋肉']],
+          fact: 'ひじを 曲げる 筋肉（力こぶ）と のばす 筋肉は 反対の はたらき。片方が ちぢむ とき もう片方は ゆるむ。ロボットの うでも 同じ 考えで つくられて いる。',
+          care: '使うと 少し こわれ、休むと 前より 強く なおる。だから 運動と 休みの 両方が 必要。' },
+        { id: 'skin', e: '🧴', n: '皮{ひ}ふ', where: 'all',
+          short: '体で いちばん 大きな 臓器。よろい・センサー・エアコン',
+          detail: [
+            ['入れない ように まもる', '細きんや 紫外線{しがいせん}、水の 出入りを ふせぐ かべ。'],
+            ['感じる センサー', 'さわった 感じ・温度・痛みを 感じとって 脳に 知らせる。'],
+            ['体温を 調節する', 'あついと 汗を 出して 気化熱で 冷やし、寒いと 血管を ちぢめて 熱を にがさない。']
+          ],
+          data: [['大人の 面積', 'やく 1.6m²'], ['重さ', 'やく 3kg（最大の 臓器）'], ['入れかわり', 'やく 1か月']],
+          fact: '皮ふの 表面は 死んだ 細ぼうの そう。毎日 はがれ落ちて、1か月ほどで まるごと 新しく 入れかわる。家の ほこりの 一部は じつは これ。',
+          care: '日やけ止めと 保しつ。すりむいた ときは あらって 清けつに すると きれいに なおる。' },
+        { id: 'blood', e: '🩸', n: '血液{けつえき}', where: 'all',
+          short: '酸素・栄養・熱を 運び、体を まもる 運送＋守り の チーム',
+          detail: [
+            ['赤血球{せっけっきゅう}＝運ぶ 係', '酸素を くっつけて 全身へ。赤い 色は 鉄を ふくむ ためで、寿命は やく 120日。'],
+            ['白血球{はっけっきゅう}＝まもる 係', '入って きた 細きんや ウイルスと たたかう。けがの ときに 出る うみは そのあと。'],
+            ['血小板{けっしょうばん}＝ふさぐ 係', 'きずぐちに あつまって かさぶたを つくり、血を 止める。']
+          ],
+          data: [['体重の', 'やく 8%（13分の1）'], ['1周する 時間', 'やく 1分'], ['赤血球の 寿命', 'やく 120日']],
+          fact: '体重 30kgの 子の 血は およそ 2.3L（牛にゅうパック 2本ちょっと）。それが 1分で 体を 1周し、1日で 1400回ほど まわって いる。',
+          care: '鉄を ふくむ 食べもの（赤み肉・ほうれんそう・ひじき）と 水分。けがの ときは まず あっぱく。' },
+        { id: 'nerve', e: '⚡', n: '神経{しんけい}', where: 'all',
+          short: '脳と 体を つなぐ 電気の ケーブル',
+          detail: [
+            ['めいれいを おくる', '脳や せきずいから 筋肉へ、「動け」の 信号を 電気で つたえる。'],
+            ['感じた ことを もどす', '皮ふや 目や 耳が 感じた ことを 脳へ おくる。'],
+            ['あつい！は 脳を 通らない', '熱い ものに ふれた とき、手を ひっこめる めいれいは せきずいで 折りかえされる（反射{はんしゃ}）。脳に とどく より 先に 体が 動く。']
+          ],
+          data: [['つたわる 速さ', '秒速 100mほど'], ['脳の 細ぼう', '数百億こ'], ['反射の 中つぎ', 'せきずい']],
+          fact: '「あつっ！」と 手を ひっこめて から「あつい」と 感じる。順番が 逆に 思えるが、まず せきずいが 体を 動かし、そのあと 信号が 脳に とどいて 感じる から。',
+          care: 'せきずいは 骨で まもられて いる。自転車や スケートでは ヘルメット、とびこみ禁止の 場所では とびこまない。' }
+    ];
+
+    /* --- からだの 絵（前から 見た 図） --- */
+    const BW = 340, BH = 560;
+    const SEL = '#be123c';
+    function organShapes(sel) {
+        const on = id => id === sel;
+        const st = id => on(id) ? `stroke="${SEL}" stroke-width="4"` : 'stroke="#9f1239" stroke-width="1.5"';
+        const op = id => on(id) ? '1' : '0.5';
+        const g = id => `<g class="organ" onclick="setOrgan('${id}')" data-shape="${id}" opacity="${op(id)}">`;
+        let s = '';
+        // 脳
+        s += g('brain') + `<ellipse cx="170" cy="36" rx="26" ry="15" fill="#fda4af" ${st('brain')}/>
+             <path d="M152 32 q10 7 18 0 q10 7 18 0" fill="none" stroke="#9f1239" stroke-width="1.5"/></g>`;
+        // 目・耳
+        s += g('eye') + `<ellipse cx="158" cy="64" rx="6" ry="4" fill="#fff" ${st('eye')}/><circle cx="158" cy="64" r="2" fill="#1e293b"/>
+             <ellipse cx="182" cy="64" rx="6" ry="4" fill="#fff" ${st('eye')}/><circle cx="182" cy="64" r="2" fill="#1e293b"/></g>`;
+        s += g('ear') + `<path d="M139 56 q-9 0 -9 9 q0 9 9 9" fill="#fecdd3" ${st('ear')}/>
+             <path d="M201 56 q9 0 9 9 q0 9 -9 9" fill="#fecdd3" ${st('ear')}/></g>`;
+        // 気管
+        s += g('trachea') + `<rect x="163" y="92" width="14" height="56" rx="4" fill="#bae6fd" ${st('trachea')}/>
+             <path d="M170 148 L150 168 M170 148 L190 168" stroke="#0284c7" stroke-width="5" fill="none"/></g>`;
+        // 肺（左右）
+        s += g('lung') + `<path d="M158 152 q-46 6 -46 52 q0 40 20 44 q22 4 26 -30 Z" fill="#fbcfe8" ${st('lung')}/>
+             <path d="M182 152 q46 6 46 52 q0 40 -20 44 q-22 4 -26 -30 Z" fill="#fbcfe8" ${st('lung')}/></g>`;
+        // 食道
+        s += g('esophagus') + `<path d="M182 148 q4 50 6 100" fill="none" ${on('esophagus') ? `stroke="${SEL}" stroke-width="9"` : 'stroke="#c4b5fd" stroke-width="7"'}/></g>`;
+        // 心臓
+        s += g('heart') + `<path d="M176 178 q-16 -14 -26 2 q-10 16 26 42 q36 -26 26 -42 q-10 -16 -26 -2 Z" fill="#f43f5e" ${st('heart')}/></g>`;
+        // 肝臓
+        s += g('liver') + `<path d="M112 248 q30 -8 66 2 q4 24 -20 30 q-34 8 -46 -4 Z" fill="#a16207" ${st('liver')} opacity="0.9"/></g>`;
+        // 胃
+        s += g('stomach') + `<path d="M188 250 q26 -4 30 16 q4 22 -14 28 q-20 6 -22 -14 q-2 -18 6 -30 Z" fill="#fb923c" ${st('stomach')}/></g>`;
+        // すいぞう
+        s += g('pancreas') + `<path d="M132 288 q34 -8 66 2 q8 2 10 8 q-40 6 -78 2 Z" fill="#facc15" ${st('pancreas')}/></g>`;
+        // じん臓（左右）
+        s += g('kidney') + `<ellipse cx="128" cy="288" rx="10" ry="16" fill="#7c2d12" ${st('kidney')}/>
+             <ellipse cx="210" cy="288" rx="10" ry="16" fill="#7c2d12" ${st('kidney')}/></g>`;
+        // 大腸（まわりの わく）
+        s += g('large') + `<path d="M134 368 L134 310 L206 310 L206 360 L172 374" fill="none"
+             ${on('large') ? `stroke="${SEL}" stroke-width="13"` : 'stroke="#65a30d" stroke-width="11"'} stroke-linejoin="round" stroke-linecap="round"/></g>`;
+        // 小腸（うずまき）
+        s += g('small') + `<path d="M150 316 H188 q8 0 8 9 t-8 9 H152 q-8 0 -8 9 t8 9 H188 q8 0 8 9 t-8 9 H152"
+             fill="none" ${on('small') ? `stroke="${SEL}" stroke-width="8"` : 'stroke="#ec4899" stroke-width="7"'} stroke-linejoin="round" stroke-linecap="round"/></g>`;
+        // ぼうこう
+        s += g('bladder') + `<path d="M158 372 q12 -6 24 0 q4 14 -12 16 q-16 -2 -12 -16 Z" fill="#fde68a" ${st('bladder')}/></g>`;
+        return s;
+    }
+    function bodyDraw() {
+        const sel = ORGANS[oi].id, where = ORGANS[oi].where;
+        const all = where === 'all';
+        const skin = all && sel === 'skin', bone = all && sel === 'bone', mus = all && sel === 'muscle';
+        const bloodOn = all && (sel === 'blood' || sel === 'nerve');
+        let g = `<rect x="0" y="0" width="${BW}" height="${BH}" rx="16" fill="#fff1f2"/>`;
+        // からだの かたち
+        const body = `M152 78 h36 v26 h34 q16 2 18 30 l-8 120 l-12 76 l-8 62 h-88 l-8 -62 l-12 -76 l-8 -120 q2 -28 18 -30 h34 z`;
+        g += `<circle id="head-outline" cx="170" cy="52" r="34" fill="${skin ? '#fcd34d' : '#ffe4e6'}" stroke="${skin ? SEL : '#fda4af'}" stroke-width="${skin ? 4 : 2}"/>`;
+        g += `<path id="body-outline" d="${body}" fill="${skin ? '#fcd34d' : '#ffe4e6'}" stroke="${skin ? SEL : '#fda4af'}" stroke-width="${skin ? 4 : 2}"/>`;
+        // うで・あし
+        const limb = (d) => `<path d="${d}" fill="${skin ? '#fcd34d' : '#ffe4e6'}" stroke="${skin ? SEL : '#fda4af'}" stroke-width="${skin ? 4 : 2}" stroke-linejoin="round"/>`;
+        g += limb('M110 108 q-18 4 -22 26 l-14 108 q-2 14 10 16 q12 2 14 -12 l16 -96 z');
+        g += limb('M230 108 q18 4 22 26 l14 108 q2 14 -10 16 q-12 2 -14 -12 l-16 -96 z');
+        g += limb('M136 372 l-8 150 q0 14 14 14 q14 0 14 -14 l6 -150 z');
+        g += limb('M204 372 l8 150 q0 14 -14 14 q-14 0 -14 -14 l-6 -150 z');
+        if (bone) {
+            // ほね（かんたんな ずかい）
+            const b = (d) => `<path d="${d}" fill="none" stroke="${SEL}" stroke-width="7" stroke-linecap="round"/>`;
+            g += `<ellipse cx="170" cy="50" rx="28" ry="30" fill="none" stroke="${SEL}" stroke-width="7"/>`;
+            g += b('M170 98 L170 300');                                  // せぼね
+            for (let i = 0; i < 6; i++) g += `<path d="M170 ${150 + i * 22} q-40 ${4 + i * 2} -46 ${26 + i * 2} M170 ${150 + i * 22} q40 ${4 + i * 2} 46 ${26 + i * 2}" fill="none" stroke="${SEL}" stroke-width="4"/>`;
+            g += b('M120 128 L220 128');                                 // かたの 骨
+            g += b('M128 310 L212 310');                                 // こしの 骨
+            g += b('M96 132 L78 240') + b('M244 132 L262 240');          // うで
+            g += b('M146 320 L140 520') + b('M194 320 L200 520');        // あし
+        }
+        if (mus) {
+            [[120, 170], [220, 170], [104, 200], [236, 200], [150, 420], [190, 420], [146, 480], [194, 480]].forEach(([x, y]) =>
+                g += `<ellipse cx="${x}" cy="${y}" rx="17" ry="30" fill="#f87171" stroke="${SEL}" stroke-width="3" opacity="0.85"/>`);
+        }
+        if (bloodOn) {
+            const col = sel === 'blood' ? '#dc2626' : '#7c3aed';
+            const vein = d => `<path d="${d}" fill="none" stroke="${col}" stroke-width="3" stroke-linecap="round"/>`;
+            g += vein('M170 100 L170 300 M170 140 L120 200 M170 140 L220 200 M170 300 L146 500 M170 300 L194 500 M170 180 L96 220 M170 180 L244 220');
+            for (let i = 0; i < 5; i++) g += `<circle cx="${140 + i * 15}" cy="${200 + i * 40}" r="4" fill="${col}"/>`;
+        }
+        if (!all) g += organShapes(sel);
+        // 選んだ 臓器の 名前
+        const label = ORGANS[oi].n.replace(/\{[^}]*\}/g, '');
+        g += `<text x="${BW / 2}" y="${BH - 10}" text-anchor="middle" font-size="14" font-weight="900" fill="#9f1239">${ORGANS[oi].e} ${label}</text>`;
+        g += `<text x="12" y="22" font-size="11" font-weight="900" fill="#fb7185">← きみの 右がわ</text>`;
+        document.getElementById('bd-fig').innerHTML = svg(BW, BH, g);
+    }
+    let oi = 0;
+    function setOrgan(id) {
+        const k = ORGANS.findIndex(o => o.id === id);
+        if (k >= 0) oi = k;
+        const o = ORGANS[oi];
+        document.getElementById('og-chips').innerHTML = ORGANS.map((x, j) =>
+            `<button onclick="setOrgan('${x.id}')" data-organ="${x.id}" class="${j === oi ? 'bg-rose-600 text-white' : 'bg-white border-2 border-rose-200 text-slate-600'} font-black px-2.5 py-1.5 rounded-xl text-xs bounce-hover">${x.e} ${x.n.replace(/\{[^}]*\}/g, '')}</button>`).join('');
+        bodyDraw();
+        document.getElementById('og-name').innerHTML = `${o.e} ${o.n}`;
+        document.getElementById('og-short').innerHTML = o.short;
+        document.getElementById('og-detail').innerHTML = o.detail.map(([t, d], k2) =>
+            `<div class="bg-rose-50 border-2 border-rose-200 rounded-2xl p-3" data-od="${k2}">
+                <p class="font-black text-sm text-rose-900">${t}</p>
+                <p class="text-xs font-bold text-slate-600 mt-0.5 leading-relaxed">${d}</p></div>`).join('');
+        document.getElementById('og-data').innerHTML = o.data.map(([k3, v]) =>
+            `<span class="bg-slate-100 rounded-2xl px-3 py-1.5 text-xs font-black" data-ogdata="${k3}">${k3}：<span class="num text-rose-800">${v}</span></span>`).join('');
+        document.getElementById('og-fact').innerHTML = `💡 ${o.fact}`;
+        document.getElementById('og-care').innerHTML = `🌱 <b>大切に する コツ</b>：${o.care}`;
+    }
+
+    /* =====================================================================
+       ② 食べものの 旅
+       ===================================================================== */
+    let foodReady = false;
+    const DIGEST = [
+        { e: '👄', n: '口', t: '30秒〜1分', x: 60,
+          what: 'よく かんで こまかく し、だ液を まぜる。だ液には でんぷんを 分解する 酵素{こうそ}が 入って いる。',
+          why: 'ごはんを かみつづけると あまく なるのは、でんぷんが 糖に 分解される から。' },
+        { e: '🥤', n: '食道', t: 'やく 5秒', x: 130,
+          what: 'かべの 筋肉が 波の ように しめつけて、胃へ おし送る。',
+          why: '重力では なく 筋肉で 運ぶので、寝て いても 落ちずに 進む。' },
+        { e: '🫙', n: '胃', t: '2〜4時間', x: 200,
+          what: '強い 酸と 動きで どろどろの おかゆに する。たんぱく質が 分解され はじめる。',
+          why: 'ここで ためて おくので、まとめて 食べても 小腸に 少しずつ 送れる。' },
+        { e: '🧪', n: 'たんじゅう・すい液が 合流', t: '入り口で', x: 270,
+          what: '肝臓が つくった たんじゅうと、すいぞうの すい液が 小腸の 入り口で 合わさる。',
+          why: 'たんじゅうは あぶらを こまかい つぶに し、すい液は 3大栄養素 ぜんぶを 分解する。' },
+        { e: '🧵', n: '小腸', t: '5〜8時間', x: 340,
+          what: '栄養を いちばん こまかく し、柔毛{じゅうもう}から 血の 中に 取りこむ（吸収）。',
+          why: '取りこんだ 栄養は まず 肝臓へ 行き、体で つかえる 形に つくりかえられる。' },
+        { e: '💦', n: '大腸', t: '10〜20時間', x: 410,
+          what: '水と 塩分を 吸収し、だんだん かたい 便に する。腸内細菌が はたらく。',
+          why: '水を 吸いすぎると かたく、吸えないと 下痢{げり}に なる。' },
+        { e: '🚽', n: 'こう門', t: '合計 1〜2日', x: 480,
+          what: 'のこった ものを 便として 体の 外へ 出す。',
+          why: '口から ここまで、大人で 7〜9mの 長い 旅。そのうち 小腸だけで 6〜7mを しめる。' }
+    ];
+    let di = 0, dgTimer = null;
+    function dgStopTimer() { if (dgTimer) { clearInterval(dgTimer); dgTimer = null; } }
+    function dgReset() { dgStopTimer(); di = 0; dgDraw(); }
+    function dgStep() { dgStopTimer(); di = (di + 1) % DIGEST.length; dgDraw(); }
+    function dgPlay() {
+        dgStopTimer(); di = 0; dgDraw();
+        dgTimer = setInterval(() => { if (di >= DIGEST.length - 1) { dgStopTimer(); return; } di++; dgDraw(); }, 1400);
+    }
+    function dgDraw() {
+        const W = 560, H = 210;
+        let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="#fff1f2"/>`;
+        // 道
+        g += `<line x1="60" y1="96" x2="480" y2="96" stroke="#fecdd3" stroke-width="10" stroke-linecap="round"/>`;
+        DIGEST.forEach((d, i) => {
+            const on = i === di, done = i < di;
+            g += `<circle cx="${d.x}" cy="96" r="${on ? 24 : 18}" fill="${on ? '#f43f5e' : done ? '#fda4af' : '#fff'}" stroke="${on ? '#9f1239' : '#fb7185'}" stroke-width="${on ? 4 : 2}"/>`;
+            g += `<text x="${d.x}" y="${96 + 7}" text-anchor="middle" font-size="${on ? 20 : 15}">${d.e}</text>`;
+            g += `<text x="${d.x}" y="${on ? 150 : 144}" text-anchor="middle" font-size="${on ? 13 : 11}" font-weight="900" fill="${on ? '#9f1239' : '#94a3b8'}">${d.n.length > 8 ? d.n.slice(0, 6) + '…' : d.n}</text>`;
+            if (on) g += `<text x="${d.x}" y="168" text-anchor="middle" font-size="11" font-weight="900" fill="#be123c">${d.t}</text>`;
+        });
+        g += `<text x="${W / 2}" y="34" text-anchor="middle" font-size="13" font-weight="900" fill="#9f1239">口 ➡ こう門　全長 7〜9m の 旅</text>`;
+        document.getElementById('dg-fig').innerHTML = svg(W, H, g);
+        document.getElementById('dg-count').innerText = `${di + 1} / ${DIGEST.length}`;
+        const d = DIGEST[di];
+        document.getElementById('dg-info').innerHTML =
+            `<b class="text-rose-800">${d.e} ${d.n}（${d.t}）</b><br>${d.what}<br>
+             <span class="text-xs text-slate-600">💡 ${d.why}</span>`;
+    }
+    function dgList() {
+        document.getElementById('dg-list').innerHTML = DIGEST.map((d, i) =>
+            `<div class="border-2 border-rose-200 rounded-2xl p-3" data-dg="${i}">
+                <p class="font-black text-sm">${i + 1}. ${d.e} ${d.n}　<span class="num text-rose-700">${d.t}</span></p>
+                <p class="text-xs font-bold text-slate-600 mt-0.5 leading-relaxed">${d.what}</p>
+            </div>`).join('');
+    }
+
+    /* =====================================================================
+       ③ 血液の 流れ
+       ===================================================================== */
+    let bloodReady = false;
+    // 点の ならびが そのまま 血管の 絵に なる。st が ついて いる ところが 説明の 場所
+    const CIRC = [
+        { x: 300, y: 389, c: 'r', st: '全身（からだ）', d: '手や 足、脳の 細ぼうに 酸素と 栄養を わたし、二酸化炭素と いらない ものを 受けとる。ここで 血は 赤から 青へ かわる。' },
+        { x: 170, y: 389, c: 'b' },
+        { x: 130, y: 350, c: 'b', st: '大静脈{だいじょうみゃく}', d: '全身から 心臓へ もどる、体で いちばん 太い 静脈。酸素の 少ない 血が 流れる。' },
+        { x: 130, y: 212, c: 'b' },
+        { x: 240, y: 194, c: 'b', st: '右心房{うしんぼう}', d: 'もどって きた 血が 最初に 入る へや。たまると 下の 右心室へ おし出す。' },
+        { x: 240, y: 268, c: 'b', st: '右心室{うしんしつ}', d: '肺へ 血を 送り出す ポンプ。ここから 出る 血管が 肺動脈。' },
+        { x: 282, y: 240, c: 'b' },
+        { x: 282, y: 146, c: 'b', st: '肺動脈{はいどうみゃく}', d: '⚠️ 「動脈」なのに 酸素の 少ない 青い 血が 流れる。心臓から 出て いく 血管を 動脈と 呼ぶ ためで、中身の 酸素とは かんけいない。' },
+        { x: 238, y: 98, c: 'r', st: '肺{はい}', d: '肺胞で 二酸化炭素を すてて 酸素を 受けとる。ここで 血は 青から 赤に かわる。（肺は 左右 2つ。同じ ことが 両方で おきる）' },
+        { x: 342, y: 98, c: 'r' },
+        { x: 400, y: 146, c: 'r', st: '肺静脈{はいじょうみゃく}', d: '⚠️ 「静脈」なのに いちばん 酸素の 多い 赤い 血が 流れる。心臓へ もどる 血管を 静脈と 呼ぶ から。' },
+        { x: 320, y: 194, c: 'r', st: '左心房', d: '肺から きた 酸素たっぷりの 血が 入る へや。下の 左心室へ 送る。' },
+        { x: 320, y: 268, c: 'r', st: '左心室', d: '全身へ 血を 送り出す、いちばん 力の 強い ポンプ。かべの 筋肉が 4つの へやで もっとも あつい。' },
+        { x: 412, y: 300, c: 'r', st: '大動脈{だいどうみゃく}', d: '左心室から 全身へ 向かう 太い 動脈。ここから 枝分かれして 体の すみずみへ 届く。' },
+        { x: 412, y: 389, c: 'r' }
+    ];
+    let ci = 0, crTimer = null, crT = 0;
+    function crStop() { if (crTimer) { clearInterval(crTimer); crTimer = null; } }
+    function stations() { return CIRC.map((p, i) => p.st ? i : -1).filter(i => i >= 0); }
+    function crStep() {
+        crStop();
+        const sts = stations();
+        const cur = sts.indexOf(ci);
+        ci = sts[(cur + 1) % sts.length];
+        crT = ci;
+        crDraw();
+    }
+    function crPlay() {
+        crStop();
+        crT = 0; ci = 0; crDraw();
+        crTimer = setInterval(() => {
+            crT += 0.08;
+            if (crT >= CIRC.length) { crT = 0; }
+            const k = Math.round(crT) % CIRC.length;
+            if (CIRC[k].st && k !== ci) ci = k;
+            crDraw();
+        }, 60);
+    }
+    function crDraw() {
+        const W = 560, H = 420;
+        let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="#fff1f2"/>`;
+        // 肺・心臓・全身の わく
+        g += `<ellipse cx="290" cy="98" rx="122" ry="46" fill="#fbcfe8" stroke="#db2777" stroke-width="2.5"/>
+              <text x="290" y="66" text-anchor="middle" font-size="13" font-weight="900" fill="#9d174d">🫁 肺（左右 2つ ある）</text>`;
+        g += `<rect x="210" y="170" width="140" height="130" rx="14" fill="#fee2e2" stroke="#e11d48" stroke-width="2.5"/>
+              <text x="212" y="163" font-size="13" font-weight="900" fill="#9f1239">🫀 心臓</text>
+              <line x1="212" y1="232" x2="348" y2="232" stroke="#fca5a5" stroke-width="2" stroke-dasharray="4 3"/>`;
+        [['右心房', 240, 184], ['右心室', 240, 258], ['左心房', 320, 184], ['左心室', 320, 258]].forEach(([n, x, y]) =>
+            g += `<text x="${x}" y="${y}" text-anchor="middle" font-size="10" font-weight="900" fill="#9f1239">${n}</text>`);
+        g += `<rect x="186" y="346" width="248" height="58" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="2.5"/>
+              <text x="310" y="368" text-anchor="middle" font-size="13" font-weight="900" fill="#92400e">🏃 全身（手・足・脳・おなか…）</text>`;
+        // 血管（点を つないだ 線）
+        for (let i = 0; i < CIRC.length; i++) {
+            const a = CIRC[i], b = CIRC[(i + 1) % CIRC.length];
+            g += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${b.c === 'r' ? '#dc2626' : '#2563eb'}" stroke-width="6" stroke-linecap="round" opacity="0.55"/>`;
+        }
+        // 場所の 印
+        CIRC.forEach((p, i) => {
+            if (!p.st) return;
+            const on = i === ci;
+            g += `<circle cx="${p.x}" cy="${p.y}" r="${on ? 9 : 6}" fill="${p.c === 'r' ? '#dc2626' : '#2563eb'}" stroke="#fff" stroke-width="${on ? 3 : 2}"/>`;
+        });
+        // 流れて いる 血の つぶ
+        const t = crTimer ? crT : ci;
+        const i0 = Math.floor(t) % CIRC.length, f = t - Math.floor(t);
+        const a = CIRC[i0], b = CIRC[(i0 + 1) % CIRC.length];
+        const px = a.x + (b.x - a.x) * f, py = a.y + (b.y - a.y) * f;
+        const col = (f < 0.5 ? a.c : b.c) === 'r' ? '#dc2626' : '#2563eb';
+        g += `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="11" fill="${col}" stroke="#fff" stroke-width="3"/>`;
+        // はんれい
+        g += `<circle cx="30" cy="30" r="7" fill="#dc2626"/><text x="42" y="35" font-size="11" font-weight="900" fill="#dc2626">酸素 多い</text>
+              <circle cx="30" cy="52" r="7" fill="#2563eb"/><text x="42" y="57" font-size="11" font-weight="900" fill="#2563eb">酸素 少ない</text>`;
+        document.getElementById('cr-fig').innerHTML = svg(W, H, g);
+        const sts = stations();
+        document.getElementById('cr-count').innerText = `${sts.indexOf(ci) + 1} / ${sts.length}`;
+        const s = CIRC[ci];
+        document.getElementById('cr-info').innerHTML =
+            `<b class="${s.c === 'r' ? 'text-rose-700' : 'text-blue-700'}">${sts.indexOf(ci) + 1}. ${s.st}</b>
+             <span class="text-xs ${s.c === 'r' ? 'text-rose-600' : 'text-blue-600'}">（${s.c === 'r' ? '酸素 たっぷりの 赤い 血' : '酸素を わたした 青い 血'}）</span><br>${s.d}`;
+    }
+    const CRTIPS = [
+        ['動脈・静脈は「中身」では なく「向き」で 決まる', '<b>心臓から 出て いく</b>のが 動脈、<b>心臓へ もどる</b>のが 静脈。だから 肺動脈には 酸素の 少ない 血、肺静脈には 酸素の 多い 血が 流れる。'],
+        ['心臓は 2つの ポンプが くっついた もの', '右がわは「肺へ 送る」ポンプ、左がわは「全身へ 送る」ポンプ。だから 遠くまで 送る 左心室の 筋肉が いちばん あつい。'],
+        ['血は 2つの わを まわって いる', '心臓 → 肺 → 心臓（肺循環{はいじゅんかん}）と、心臓 → 全身 → 心臓（体循環{たいじゅんかん}）。8の字の ように つながって いる。'],
+        ['「ドクン」は 弁が しまる 音', '血が ぎゃく流しない ように、へやの あいだの 弁が パタンと しまる。その 音を 聞いて いる。'],
+        ['1周 およそ 1分', '赤血球 1こが 体を ひとまわりして くるのに およそ 1分。1日で 1400回ほど まわって いる。']
+    ];
+    function crTips() {
+        document.getElementById('cr-tips').innerHTML = CRTIPS.map(([t, d]) =>
+            `<div class="border-2 border-rose-200 bg-rose-50 rounded-2xl p-3" data-crtip="${t.slice(0, 6)}">
+                <p class="font-black text-sm text-rose-900">💡 ${t}</p>
+                <p class="text-xs font-bold text-slate-600 mt-0.5 leading-relaxed">${d}</p></div>`).join('');
+    }
+
+    /* =====================================================================
+       ④ きみの からだの 数字
+       ===================================================================== */
+    let meReady = false;
+    const ME = { h: 130, w: 28, age: 9 };
+    function meSet(k, v) { ME[k] = +v; meDraw(); }
+    function meDraw() {
+        const rows = [
+            ['h', '身長', 90, 190, 1, v => v + ' cm'],
+            ['w', '体重', 15, 90, 1, v => v + ' kg'],
+            ['age', '年れい', 5, 18, 1, v => v + ' さい']
+        ];
+        document.getElementById('me-ctrl').innerHTML = rows.map(([k, label, min, max, step, fmt]) => `
+            <div>
+                <div class="flex justify-between items-baseline">
+                    <span class="text-xs font-black text-slate-600">${label}</span>
+                    <span class="num font-black text-sm" data-mev="${k}">${fmt(ME[k])}</span>
+                </div>
+                <input type="range" min="${min}" max="${max}" step="${step}" value="${ME[k]}" data-me="${k}" oninput="meSet('${k}', this.value)">
+            </div>`).join('');
+        const blood = ME.w / 13;                          // 体重の やく 13分の1
+        const beatsDay = 85 * 60 * 24;                    // 1分 85回として
+        const beatsLife = beatsDay * 365 * ME.age;
+        const gut = 6.5;                                  // 小腸 6〜7m の まん中
+        const times = gut / (ME.h / 100);
+        const breathDay = 22 * 60 * 24;                   // 1分 22回として
+        const skin = (ME.h / 100) * (ME.w) ;              // つかう 式は 下で
+        const skinArea = Math.sqrt(ME.h * ME.w / 3600);   // モステラーの 式（体表面積 m²）
+        const cards = [
+            ['🩸', '体の 中の 血の 量', `やく ${blood.toFixed(1)} L`,
+             `体重の やく 8%（13分の1）。${ME.w}kg ÷ 13 ＝ ${blood.toFixed(1)}L。牛にゅうパック（1L）${blood.toFixed(1)}本ぶん。`],
+            // 億の 位で 小数第1位まで（402,084,000 → 4.0億）
+            ['🫀', `${ME.age}さいまでの 心ぱくの 数`, `やく ${(Math.round(beatsLife / 1e7) / 10).toFixed(1)} 億回`,
+             `1分 85回 ×60分 ×24時間 ＝ 1日 ${nf(beatsDay)}回。それを ${ME.age}年ぶん。生まれて から ずっと 休んで いない。`],
+            ['🧵', '小腸の 長さは 身長の 何倍？', `やく ${times.toFixed(1)} 倍`,
+             `小腸は 6〜7m。身長 ${ME.h}cm ＝ ${(ME.h / 100).toFixed(2)}m の ${times.toFixed(1)}倍が、おなかに おりたたんで 入って いる。`],
+            ['🫁', '1日の 呼吸の 回数', `やく ${nf(breathDay)} 回`,
+             `1分 22回 として 計算。ねて いる あいだも 続いて いる。1回で ペットボトル 半分ほどの 空気が 出入りする。`],
+            ['🦴', '骨の 数', `206本（赤ちゃんは やく 300本）`,
+             `育つ あいだに となりの 骨と くっついて 数が へる。きみの 骨は いま、じょうぶに なる いちばん 大事な 時期。`],
+            ['🧴', '皮ふの 面積', `やく ${skinArea.toFixed(2)} m²`,
+             `身長と 体重から 計算した 目安。たたみ ${(skinArea / 1.62).toFixed(1)}じょう分ほど。体で いちばん 大きな 臓器。`]
+        ];
+        document.getElementById('me-cards').innerHTML = cards.map(([e, t, v, d]) =>
+            `<div class="border-2 border-rose-200 bg-rose-50 rounded-2xl p-3" data-mecard="${t}">
+                <p class="font-black text-xs text-slate-500">${e} ${t}</p>
+                <p class="num font-black text-lg text-rose-700 mt-0.5">${v}</p>
+                <p class="text-xs font-bold text-slate-600 mt-1 leading-relaxed">${d}</p>
+            </div>`).join('');
+    }
+    const MEFACTS = [
+        ['🫀', '心臓は 1日 およそ 10万回', '80年 生きると 30億回 以上。1回も 休まない。'],
+        ['🩸', '血は 1分で 体を 1周', '全身の 血管を まっすぐ つなぐと およそ 10万km。地球 2周半 より 長い。'],
+        ['🧬', '細ぼうの 数は 37兆こ', 'その ほとんどが 毎日 少しずつ 新しく 入れかわって いる。'],
+        ['🧠', '脳は 酸素の 2割を つかう', '重さは 体の 2%ほどなのに、いちばんの 大食い。'],
+        ['🦴', '赤ちゃん 300本 → 大人 206本', 'くっついて 減る。頭の 骨も 生まれた ときは 何まいかに 分かれて いる。'],
+        ['🧴', '皮ふは 1か月で 入れかわる', '表面は 死んだ 細ぼうの そう。毎日 はがれ落ちて いる。'],
+        ['💤', 'ねて いる あいだに 記おくを せいり', '習った ことが 頭に のこるのは ねむって いる あいだ。'],
+        ['🦠', 'おなかの 細きんは 100兆こ', 'あつめると 1〜2kg。消化を 助け、体を まもる 力にも なる。'],
+        ['👁️', 'まばたきは 1分に やく 20回', '1日 起きて いる あいだで 1万回以上。目を あらって まもって いる。'],
+        ['💪', '体温の ほとんどは 筋肉が つくる', '寒いと ふるえるのは、筋肉を 動かして 熱を 出して いる から。']
+    ];
+    function meFacts() {
+        document.getElementById('me-facts').innerHTML = MEFACTS.map(([e, t, d]) =>
+            `<div class="border-2 border-amber-200 bg-amber-50 rounded-2xl p-3" data-mefact="${t.slice(0, 8)}">
+                <p class="font-black text-sm">${e} ${t}</p>
+                <p class="text-xs font-bold text-slate-600 mt-0.5 leading-relaxed">${d}</p></div>`).join('');
+    }
+
+    /* =====================================================================
+       ⑤ クイズ
+       ===================================================================== */
+    const QS = [
+        { f: 'はたらき', q: '食べものの 栄養を いちばん たくさん 体に 取りこんで いるのは？', a: '小腸', x: ['胃', '大腸', '食道'], e: '胃は 下ごしらえと ためる 係。取りこむ（吸収）のは ほとんど 小腸の 柔毛から。' },
+        { f: 'はたらき', q: '大腸の いちばんの 仕事は？', a: '水分を 吸収して 便を つくる', x: ['栄養を 吸収する', '食べものを とかす', '酸素を 取りこむ'], e: '小腸から きた どろどろから 水と 塩分を 取りもどす。細きんの 住みかでも ある。' },
+        { f: 'はたらき', q: '胃が 自分の 強い 酸で とけない りゆうは？', a: 'かべから ねんえきを 出して 守って いる', x: ['酸が よわい から', '骨で できて いる から', '酸を 出す のは 夜だけ だから'], e: 'ねんえきが へると 自分の 酸で かべが きずつく。ストレスや ねぶそくは よくない。' },
+        { f: 'はたらき', q: '体で いちばん 大きな 臓器は？', a: '皮ふ', x: ['肝臓', '肺', '脳'], e: '大人で やく 1.6m²、重さ やく 3kg。よろい・センサー・エアコンを 兼ねて いる。' },
+        { f: 'はたらき', q: '体の 中で いちばん 大きな 内臓{ないぞう}は？', a: '肝臓', x: ['胃', '心臓', 'じん臓'], e: 'やく 1.2〜1.5kg。栄養の つくりかえ・毒の 分解・たんじゅうづくりなど 500 以上の 仕事。' },
+        { f: 'はたらき', q: 'あぶらを こまかい つぶに する 液（たんじゅう）を つくるのは？', a: '肝臓', x: ['すいぞう', '胃', '小腸'], e: 'つくるのは 肝臓、ためるのは たんのう、はたらくのは 小腸の 入り口。' },
+        { f: 'はたらき', q: '血の 中の 糖を ちょうど よい 量に する ホルモン（インスリン）を 出すのは？', a: 'すいぞう', x: ['肝臓', 'じん臓', 'ぼうこう'], e: 'すいぞうは 消化液も ホルモンも つくる、2つの 仕事を 持つ 臓器。' },
+        { f: 'はたらき', q: 'じん臓の 仕事は？', a: '血を こして おしっこを つくる', x: ['食べものを とかす', '酸素を 取りこむ', '栄養を ためる'], e: '1日に 150L以上の 血を こし、99%は 体に もどして、のこりを おしっこに する。' },
+        { f: 'はたらき', q: '肺で 入れかわって いる 気体は？', a: '酸素を 取りこみ 二酸化炭素を 出す', x: ['二酸化炭素を 取りこみ 酸素を 出す', '水と 空気', 'ちっそだけ'], e: '肺胞の うすい かべごしに、しぜんに 入れかわる。' },
+        { f: 'はたらき', q: '肺が ふくらむのは なぜ？', a: '横隔膜や ろっ骨の 筋肉が 胸を 広げる から', x: ['肺じしんの 筋肉で ふくらむ', '心臓が おしている', '空気が 勝手に 入る'], e: '肺に 筋肉は ない。胸を 広げて 中の 気圧を 下げ、空気を すいこんで いる。' },
+        { f: 'はたらき', q: '骨の 中で つくられて いる ものは？', a: '血（赤血球や 白血球）', x: ['だ液', 'たんじゅう', 'おしっこ'], e: '骨の 中の 骨髄で 毎日 つくられて いる。骨は カルシウムの ちょ金箱でも ある。' },
+        { f: 'はたらき', q: '筋肉が できる ことは？', a: 'ちぢんで 引っぱる こと だけ', x: ['ちぢむ ことと のばす こと', 'おす ことだけ', '自由に 形を かえる'], e: '引く ことしか できないので、骨の 両がわに ペアで ついて かわりばんこに 引いて いる。' },
+        { f: 'はたらき', q: '体の かたむきや 回転を 感じて バランスを とって いるのは？', a: '耳（三半規管）', x: ['目', '皮ふ', '鼻'], e: 'だから 目を つぶっても 立って いられる。ぐるぐる まわると 目が まわるのも これ。' },
+        { f: 'はたらき', q: 'あつい ものに ふれた とき、手を ひっこめる めいれいを 出すのは？', a: 'せきずい（脳を 通らない）', x: ['脳', '心臓', '筋肉じしん'], e: 'これが 反射。まず 体が 動き、そのあと 信号が 脳に とどいて「あつい」と 感じる。' },
+        { f: 'はたらき', q: 'ぼうこうの 仕事は？', a: 'おしっこを ためて おく', x: ['おしっこを つくる', '血を こす', '水を 吸収する'], e: 'つくるのは じん臓、ためるのが ぼうこう。400〜500mLほど 入る。' },
+
+        { f: '血の 流れ', q: '心臓の へやは いくつ？', a: '4つ', x: ['2つ', '3つ', '6つ'], e: '右心房・右心室・左心房・左心室。右は 肺へ、左は 全身へ 血を おくる。' },
+        { f: '血の 流れ', q: '全身へ 血を 送り出す、いちばん 力の 強い へやは？', a: '左心室', x: ['右心室', '左心房', '右心房'], e: '遠くまで 送るので、4つの へやの 中で かべの 筋肉が いちばん あつい。' },
+        { f: '血の 流れ', q: '肺動脈に 流れて いる 血は？', a: '酸素の 少ない 血', x: ['酸素の 多い 血', '栄養だけの 血', 'おしっこに なる 血'], e: '「動脈」は 心臓から 出て いく 血管という いみ。中身の 酸素とは かんけいない。' },
+        { f: '血の 流れ', q: 'いちばん 酸素が 多い 血が 流れて いるのは？', a: '肺静脈', x: ['大静脈', '肺動脈', 'じん臓の 中'], e: '肺で 酸素を もらった 直後だから。「静脈」は 心臓へ もどる 血管という いみ。' },
+        { f: '血の 流れ', q: '動脈と 静脈の ちがいは？', a: '心臓から 出て いくのが 動脈、もどるのが 静脈', x: ['赤い のが 動脈、青い のが 静脈', '太い のが 動脈、細い のが 静脈', '体の 前が 動脈、後ろが 静脈'], e: 'だから 肺動脈は 青い 血、肺静脈は 赤い 血という 例外のように 見える ものが ある。' },
+        { f: '血の 流れ', q: '赤血球の いちばんの 仕事は？', a: '酸素を 運ぶ', x: ['細きんと たたかう', '血を 止める', '栄養を つくる'], e: 'たたかうのは 白血球、止めるのは 血小板。赤血球の 寿命は やく 120日。' },
+        { f: '血の 流れ', q: 'けがを した とき、血を 止めて かさぶたを つくるのは？', a: '血小板', x: ['赤血球', '白血球', 'だ液'], e: 'きずぐちに あつまって ふたを する。白血球は 入って きた 細きんと たたかう。' },
+        { f: '血の 流れ', q: '血が 体を 1周するのに かかる 時間は およそ？', a: '1分', x: ['1秒', '1時間', '1日'], e: '1日で 1400回ほど まわって いる。全身の 血管を つなぐと やく 10万km。' },
+        { f: '血の 流れ', q: '「ドクン」という 心臓の 音は 何の 音？', a: 'へやの あいだの 弁が しまる 音', x: ['血が ぶつかる 音', '筋肉が こすれる 音', '空気が 入る 音'], e: '血が ぎゃく流しない ように 弁が パタンと しまる。だから 2つの 音が 聞こえる。' },
+        { f: '血の 流れ', q: '小腸で 取りこんだ 栄養は、まず どこへ 行く？', a: '肝臓', x: ['心臓', '脳', 'じん臓'], e: '肝臓で 体で つかえる 形に つくりかえられ、あまりは ためられる。' },
+
+        { f: '数字', q: '小腸の 長さは およそ？', a: '6〜7m', x: ['30cm', '1.5m', '20m'], e: '大腸は やく 1.5m。身長 130cmの 子なら 小腸だけで 身長の 5倍ちかい。' },
+        { f: '数字', q: '大人の 骨の 数は？', a: '206本', x: ['300本', '100本', '1000本'], e: '赤ちゃんは やく 300本。育つ あいだに となりの 骨と くっついて へる。' },
+        { f: '数字', q: '体の 中の 血の 量は、体重の およそ？', a: '8%（13分の1）', x: ['50%', '1%', '30%'], e: '体重 30kgなら やく 2.3L。牛にゅうパック 2本 ちょっと。' },
+        { f: '数字', q: '心臓が 1日に うつ 回数は およそ？', a: '10万回', x: ['1000回', '100回', '1億回'], e: '1分 80〜100回（子ども）×60×24。80年で 30億回 以上。' },
+        { f: '数字', q: '口から こう門までの 長さは 大人で およそ？', a: '7〜9m', x: ['1m', '30cm', '50m'], e: 'そのうち 6〜7mが 小腸。おなかの 中で おりたたまれて 入って いる。' },
+        { f: '数字', q: '食べものが 口から 出るまで かかる 時間は およそ？', a: '1〜2日', x: ['30分', '1時間', '1か月'], e: '胃で 2〜4時間、小腸で 5〜8時間、大腸で 10〜20時間。大腸が いちばん 長い。' },
+        { f: '数字', q: '肺の 中の 小さな ふくろ（肺胞）を 広げると どれくらい？', a: 'テニスコート 半分ほど', x: ['ノート 1さつ', '手のひら', '学校の 校庭'], e: '3〜6億こ あって、合わせて 60〜70m²。たたんで 胸に しまって ある。' },
+        { f: '数字', q: '大腸に すんで いる 細きんの 数は およそ？', a: '100兆こ', x: ['100こ', '1万こ', '10こ'], e: 'あつめると 1〜2kg。消化を 助け、ビタミンを つくり、体を まもる 力も 高める。' },
+        { f: '数字', q: '皮ふが まるごと 新しく 入れかわる 時間は およそ？', a: '1か月', x: ['1日', '1年', '10年'], e: '表面は 死んだ 細ぼう。毎日 少しずつ はがれ落ちて いる。' },
+        { f: '数字', q: '脳の 重さは 体重の やく 2%。では つかう 酸素は 全体の およそ？', a: '20%以上', x: ['2%', '1%', '80%'], e: '体の 中で いちばんの 大食い。だから 朝ごはんを ぬくと 頭が はたらきにくい。' },
+        { f: '数字', q: 'じん臓が 1日に こす 血の 量は およそ？', a: '150L以上', x: ['1L', '10L', '5000L'], e: 'こした 液の 99%は 体に もどし、のこり 1〜1.5Lが おしっこに なる。' },
+        { f: '数字', q: '赤血球の 寿命は およそ？', a: '120日', x: ['1日', '1年', '10年'], e: '古く なると ひ臓や 肝臓で こわされ、鉄は また つかわれる。骨の 中で 毎日 新しく つくられて いる。' }
+    ];
+    let qz = null, qzField = 'all';
+    function newQuiz() {
+        const pool = qzField === 'all' ? QS : QS.filter(q => q.f === qzField);
+        const q = pool[rnd(pool.length)];
+        qz = { q, choices: shuffle([q.a].concat(q.x)), done: false };
+        const fields = ['all'].concat([...new Set(QS.map(x => x.f))]);
+        document.getElementById('qz-fields').innerHTML = fields.map(f =>
+            `<button onclick="setField('${f}')" data-qf="${f}" class="${qzField === f ? 'bg-rose-600 text-white' : 'bg-white border-2 border-rose-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${f === 'all' ? 'ぜんぶ ' + QS.length : f + ' ' + QS.filter(x => x.f === f).length}</button>`).join('');
+        document.getElementById('qz-q').innerHTML = `<span class="text-xs font-black text-rose-700 bg-rose-100 px-2 py-1 rounded-lg mr-2">${esc(q.f)}</span>${esc(q.q)}`;
+        document.getElementById('qz-choices').innerHTML = qz.choices.map((c, i) =>
+            `<button onclick="ansQuiz(${i})" data-qzc="${i}" class="bg-white border-2 border-slate-200 hover:border-rose-500 font-bold text-left px-4 py-3 rounded-2xl bounce-hover">${esc(c)}</button>`).join('');
+        document.getElementById('qz-res').innerHTML = '';
+        scoreBox('qz-score', S.quiz);
+    }
+    function setField(f) { qzField = f; newQuiz(); }
+    function ansQuiz(i) {
+        if (!qz || qz.done) return;
+        qz.done = true;
+        const ok = qz.choices[i] === qz.q.a;
+        S.quiz[1]++; if (ok) S.quiz[0]++;
+        markChoices('[data-qzc]', j => qz.choices[j] === qz.q.a, i, 'font-bold text-left px-4 py-3 rounded-2xl');
+        document.getElementById('qz-res').innerHTML = resultBox(ok, ok ? '⭕ せいかい！' : `❌ こたえは 「${esc(qz.q.a)}」`, qz.q.e);
+        scoreBox('qz-score', S.quiz);
+    }
+
+    /* ===================== 起動 ===================== */
+    renderNav();
+    setOrgan('heart');
+    rubify(document.body);
+</script>
+</body>
+</html>
