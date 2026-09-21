@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>おかねラボ</title>
+    <meta name="description" content="小学生から学べる金融リテラシー。お金が生まれた理由と3つのはたらき、支払い方法のちがい、おこづかいのやりくり、複利のグラフ、詐欺や課金から身をまもる判断クイズ。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums }
+        .bounce-hover { transition: transform .12s cubic-bezier(.175,.885,.32,1.275) }
+        .bounce-hover:active { transform: scale(.94) }
+        @keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.1) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275) }
+        @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+        .shake { animation: shake .3s ease-in-out }
+        svg text { font-family: inherit }
+        rt { font-size: .55em; font-weight: 700; color: #047857 }
+        input[type=range] { accent-color: #059669; width: 100% }
+    </style>
+</head>
+<body class="bg-emerald-50 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-emerald-700 via-green-600 to-lime-600 text-white p-3 shadow-lg sticky top-0 z-30">
+        <div class="max-w-4xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">💰</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">おかねラボ</h1>
+                    <p class="text-xs text-emerald-50 font-bold hidden sm:block">かせぐ・つかう・ためる・まもる を 知ろう</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[64px] z-20 bg-emerald-50/95 backdrop-blur border-b border-emerald-200">
+        <div class="max-w-4xl mx-auto flex gap-2 p-3 overflow-x-auto" id="tab-nav"></div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto w-full p-3 sm:p-5 flex-grow space-y-4">
+
+        <!-- ===== ① おかねの しくみ ===== -->
+        <section id="tab-what" class="space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <h2 class="font-black">🪙 なぜ お金が うまれたの？</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    むかしは ほしい ものを ものと ものを とりかえて（物々交換{ぶつぶつこうかん}）手に 入れていた。
+                    でも それは 大変だった。ボタンで くらべて みよう。
+                </p>
+                <div class="flex flex-wrap gap-2 mt-3">
+                    <button onclick="setBarter(false)" data-bt="0" class="font-black px-3 py-1.5 rounded-full text-xs bounce-hover">🥩 お金の ない 世界</button>
+                    <button onclick="setBarter(true)" data-bt="1" class="font-black px-3 py-1.5 rounded-full text-xs bounce-hover">🪙 お金の ある 世界</button>
+                </div>
+                <div id="bt-fig" class="mt-2"></div>
+                <div id="bt-info" class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-3 text-sm font-bold leading-relaxed"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <h2 class="font-black">🎯 お金の 3つの はたらき</h2>
+                <div class="grid sm:grid-cols-3 gap-3 mt-3" id="roles"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <h2 class="font-black">💳 はらい方の ちがい</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    どれも「お金を はらう」けれど、<b class="text-emerald-700">お金が 実際に へる タイミング</b>が ちがう。
+                    カードを タップして みよう。
+                </p>
+                <div id="pay-chips" class="flex flex-wrap gap-2 mt-3"></div>
+                <div id="pay-fig" class="mt-2"></div>
+                <div id="pay-info" class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-3 text-sm font-bold leading-relaxed"></div>
+            </div>
+        </section>
+
+        <!-- ===== ② やりくり ===== -->
+        <section id="tab-budget" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <h2 class="font-black">🧾 おこづかいの やりくり</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    <b class="text-emerald-700">入ってくる お金（収入{しゅうにゅう}）− 出ていく お金（支出{ししゅつ}）＝ のこる お金</b>。
+                    スライダーを 動かして みよう。
+                </p>
+                <div class="grid sm:grid-cols-2 gap-4 mt-3">
+                    <div class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-3">
+                        <p class="font-black text-emerald-800 text-sm">⬆️ 入ってくる（毎月）</p>
+                        <div id="bg-in" class="space-y-3 mt-2"></div>
+                    </div>
+                    <div class="bg-rose-50 border-2 border-rose-200 rounded-2xl p-3">
+                        <p class="font-black text-rose-800 text-sm">⬇️ 出ていく（毎月）</p>
+                        <div id="bg-out" class="space-y-3 mt-2"></div>
+                    </div>
+                </div>
+                <div id="bg-fig" class="mt-3"></div>
+                <div id="bg-info" class="bg-slate-50 border-2 border-slate-200 rounded-2xl p-3 text-sm font-bold leading-relaxed"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <h2 class="font-black">🎁 ほしい ものまで 何か月？</h2>
+                <div id="goal-ctrl" class="mt-2"></div>
+                <div id="goal-info" class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-3 text-sm font-bold leading-relaxed mt-2"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <h2 class="font-black">👛 3つの さいふに 分ける</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    もらった お金を はじめから 分けて おくと、やりくりが ぐっと 楽に なる。
+                </p>
+                <div class="grid sm:grid-cols-3 gap-3 mt-3" id="wallets"></div>
+            </div>
+        </section>
+
+        <!-- ===== ③ ためる・ふやす ===== -->
+        <section id="tab-grow" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <h2 class="font-black">📈 利息（りそく）と 複利（ふくり）</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    銀行に あずけると <b class="text-emerald-700">利息</b>が つく。
+                    <b>単利{たんり}</b>は「元金{もときん}にだけ」つき、<b>複利</b>は「ふえた ぶんにも」つく。
+                    だから 時間が たつと 差が 大きく なる。
+                </p>
+                <div id="ci-ctrl" class="space-y-3 mt-3"></div>
+                <div id="ci-fig" class="mt-2"></div>
+                <div id="ci-info" class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-3 text-sm font-bold leading-relaxed"></div>
+                <p class="text-xs font-bold text-slate-400 mt-2">
+                    ※ 今の 日本の ふつうの 銀行（普通預金）の 利息は 年 0.001〜0.2% くらい。
+                    ここの 数字は「しくみ」を つかむ ための 練習だよ。
+                </p>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <h2 class="font-black">⚖️ リスクと リターン</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    「ふえそうな もの」は「へるかも しれない もの」でも ある。
+                    <b class="text-rose-700">ぜったいに もうかる 話は ない</b>。
+                </p>
+                <div id="risk-list" class="space-y-2 mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ④ 気をつける ===== -->
+        <section id="tab-guard" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">🛡️ こんな とき どう する？</h2>
+                    <span id="sc-score" class="num bg-emerald-100 text-emerald-700 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newScene()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <p id="sc-q" class="font-black text-base sm:text-lg mt-3 leading-relaxed"></p>
+                <div id="sc-choices" class="grid gap-2 mt-3"></div>
+                <div id="sc-res" class="mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <h2 class="font-black">🚨 あぶない サインの 合言葉</h2>
+                <div id="signs" class="space-y-2 mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ⑤ クイズ ===== -->
+        <section id="tab-quiz" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">❓ おかねクイズ</h2>
+                    <span id="qz-score" class="num bg-emerald-100 text-emerald-700 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newQuiz()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <div id="qz-fields" class="flex flex-wrap gap-2 mt-3"></div>
+                <p id="qz-q" class="font-black text-base sm:text-lg mt-3 leading-relaxed"></p>
+                <div id="qz-choices" class="grid gap-2 mt-3"></div>
+                <div id="qz-res" class="mt-3"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center text-xs text-slate-400 font-bold p-4">おかねラボ © 2026</footer>
+
+<script>
+    /* ===================== きょうつう ===================== */
+    const rnd = n => Math.floor(Math.random() * n);
+    const pickOne = a => a[rnd(a.length)];
+    function shuffle(a) { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = rnd(i + 1); const t = b[i]; b[i] = b[j]; b[j] = t; } return b; }
+    function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    const yen = n => Math.round(n).toLocaleString('ja-JP') + '円';
+    function svg(w, h, body) {
+        return `<svg viewBox="0 0 ${w} ${h}" class="w-full h-auto block mx-auto" style="max-width:${w}px" role="img">${body}</svg>`;
+    }
+    function resultBox(ok, title, body) {
+        return `<div class="pop ${ok ? 'bg-green-50 border-green-300' : 'bg-amber-50 border-amber-300'} border-2 rounded-2xl p-3">
+            <p class="font-black ${ok ? 'text-green-700' : 'text-amber-700'}">${title}</p>
+            <div class="font-bold text-sm mt-1 leading-relaxed">${body}</div></div>`;
+    }
+    const S = { scene: [0, 0], quiz: [0, 0] };
+    function scoreBox(id, s) { document.getElementById(id).innerText = `${s[0]} / ${s[1]}`; }
+    function markChoices(sel, isRight, picked, cls) {
+        document.querySelectorAll(sel).forEach((el, j) => {
+            el.className = `${isRight(j) ? 'bg-green-50 border-green-500' : (j === picked ? 'bg-red-50 border-red-400 shake' : 'bg-white border-slate-200 opacity-60')} border-2 ${cls}`;
+        });
+    }
+
+    /* 漢字{よみ} を ルビに（あとから 出す 文にも かかる） */
+    const RUBY_RE = /([一-鿿々]+)\{([^{}]+)\}/g;
+    function rubySkip(el) {
+        for (let n = el; n; n = n.parentNode) {
+            const tag = n.nodeType === 1 ? n.tagName.toLowerCase() : '';
+            if (tag === 'script' || tag === 'style' || tag === 'svg' || tag === 'ruby') return true;
+        }
+        return false;
+    }
+    function rubifyText(node) {
+        const t = node.nodeValue;
+        if (t.indexOf('{') < 0 || !node.parentNode || rubySkip(node.parentNode)) return;
+        RUBY_RE.lastIndex = 0;
+        if (!RUBY_RE.test(t)) return;
+        RUBY_RE.lastIndex = 0;
+        const frag = document.createDocumentFragment();
+        let last = 0, m;
+        while ((m = RUBY_RE.exec(t))) {
+            if (m.index > last) frag.appendChild(document.createTextNode(t.slice(last, m.index)));
+            const ruby = document.createElement('ruby');
+            ruby.appendChild(document.createTextNode(m[1]));
+            const rt = document.createElement('rt');
+            rt.textContent = m[2];
+            ruby.appendChild(rt);
+            frag.appendChild(ruby);
+            last = m.index + m[0].length;
+        }
+        if (last < t.length) frag.appendChild(document.createTextNode(t.slice(last)));
+        node.parentNode.replaceChild(frag, node);
+    }
+    function rubify(root) {
+        if (root.nodeType === 3) return rubifyText(root);
+        if (root.nodeType !== 1 || rubySkip(root)) return;
+        const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        const list = [];
+        while (w.nextNode()) if (w.currentNode.nodeValue.indexOf('{') >= 0) list.push(w.currentNode);
+        list.forEach(rubifyText);
+    }
+    new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(rubify)))
+        .observe(document.body, { childList: true, subtree: true });
+
+    const TABS = { what: '🪙 おかねの しくみ', budget: '🧾 やりくり', grow: '📈 ためる・ふやす', guard: '🛡️ 気をつける', quiz: '❓ クイズ' };
+    let tab = 'what';
+    function renderNav() {
+        document.getElementById('tab-nav').innerHTML = Object.entries(TABS).map(([k, label]) =>
+            `<button onclick="setTab('${k}')" data-tab="${k}" class="${tab === k ? 'bg-emerald-700 text-white' : 'bg-white border-2 border-emerald-200 text-slate-600'} font-black px-4 py-2 rounded-full text-sm whitespace-nowrap bounce-hover">${label}</button>`).join('');
+    }
+    function setTab(k) {
+        tab = k;
+        Object.keys(TABS).forEach(t => document.getElementById('tab-' + t).classList.toggle('hidden', t !== k));
+        renderNav();
+        if (k === 'budget' && !budgetReady) { drawBudget(); drawGoal(); drawWallets(); budgetReady = true; }
+        if (k === 'grow' && !growReady) { drawCompound(); drawRisk(); growReady = true; }
+        if (k === 'guard' && !sc) { newScene(); drawSigns(); }
+        if (k === 'quiz' && !qz) newQuiz();
+    }
+
+    /* =====================================================================
+       ① おかねの しくみ
+       ===================================================================== */
+    let barter = false;
+    function setBarter(v) {
+        barter = v;
+        document.querySelectorAll('[data-bt]').forEach(b => {
+            const on = (b.dataset.bt === '1') === barter;
+            b.className = `${on ? 'bg-emerald-700 text-white' : 'bg-white border-2 border-emerald-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover`;
+        });
+        // さかなを もっている 人が くつ を 手に 入れるまで
+        const W = 560, H = 190;
+        const box = (x, y, emoji, label, col) =>
+            `<rect x="${x - 44}" y="${y - 30}" width="88" height="60" rx="12" fill="${col}"/>
+             <text x="${x}" y="${y - 4}" text-anchor="middle" font-size="24">${emoji}</text>
+             <text x="${x}" y="${y + 22}" text-anchor="middle" font-size="12" font-weight="900" fill="#fff">${label}</text>`;
+        const arrow = (x1, x2, y, label, col) =>
+            `<line x1="${x1}" y1="${y}" x2="${x2 - 8}" y2="${y}" stroke="${col}" stroke-width="3"/>
+             <polygon points="${x2},${y} ${x2 - 10},${y - 6} ${x2 - 10},${y + 6}" fill="${col}"/>
+             <text x="${(x1 + x2) / 2}" y="${y - 12}" text-anchor="middle" font-size="12" font-weight="900" fill="${col}">${label}</text>`;
+        let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="#f0fdf4"/>`;
+        if (!barter) {
+            g += box(66, 60, '🐟', 'あなた', '#0f766e') + box(226, 60, '🍚', '米の人', '#b45309') + box(386, 60, '🪵', '木の人', '#7c3aed') + box(516, 120, '👟', 'くつ屋', '#be123c');
+            g += arrow(110, 182, 60, '魚→米', '#64748b') + arrow(270, 342, 60, '米→木', '#64748b');
+            g += `<line x1="430" y1="60" x2="472" y2="104" stroke="#64748b" stroke-width="3"/>
+                  <polygon points="478,110 464,104 470,94" fill="#64748b"/>
+                  <text x="462" y="76" font-size="12" font-weight="900" fill="#64748b">木→くつ</text>`;
+            g += `<text x="20" y="${H - 14}" font-size="13" font-weight="900" fill="#be123c">くつを もらうまでに 3回も 交換！ 魚は くさるし 運ぶのも 大変…</text>`;
+        } else {
+            g += box(96, 70, '🐟', 'あなた', '#0f766e') + box(296, 70, '🪙', 'お金', '#ca8a04') + box(490, 70, '👟', 'くつ屋', '#be123c');
+            g += arrow(140, 252, 70, '売る', '#059669') + arrow(340, 446, 70, '買う', '#059669');
+            g += `<text x="20" y="${H - 42}" font-size="13" font-weight="900" fill="#059669">魚を「お金」に かえて おけば、いつでも・だれとでも・くさらずに 交換できる。</text>
+                  <text x="20" y="${H - 16}" font-size="13" font-weight="900" fill="#047857">これが お金の いちばん 大事な はたらき。</text>`;
+        }
+        document.getElementById('bt-fig').innerHTML = svg(W, H, g);
+        document.getElementById('bt-info').innerHTML = barter
+            ? `お金は <b>だれでも 受けとって くれる</b>ので、ほしい ものが 一致しなくても 交換が できる。
+               くさらないから ためて おけるし、軽いから 運べる。<br>
+               お金じたいが おいしい わけでは ないのに、みんなが「使える」と 信じて いるから 使える。これを <b class="text-emerald-700">信用{しんよう}</b>と いう。`
+            : `物々交換は ①ほしい ものが おたがい 一致しないと 成立しない ②魚や 野菜は くさる
+               ③重い ものは 運べない ④「魚1匹＝くつ何足？」が 決めにくい、という 弱点が ある。`;
+    }
+
+    const ROLES = [
+        ['🔄', '交換{こうかん}の 道具', 'ものや サービスと とりかえられる。だれでも 受けとって くれるから 使える。', 'bg-emerald-50 border-emerald-200'],
+        ['📏', '価値{かち}の ものさし', '「りんご1こ 150円」のように、ねだんで ものの 価値を くらべられる。', 'bg-sky-50 border-sky-200'],
+        ['🏦', 'ためて おく 道具', 'くさらないので、あとで 使う ために とって おける（貯金{ちょきん}）。', 'bg-amber-50 border-amber-200']
+    ];
+    function drawRoles() {
+        document.getElementById('roles').innerHTML = ROLES.map(([e, t, d, col]) =>
+            `<div class="${col} border-2 rounded-2xl p-3" data-role="${t}">
+                <p class="text-3xl">${e}</p>
+                <p class="font-black mt-1">${t}</p>
+                <p class="text-sm font-bold text-slate-600 mt-1 leading-relaxed">${d}</p>
+            </div>`).join('');
+    }
+
+    const PAYS = [
+        { k: 'cash', n: '現金{げんきん}', e: '💵', when: 1, d: 'その 場で 財布から お金が へる。いくら つかったか 目で 見て わかるので、はじめは いちばん わかりやすい。' },
+        { k: 'pre', n: 'プリペイド', e: '🎫', when: 0, d: '先に お金を 入れて おく（チャージ）。入れた ぶん しか つかえないので、使いすぎを ふせげる。交通系ICカードや ギフトカード。' },
+        { k: 'debit', n: 'デビット', e: '🏧', when: 1, d: 'はらうと すぐ 銀行の 口座から ひかれる。口座に ある ぶん しか つかえない。' },
+        { k: 'credit', n: 'クレジット', e: '💳', when: 2, d: 'お店には カード会社が 先に はらい、自分は <b>あとで</b>（翌月など）まとめて はらう。つまり 少しの あいだ お金を 借りて いる。使いすぎに いちばん 気をつける。' }
+    ];
+    let paySel = 'cash';
+    function drawPay() {
+        document.getElementById('pay-chips').innerHTML = PAYS.map(p =>
+            `<button onclick="setPay('${p.k}')" data-pay="${p.k}" class="${paySel === p.k ? 'bg-emerald-700 text-white' : 'bg-white border-2 border-emerald-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${p.e} ${p.n.replace(/\{[^}]*\}/g, '')}</button>`).join('');
+        const p = PAYS.find(x => x.k === paySel);
+        const W = 560, H = 160;
+        const xs = [110, 280, 450];
+        const labels = ['① 買う 前', '② 買う とき', '③ あとで（翌月など）'];
+        let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="#f0fdf4"/>
+                 <line x1="60" y1="96" x2="510" y2="96" stroke="#a7f3d0" stroke-width="6"/>
+                 <polygon points="524,96 508,88 508,104" fill="#a7f3d0"/>
+                 <text x="534" y="118" text-anchor="end" font-size="12" font-weight="900" fill="#6ee7b7">じかん →</text>`;
+        xs.forEach((x, i) => {
+            const on = p.when === i;
+            g += `<circle cx="${x}" cy="96" r="${on ? 20 : 12}" fill="${on ? '#dc2626' : '#fff'}" stroke="${on ? '#7f1d1d' : '#6ee7b7'}" stroke-width="3"/>
+                  ${on ? `<text x="${x}" y="102" text-anchor="middle" font-size="16">💸</text>` : ''}
+                  <text x="${x}" y="${on ? 48 : 56}" text-anchor="middle" font-size="13" font-weight="900" fill="${on ? '#b91c1c' : '#94a3b8'}">${labels[i]}</text>
+                  ${on ? `<text x="${x}" y="70" text-anchor="middle" font-size="12" font-weight="900" fill="#b91c1c">ここで お金が へる</text>` : ''}
+                  <text x="${x}" y="134" text-anchor="middle" font-size="12" font-weight="800" fill="#64748b">${['チャージ', 'お買いもの', '引きおとし'][i]}</text>`;
+        });
+        document.getElementById('pay-fig').innerHTML = svg(W, H, g);
+        document.getElementById('pay-info').innerHTML =
+            `<p class="font-black text-emerald-800">${p.e} ${p.n}</p><p class="mt-1">${p.d}</p>
+             <p class="mt-1 text-slate-600">どの はらい方でも、<b>つかった お金は かならず へる</b>。
+             見えないと わすれやすいので、つかった 記録を のこすのが コツ。</p>`;
+    }
+    function setPay(k) { paySel = k; drawPay(); }
+
+    /* =====================================================================
+       ② やりくり
+       ===================================================================== */
+    let budgetReady = false;
+    const BG = { allowance: 500, help: 200, snack: 200, book: 300, game: 0 };
+    const BGDEF = [
+        ['allowance', 'おこづかい', 0, 3000, 100, 'in'],
+        ['help', 'おてつだい など', 0, 2000, 100, 'in'],
+        ['snack', 'おかし・ジュース', 0, 2000, 50, 'out'],
+        ['book', 'まんが・本', 0, 2000, 50, 'out'],
+        ['game', 'ゲーム・課金', 0, 3000, 100, 'out']
+    ];
+    function drawBudget() {
+        const row = ([k, label, min, max, step]) => `
+            <div>
+                <div class="flex justify-between items-baseline">
+                    <span class="text-xs font-black text-slate-600">${label}</span>
+                    <span class="num font-black text-sm" data-bgv="${k}">${yen(BG[k])}</span>
+                </div>
+                <input type="range" min="${min}" max="${max}" step="${step}" value="${BG[k]}"
+                    data-bg="${k}" oninput="bgSet('${k}', this.value)">
+            </div>`;
+        document.getElementById('bg-in').innerHTML = BGDEF.filter(d => d[5] === 'in').map(row).join('');
+        document.getElementById('bg-out').innerHTML = BGDEF.filter(d => d[5] === 'out').map(row).join('');
+        const inc = BG.allowance + BG.help;
+        const out = BG.snack + BG.book + BG.game;
+        const left = inc - out;
+        // つみあげ グラフ
+        const W = 560, H = 180, base = 140, scale = Math.max(inc, out, 1);
+        const barH = v => Math.max(2, (v / scale) * 104);
+        let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="#f8fafc"/>
+                 <line x1="40" y1="${base}" x2="520" y2="${base}" stroke="#cbd5e1" stroke-width="3"/>`;
+        const stack = (x, parts, label) => {
+            let y = base, s = '';
+            parts.forEach(([v, col, name]) => {
+                const h = barH(v);
+                y -= h;
+                s += `<rect x="${x - 52}" y="${y.toFixed(1)}" width="104" height="${h.toFixed(1)}" fill="${col}"/>`;
+                if (h > 18) s += `<text x="${x}" y="${(y + h / 2 + 5).toFixed(1)}" text-anchor="middle" font-size="12" font-weight="900" fill="#fff">${name} ${v}</text>`;
+            });
+            s += `<text x="${x}" y="${base + 20}" text-anchor="middle" font-size="13" font-weight="900" fill="#475569">${label}</text>`;
+            return s;
+        };
+        g += stack(150, [[BG.allowance, '#059669', 'こづかい'], [BG.help, '#34d399', 'おてつだい']], `入ってくる ${inc}円`);
+        g += stack(330, [[BG.snack, '#e11d48', 'おかし'], [BG.book, '#fb7185', '本'], [BG.game, '#fda4af', 'ゲーム']], `出ていく ${out}円`);
+        g += stack(490, [[Math.max(0, left), left >= 0 ? '#0284c7' : '#94a3b8', 'のこり']], `のこり ${left}円`);
+        if (left < 0) g += `<text x="490" y="${base - 116}" text-anchor="middle" font-size="14" font-weight="900" fill="#b91c1c">${left}円！</text>`;
+        document.getElementById('bg-fig').innerHTML = svg(W, H, g);
+        document.getElementById('bg-info').innerHTML = left < 0
+            ? `<p class="text-rose-700 font-black">⚠️ ${Math.abs(left)}円 たりない（赤字{あかじ}）</p>
+               <p class="mt-1">出ていく お金を へらすか、入ってくる お金を ふやさないと つづかない。
+               まず「なくても 困らない もの」から 見なおして みよう。</p>`
+            : left === 0
+                ? `<p class="text-amber-700 font-black">ぴったり 0円（貯金は できない）</p>
+                   <p class="mt-1">急に ほしい ものが 出た ときに こまる。少しでも のこす 練習を しよう。</p>`
+                : `<p class="text-emerald-700 font-black">🎉 毎月 ${yen(left)} のこる（黒字{くろじ}）</p>
+                   <p class="mt-1">1年つづけると <b>${yen(left * 12)}</b>、3年で <b>${yen(left * 36)}</b>。
+                   のこす 金額を 先に 決めて しまう（先に 貯金）と つづけやすい。</p>`;
+        drawGoal();
+    }
+    function bgSet(k, v) {
+        BG[k] = +v;
+        const el = document.querySelector(`[data-bgv="${k}"]`);
+        if (el) el.innerText = yen(BG[k]);
+        drawBudget();
+    }
+
+    const GOAL = { price: 5000, saved: 1000 };
+    function drawGoal() {
+        const left = (BG.allowance + BG.help) - (BG.snack + BG.book + BG.game);
+        document.getElementById('goal-ctrl').innerHTML = `
+            <div class="grid sm:grid-cols-2 gap-3">
+                <div>
+                    <div class="flex justify-between items-baseline">
+                        <span class="text-xs font-black text-slate-600">ほしい ものの ねだん</span>
+                        <span class="num font-black text-sm" data-goalv="price">${yen(GOAL.price)}</span>
+                    </div>
+                    <input type="range" min="500" max="30000" step="500" value="${GOAL.price}" data-goal="price" oninput="goalSet('price', this.value)">
+                </div>
+                <div>
+                    <div class="flex justify-between items-baseline">
+                        <span class="text-xs font-black text-slate-600">いま ある 貯金</span>
+                        <span class="num font-black text-sm" data-goalv="saved">${yen(GOAL.saved)}</span>
+                    </div>
+                    <input type="range" min="0" max="30000" step="500" value="${GOAL.saved}" data-goal="saved" oninput="goalSet('saved', this.value)">
+                </div>
+            </div>`;
+        const need = GOAL.price - GOAL.saved;
+        let msg;
+        if (need <= 0) {
+            msg = `<p class="text-emerald-700 font-black">🎉 もう 買える！（買った あと ${yen(Math.abs(need))} のこる）</p>
+                   <p class="mt-1">買った あとに いくら のこるかも 見て 決めよう。</p>`;
+        } else if (left <= 0) {
+            msg = `<p class="text-rose-700 font-black">あと ${yen(need)} 必要だけど、毎月 のこる お金が ${yen(left)}</p>
+                   <p class="mt-1">このままでは いつまでも たまらない。まず 毎月 のこる お金を プラスに しよう。</p>`;
+        } else {
+            const m = Math.ceil(need / left);
+            msg = `<p class="text-emerald-700 font-black">あと ${yen(need)} → 毎月 ${yen(left)} ためると <span class="num text-xl">${m}</span>か月</p>
+                   <p class="mt-1">${m >= 12 ? `${Math.floor(m / 12)}年${m % 12}か月。長いと 感じたら、ねだんの 安い もので 代わりに ならないか、
+                        本当に ほしいのかを もう一度 考えて みよう。` : '目あてが 見えると がまんが しやすく なる。'}</p>
+                   <p class="mt-1 text-slate-600">ひとつ 買うと、そのお金で 買えた ほかの ものは あきらめる ことに なる。
+                   これを <b class="text-emerald-700">機会費用{きかいひよう}</b>と いうよ。</p>`;
+        }
+        document.getElementById('goal-info').innerHTML = msg;
+    }
+    function goalSet(k, v) {
+        GOAL[k] = +v;
+        const el = document.querySelector(`[data-goalv="${k}"]`);
+        if (el) el.innerText = yen(GOAL[k]);
+        drawGoal();
+    }
+
+    const WALLETS = [
+        ['🛍️', 'つかう さいふ', '毎日の おかしや 文ぼう具。使いきって いい お金。', 'bg-sky-50 border-sky-200'],
+        ['🏦', 'ためる さいふ', '大きな ものや 先の ために とって おく。さわらないのが コツ。', 'bg-emerald-50 border-emerald-200'],
+        ['🎁', 'ひとの ための さいふ', 'プレゼントや 寄付{きふ}。人を よろこばせる ために つかう お金。', 'bg-rose-50 border-rose-200']
+    ];
+    function drawWallets() {
+        document.getElementById('wallets').innerHTML = WALLETS.map(([e, t, d, col]) =>
+            `<div class="${col} border-2 rounded-2xl p-3" data-wallet="${t}">
+                <p class="text-3xl">${e}</p><p class="font-black mt-1">${t}</p>
+                <p class="text-sm font-bold text-slate-600 mt-1 leading-relaxed">${d}</p>
+            </div>`).join('');
+    }
+
+    /* =====================================================================
+       ③ ためる・ふやす
+       ===================================================================== */
+    let growReady = false;
+    const CI = { principal: 10000, rate: 5, years: 20 };
+    function drawCompound() {
+        const rows = [
+            ['principal', '元金（さいしょの お金）', 1000, 100000, 1000, yen],
+            ['rate', '年の 利率', 1, 10, 1, v => v + '%'],
+            ['years', 'あずける 年数', 1, 40, 1, v => v + '年']
+        ];
+        document.getElementById('ci-ctrl').innerHTML = rows.map(([k, label, min, max, step, fmt]) => `
+            <div>
+                <div class="flex justify-between items-baseline">
+                    <span class="text-xs font-black text-slate-600">${label}</span>
+                    <span class="num font-black text-sm" data-civ="${k}">${fmt(CI[k])}</span>
+                </div>
+                <input type="range" min="${min}" max="${max}" step="${step}" value="${CI[k]}" data-ci="${k}" oninput="ciSet('${k}', this.value)">
+            </div>`).join('');
+
+        const r = CI.rate / 100;
+        const simple = y => CI.principal * (1 + r * y);
+        const comp = y => CI.principal * Math.pow(1 + r, y);
+        const maxV = comp(CI.years);
+        const W = 560, H = 260, L = 64, R = 524, T = 24, B = 210;
+        const px = y => L + (y / CI.years) * (R - L);
+        const py = v => B - ((v - CI.principal) / Math.max(1, maxV - CI.principal)) * (B - T);
+        let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="#f0fdf4"/>`;
+        for (let i = 0; i <= 4; i++) {
+            const v = CI.principal + (maxV - CI.principal) * i / 4;
+            g += `<line x1="${L}" y1="${py(v).toFixed(1)}" x2="${R}" y2="${py(v).toFixed(1)}" stroke="#d1fae5" stroke-width="1.5"/>
+                  <text x="${L - 6}" y="${(py(v) + 4).toFixed(1)}" text-anchor="end" font-size="11" font-weight="800" fill="#64748b">${Math.round(v / 1000)}千</text>`;
+        }
+        const line = (f, col, dash) => {
+            const pts = [];
+            for (let y = 0; y <= CI.years; y++) pts.push(`${px(y).toFixed(1)},${py(f(y)).toFixed(1)}`);
+            return `<polyline points="${pts.join(' ')}" fill="none" stroke="${col}" stroke-width="3.5" ${dash ? 'stroke-dasharray="7 5"' : ''} stroke-linejoin="round"/>`;
+        };
+        g += line(simple, '#94a3b8', true) + line(comp, '#059669', false);
+        g += `<circle cx="${px(CI.years).toFixed(1)}" cy="${py(comp(CI.years)).toFixed(1)}" r="6" fill="#059669"/>
+              <circle cx="${px(CI.years).toFixed(1)}" cy="${py(simple(CI.years)).toFixed(1)}" r="5" fill="#94a3b8"/>`;
+        for (let y = 0; y <= CI.years; y += Math.max(1, Math.round(CI.years / 5))) {
+            g += `<text x="${px(y).toFixed(1)}" y="${B + 20}" text-anchor="middle" font-size="11" font-weight="800" fill="#64748b">${y}年</text>`;
+        }
+        g += `<line x1="${L}" y1="${B}" x2="${R}" y2="${B}" stroke="#a7f3d0" stroke-width="2.5"/>
+              <line x1="${L}" y1="${T}" x2="${L}" y2="${B}" stroke="#a7f3d0" stroke-width="2.5"/>
+              <rect x="${L + 6}" y="${T + 2}" width="14" height="4" fill="#059669"/>
+              <text x="${L + 26}" y="${T + 10}" font-size="12" font-weight="900" fill="#059669">複利</text>
+              <rect x="${L + 76}" y="${T + 2}" width="14" height="4" fill="#94a3b8"/>
+              <text x="${L + 96}" y="${T + 10}" font-size="12" font-weight="900" fill="#94a3b8">単利</text>`;
+        document.getElementById('ci-fig').innerHTML = svg(W, H, g);
+
+        const c = comp(CI.years), sm = simple(CI.years);
+        const double = 72 / CI.rate;
+        document.getElementById('ci-info').innerHTML =
+            `${CI.years}年後　複利 <b class="text-emerald-700">${yen(c)}</b>　／　単利 <b class="text-slate-500">${yen(sm)}</b>
+             　（差 <b>${yen(c - sm)}</b>）<br>
+             ふえた ぶんは 複利で ${yen(c - CI.principal)}、元金の <b>${(c / CI.principal).toFixed(2)}倍</b>。<br>
+             <span class="text-slate-600">💡 <b>72の法則</b>… 72 ÷ 利率 ＝ お金が だいたい 2倍に なる 年数。
+             72 ÷ ${CI.rate} ＝ やく <b>${double.toFixed(1)}年</b>。早く 始めるほど 時間が 味方に なる。</span>`;
+    }
+    function ciSet(k, v) {
+        CI[k] = +v;
+        drawCompound();
+    }
+
+    const RISKS = [
+        ['🏦', '銀行の 預金{よきん}', 1, '元本{がんぽん}（あずけた お金）は へらない。そのかわり ふえ方も とても 小さい。1つの 銀行で 1000万円までは 国の しくみで まもられる。'],
+        ['📜', '国債{こくさい}', 2, '国に お金を 貸して 利息を もらう。国が 返せなく なる ことは まず ないので リスクは 小さめ。'],
+        ['📈', '株式{かぶしき}・投資信託', 4, '会社の オーナーに なる こと。会社が もうかれば ふえるが、へる ことも ある。長い 時間と いろいろな ものに 分ける（分散）のが 基本。'],
+        ['🎰', 'ギャンブル・「必ずもうかる」話', 5, '平均では 出した お金より かえって こない しくみ。「必ず」「元本保証で 高利回り」は <b class="text-rose-700">ほぼ 詐欺{さぎ}</b>。']
+    ];
+    function drawRisk() {
+        document.getElementById('risk-list').innerHTML = RISKS.map(([e, n, lv, d]) =>
+            `<div class="border-2 ${lv >= 5 ? 'border-rose-300 bg-rose-50' : lv >= 4 ? 'border-amber-300 bg-amber-50' : 'border-emerald-200 bg-emerald-50'} rounded-2xl p-3" data-risk="${n.replace(/\{[^}]*\}/g, '')}">
+                <p class="font-black">${e} ${n}
+                    <span class="ml-2 text-xs">リスク ${'★'.repeat(lv)}${'☆'.repeat(5 - lv)}</span></p>
+                <p class="text-sm font-bold text-slate-600 mt-1 leading-relaxed">${d}</p>
+            </div>`).join('');
+    }
+
+    /* =====================================================================
+       ④ 気をつける
+       ===================================================================== */
+    const SCENES = [
+        { q: '知らない ところから「あなたは 1000万円に 当せんしました！ここを タップ」という メールが きた。',
+          a: '開かずに 消して、おうちの人に 話す',
+          x: ['とりあえず リンクを タップして たしかめる', '名前と 住所だけ 入れて みる', '友だちに 転送して 教えてあげる'],
+          e: '当たって いない ものに 当せんは ない。リンクを 開くと 個人情報を 取られたり、お金を 請求されたり する（フィッシング）。' },
+        { q: 'ゲームの 画面に「今だけ 100円で 強い アイテム！」と 出た。',
+          a: 'おうちの人に 相談してから 決める',
+          x: ['安いから すぐ 買う', '無料だと 書いて あるので 全部 押す', '友だちの ID で 買う'],
+          e: 'ゲームの 課金は おうちの人の お金や カードを つかう ことが 多い。「安い」を くりかえすと 合計は 大きく なる。' },
+        { q: '友だちが「100円 貸して。あとで 返すから」と 言って きた。',
+          a: '返す 日を 決めて、おうちの人にも 話す',
+          x: ['だまって 貸す。友だちだから 大丈夫', '倍にして 返してと たのむ', '自分の 貯金を ぜんぶ 貸す'],
+          e: 'お金の 貸し借りは なかが わるく なる いちばんの もと。学校では しないのが いちばん。どうしても の ときは 大人に 話す。' },
+        { q: 'SNSで「毎日 5分の 作業で 1万円 かせげる」と さそわれた。',
+          a: 'ぜったいに 返事を しないで 大人に 相談する',
+          x: ['くわしく 話を 聞いて みる', '1回だけ ためして みる', '友だちも さそって いっしょに やる'],
+          e: 'かんたんに 大金が かせげる 仕事は ない。さそいに のると お金を 取られたり、犯罪に つかわれたり する。' },
+        { q: '道で お金が 入った 財布を 見つけた。',
+          a: '交番か 近くの 大人に わたす',
+          x: ['中の お金だけ もらう', '持ち主が 来るまで 持って いる', 'そのままに して 通りすぎる'],
+          e: '落とし物を 自分の ものに すると 法りつ違反に なる。交番に 出せば 持ち主が 見つかりやすい。' },
+        { q: 'ほしい ゲームが 5000円。貯金は 5200円 ある。',
+          a: '買った あとに いくら のこるかを 考えて 決める',
+          x: ['貯金が あるから 何も 考えず 買う', '足りないぶんを 友だちに 借りる', '買うのを あきらめる'],
+          e: '買えば のこりは 200円。ほかに いる ものが ないか、機会費用{きかいひよう}を 考えて 決めるのが 上手な 使い方。' },
+        { q: '動画サービスが「1か月 無料お試し」と 書いて ある。',
+          a: '1か月後から お金が かかるかと、やめ方を 先に 調べる',
+          x: ['無料だから すぐ 登録する', '家族の カード番号を 入れて おく', '毎月 お金は かからないと 思って おく'],
+          e: '無料お試しの あと 自動で 有料に なる ものが 多い（サブスク）。「いつから いくら」「どう やめるか」を 先に たしかめる。' },
+        { q: '友だちが「ゲームの パスワード 教えて。課金して あげる」と 言って きた。',
+          a: 'パスワードは だれにも 教えない',
+          x: ['仲が いいから 教える', '半分だけ 教える', '自分の 名前と 生年月日も 伝える'],
+          e: 'パスワードは 家の かぎと 同じ。教えると かってに 使われたり、お金を つかわれたり する。' },
+        { q: '同じ おかしが、A店で 1こ 120円、B店で 3こ 330円。',
+          a: 'B店（1こ 110円）が 安い',
+          x: ['A店（1こ 120円）が 安い', 'どちらも 同じ ねだん', '330円の ほうが 高いので A店'],
+          e: '330 ÷ 3 ＝ 110円。まとめ売りは <b>1こ あたりの ねだん（単価{たんか}）</b>で くらべる。ただし 食べきれるかも 考える。' },
+        { q: 'お年玉で 10000円 もらった。',
+          a: 'つかう・ためる・ひとのため に 分けてから 決める',
+          x: ['その日に ぜんぶ つかう', '全部 だれにも 言わず 持ちあるく', '友だちに 見せて 自慢する'],
+          e: '先に 分けて しまうと つかいすぎない。大きい お金は おうちの人と いっしょに 銀行に あずけると 安心。' },
+        { q: 'お店の 人に「今 買わないと もう なくなります！」と 急かされた。',
+          a: 'いったん 帰って、ほんとうに いるか 考える',
+          x: ['なくなると こまるので すぐ 買う', '2こ 買って おく', '言われた ねだんで すぐ サインする'],
+          e: '急かすのは 買わせる ための テクニック。あとから 後悔しやすい。「一晩 考える」が いちばんの まもり。' },
+        { q: 'ポイントが 500円分 たまって いた。',
+          a: '期限{きげん}を たしかめて、いる ものに つかう',
+          x: ['ポイントは お金では ないので どうでも いい', 'つかわずに ずっと ためる', 'ポイントの ために いらない ものを 買う'],
+          e: 'ポイントも お金と 同じ 価値。期限が すぎると 消える。「ポイントの ために 買う」と かえって 損に なる。' },
+        { q: '知らない 人から SNSで「銀行の 口座を 貸して。お礼を あげる」と 言われた。',
+          a: 'ぜったいに ことわって 大人に 相談する',
+          x: ['お礼が もらえるので 貸す', '名前だけ 教える', '家族の 口座を 教える'],
+          e: '口座を 貸すのは 犯罪の 手助けに なり、自分が つかまる ことも ある。ぜったいに 貸さない。' },
+        { q: 'クレジットカードは「あとで はらう」しくみ。気をつける 点は？',
+          a: 'いま お金が なくても 買えるので 使いすぎやすい',
+          x: ['お金が 増える まほうの カード', 'はらわなくて いい', '何回 つかっても 手数料は ない'],
+          e: 'クレジットは カード会社から 少しの あいだ 借りて いる。分割や リボ払いには 手数料（利息）が つく。' }
+    ];
+    let sc = null;
+    function newScene() {
+        const s = pickOne(SCENES);
+        sc = { s, choices: shuffle([s.a].concat(s.x)), done: false };
+        document.getElementById('sc-q').innerText = s.q;
+        document.getElementById('sc-choices').innerHTML = sc.choices.map((c, i) =>
+            `<button onclick="ansScene(${i})" data-scc="${i}" class="bg-white border-2 border-slate-200 hover:border-emerald-500 font-bold text-left px-4 py-3 rounded-2xl bounce-hover text-sm leading-relaxed">${esc(c)}</button>`).join('');
+        document.getElementById('sc-res').innerHTML = '';
+        scoreBox('sc-score', S.scene);
+    }
+    function ansScene(i) {
+        if (!sc || sc.done) return;
+        sc.done = true;
+        const ok = sc.choices[i] === sc.s.a;
+        S.scene[1]++; if (ok) S.scene[0]++;
+        markChoices('[data-scc]', j => sc.choices[j] === sc.s.a, i, 'font-bold text-left px-4 py-3 rounded-2xl text-sm leading-relaxed');
+        document.getElementById('sc-res').innerHTML = resultBox(ok, ok ? '⭕ そのとおり！' : `❌ いちばん よいのは 「${esc(sc.s.a)}」`, sc.s.e);
+        scoreBox('sc-score', S.scene);
+    }
+
+    const SIGNS = [
+        ['「必ず もうかる」', 'もうかるか どうかは だれにも わからない。「必ず」と 言う 人を 信じない。'],
+        ['「あなただけ 特別」', '特別あつかいで 判断を にぶらせる 手。ふつうの 人には 来ない 話は あやしい。'],
+        ['「今すぐ」「今日だけ」', '考える 時間を うばう のが ねらい。急かされたら いったん 止まる。'],
+        ['「だれにも 言わないで」', '大人に 相談されると こまる から。かくす 話は だいたい あぶない。'],
+        ['「無料」なのに 情報を 聞く', '名前・住所・電話・カード番号を 聞かれたら いったん やめて 大人に 見せる。']
+    ];
+    function drawSigns() {
+        document.getElementById('signs').innerHTML = SIGNS.map(([t, d]) =>
+            `<div class="border-2 border-rose-200 bg-rose-50 rounded-2xl p-3" data-sign="${t}">
+                <p class="font-black text-rose-800">🚨 ${t}</p>
+                <p class="text-sm font-bold text-slate-600 mt-0.5 leading-relaxed">${d}</p>
+            </div>`).join('');
+    }
+
+    /* =====================================================================
+       ⑤ クイズ
+       ===================================================================== */
+    const QS = [
+        { f: 'ことば', q: '入ってくる お金の ことを 何と いう？', a: '収入', x: ['支出', '貯金', '利息'], e: '出ていく お金は 支出。収入 − 支出 ＝ のこる お金。' },
+        { f: 'ことば', q: 'あずけた お金じたい（さいしょの お金）を 何と いう？', a: '元本（元金）', x: ['利息', '利率', '手数料'], e: '元本に ついた おまけが 利息。1年で 何％つくかが 利率。' },
+        { f: 'ことば', q: 'ふえた 利息にも さらに 利息が つく しくみは？', a: '複利', x: ['単利', '分割', '前払い'], e: '単利は 元本にだけ つく。長い 年数では 複利の ほうが ずっと ふえる。' },
+        { f: 'ことば', q: '「これを 買うと、そのお金で 買えた ほかの ものを あきらめる」ことを 何と いう？', a: '機会費用', x: ['固定費', '消費税', '手数料'], e: '選ぶ ことは 同時に あきらめる こと。だから よく 考えて 選ぶ。' },
+        { f: 'ことば', q: 'ものの ねだんが どんどん 上がって、お金の 価値が 下がる ことを 何と いう？', a: 'インフレ', x: ['デフレ', '円高', '不景気'], e: '反対に ねだんが 下がりつづけるのが デフレ。インフレでは 同じ 1000円で 買える ものが へる。' },
+        { f: 'ことば', q: '毎月 きまった お金を はらって サービスを つかいつづける しくみは？', a: 'サブスク（定額制）', x: ['一括払い', 'プリペイド', '頭金'], e: '便利だけれど、使って いなくても お金は へる。いらない ものは やめる。' },
+        { f: 'ことば', q: '「ほしい（ウォンツ）」と くべつされる、「ないと 困る」ものは？', a: 'ニーズ（必要なもの）', x: ['ボーナス', 'ポイント', 'リスク'], e: 'ごはん・くすり・ふくは ニーズ。ゲームや おかしは ウォンツ。先に はらうのは ニーズ。' },
+        { f: 'ことば', q: '投資で「いろいろな ものに 分けて 買う」ことを 何と いう？', a: '分散', x: ['集中', '一括', '両替'], e: '1つに 全部 かけると、それが だめな とき 大損する。卵を ひとつの かごに 盛らない。' },
+        { f: '計算', q: '100円の おかしを 買う。消費税10%を 入れると はらう のは？', a: '110円', x: ['100円', '101円', '120円'], e: '100 × 1.1 ＝ 110円。ねだんの 表示が 税ぬきか 税こみかを 見よう。' },
+        { f: '計算', q: '1000円を 年 5%で 1年 あずけると 利息は？', a: '50円', x: ['5円', '500円', '105円'], e: '1000 × 0.05 ＝ 50円。1年後の 合計は 1050円。' },
+        { f: '計算', q: '毎月 300円 ためると、1年で いくら？', a: '3600円', x: ['300円', '1200円', '36000円'], e: '300 × 12 ＝ 3600円。小さい 金額でも 続けると 大きく なる。' },
+        { f: '計算', q: '4500円の ものが 2割引き。いくらに なる？', a: '3600円', x: ['4300円', '900円', '2250円'], e: '2割＝20%引き。4500 × 0.8 ＝ 3600円。「引いた あとの 値段」を 計算する。' },
+        { f: '計算', q: '5こ 400円の あめ。1こ あたり いくら？', a: '80円', x: ['40円', '100円', '2000円'], e: '400 ÷ 5 ＝ 80円。この「1こ あたり」が 単価。安いか どうかは 単価で くらべる。' },
+        { f: '計算', q: '年 6%なら、72の法則で お金が 2倍に なるのは およそ 何年後？', a: '12年', x: ['6年', '24年', '72年'], e: '72 ÷ 6 ＝ 12。おおよその 目安を すぐ 出せる 便利な 計算。' },
+        { f: '計算', q: '2000円の 貯金に 毎月 500円 たす。10000円に なるのは 何か月後？', a: '16か月後', x: ['20か月後', '10か月後', '5か月後'], e: '(10000 − 2000) ÷ 500 ＝ 16。ゴールまでの 月数が 見えると がんばれる。' },
+        { f: 'しくみ', q: 'はらった お金が すぐ には へらず、あとで まとめて はらうのは？', a: 'クレジットカード', x: ['現金', 'プリペイドカード', 'デビットカード'], e: 'デビットは すぐ 口座から ひかれ、プリペイドは 先に 入れた ぶんを つかう。' },
+        { f: 'しくみ', q: '先に お金を 入れて おいて、その ぶんだけ つかえるのは？', a: 'プリペイドカード', x: ['クレジットカード', '手形', 'ローン'], e: 'チャージした 金額が 上限なので 使いすぎを ふせげる。' },
+        { f: 'しくみ', q: '銀行が あずかった お金を どうして いる？', a: '会社や 人に 貸して 利息を もらって いる', x: ['金庫で ねかせて いるだけ', '国に あげて いる', '株を 買って 全部 つかう'], e: '貸した 利息の 一部を、あずけた 人に 利息として 返す。だから 利息が つく。' },
+        { f: 'しくみ', q: '国や 市に みんなが はらう お金で、道路や 学校や 消防に つかわれるのは？', a: '税金', x: ['寄付', '保険料', '手数料'], e: '消費税・所得税など。「みんなで お金を 出して みんなで つかう」しくみ。' },
+        { f: 'しくみ', q: '病気や 事故に そなえて、みんなで 少しずつ お金を 出しあう しくみは？', a: '保険', x: ['貯金', '投資', '宝くじ'], e: 'めったに 起きないけれど 起きたら 大変な ことに そなえる。だれかに 起きたとき その お金が つかわれる。' },
+        { f: 'しくみ', q: '株式を 買うと、その 人は 会社の 何に なる？', a: 'オーナー（もちぬし）の ひとり', x: ['社員', 'お客さん', '社長'], e: '会社が もうかると 配当や 株価の 上がりで 得を するが、うまく いかないと へる。' },
+        { f: 'しくみ', q: '1つの 銀行が つぶれても、預金が いくらまで まもられる？', a: '1000万円と その 利息まで', x: ['ぜんぶ まもられる', '10万円まで', 'まもられない'], e: 'これを 預金保険（ペイオフ）と いう。だから 大きな お金は 分ける ことも ある。' },
+        { f: 'しくみ', q: '1ドル 100円から 1ドル 150円に なった。これは？', a: '円安（円の 価値が 下がった）', x: ['円高', '株高', 'インフレ終了'], e: '同じ 1ドルを 買うのに 多くの 円が 必要＝円の 力が 弱い。輸入品の ねだんが 上がる。' },
+        { f: 'まもる', q: '「必ず もうかる」と さそわれた。正しい 見方は？', a: 'そんな 話は ないので 信じない', x: ['プロが 言うなら 本当', '少額なら やって みる', '友だちも さそう'], e: '将来の ことは だれにも わからない。「必ず」「元本保証で 高い 利回り」は ほぼ 詐欺。' },
+        { f: 'まもる', q: '知らない メールの リンクを 開いて しまいそうな とき、まず する ことは？', a: 'おうちの人に 見せて 相談する', x: ['とりあえず 開く', '返信して たしかめる', '電話番号を 入れて みる'],
+          e: '開くだけで ウイルスに なったり、入れた 情報を 取られたり する。迷ったら 大人に 見せる。' },
+        { f: 'まもる', q: 'ネットの お店で 買う とき たしかめる ことは？', a: 'ねだん・送料・返品の きまり・お店の 情報', x: ['写真が きれいか だけ', '売れて いるか だけ', 'ポイントの 数だけ'], e: '「安い」だけで 決めると 送料で 高く なったり、にせ物が 届いたり する。' },
+        { f: 'まもる', q: '友だちに お金を 貸して ほしいと 言われた とき いちばん よいのは？', a: '貸さずに、おうちの人に 相談する', x: ['すぐ 貸す', '利息を つけて 貸す', 'だまって あげる'], e: 'お金の 貸し借りは 友だちを なくす いちばんの もと。学校では しない。' },
+        { f: 'まもる', q: 'IDや パスワードは どう する？', a: 'だれにも 教えず、ちがう サービスで 同じに しない', x: ['友だちには 教える', 'ノートに 貼って おく', '誕生日に して おく'], e: '家の かぎと 同じ。使いまわすと 1つ もれた とき 全部 あぶない。' },
+        { f: 'まもる', q: 'スマホゲームで つかいすぎない ために よいのは？', a: '先に 上限を 決めて おうちの人と 共有する', x: ['気が すむまで つかう', '安い ものだけ 何回も 買う', '友だちと きそって 買う'], e: '「安いから」を くりかえすと 合計は 大きく なる。記録を 見える ように する。' },
+        { f: 'まもる', q: '買いものの あとに レシートを どう する？', a: 'とって おいて、つかった お金を 記録する', x: ['すぐ すてる', '見ずに ためる', '友だちに あげる'], e: '記録すると「何に いくら つかったか」が わかる。やりくりの 第一歩。' }
+    ];
+    let qz = null, qzField = 'all';
+    function newQuiz() {
+        const pool = qzField === 'all' ? QS : QS.filter(q => q.f === qzField);
+        const q = pool[rnd(pool.length)];
+        qz = { q, choices: shuffle([q.a].concat(q.x)), done: false };
+        const fields = ['all'].concat([...new Set(QS.map(x => x.f))]);
+        document.getElementById('qz-fields').innerHTML = fields.map(f =>
+            `<button onclick="setField('${f}')" data-qf="${f}" class="${qzField === f ? 'bg-emerald-700 text-white' : 'bg-white border-2 border-emerald-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${f === 'all' ? 'ぜんぶ ' + QS.length : f + ' ' + QS.filter(x => x.f === f).length}</button>`).join('');
+        document.getElementById('qz-q').innerHTML = `<span class="text-xs font-black text-emerald-700 bg-emerald-100 px-2 py-1 rounded-lg mr-2">${esc(q.f)}</span>${esc(q.q)}`;
+        document.getElementById('qz-choices').innerHTML = qz.choices.map((c, i) =>
+            `<button onclick="ansQuiz(${i})" data-qzc="${i}" class="bg-white border-2 border-slate-200 hover:border-emerald-500 font-bold text-left px-4 py-3 rounded-2xl bounce-hover">${esc(c)}</button>`).join('');
+        document.getElementById('qz-res').innerHTML = '';
+        scoreBox('qz-score', S.quiz);
+    }
+    function setField(f) { qzField = f; newQuiz(); }
+    function ansQuiz(i) {
+        if (!qz || qz.done) return;
+        qz.done = true;
+        const ok = qz.choices[i] === qz.q.a;
+        S.quiz[1]++; if (ok) S.quiz[0]++;
+        markChoices('[data-qzc]', j => qz.choices[j] === qz.q.a, i, 'font-bold text-left px-4 py-3 rounded-2xl');
+        document.getElementById('qz-res').innerHTML = resultBox(ok, ok ? '⭕ せいかい！' : `❌ こたえは 「${esc(qz.q.a)}」`, qz.q.e);
+        scoreBox('qz-score', S.quiz);
+    }
+
+    /* ===================== 起動 ===================== */
+    renderNav();
+    setBarter(false);
+    drawRoles();
+    drawPay();
+    rubify(document.body);
+</script>
+</body>
+</html>
