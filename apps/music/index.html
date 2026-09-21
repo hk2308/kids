@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音と楽器ラボ</title>
+    <meta name="description" content="音は空気のふるえ。周波数と音色を実際に鳴らして波の形で見る、ピアノで音階と和音のひみつ、楽器12種のしくみ図解、弦の長さ・管の長さ・倍音・うなりの実験、クイズ。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums }
+        .bounce-hover { transition: transform .12s cubic-bezier(.175,.885,.32,1.275) }
+        .bounce-hover:active { transform: scale(.94) }
+        @keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.1) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275) }
+        @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+        .shake { animation: shake .3s ease-in-out }
+        svg text { font-family: inherit }
+        rt { font-size: .55em; font-weight: 700; color: #7e22ce }
+        input[type=range] { accent-color: #9333ea; width: 100% }
+        .key { cursor: pointer }
+    </style>
+</head>
+<body class="bg-fuchsia-50 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-purple-700 via-fuchsia-600 to-pink-500 text-white p-3 shadow-lg sticky top-0 z-30">
+        <div class="max-w-4xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">🎵</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">音と楽器ラボ</h1>
+                    <p class="text-xs text-fuchsia-50 font-bold hidden sm:block">音は 空気の ふるえ。数で できて いる</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[64px] z-20 bg-fuchsia-50/95 backdrop-blur border-b border-fuchsia-200">
+        <div class="max-w-4xl mx-auto flex gap-2 p-3 overflow-x-auto" id="tab-nav"></div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto w-full p-3 sm:p-5 flex-grow space-y-4">
+
+        <div class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-3 text-sm font-bold">
+            🔊 このページは <b>音が 出ます</b>。はじめに 🔊ボタンを おすと 鳴るように なります。
+            音を 出せない ときも、<b>波の 形</b>で ぜんぶ 見られます。
+            イヤホンの ときは <b>音量を 小さく</b> してね。
+        </div>
+
+        <!-- ===== ① 音って なに ===== -->
+        <section id="tab-wave" class="space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-fuchsia-100">
+                <h2 class="font-black">🌊 音は「空気の ふるえ」</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    ものが ふるえると、まわりの 空気が おされたり ひっぱられたり して 波に なる。
+                    それが 耳に とどくと「音」に なる。
+                    <b class="text-purple-700">1秒間に ふるえる 回数</b>を 周波数{しゅうはすう}（ヘルツ / Hz）と いう。
+                </p>
+                <div class="grid sm:grid-cols-2 gap-3 mt-3">
+                    <div><input type="range" min="80" max="1000" step="1" value="440" id="wv-f" oninput="wvDraw()">
+                        <p class="text-xs font-black text-slate-600 text-center">高さ <span id="wv-fv" class="num">440</span> Hz</p></div>
+                    <div><input type="range" min="0" max="100" step="1" value="70" id="wv-a" oninput="wvDraw()">
+                        <p class="text-xs font-black text-slate-600 text-center">大きさ <span id="wv-av" class="num">70</span></p></div>
+                </div>
+                <div id="wv-tones" class="flex flex-wrap gap-2 mt-2"></div>
+                <div id="wv-fig" class="mt-2"></div>
+                <div class="flex flex-wrap gap-2 mt-2">
+                    <button onclick="wvPlay()" class="bg-purple-700 text-white font-black px-4 py-2 rounded-full text-sm bounce-hover">🔊 鳴らして みる</button>
+                    <button onclick="wvPlayPair()" class="bg-white border-2 border-purple-300 text-purple-700 font-black px-4 py-2 rounded-full text-sm bounce-hover">🔊 1オクターブ上と くらべる</button>
+                </div>
+                <div id="wv-info" class="bg-purple-50 border-2 border-purple-200 rounded-2xl p-3 text-sm font-bold leading-relaxed mt-2"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-fuchsia-100">
+                <h2 class="font-black">💨 音の 速さは 秒速 340m</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    光は ほとんど 一瞬{いっしゅん}で 来るのに、音は ゆっくり。
+                    だから <b class="text-purple-700">かみなりが 光ってから ゴロゴロが 来るまでの 秒数</b>で きょりが わかる。
+                </p>
+                <div class="mt-3"><input type="range" min="1" max="20" step="1" value="3" id="sp-t" oninput="spDraw()">
+                    <p class="text-xs font-black text-slate-600 text-center">光ってから <span id="sp-tv" class="num">3</span> 秒後に 音が 来た</p></div>
+                <div id="sp-fig" class="mt-2"></div>
+                <div id="sp-info" class="bg-purple-50 border-2 border-purple-200 rounded-2xl p-3 text-sm font-bold leading-relaxed"></div>
+            </div>
+        </section>
+
+        <!-- ===== ② 音階 ===== -->
+        <section id="tab-scale" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-fuchsia-100">
+                <h2 class="font-black">🎹 けんばんを おして みよう</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    けんばんを タップすると 音が 鳴って、<b class="text-purple-700">その 音の Hz</b>が 出る。
+                    ドレミが 数で できて いる ことが わかるよ。
+                </p>
+                <div id="kb-fig" class="mt-3"></div>
+                <div id="kb-info" class="bg-purple-50 border-2 border-purple-200 rounded-2xl p-3 text-sm font-bold leading-relaxed mt-2"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-fuchsia-100">
+                <h2 class="font-black">✨ オクターブ＝ちょうど 2倍</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    同じ「ド」でも 高い ドは、低い ドの <b class="text-purple-700">ぴったり 2倍</b>の Hz。
+                    だから 同時に 鳴らすと 1つの 音の ように とけあう。
+                </p>
+                <div id="oc-table" class="mt-3 overflow-x-auto"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-fuchsia-100">
+                <h2 class="font-black">🎶 きれいな 和音{わおん}の ひみつ</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    2つ以上の 音が <b class="text-purple-700">かんたんな 整数{せいすう}の 比</b>に なって いると
+                    きれいに ひびく。ボタンで 聞きくらべて みよう。
+                </p>
+                <div id="ch-list" class="space-y-2 mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ③ 楽器 ===== -->
+        <section id="tab-inst" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-fuchsia-100">
+                <h2 class="font-black">🎻 楽器は みんな この 3ステップ</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    ①<b class="text-purple-700">何かを ふるわせる</b> →
+                    ②<b class="text-purple-700">高さを 決める</b> →
+                    ③<b class="text-purple-700">大きく する</b>。
+                    この 3つの やり方の ちがいが 楽器の ちがい。
+                </p>
+                <div id="in-chips" class="flex flex-wrap gap-1.5 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-fuchsia-100">
+                <h2 id="in-name" class="font-black text-lg"></h2>
+                <p id="in-lead" class="text-sm font-bold text-slate-500 mt-1"></p>
+                <div id="in-fig" class="mt-3"></div>
+                <div id="in-steps" class="space-y-2 mt-3"></div>
+                <div class="flex flex-wrap gap-2 mt-3">
+                    <button onclick="inPlay()" class="bg-purple-700 text-white font-black px-4 py-2 rounded-full text-sm bounce-hover">🔊 音の 感じを 聞く</button>
+                    <span id="in-fam" class="bg-slate-100 rounded-2xl px-3 py-2 text-xs font-black"></span>
+                </div>
+                <div id="in-trivia" class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-3 text-sm font-bold mt-3 leading-relaxed"></div>
+            </div>
+        </section>
+
+        <!-- ===== ④ じっけん ===== -->
+        <section id="tab-lab" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-fuchsia-100">
+                <h2 class="font-black">🎸 弦{げん}の 長さと 高さ</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    弦を おさえて 短く すると 高く なる。
+                    <b class="text-purple-700">長さを 半分に すると ちょうど 1オクターブ 上</b>（Hzが 2倍）。
+                </p>
+                <div class="grid sm:grid-cols-3 gap-3 mt-3">
+                    <div><input type="range" min="12" max="100" step="1" value="50" id="st-l" oninput="stDraw()">
+                        <p class="text-xs font-black text-slate-600 text-center">長さ <span id="st-lv" class="num">50</span> cm</p></div>
+                    <div><input type="range" min="1" max="4" step="0.25" value="1" id="st-t" oninput="stDraw()">
+                        <p class="text-xs font-black text-slate-600 text-center">はりの 強さ ×<span id="st-tv" class="num">1</span></p></div>
+                    <div id="st-thick" class="flex flex-wrap gap-2 items-center justify-center"></div>
+                </div>
+                <div id="st-fig" class="mt-2"></div>
+                <div class="flex flex-wrap gap-2 mt-2">
+                    <button onclick="stPlay()" class="bg-purple-700 text-white font-black px-4 py-2 rounded-full text-sm bounce-hover">🔊 はじいて みる</button>
+                    <button onclick="stHalf()" class="bg-white border-2 border-purple-300 text-purple-700 font-black px-4 py-2 rounded-full text-sm bounce-hover">↔️ 長さを 半分に</button>
+                </div>
+                <div id="st-info" class="bg-purple-50 border-2 border-purple-200 rounded-2xl p-3 text-sm font-bold leading-relaxed mt-2"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-fuchsia-100">
+                <h2 class="font-black">🎺 管{かん}の 長さと 高さ</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    管の 中の 空気が ふるえる。長いほど 低い。
+                    <b class="text-purple-700">片方が とじた 管</b>は、同じ 長さでも <b>1オクターブ 低い</b>。
+                </p>
+                <div class="grid sm:grid-cols-2 gap-3 mt-3">
+                    <div><input type="range" min="10" max="80" step="1" value="39" id="pp-l" oninput="ppDraw()">
+                        <p class="text-xs font-black text-slate-600 text-center">長さ <span id="pp-lv" class="num">39</span> cm</p></div>
+                    <div id="pp-kind" class="flex flex-wrap gap-2 items-center justify-center"></div>
+                </div>
+                <div id="pp-fig" class="mt-2"></div>
+                <button onclick="ppPlay()" class="bg-purple-700 text-white font-black px-4 py-2 rounded-full text-sm bounce-hover mt-2">🔊 ふいて みる</button>
+                <div id="pp-info" class="bg-purple-50 border-2 border-purple-200 rounded-2xl p-3 text-sm font-bold leading-relaxed mt-2"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-fuchsia-100">
+                <h2 class="font-black">🌈 倍音{ばいおん}＝音色の もと</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    1本の 弦は、ぜんたいで ふるえる だけでなく、
+                    <b class="text-purple-700">2つ・3つ・4つに 分かれて 同時に</b>も ふるえて いる。
+                    その 重なり方の ちがいが「音色{ねいろ}」に なる。
+                </p>
+                <div id="ha-btns" class="flex flex-wrap gap-2 mt-3"></div>
+                <div id="ha-fig" class="mt-2"></div>
+                <div id="ha-info" class="bg-purple-50 border-2 border-purple-200 rounded-2xl p-3 text-sm font-bold leading-relaxed"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-fuchsia-100">
+                <h2 class="font-black">🌀 うなり（チューニングの ひみつ）</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    とても 近い 2つの 音を 同時に 鳴らすと、音が <b class="text-purple-700">ワーン ワーン</b>と
+                    ゆれる。このゆれの 回数は <b>2つの Hzの 差</b>と ぴったり 同じ。
+                </p>
+                <div class="mt-3"><input type="range" min="430" max="450" step="1" value="444" id="bt-f" oninput="btDraw()">
+                    <p class="text-xs font-black text-slate-600 text-center">2つめの 音 <span id="bt-fv" class="num">444</span> Hz（1つめは 440Hz）</p></div>
+                <div id="bt-fig" class="mt-2"></div>
+                <button onclick="btPlay()" class="bg-purple-700 text-white font-black px-4 py-2 rounded-full text-sm bounce-hover mt-2">🔊 2つ 同時に 鳴らす</button>
+                <div id="bt-info" class="bg-purple-50 border-2 border-purple-200 rounded-2xl p-3 text-sm font-bold leading-relaxed mt-2"></div>
+            </div>
+        </section>
+
+        <!-- ===== ⑤ クイズ ===== -->
+        <section id="tab-quiz" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-fuchsia-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">❓ 音と楽器クイズ</h2>
+                    <span id="qz-score" class="num bg-purple-100 text-purple-700 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newQuiz()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <div id="qz-fields" class="flex flex-wrap gap-2 mt-3"></div>
+                <p id="qz-q" class="font-black text-base sm:text-lg mt-3 leading-relaxed"></p>
+                <div id="qz-choices" class="grid gap-2 mt-3"></div>
+                <div id="qz-res" class="mt-3"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center text-xs text-slate-400 font-bold p-4">音と楽器ラボ © 2026</footer>
+
+<script>
+    /* ===================== きょうつう ===================== */
+    const rnd = n => Math.floor(Math.random() * n);
+    const pickOne = a => a[rnd(a.length)];
+    function shuffle(a) { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = rnd(i + 1); const t = b[i]; b[i] = b[j]; b[j] = t; } return b; }
+    function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    const W = 560;
+    function svg(w, h, body) {
+        return `<svg viewBox="0 0 ${w} ${h}" class="w-full h-auto block mx-auto" style="max-width:${w}px" role="img">${body}</svg>`;
+    }
+    function resultBox(ok, title, body) {
+        return `<div class="pop ${ok ? 'bg-green-50 border-green-300' : 'bg-amber-50 border-amber-300'} border-2 rounded-2xl p-3">
+            <p class="font-black ${ok ? 'text-green-700' : 'text-amber-700'}">${title}</p>
+            <div class="font-bold text-sm mt-1 leading-relaxed">${body}</div></div>`;
+    }
+    const S = { quiz: [0, 0] };
+    function scoreBox(id, s) { document.getElementById(id).innerText = `${s[0]} / ${s[1]}`; }
+    function markChoices(sel, isRight, picked, cls) {
+        document.querySelectorAll(sel).forEach((el, j) => {
+            el.className = `${isRight(j) ? 'bg-green-50 border-green-500' : (j === picked ? 'bg-red-50 border-red-400 shake' : 'bg-white border-slate-200 opacity-60')} border-2 ${cls}`;
+        });
+    }
+    const plain = t => String(t).replace(/\{[^{}]*\}/g, '');
+    const SOUND_SPEED = 340;                 // 音の 速さ（m/秒・気温15℃くらい）
+
+    /* 漢字{よみ} を ルビに */
+    const RUBY_RE = /([一-鿿々]+)\{([^{}]+)\}/g;
+    function rubySkip(el) {
+        for (let n = el; n; n = n.parentNode) {
+            const tag = n.nodeType === 1 ? n.tagName.toLowerCase() : '';
+            if (tag === 'script' || tag === 'style' || tag === 'svg' || tag === 'ruby') return true;
+        }
+        return false;
+    }
+    function rubifyText(node) {
+        const t = node.nodeValue;
+        if (t.indexOf('{') < 0 || !node.parentNode || rubySkip(node.parentNode)) return;
+        RUBY_RE.lastIndex = 0;
+        if (!RUBY_RE.test(t)) return;
+        RUBY_RE.lastIndex = 0;
+        const frag = document.createDocumentFragment();
+        let last = 0, m;
+        while ((m = RUBY_RE.exec(t))) {
+            if (m.index > last) frag.appendChild(document.createTextNode(t.slice(last, m.index)));
+            const ruby = document.createElement('ruby');
+            ruby.appendChild(document.createTextNode(m[1]));
+            const rt = document.createElement('rt');
+            rt.textContent = m[2];
+            ruby.appendChild(rt);
+            frag.appendChild(ruby);
+            last = m.index + m[0].length;
+        }
+        if (last < t.length) frag.appendChild(document.createTextNode(t.slice(last)));
+        node.parentNode.replaceChild(frag, node);
+    }
+    function rubify(root) {
+        if (root.nodeType === 3) return rubifyText(root);
+        if (root.nodeType !== 1 || rubySkip(root)) return;
+        const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        const list = [];
+        while (w.nextNode()) if (w.currentNode.nodeValue.indexOf('{') >= 0) list.push(w.currentNode);
+        list.forEach(rubifyText);
+    }
+    new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(rubify)))
+        .observe(document.body, { childList: true, subtree: true });
+
+    /* ===================== 音を 鳴らす ===================== */
+    const MASTER_VOL = 0.5;                  // 全体の 音量（ここ 1か所で 決める）
+    let ctx = null, master = null;
+    function ensureCtx() {
+        if (!ctx) {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            if (!AC) return null;
+            ctx = new AC();
+            master = ctx.createGain();
+            master.gain.value = MASTER_VOL;
+            master.connect(ctx.destination);
+        }
+        if (ctx.state === 'suspended') ctx.resume();
+        return ctx;
+    }
+    // 1つの 音を 予約する。at は ctx の 時間
+    function tone(at, f, dur, type, vol) {
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = type || 'sine';
+        o.frequency.value = f;
+        const v = vol == null ? 0.3 : vol;
+        g.gain.setValueAtTime(0, at);
+        g.gain.linearRampToValueAtTime(v, at + 0.02);
+        g.gain.setValueAtTime(v, at + Math.max(0.03, dur - 0.08));
+        g.gain.linearRampToValueAtTime(0, at + dur);
+        o.connect(g); g.connect(master);
+        o.start(at); o.stop(at + dur + 0.02);
+    }
+    // まとめて 鳴らす（テストから も 同じ 関数を つかう）
+    function scheduleTones(list, at) {
+        list.forEach(t => tone(at + (t.delay || 0), t.f, t.dur, t.type, t.vol));
+    }
+    function play(list) {
+        if (!ensureCtx()) return false;
+        scheduleTones(list, ctx.currentTime + 0.03);
+        return true;
+    }
+
+    const TABS = { wave: '🌊 音って なに', scale: '🎹 音階と 和音', inst: '🎻 楽器', lab: '🔬 じっけん', quiz: '❓ クイズ' };
+    let tab = 'wave';
+    function renderNav() {
+        document.getElementById('tab-nav').innerHTML = Object.entries(TABS).map(([k, label]) =>
+            `<button onclick="setTab('${k}')" data-tab="${k}" class="${tab === k ? 'bg-purple-700 text-white' : 'bg-white border-2 border-purple-200 text-slate-600'} font-black px-4 py-2 rounded-full text-sm whitespace-nowrap bounce-hover">${label}</button>`).join('');
+    }
+    function setTab(k) {
+        tab = k;
+        Object.keys(TABS).forEach(t => document.getElementById('tab-' + t).classList.toggle('hidden', t !== k));
+        renderNav();
+        if (k === 'scale' && !scaleReady) { kbDraw(); ocTable(); chList(); scaleReady = true; }
+        if (k === 'inst' && !instReady) { setIn(0); instReady = true; }
+        if (k === 'lab' && !labReady) { stDraw(); ppDraw(); haDraw(); btDraw(); labReady = true; }
+        if (k === 'quiz' && !qz) newQuiz();
+    }
+
+    /* =====================================================================
+       ① 音って なに
+       ===================================================================== */
+    const TONETYPES = [
+        ['sine', 'サイン波', 'やわらかい 音（音さ・口ぶえ）'],
+        ['triangle', '三角波', 'すこし まるい 音（リコーダー風）'],
+        ['square', '矩形波{くけいは}', 'ブザーっぽい 音（ゲーム音）'],
+        ['sawtooth', 'のこぎり波', 'ざらざらした 音（バイオリン風）']
+    ];
+    let wvType = 'sine';
+    function wvSetType(t) { wvType = t; wvDraw(); }
+    // 波の 形（1周期ぶんの 値を かえす。0〜1 の 位置 x）
+    function waveAt(type, x) {
+        const p = x % 1;
+        if (type === 'sine') return Math.sin(p * 2 * Math.PI);
+        if (type === 'triangle') return p < 0.25 ? p * 4 : p < 0.75 ? 2 - p * 4 : p * 4 - 4;
+        if (type === 'square') return p < 0.5 ? 1 : -1;
+        return 1 - 2 * p;                       // sawtooth
+    }
+    function wvDraw() {
+        const f = +document.getElementById('wv-f').value, a = +document.getElementById('wv-a').value;
+        document.getElementById('wv-fv').innerText = f;
+        document.getElementById('wv-av').innerText = a;
+        document.getElementById('wv-tones').innerHTML = TONETYPES.map(([t, n]) =>
+            `<button onclick="wvSetType('${t}')" data-wt="${t}" class="${wvType === t ? 'bg-purple-700 text-white' : 'bg-white border-2 border-purple-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${n}</button>`).join('');
+        const H = 200, L = 40, R = 540, mid = 100, amp = (a / 100) * 74;
+        // 画面には 3周期ぶん かく（Hzが 高いほど 波が つまって 見える ように 目じるしを 出す）
+        const cycles = 3;
+        let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="#faf5ff"/>`;
+        g += `<line x1="${L}" y1="${mid}" x2="${R}" y2="${mid}" stroke="#d8b4fe" stroke-width="2" stroke-dasharray="6 4"/>`;
+        const pts = [];
+        for (let i = 0; i <= 480; i++) {
+            const x = L + (R - L) * i / 480;
+            pts.push(`${x.toFixed(1)},${(mid - waveAt(wvType, i / 480 * cycles) * amp).toFixed(1)}`);
+        }
+        g += `<polyline data-wave points="${pts.join(' ')}" fill="none" stroke="#9333ea" stroke-width="3.5" stroke-linejoin="round"/>`;
+        // 波長（1周期）と 振幅の めじるし
+        const per = (R - L) / cycles;
+        g += `<line x1="${L}" y1="${mid + 84}" x2="${L + per}" y2="${mid + 84}" stroke="#0891b2" stroke-width="2"/>
+              <line x1="${L}" y1="${mid + 78}" x2="${L}" y2="${mid + 90}" stroke="#0891b2" stroke-width="2"/>
+              <line x1="${L + per}" y1="${mid + 78}" x2="${L + per}" y2="${mid + 90}" stroke="#0891b2" stroke-width="2"/>
+              <text x="${L + per / 2}" y="${mid + 78}" text-anchor="middle" font-size="11" font-weight="900" fill="#0891b2">1回の ふるえ</text>`;
+        if (amp > 6) g += `<line x1="${R - 14}" y1="${mid}" x2="${R - 14}" y2="${mid - amp}" stroke="#db2777" stroke-width="2"/>
+              <text x="${R - 20}" y="${mid - amp / 2}" text-anchor="end" font-size="11" font-weight="900" fill="#db2777">大きさ</text>`;
+        document.getElementById('wv-fig').innerHTML = svg(W, H, g);
+        const note = nearestNote(f);
+        document.getElementById('wv-info').innerHTML =
+            `<b class="num text-purple-800">${f} Hz</b> ＝ 1秒間に <b class="num">${f}</b>回 ふるえる。
+             いちばん 近い 音は <b>${note.name}（${note.hz.toFixed(1)}Hz）</b>。<br>
+             音色は <b>${TONETYPES.find(t => t[0] === wvType)[1]}</b>… ${TONETYPES.find(t => t[0] === wvType)[2]}。<br>
+             <span class="text-xs text-slate-600">💡 <b>高さ</b>は ふるえる 回数（Hz）、<b>大きさ</b>は ゆれの 幅（振幅{しんぷく}）、
+             <b>音色</b>は 波の 形で 決まる。人が 聞けるのは だいたい 20Hz〜20000Hz。
+             ${f < 120 ? 'この あたりは とても 低い 音。' : f > 800 ? 'この あたりは かなり 高い 音。' : ''}</span>`;
+    }
+    function wvPlay() {
+        const f = +document.getElementById('wv-f').value, a = +document.getElementById('wv-a').value;
+        play([{ f, dur: 1.0, type: wvType, vol: 0.05 + (a / 100) * 0.35 }]);
+    }
+    function wvPlayPair() {
+        const f = +document.getElementById('wv-f').value;
+        play([{ f, dur: 0.7, type: wvType, vol: 0.28 },
+               { f: f * 2, dur: 0.7, type: wvType, vol: 0.28, delay: 0.8 },
+               { f, dur: 0.9, type: wvType, vol: 0.22, delay: 1.7 },
+               { f: f * 2, dur: 0.9, type: wvType, vol: 0.22, delay: 1.7 }]);
+    }
+
+    function spDraw() {
+        const t = +document.getElementById('sp-t').value;
+        document.getElementById('sp-tv').innerText = t;
+        const m = SOUND_SPEED * t;
+        const H = 190;
+        let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="#faf5ff"/>`;
+        // 左に 自分、右へ いくほど かみなりが 遠い。ものさしの 右はし＝20秒＝6,800m
+        const xa = 70, xb = 496, frac = t / 20, tip = xa + (xb - xa) * frac;
+        g += `<text x="26" y="40" font-size="24">🧍</text>`;
+        g += `<line x1="${xa}" y1="110" x2="${xb}" y2="110" stroke="#e9d5ff" stroke-width="6" stroke-linecap="round"/>`;
+        g += `<line data-dist x1="${xa}" y1="110" x2="${tip.toFixed(1)}" y2="110" stroke="#9333ea" stroke-width="6" stroke-linecap="round"/>`;
+        g += `<text x="${tip.toFixed(1)}" y="100" text-anchor="middle" font-size="24">⛈️</text>`;
+        g += `<line x1="${xa}" y1="62" x2="${tip.toFixed(1)}" y2="62" stroke="#fbbf24" stroke-width="3"/>`;
+        g += `<text x="${xa}" y="54" font-size="11" font-weight="900" fill="#b45309">光は すぐ 見える → 音は ${t}秒 おくれて とどく</text>`;
+        // 音の 波が こちらへ 向かって くる ようす
+        for (let i = 0; i < 4; i++)
+            g += `<path d="M${(tip - 16 - i * 16).toFixed(1)} 122 q-12 12 0 24" fill="none" stroke="#9333ea" stroke-width="3" opacity="${0.9 - i * 0.18}"/>`;
+        g += `<text x="283" y="162" text-anchor="middle" font-size="13" font-weight="900" fill="#7e22ce">340 × ${t} ＝ ${m.toLocaleString('ja-JP')} m</text>`;
+        g += `<text x="${xb}" y="180" text-anchor="end" font-size="10" font-weight="800" fill="#a855f7">ものさしの 右はし＝20秒＝6,800m</text>`;
+        document.getElementById('sp-fig').innerHTML = svg(W, H, g);
+        document.getElementById('sp-info').innerHTML =
+            `光ってから <b class="num">${t}秒</b>後に 音が 来たなら、かみなりまでの きょりは
+             340 × ${t} ＝ <b class="num text-purple-800">${m.toLocaleString('ja-JP')} m</b>（やく ${(m / 1000).toFixed(1)} km）。<br>
+             <span class="text-xs text-slate-600">💡 100m走の スタートで、けむりを 見てから 音が 来るまでの ずれは
+             100 ÷ 340 ＝ やく 0.3秒。だから 陸上では ピストルの 音では なく 光や 電気の 合図も つかう。</span>`;
+    }
+
+    /* =====================================================================
+       ② 音階と 和音
+       ===================================================================== */
+    let scaleReady = false;
+    // 平均律。MIDI番号 m の Hz ＝ 440 × 2^((m-69)/12)。ラ(A4)=69=440Hz
+    const hzOf = m => 440 * Math.pow(2, (m - 69) / 12);
+    const WHITE = [0, 2, 4, 5, 7, 9, 11];
+    const DOREMI = ['ド', 'レ', 'ミ', 'ファ', 'ソ', 'ラ', 'シ'];
+    const SHARP = [0, 1, 3, 4, 5];              // 白鍵の この あとに 黒鍵が ある
+    function nearestNote(f) {
+        const m = Math.round(69 + 12 * Math.log2(f / 440));
+        const oct = Math.floor(m / 12) - 1;
+        const semi = ((m % 12) + 12) % 12;
+        const wi = WHITE.indexOf(semi);
+        const name = wi >= 0 ? `${DOREMI[wi]}${oct}` : `${DOREMI[WHITE.indexOf(semi - 1)]}${oct}の ♯`;
+        return { m, hz: hzOf(m), name };
+    }
+    let kbLast = null;
+    function kbPress(m) {
+        kbLast = m;
+        play([{ f: hzOf(m), dur: 0.9, type: 'triangle', vol: 0.3 }]);
+        kbDraw();
+    }
+    function kbDraw() {
+        const KW = 38, KH = 132, BW = 24, BH = 84, x0 = 16, y0 = 16;
+        const H = KH + 74;
+        let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="#faf5ff"/>`;
+        const whites = [];
+        for (let oct = 0; oct < 2; oct++) for (let i = 0; i < 7; i++) whites.push({ oct, i, m: 60 + oct * 12 + WHITE[i] });
+        whites.forEach((k, idx) => {
+            const x = x0 + idx * KW;
+            const on = kbLast === k.m;
+            g += `<rect class="key" data-key="${k.m}" onclick="kbPress(${k.m})" x="${x}" y="${y0}" width="${KW - 2}" height="${KH}" rx="5"
+                  fill="${on ? '#c084fc' : '#ffffff'}" stroke="#6b21a8" stroke-width="2"/>`;
+            g += `<text x="${x + (KW - 2) / 2}" y="${y0 + KH - 12}" text-anchor="middle" font-size="12" font-weight="900" fill="${on ? '#3b0764' : '#6b21a8'}" pointer-events="none">${DOREMI[k.i]}</text>`;
+            g += `<text x="${x + (KW - 2) / 2}" y="${y0 + KH + 18}" text-anchor="middle" font-size="9" font-weight="800" fill="#a855f7" pointer-events="none">${hzOf(k.m).toFixed(0)}</text>`;
+        });
+        whites.forEach((k, idx) => {
+            if (SHARP.indexOf(k.i) < 0) return;
+            const x = x0 + (idx + 1) * KW - BW / 2 - 1;
+            const m = k.m + 1;
+            const on = kbLast === m;
+            g += `<rect class="key" data-key="${m}" onclick="kbPress(${m})" x="${x}" y="${y0}" width="${BW}" height="${BH}" rx="4"
+                  fill="${on ? '#7e22ce' : '#1e1b4b'}" stroke="#1e1b4b" stroke-width="2"/>`;
+        });
+        g += `<text x="${W - 16}" y="${H - 8}" text-anchor="end" font-size="10" font-weight="800" fill="#a855f7">白いけんの 下の 数字は Hz</text>`;
+        document.getElementById('kb-fig').innerHTML = svg(W, H, g);
+        const info = document.getElementById('kb-info');
+        if (kbLast == null) {
+            info.innerHTML = 'けんばんを タップすると、音と いっしょに その 音の Hzが 出るよ。';
+        } else {
+            const n = nearestNote(hzOf(kbLast));
+            const low = hzOf(60), rel = hzOf(kbLast) / low;
+            info.innerHTML = `<b>${n.name}</b>　<b class="num text-purple-800">${hzOf(kbLast).toFixed(1)} Hz</b><br>
+                いちばん 左の ド（${low.toFixed(1)}Hz）の <b class="num">${rel.toFixed(3)}倍</b>。<br>
+                <span class="text-xs text-slate-600">💡 となりの けん（半音）へ 行くと Hzは いつも <b>×1.0595</b>。
+                これを 12回 かけると ちょうど 2倍（＝1オクターブ）に なる
+                （じっさいに 計算すると ${Math.pow(Math.pow(2, 1 / 12), 12).toFixed(3)}）。</span>`;
+        }
+    }
+    function ocTable() {
+        const rows = [0, 1, 2, 3, 4].map(k => ({ oct: k, m: 60 + k * 12 }));
+        document.getElementById('oc-table').innerHTML = `
+            <table class="w-full text-sm font-bold border-collapse">
+                <thead><tr class="bg-purple-100 text-purple-800">
+                    <th class="p-2 rounded-l-xl text-left">ドの 高さ</th><th class="p-2">Hz</th>
+                    <th class="p-2 rounded-r-xl">いちばん 低い ドの 何倍</th></tr></thead>
+                <tbody>${rows.map(r => `<tr class="border-b border-purple-100" data-oc="${r.oct}">
+                    <td class="p-2">${r.oct === 0 ? 'まん中の ド' : r.oct + 'オクターブ 上の ド'}</td>
+                    <td class="p-2 num text-center text-purple-700">${hzOf(r.m).toFixed(1)}</td>
+                    <td class="p-2 num text-center"><b>${Math.pow(2, r.oct)} 倍</b></td></tr>`).join('')}</tbody>
+            </table>
+            <p class="text-xs font-bold text-slate-500 mt-2">オクターブが 1つ 上がる ごとに Hzは ちょうど 2倍。
+            だから 5オクターブ 上は 32倍。ピアノは いちばん 低い 音から 高い 音まで やく 7オクターブ ある。</p>`;
+    }
+    const CHORDS = [
+        { id: 'oct', n: 'ド ＋ 高い ド', ratio: '1 : 2', ms: [60, 72], good: true,
+          d: 'オクターブ。Hzが ちょうど 2倍なので、2つの 音が 1つに とけて 聞こえる。' },
+        { id: 'fifth', n: 'ド ＋ ソ', ratio: 'だいたい 2 : 3', ms: [60, 67], good: true,
+          d: '完全五度{かんぜんごど}。とても 安定した ひびき。むかしの 音楽は これが 中心だった。' },
+        { id: 'major', n: 'ド ＋ ミ ＋ ソ（メジャー）', ratio: 'だいたい 4 : 5 : 6', ms: [60, 64, 67], good: true,
+          d: '明るい 和音。3つの Hzが かんたんな 整数の 比に 近いので きれいに ひびく。' },
+        { id: 'minor', n: 'ラ ＋ ド ＋ ミ（マイナー）', ratio: 'だいたい 10 : 12 : 15', ms: [57, 60, 64], good: true,
+          d: 'かなしい 感じの 和音。音の あいだの きょりが 少し ちがう だけで 気もちが 変わる。' },
+        { id: 'semi', n: 'ド ＋ ド♯（半音）', ratio: 'だいたい 15 : 16', ms: [60, 61], good: false,
+          d: '比が かんたんでは ないので、ぶつかって 聞こえる（不協和{ふきょうわ}）。こわい 場面の 音楽に つかわれる。' },
+        { id: 'tri', n: 'ド ＋ ファ♯（三全音）', ratio: 'だいたい 32 : 45', ms: [60, 66], good: false,
+          d: 'とても 不安な ひびき。むかしは「悪魔の 音」と 呼ばれて さけられた。' }
+    ];
+    function chPlay(id) {
+        const c = CHORDS.find(x => x.id === id);
+        play(c.ms.map(m => ({ f: hzOf(m), dur: 1.6, type: 'triangle', vol: 0.26 })));
+    }
+    function chList() {
+        document.getElementById('ch-list').innerHTML = CHORDS.map(c =>
+            `<div class="border-2 ${c.good ? 'border-emerald-200 bg-emerald-50' : 'border-rose-200 bg-rose-50'} rounded-2xl p-3" data-chord="${c.id}">
+                <div class="flex flex-wrap items-center gap-2">
+                    <p class="font-black text-sm">${c.good ? '😊' : '😖'} ${c.n}</p>
+                    <span class="num text-xs font-black ${c.good ? 'text-emerald-700' : 'text-rose-700'}">${c.ratio}</span>
+                    <button onclick="chPlay('${c.id}')" class="ml-auto bg-white border-2 border-purple-300 text-purple-700 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">🔊 聞く</button>
+                </div>
+                <p class="text-xs font-bold text-slate-600 mt-1 leading-relaxed">${c.d}</p>
+                <p class="num text-xs font-bold text-slate-400 mt-1">${c.ms.map(m => hzOf(m).toFixed(1) + 'Hz').join(' ＋ ')}</p>
+            </div>`).join('');
+    }
+
+    /* =====================================================================
+       ③ 楽器
+       ===================================================================== */
+    let instReady = false;
+    function tag(x, y, tx, ty, text, col) {
+        const c = col || '#7e22ce';
+        const anchor = tx < x ? 'end' : 'start';
+        return `<line x1="${x}" y1="${y}" x2="${tx}" y2="${ty}" stroke="${c}" stroke-width="1.5" stroke-dasharray="3 3"/>
+                <circle cx="${x}" cy="${y}" r="3" fill="${c}"/>
+                <text x="${tx + (anchor === 'end' ? -4 : 4)}" y="${ty + 4}" text-anchor="${anchor}" font-size="11" font-weight="900" fill="${c}">${text}</text>`;
+    }
+    function bg(h) { return `<rect x="0" y="0" width="${W}" height="${h}" rx="14" fill="#faf5ff"/>`; }
+    const INSTS = [
+        {
+            id: 'guitar', e: '🎸', n: 'ギター', fam: '弦楽器（はじく）',
+            lead: '弦を <b>指で はじいて</b> ふるわせる。おさえる 場所で 長さを 変えて 高さを 決める。',
+            steps: [['ふるわせる', '弦を はじく。細い 弦・強く 張った 弦ほど 高い 音。'],
+                    ['高さを 決める', 'フレットを おさえて 弦の 長さを 短く する。短いほど 高い。'],
+                    ['大きく する', '弦だけでは 小さい 音。胴{どう}の 中の 空気が いっしょに ふるえて（共鳴{きょうめい}）大きく なる。']],
+            tones: [{ f: 196, dur: 1.2, type: 'sawtooth', vol: 0.2 }, { f: 392, dur: 1.2, type: 'sawtooth', vol: 0.1, delay: 0 }],
+            trivia: '弦を はじくと、ぜんたいの ふるえ（基音）だけでなく 2倍・3倍… の ふるえ（倍音）も 同時に おきる。この 混ざり方が ギターらしい 音を 作って いる。',
+            fig: () => {
+                let g = bg(200);
+                g += `<ellipse cx="150" cy="100" rx="82" ry="62" fill="#fcd34d" stroke="#92400e" stroke-width="3"/>`;
+                g += `<circle cx="168" cy="100" r="24" fill="#78350f"/>`;
+                g += `<rect x="228" y="88" width="250" height="24" rx="4" fill="#78350f" stroke="#451a03" stroke-width="2"/>`;
+                g += `<rect x="470" y="78" width="40" height="44" rx="6" fill="#92400e" stroke="#451a03" stroke-width="2"/>`;
+                for (let i = 0; i < 5; i++) g += `<line x1="${256 + i * 42}" y1="88" x2="${256 + i * 42}" y2="112" stroke="#d6d3d1" stroke-width="3"/>`;
+                for (let i = 0; i < 3; i++) g += `<line x1="88" y1="${94 + i * 6}" x2="500" y2="${94 + i * 6}" stroke="#e7e5e4" stroke-width="1.8"/>`;
+                g += tag(150, 152, 112, 186, '胴（共鳴する 箱）', '#92400e');
+                g += tag(298, 100, 300, 44, 'フレット（長さを 決める）');
+                g += tag(120, 97, 40, 60, '弦', '#57534e');
+                return svg(W, 200, g);
+            }
+        },
+        {
+            id: 'violin', e: '🎻', n: 'バイオリン', fam: '弦楽器（こする）',
+            lead: '弓{ゆみ}で 弦を <b>こすりつづけて</b> ふるわせる。だから 長く のばした 音が 出せる。',
+            steps: [['ふるわせる', '弓の 毛に 松{まつ}やにを ぬって おく。ざらざらの 毛が 弦を 引っかけて 離す のを 1秒に 何百回も くりかえす。'],
+                    ['高さを 決める', '指で 弦を おさえて 長さを 変える。フレットが ないので 場所は 耳で 決める。'],
+                    ['大きく する', '弦の ふるえが こまと 魂柱{こんちゅう}を 通って 胴に つたわり、中の 空気が 共鳴して 大きく なる。']],
+            tones: [{ f: 440, dur: 1.4, type: 'sawtooth', vol: 0.18 }, { f: 660, dur: 1.4, type: 'sawtooth', vol: 0.07 }],
+            trivia: '弓は「引っかけて 離す」を くりかえして いる（自励振動{じれいしんどう}）。松やにを ぬらないと つるつる すべって 音が 出ない。だから 演奏の 前に かならず ぬる。',
+            fig: () => {
+                let g = bg(210);
+                g += `<path d="M180 40 q46 0 46 34 q0 20 -18 26 q18 6 18 26 q0 40 -46 40 q-46 0 -46 -40 q0 -20 18 -26 q-18 -6 -18 -26 q0 -34 46 -34 z" fill="#d97706" stroke="#7c2d12" stroke-width="3"/>`;
+                g += `<rect x="172" y="164" width="16" height="30" rx="3" fill="#7c2d12"/>`;
+                g += `<rect x="168" y="14" width="24" height="30" rx="4" fill="#7c2d12"/>`;
+                for (let i = 0; i < 4; i++) g += `<line x1="${170 + i * 7}" y1="20" x2="${170 + i * 7}" y2="180" stroke="#f5f5f4" stroke-width="1.8"/>`;
+                g += `<rect x="158" y="118" width="46" height="7" rx="2" fill="#57534e"/>`;
+                // 弓は 弦の 上を よこぎる ように かく（はなれて いると「こする」ことが 伝わらない）
+                g += `<line x1="118" y1="108" x2="476" y2="84" stroke="#78350f" stroke-width="7" stroke-linecap="round"/>`;
+                g += `<line x1="120" y1="117" x2="474" y2="93" stroke="#fef3c7" stroke-width="3.5"/>`;
+                g += `<path d="M150 134 l-16 0 m16 0 l-5 -5 m5 5 l-5 5" stroke="#0891b2" stroke-width="2.5" fill="none" stroke-linecap="round"/>`;
+                g += `<path d="M212 130 l16 0 m-16 0 l5 -5 m-5 5 l5 5" stroke="#0891b2" stroke-width="2.5" fill="none" stroke-linecap="round"/>`;
+                g += `<text x="112" y="152" text-anchor="end" font-size="10" font-weight="900" fill="#0891b2">こする</text>`;
+                g += tag(330, 92, 368, 48, '弓（松やにを ぬった 毛）', '#92400e');
+                g += tag(181, 121, 130, 178, 'こま（ふるえを 胴へ）', '#57534e');
+                g += tag(181, 80, 60, 56, '弦');
+                return svg(W, 210, g);
+            }
+        },
+        {
+            id: 'piano', e: '🎹', n: 'ピアノ', fam: '弦楽器＋打楽器',
+            lead: 'けんを おすと <b>ハンマーが 弦を たたく</b>。だから「打弦{だげん}楽器」とも 呼ばれる。',
+            steps: [['ふるわせる', 'けんを おす → てこの しくみで ハンマーが 上がる → 弦を たたいて すぐ 離れる。'],
+                    ['高さを 決める', '音ごとに <b>べつの 弦</b>が 用意されて いる（88音ぶん）。低い 音は 長く 太い 弦、高い 音は 短く 細い 弦。'],
+                    ['大きく する', '弦の ふるえが 大きな 木の 板（響板{きょうばん}）に つたわって 大きな 音に なる。'],
+                    ['ペダルの 役目', '右の ペダルを ふむと 弦を 止める フェルトが はなれ、音が のびて 響く。']],
+            tones: [{ f: 261.63, dur: 1.4, type: 'triangle', vol: 0.22 }, { f: 329.63, dur: 1.4, type: 'triangle', vol: 0.18 }, { f: 392, dur: 1.4, type: 'triangle', vol: 0.18 }],
+            trivia: '大きい ピアノの いちばん 低い 弦は 2m ちかく、高い 弦は 5cm ほど。全部で 200本 以上の 弦が 20トン ちかい 力で 張られて いる。',
+            fig: () => {
+                let g = bg(210);
+                g += `<rect x="40" y="130" width="480" height="60" rx="6" fill="#f8fafc" stroke="#334155" stroke-width="3"/>`;
+                for (let i = 0; i < 12; i++) g += `<rect x="${46 + i * 39}" y="134" width="35" height="52" rx="3" fill="#fff" stroke="#334155" stroke-width="1.5"/>`;
+                // 黒けんは ド・レ・ファ・ソ・ラ の「すぐ 右」だけ。いちばん 右の 白けんには つけない
+                for (let i = 0; i < 11; i++) if (SHARP.indexOf(i % 7) >= 0)
+                    g += `<rect x="${46 + (i + 1) * 39 - 11}" y="134" width="20" height="32" rx="2" fill="#1e1b4b"/>`;
+                // ハンマーと 弦
+                g += `<line x1="60" y1="60" x2="500" y2="44" stroke="#78350f" stroke-width="4"/>`;
+                for (let i = 0; i < 9; i++) g += `<line x1="${70 + i * 52}" y1="${74 - i}" x2="${70 + i * 52}" y2="${102 - i}" stroke="#d6d3d1" stroke-width="2.5"/>`;
+                for (let i = 0; i < 9; i++) {
+                    const x = 70 + i * 52;
+                    g += `<line x1="${x}" y1="${118 - i}" x2="${x + 8}" y2="${104 - i}" stroke="#7c2d12" stroke-width="3"/>`;
+                    g += `<circle cx="${x + 10}" cy="${100 - i}" r="6" fill="#f3f4f6" stroke="#7c2d12" stroke-width="2"/>`;
+                }
+                g += tag(140, 88, 120, 36, '弦（音ごとに べつ）', '#57534e');
+                g += tag(288, 104, 344, 124, 'ハンマー', '#7c2d12');
+                g += tag(280, 186, 400, 200, 'けん（てこ）', '#334155');
+                return svg(W, 210, g);
+            }
+        },
+        {
+            id: 'recorder', e: '🪈', n: 'リコーダー', fam: '管楽器（両はしが 開いた 管）',
+            lead: '<b>管の 中の 空気</b>が ふるえる。あなを ふさぐと 管が 長く なって 低く なる。',
+            steps: [['ふるわせる', '吹き口から 入った 空気が とがった ふち（エッジ）に あたって、上下に ふるえ出す。'],
+                    ['高さを 決める', 'あなを ふさぐと 空気が ふるえる 部分が 長く なる → 低い 音。あなを 開けると 短く なる → 高い 音。'],
+                    ['大きく する', '管じたいが 共鳴の 箱。だから 小さな 息でも まとまった 音が 出る。'],
+                    ['サミング', '裏の あなを 半分 開けると 1オクターブ 上の 音が 出る（倍音を つかって いる）。']],
+            tones: [{ f: 587.33, dur: 1.1, type: 'triangle', vol: 0.26 }],
+            trivia: 'リコーダーは 両はしが 開いた「開管{かいかん}」。だから 同じ 長さの 閉じた 管より 1オクターブ 高い 音が 出る。息を 強く しすぎると 倍音に ひっくり返って ピーッと なる。',
+            fig: () => {
+                let g = bg(180);
+                g += `<path d="M40 76 q0 -18 22 -18 l16 0 q10 0 10 14 l0 24 q0 14 -10 14 l-16 0 q-22 0 -22 -18 z" fill="#fde68a" stroke="#92400e" stroke-width="3"/>`;
+                g += `<rect x="88" y="66" width="390" height="34" rx="10" fill="#fde68a" stroke="#92400e" stroke-width="3"/>`;
+                g += `<path d="M478 62 q30 0 30 21 q0 21 -30 21 z" fill="#fde68a" stroke="#92400e" stroke-width="3"/>`;
+                g += `<path d="M96 66 l14 14 l-14 0 z" fill="#92400e"/>`;
+                for (let i = 0; i < 7; i++) g += `<circle cx="${150 + i * 44}" cy="83" r="7" fill="${i < 3 ? '#451a03' : '#fff'}" stroke="#92400e" stroke-width="2"/>`;
+                [0, 1, 2].forEach(i => g += `<path d="M${20 + i * 6} ${70 + i * 2} q8 -6 14 0" fill="none" stroke="#0891b2" stroke-width="2.5"/>`);
+                g += tag(104, 76, 120, 34, 'エッジ（ここで 空気が ふるえる）', '#92400e');
+                g += tag(194, 83, 210, 140, 'ふさいだ あな＝長く＝低い');
+                g += tag(326, 83, 400, 140, '開けた あな＝短く＝高い');
+                return svg(W, 180, g);
+            }
+        },
+        {
+            id: 'flute', e: '🎶', n: 'フルート', fam: '管楽器（両はしが 開いた 管）',
+            lead: '<b>あなの ふちに 息を あてて</b> 空気を ふるわせる。リードは つかわない。',
+            steps: [['ふるわせる', '歌口{うたくち}の ふちに 息を ななめに あてる。空気の 流れが 上下に 分かれて ふるえ出す。'],
+                    ['高さを 決める', 'キーで あなを 開け閉めして、空気が ふるえる 長さを 変える。'],
+                    ['大きく する', '金属の 管が 共鳴する。'],
+                    ['オクターブの 出し方', '息の 速さと 角度を 変えると 倍音に 切りかわり、同じ 指でも オクターブ 上が 出る。']],
+            tones: [{ f: 880, dur: 1.2, type: 'sine', vol: 0.3 }],
+            trivia: 'ビンの 口に 息を ふきつけて 音を 出す 遊びと 同じ しくみ。水を 入れると 空気の 部分が 短く なって 音が 高く なる。フルートは これを キーで やって いる。',
+            fig: () => {
+                let g = bg(180);
+                g += `<rect x="50" y="70" width="440" height="28" rx="14" fill="#e2e8f0" stroke="#475569" stroke-width="3"/>`;
+                g += `<ellipse cx="96" cy="70" rx="14" ry="7" fill="#f8fafc" stroke="#475569" stroke-width="2.5"/>`;
+                for (let i = 0; i < 8; i++) g += `<circle cx="${170 + i * 40}" cy="84" r="9" fill="#f1f5f9" stroke="#475569" stroke-width="2"/>`;
+                [0, 1, 2].forEach(i => g += `<path d="M${58 + i * 8} ${46 + i * 3} q10 8 18 2" fill="none" stroke="#0891b2" stroke-width="2.5"/>`);
+                g += `<path d="M84 58 l14 8" stroke="#0891b2" stroke-width="3"/>`;
+                g += tag(96, 68, 150, 36, '歌口（ふちに 息を あてる）', '#0891b2');
+                g += tag(290, 84, 300, 140, 'キーで あなを 開け閉め', '#475569');
+                g += `<text x="500" y="130" text-anchor="end" font-size="11" font-weight="900" fill="#7e22ce">管が 長い＝低い / 短い＝高い</text>`;
+                return svg(W, 180, g);
+            }
+        },
+        {
+            id: 'clarinet', e: '🎷', n: 'クラリネット', fam: '管楽器（片はしが とじた 管）',
+            lead: '<b>リード（うすい 板）</b>が ふるえて 音の もとに なる。吹き口が ふさがれて いるので「閉管{へいかん}」。',
+            steps: [['ふるわせる', '息で リードが 1秒に 何百回も 開いたり 閉じたり して、管の 中の 空気を ふるわせる。'],
+                    ['高さを 決める', 'あなと キーで 管の 長さを 変える。'],
+                    ['大きく する', '長い 管と 朝顔{あさがお}型の 先が 音を 外へ ひろげる。'],
+                    ['音が 低い りゆう', '片はしが とじた 管は、同じ 長さの 開いた 管より <b>1オクターブ 低い</b> 音が 出る。']],
+            tones: [{ f: 293.66, dur: 1.3, type: 'square', vol: 0.14 }, { f: 880, dur: 1.3, type: 'square', vol: 0.05 }],
+            trivia: '閉じた 管は <b>奇数{きすう}の 倍音</b>（1・3・5倍）ばかりが 出る。だから クラリネットは あの「太くて 丸い」独特の 音色に なる。フルート（開管）は 2倍・3倍も 出るので ちがう 音色。',
+            fig: () => {
+                let g = bg(200);
+                g += `<rect x="70" y="52" width="34" height="34" rx="6" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>`;
+                g += `<path d="M74 86 l26 0 l-4 16 l-18 0 z" fill="#fcd34d" stroke="#92400e" stroke-width="2"/>`;
+                g += `<rect x="78" y="100" width="26" height="70" rx="6" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>`;
+                g += `<rect x="104" y="100" width="300" height="26" rx="6" fill="#1e293b" stroke="#0f172a" stroke-width="2" transform="rotate(12 104 113)"/>`;
+                g += `<path d="M396 152 q40 -6 52 30 l-56 12 q-8 -28 4 -42 z" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>`;
+                for (let i = 0; i < 6; i++) g += `<circle cx="${140 + i * 42}" cy="${120 + i * 9}" r="7" fill="#cbd5e1" stroke="#475569" stroke-width="2"/>`;
+                [0, 1, 2].forEach(i => g += `<path d="M${30 + i * 9} ${58 + i * 7} q8 6 16 1" fill="none" stroke="#0891b2" stroke-width="2.5"/>`);
+                g += tag(88, 92, 150, 40, 'リード（ふるえる 板）', '#92400e');
+                g += tag(230, 140, 152, 192, 'あなで 長さを 変える', '#475569');
+                g += tag(448, 186, 496, 152, '朝顔', '#0f172a');
+                return svg(W, 200, g);
+            }
+        },
+        {
+            id: 'trumpet', e: '🎺', n: 'トランペット', fam: '管楽器（くちびるで ふるわせる）',
+            lead: '<b>くちびる自体</b>を ブルブル ふるわせる。バルブで 管の 長さを 変えて 音を 選ぶ。',
+            steps: [['ふるわせる', 'くちびるを あわせて 息を 通し、ブーッと ふるわせる（バジング）。これが 音の もと。'],
+                    ['高さを 決める（その1）', 'くちびるの しめ方で <b>倍音</b>を 選ぶ。同じ 指でも 何種類もの 高さが 出る。'],
+                    ['高さを 決める（その2）', '3つの バルブを おすと 回り道の 管が つながって 管が 長く なり、音が 下がる。'],
+                    ['大きく する', '曲がった 長い 管と 朝顔型の 先で 音を 前へ 飛ばす。']],
+            tones: [{ f: 466.16, dur: 1.2, type: 'sawtooth', vol: 0.15 }, { f: 932, dur: 1.2, type: 'sawtooth', vol: 0.07 }],
+            trivia: 'トランペットの 管を のばすと 1.4m ほど。くるくる 巻いて あるのは 持ちやすく する ため。バルブが なかった 時代は 倍音だけで 演奏して いたので、出せる 音が 限られて いた。',
+            fig: () => {
+                let g = bg(200);
+                g += `<path d="M60 100 L340 100" stroke="#eab308" stroke-width="12" stroke-linecap="round"/>`;
+                g += `<path d="M340 100 q60 0 60 -30 q0 -26 -44 -26 L200 44 q-40 0 -40 26 q0 30 40 30" fill="none" stroke="#eab308" stroke-width="10"/>`;
+                g += `<path d="M340 100 q46 -6 60 26 l-64 16 q-6 -30 4 -42 z" fill="#eab308" stroke="#a16207" stroke-width="3"/>`;
+                g += `<ellipse cx="56" cy="100" rx="14" ry="12" fill="#facc15" stroke="#a16207" stroke-width="3"/>`;
+                for (let i = 0; i < 3; i++) {
+                    g += `<rect x="${190 + i * 44}" y="66" width="18" height="40" rx="4" fill="#fde68a" stroke="#a16207" stroke-width="2.5"/>`;
+                    g += `<circle cx="${199 + i * 44}" cy="62" r="9" fill="#facc15" stroke="#a16207" stroke-width="2.5"/>`;
+                }
+                [0, 1, 2].forEach(i => g += `<path d="M${20 + i * 7} ${96 + i * 3} q8 -6 14 0" fill="none" stroke="#0891b2" stroke-width="2.5"/>`);
+                g += tag(56, 112, 90, 160, 'くちびるを ふるわせる', '#0891b2');
+                g += tag(221, 62, 260, 26, '3つの バルブ（管を 長く する）', '#a16207');
+                g += tag(376, 128, 440, 172, '朝顔', '#a16207');
+                return svg(W, 200, g);
+            }
+        },
+        {
+            id: 'taiko', e: '🥁', n: '太鼓{たいこ}・ドラム', fam: '打楽器（膜{まく}が ふるえる）',
+            lead: 'ぴんと 張った <b>膜</b>を たたいて ふるわせる。高さより <b>リズム</b>を 作るのが 役目。',
+            steps: [['ふるわせる', 'ばちで 膜を たたく。膜が 上下に ふるえて 中の 空気を おす。'],
+                    ['高さを 決める', '膜を 強く 張るほど 高い 音。小さい 太鼓ほど 高い 音。だから ドラムセットは 大きさが ちがう。'],
+                    ['大きく する', '胴の 中の 空気が 共鳴して 大きく なる。下にも 膜が あると 響きが のびる。'],
+                    ['なぜ ドレミが ない？', '膜の ふるえは いろいろな 高さが 同時に 混ざって いて、1つの 音の 高さに 聞こえにくい から。']],
+            tones: [{ f: 90, dur: 0.5, type: 'sine', vol: 0.4 }, { f: 140, dur: 0.25, type: 'triangle', vol: 0.18 }],
+            trivia: 'ティンパニは 打楽器なのに 音の 高さを 決められる 特別な 太鼓。ペダルで 膜の 張りを 変えて、曲の とちゅうでも 高さを 変えられる。',
+            fig: () => {
+                let g = bg(200);
+                g += `<ellipse cx="280" cy="70" rx="120" ry="34" fill="#fef3c7" stroke="#92400e" stroke-width="3"/>`;
+                g += `<path d="M160 70 L172 160 q108 26 216 0 L400 70" fill="#b45309" stroke="#78350f" stroke-width="3"/>`;
+                g += `<ellipse cx="280" cy="70" rx="120" ry="34" fill="none" stroke="#78350f" stroke-width="3"/>`;
+                for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4;
+                    g += `<circle cx="${(280 + Math.cos(a) * 112).toFixed(0)}" cy="${(70 + Math.sin(a) * 30).toFixed(0)}" r="5" fill="#78350f"/>`; }
+                g += `<line x1="330" y1="14" x2="296" y2="58" stroke="#78350f" stroke-width="7" stroke-linecap="round"/>`;
+                [0, 1, 2].forEach(i => g += `<ellipse cx="280" cy="${70 + 8 + i * 9}" rx="${70 - i * 16}" ry="${10 - i * 2}" fill="none" stroke="#9333ea" stroke-width="2" opacity="${0.8 - i * 0.2}"/>`);
+                g += tag(280, 70, 150, 26, '膜（強く 張ると 高い）', '#92400e');
+                g += tag(280, 96, 430, 120, 'ふるえが 空気を おす');
+                g += tag(280, 150, 400, 186, '胴（共鳴）', '#78350f');
+                return svg(W, 200, g);
+            }
+        },
+        {
+            id: 'xylo', e: '🎼', n: '鉄琴{てっきん}・木琴{もっきん}', fam: '打楽器（板が ふるえる）',
+            lead: '<b>長さの ちがう 板</b>を たたく。打楽器なのに ドレミが はっきり ある。',
+            steps: [['ふるわせる', 'ばちで 板を たたく。板ぜんたいが たわむ ように ふるえる。'],
+                    ['高さを 決める', '板が <b>長いほど 低く、短いほど 高い</b>。だから 階段の ように ならんで いる。'],
+                    ['大きく する', '板の 下に 長さの ちがう 筒（共鳴管）が あり、その 音だけを よく 響かせる。'],
+                    ['たたく 場所', '板の まん中を たたくと よく 鳴る。はしは ふるえが 小さいので 音が 出にくい。']],
+            tones: [{ f: 1046.5, dur: 0.9, type: 'sine', vol: 0.3 }, { f: 3139, dur: 0.5, type: 'sine', vol: 0.06 }],
+            trivia: '板の 下の 筒は、その 板の 音と ぴったり 同じ 高さで 共鳴する 長さに 切って ある。だから 1本ずつ 長さが ちがう。筒を ふさぐと 音が 小さく なる。',
+            fig: () => {
+                let g = bg(200);
+                for (let i = 0; i < 8; i++) {
+                    const w = 200 - i * 20, x = 60 + i * 58;
+                    g += `<rect x="${x}" y="${100 - w / 6}" width="40" height="${w / 3}" rx="4" fill="#fcd34d" stroke="#92400e" stroke-width="2.5"/>`;
+                    g += `<rect x="${x + 10}" y="${100 + w / 6 + 6}" width="20" height="${w / 4}" rx="3" fill="#a8a29e" stroke="#57534e" stroke-width="2"/>`;
+                }
+                // ばちは まん中の 板の 上（左右の ラベルと かさならない 場所）
+                g += `<line x1="340" y1="18" x2="312" y2="62" stroke="#78350f" stroke-width="6" stroke-linecap="round"/>`;
+                g += `<circle cx="310" cy="66" r="8" fill="#e11d48"/>`;
+                g += tag(80, 70, 96, 40, '長い板＝低い', '#92400e');
+                g += tag(490, 100, 470, 40, '短い板＝高い', '#92400e');
+                g += tag(300, 150, 330, 186, '下の 筒で 共鳴', '#57534e');
+                return svg(W, 200, g);
+            }
+        },
+        {
+            id: 'triangle', e: '🔔', n: 'トライアングル・すず', fam: '打楽器（金属が ふるえる）',
+            lead: '<b>金属じたい</b>が ふるえる。長く 響くのが とくちょう。',
+            steps: [['ふるわせる', '金属の 棒を たたく。金属は かたいので ふるえが 長く つづく。'],
+                    ['高さを 決める', '太さと 長さで 決まる。決まった 高さが あるが、いろいろな 倍音が 混ざるので キラキラ 聞こえる。'],
+                    ['大きく する', '共鳴箱は ない。金属の ふるえが 直接 空気を ゆらす。'],
+                    ['持ち方が 大事', 'ひもで つるす。手で にぎると ふるえが 止まって 音が すぐ 消える。']],
+            tones: [{ f: 2093, dur: 1.8, type: 'sine', vol: 0.16 }, { f: 3136, dur: 1.8, type: 'sine', vol: 0.08 }, { f: 4186, dur: 1.4, type: 'sine', vol: 0.05 }],
+            trivia: '音を 止めたい ときは 手で にぎる。これを ミュートと いう。にぎると ふるえが 手に つたわって 熱に 変わり、音の エネルギーが なくなる。',
+            fig: () => {
+                let g = bg(190);
+                g += `<path d="M280 40 L200 150 L360 150" fill="none" stroke="#94a3b8" stroke-width="9" stroke-linecap="round"/>`;
+                g += `<line x1="280" y1="16" x2="280" y2="40" stroke="#78350f" stroke-width="3"/>`;
+                g += `<line x1="410" y1="60" x2="366" y2="104" stroke="#94a3b8" stroke-width="6" stroke-linecap="round"/>`;
+                [0, 1, 2].forEach(i => g += `<path d="M${370 + i * 22} ${140 - i * 6} q14 -10 0 -22" fill="none" stroke="#9333ea" stroke-width="2.5" opacity="${0.9 - i * 0.25}"/>`);
+                [0, 1, 2].forEach(i => g += `<path d="M${190 - i * 22} ${140 - i * 6} q-14 -10 0 -22" fill="none" stroke="#9333ea" stroke-width="2.5" opacity="${0.9 - i * 0.25}"/>`);
+                g += tag(280, 20, 330, 26, 'ひもで つるす（にぎると 止まる）', '#78350f');
+                g += tag(300, 150, 300, 182, '金属が 長く ふるえつづける');
+                return svg(W, 190, g);
+            }
+        },
+        {
+            id: 'voice', e: '🗣️', n: '声（歌）', fam: '体そのものが 楽器',
+            lead: 'のどの <b>声帯{せいたい}</b>が ふるえて 音の もとを 作り、口や 鼻の 形で 音色を 変える。',
+            steps: [['ふるわせる', '肺から 出た 息が 声帯（2枚の ひだ）を 通ると、ひだが 1秒に 100〜1000回 ふるえる。'],
+                    ['高さを 決める', '声帯を 引っぱって うすく すると 高い 声、ゆるめると 低い 声。'],
+                    ['大きく・音色を 作る', 'のど・口・鼻の 空どうが 共鳴して 大きく なる。口の 形を 変えると「あ・い・う・え・お」に なる。'],
+                    ['ささやき声', '声帯を ふるわせず 息の 音だけを つかうと ささやき声に なる。']],
+            tones: [{ f: 220, dur: 1.2, type: 'sawtooth', vol: 0.12 }, { f: 440, dur: 1.2, type: 'sine', vol: 0.12 }, { f: 660, dur: 1.2, type: 'sine', vol: 0.06 }],
+            trivia: '声変わりは 声帯が 長く 厚く なる から。弦が 長く 太く なると 低く なる のと 同じ 理屈。男の子は 声帯が 1.5倍ほど 長く なり、1オクターブ 近く 低く なる。',
+            fig: () => {
+                const H = 244;
+                let g = bg(H);
+                // 横顔（右向き）。おでこ → 鼻 → 口 → あご → 首、と たどる 1本の パス
+                g += `<path d="M172 44 C176 10 238 4 264 38 C286 66 280 90 270 104
+                       L282 110 L266 118 C274 130 266 140 254 142 C264 152 256 164 240 166
+                       L240 218 L188 218 L188 134 C176 118 168 76 172 44 Z"
+                      fill="#fde68a" stroke="#b45309" stroke-width="3" stroke-linejoin="round"/>`;
+                g += `<circle cx="244" cy="76" r="5" fill="#1e293b"/>`;
+                g += `<path d="M236 130 q14 10 22 2" fill="none" stroke="#b45309" stroke-width="3" stroke-linecap="round"/>`;
+                // 声帯（2枚の ひだ）
+                g += `<ellipse cx="214" cy="188" rx="22" ry="11" fill="#fca5a5" stroke="#b91c1c" stroke-width="2.5"/>`;
+                g += `<line x1="196" y1="188" x2="232" y2="188" stroke="#b91c1c" stroke-width="3"/>`;
+                // 下からの 息
+                [0, 1, 2].forEach(i => g += `<path d="M214 ${208 + i * 10} q-11 -7 0 -14" fill="none" stroke="#0891b2" stroke-width="2.5"/>`);
+                // 口から 出る 音
+                [0, 1, 2].forEach(i => g += `<path d="M${296 + i * 26} ${132 - i * 4} q14 -10 0 -20" fill="none" stroke="#9333ea" stroke-width="2.5" opacity="${0.9 - i * 0.2}"/>`);
+                g += tag(214, 188, 128, 172, '声帯（ふるえる ひだ）', '#b91c1c');
+                g += tag(262, 128, 330, 96, '口・鼻の 空どうで 共鳴');
+                g += tag(214, 226, 330, 216, '肺からの 息', '#0891b2');
+                return svg(W, H, g);
+            }
+        },
+        {
+            id: 'electric', e: '🎛️', n: '電子{でんし}キーボード', fam: '電子楽器',
+            lead: 'ふるえる ものが <b>ない</b>。電気の 波を 計算で 作り、スピーカーが 空気を ふるわせる。',
+            steps: [['波を 作る', 'けんを おすと「この 高さの 波を 出して」と 計算機に つたわる。'],
+                    ['高さを 決める', '出す 波の Hzを 数字で 決める だけ。だから ぜったいに 音が くるわない。'],
+                    ['音色を 作る', '波の 形を 変える・倍音を 足す・録音した 本物の 音を 鳴らす など、いろいろな 音色に できる。'],
+                    ['大きく する', 'アンプで 電気の 波を 強く し、スピーカーの 紙（コーン）が 前後に 動いて 空気を おす。']],
+            tones: [{ f: 523.25, dur: 0.5, type: 'square', vol: 0.12 }, { f: 659.25, dur: 0.5, type: 'square', vol: 0.12, delay: 0.3 }, { f: 783.99, dur: 0.7, type: 'square', vol: 0.12, delay: 0.6 }],
+            trivia: 'スピーカーは「電磁石＋永久磁石」で 紙を 前後に 動かして いる。じつは モーターと ほとんど 同じ しくみ。マイクは その 逆で、空気の ふるえから 電気を 作って いる。',
+            fig: () => {
+                let g = bg(200);
+                g += `<rect x="30" y="100" width="230" height="56" rx="8" fill="#334155" stroke="#0f172a" stroke-width="3"/>`;
+                for (let i = 0; i < 7; i++) g += `<rect x="${38 + i * 31}" y="112" width="28" height="38" rx="3" fill="#f8fafc"/>`;
+                g += `<rect x="30" y="76" width="230" height="20" rx="6" fill="#1e293b"/>`;
+                [0, 1, 2].forEach(i => g += `<circle cx="${52 + i * 30}" cy="86" r="6" fill="#22d3ee"/>`);
+                g += `<path d="M280 128 L320 128 L320 100 L360 84 L360 172 L320 156 L320 128" fill="#94a3b8" stroke="#475569" stroke-width="3"/>`;
+                g += `<rect x="266" y="118" width="18" height="20" rx="3" fill="#475569"/>`;
+                [0, 1, 2, 3].forEach(i => g += `<path d="M${376 + i * 30} ${96 + i * 4} q18 32 0 64" fill="none" stroke="#9333ea" stroke-width="2.5" opacity="${0.9 - i * 0.18}"/>`);
+                g += tag(145, 100, 150, 40, 'けん（高さの 数字を おくる）', '#22d3ee');
+                g += tag(300, 128, 270, 186, 'アンプ＋スピーカー', '#475569');
+                g += tag(420, 128, 450, 60, '空気の ふるえ＝音');
+                return svg(W, 200, g);
+            }
+        }
+    ];
+    let ii = 0;
+    function setIn(i) {
+        ii = i;
+        const x = INSTS[i];
+        document.getElementById('in-chips').innerHTML = INSTS.map((y, j) =>
+            `<button onclick="setIn(${j})" data-inst="${y.id}" class="${j === i ? 'bg-purple-700 text-white' : 'bg-white border-2 border-purple-200 text-slate-600'} font-black px-2.5 py-1.5 rounded-xl text-xs bounce-hover">${y.e} ${plain(y.n)}</button>`).join('');
+        document.getElementById('in-name').innerHTML = `${x.e} ${x.n}`;
+        document.getElementById('in-lead').innerHTML = x.lead;
+        document.getElementById('in-fig').innerHTML = x.fig();
+        document.getElementById('in-steps').innerHTML = x.steps.map(([t, d], k) =>
+            `<div class="bg-purple-50 border-2 border-purple-200 rounded-2xl p-3" data-step="${k}">
+                <p class="font-black text-sm text-purple-900">${k + 1}. ${t}</p>
+                <p class="text-xs font-bold text-slate-600 mt-0.5 leading-relaxed">${d}</p></div>`).join('');
+        document.getElementById('in-fam').innerHTML = `なかま：<b class="text-purple-800">${x.fam}</b>`;
+        document.getElementById('in-trivia').innerHTML = `💡 ${x.trivia}`;
+    }
+    function inPlay() { play(INSTS[ii].tones); }
+
+    /* =====================================================================
+       ④ じっけん
+       ===================================================================== */
+    let labReady = false;
+
+    /* --- 弦 --- */
+    const STR_BASE_L = 50, STR_BASE_F = 440;     // 50cm・はり×1・細い弦 で 440Hz
+    let stThin = true;
+    function stSetThin(v) { stThin = v; stDraw(); }
+    function stHalf() {
+        const el = document.getElementById('st-l');
+        el.value = Math.max(+el.min, Math.round(+el.value / 2));
+        stDraw();
+        stPlay();
+    }
+    function strFreq() {
+        const L = +document.getElementById('st-l').value, T = +document.getElementById('st-t').value;
+        // f ∝ 1/L、f ∝ √T、太い弦は 線密度が 4倍 → f は 1/2
+        return STR_BASE_F * (STR_BASE_L / L) * Math.sqrt(T) * (stThin ? 1 : 0.5);
+    }
+    function stDraw() {
+        const L = +document.getElementById('st-l').value, T = +document.getElementById('st-t').value;
+        document.getElementById('st-lv').innerText = L;
+        document.getElementById('st-tv').innerText = T;
+        document.getElementById('st-thick').innerHTML = [['細い 弦', true], ['太い 弦', false]].map(([n, v]) =>
+            `<button onclick="stSetThin(${v})" data-thin="${v}" class="${stThin === v ? 'bg-purple-700 text-white' : 'bg-white border-2 border-purple-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${n}</button>`).join('');
+        const f = strFreq();
+        const H = 190, x0 = 40, xmax = 520, y = 80;
+        const len = (L / 100) * (xmax - x0);
+        let g = bg(H);
+        g += `<rect x="${x0 - 14}" y="${y - 30}" width="14" height="60" rx="3" fill="#78350f"/>`;
+        g += `<rect x="${(x0 + len).toFixed(1)}" y="${y - 30}" width="14" height="60" rx="3" fill="#78350f"/>`;
+        // ふるえて いる 弦（基音の 形）
+        const th = stThin ? 3 : 6;
+        const pts = [];
+        for (let i = 0; i <= 60; i++) {
+            const t = i / 60;
+            pts.push(`${(x0 + len * t).toFixed(1)},${(y - Math.sin(t * Math.PI) * 22).toFixed(1)}`);
+        }
+        const pts2 = pts.map(p => { const [a, b] = p.split(','); return `${a},${(2 * y - +b).toFixed(1)}`; });
+        g += `<polyline points="${pts.join(' ')}" fill="none" stroke="#9333ea" stroke-width="${th}" opacity="0.5"/>`;
+        g += `<polyline points="${pts2.join(' ')}" fill="none" stroke="#9333ea" stroke-width="${th}" opacity="0.5"/>`;
+        g += `<line data-string x1="${x0}" y1="${y}" x2="${(x0 + len).toFixed(1)}" y2="${y}" stroke="#4c1d95" stroke-width="${th}"/>`;
+        g += `<line x1="${x0}" y1="${y + 46}" x2="${(x0 + len).toFixed(1)}" y2="${y + 46}" stroke="#0891b2" stroke-width="2"/>
+              <text x="${(x0 + len / 2).toFixed(1)}" y="${y + 64}" text-anchor="middle" font-size="11" font-weight="900" fill="#0891b2">${L} cm</text>`;
+        g += `<text x="${W / 2}" y="${H - 10}" text-anchor="middle" font-size="14" font-weight="900" fill="#7e22ce">${f.toFixed(1)} Hz（${nearestNote(f).name}）</text>`;
+        document.getElementById('st-fig').innerHTML = svg(W, H, g);
+        // 「半分に」ボタンと 同じ 数字（整数cm）で 計算する。ここだけ 12.5cm に すると
+        // 表示の「13cm」と Hz が 合わなく なる
+        const halfL = Math.max(+document.getElementById('st-l').min, Math.round(L / 2));
+        const half = STR_BASE_F * (STR_BASE_L / halfL) * Math.sqrt(T) * (stThin ? 1 : 0.5);
+        document.getElementById('st-info').innerHTML =
+            `長さ ${L}cm・はり ×${T}・${stThin ? '細い' : '太い'} 弦 → <b class="num text-purple-800">${f.toFixed(1)} Hz</b><br>
+             <span class="text-xs text-slate-600">
+             ・長さを <b>半分</b>（${halfL}cm）に すると ${half.toFixed(1)}Hz ＝ <b>やく 2倍</b>（1オクターブ 上）<br>
+             ・はりを <b>4倍</b>に すると Hzは <b>2倍</b>（√4＝2 だから）<br>
+             ・<b>太い</b> 弦に すると Hzは <b>半分</b>（重い ものは ゆっくり ふるえる）<br>
+             💡 ギターの 6本の 弦は「太さ」で、フレットは「長さ」で、ペグ（糸まき）は「はり」で 高さを 変えて いる。</span>`;
+    }
+    function stPlay() {
+        const f = strFreq();
+        play([{ f, dur: 1.1, type: 'sawtooth', vol: 0.16 }, { f: f * 2, dur: 1.1, type: 'sawtooth', vol: 0.07 }]);
+    }
+
+    /* --- 管 --- */
+    let ppOpen = true;
+    function ppSetOpen(v) { ppOpen = v; ppDraw(); }
+    function pipeFreq() {
+        const L = +document.getElementById('pp-l').value / 100;   // m
+        // 開管 f = v/(2L)、閉管 f = v/(4L)
+        return SOUND_SPEED / ((ppOpen ? 2 : 4) * L);
+    }
+    function ppDraw() {
+        const L = +document.getElementById('pp-l').value;
+        document.getElementById('pp-lv').innerText = L;
+        document.getElementById('pp-kind').innerHTML = [['両はし 開いた 管', true], ['片はし とじた 管', false]].map(([n, v]) =>
+            `<button onclick="ppSetOpen(${v})" data-open="${v}" class="${ppOpen === v ? 'bg-purple-700 text-white' : 'bg-white border-2 border-purple-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${n}</button>`).join('');
+        const f = pipeFreq();
+        const H = 216, x0 = 40, y = 92, len = (L / 80) * 470;
+        let g = bg(H);
+        g += `<rect x="${x0}" y="${y - 22}" width="${len.toFixed(1)}" height="44" rx="6" fill="#e0f2fe" stroke="#0369a1" stroke-width="3"/>`;
+        if (!ppOpen) g += `<rect x="${(x0 + len - 10).toFixed(1)}" y="${y - 22}" width="10" height="44" fill="#0369a1"/>`;
+        // 中の 空気の ふるえ。ゆれの 大きさを 上下 両方に かいて「ふくらみ」に 見える ように する
+        // （開管は 両はしが 大きく ゆれる／閉管は とじた 側が まったく 動かない）
+        const pts = [], mir = [];
+        for (let i = 0; i <= 60; i++) {
+            const t = i / 60;
+            const amp = ppOpen ? Math.cos(t * Math.PI) : Math.cos(t * Math.PI / 2);
+            const x = (x0 + len * t).toFixed(1);
+            pts.push(`${x},${(y - amp * 17).toFixed(1)}`);
+            mir.push(`${x},${(y + amp * 17).toFixed(1)}`);
+        }
+        g += `<polygon points="${pts.join(' ')} ${mir.slice().reverse().join(' ')}" fill="#c4b5fd" opacity="0.55"/>`;
+        g += `<polyline data-air points="${pts.join(' ')}" fill="none" stroke="#9333ea" stroke-width="3"/>`;
+        g += `<polyline points="${mir.join(' ')}" fill="none" stroke="#9333ea" stroke-width="3" opacity="0.5"/>`;
+        g += `<line x1="${x0}" y1="${y}" x2="${(x0 + len).toFixed(1)}" y2="${y}" stroke="#7e22ce" stroke-width="1"/>`;
+        // よく ゆれる はし（腹）と 動かない はし（節）に めじるしを つける
+        const mark = (x, node) => node
+            ? `<circle cx="${x}" cy="${y}" r="5" fill="#4c1d95"/>`
+            : `<path d="M${x} ${y - 24} l0 -10 M${x} ${y + 24} l0 10" stroke="#4c1d95" stroke-width="3" stroke-linecap="round"/>`;
+        g += mark(x0.toFixed(1), false) + mark((x0 + len).toFixed(1), !ppOpen);
+        // ラベルは 管の 長さに よらず いつも 同じ 場所。SVGの 文字には ルビが つかないので かなで 書く
+        g += `<text x="${x0}" y="${y - 44}" font-size="10" font-weight="900" fill="#4c1d95">左は よく ゆれる（はら）</text>`;
+        // 引き出し線は 文字の 下で 止める（文字を つらぬかない ように）
+        g += `<line x1="${(x0 + len).toFixed(1)}" y1="${y - 30}" x2="506" y2="${y - 34}" stroke="#4c1d95" stroke-width="1" stroke-dasharray="3 3"/>`;
+        g += `<text x="520" y="${y - 44}" text-anchor="end" font-size="10" font-weight="900" fill="#4c1d95">${ppOpen ? '右も よく ゆれる（はら）' : '右は 動かない（せつ）'}</text>`;
+        g += `<line x1="${x0}" y1="${y + 46}" x2="${(x0 + len).toFixed(1)}" y2="${y + 46}" stroke="#0891b2" stroke-width="2"/>
+              <text x="${(x0 + len / 2).toFixed(1)}" y="${y + 64}" text-anchor="middle" font-size="11" font-weight="900" fill="#0891b2">${L} cm</text>`;
+        g += `<text x="${W / 2}" y="${H - 32}" text-anchor="middle" font-size="12" font-weight="900" fill="#7e22ce">
+              ${ppOpen ? '340 ÷ (2 × ' + (L / 100).toFixed(2) + ')' : '340 ÷ (4 × ' + (L / 100).toFixed(2) + ')'} ＝ ${f.toFixed(1)} Hz</text>`;
+        g += `<text x="${W / 2}" y="${H - 12}" text-anchor="middle" font-size="14" font-weight="900" fill="#7e22ce">${f.toFixed(1)} Hz（${nearestNote(f).name}）</text>`;
+        document.getElementById('pp-fig').innerHTML = svg(W, H, g);
+        const other = SOUND_SPEED / ((ppOpen ? 4 : 2) * (L / 100));
+        document.getElementById('pp-info').innerHTML =
+            `${ppOpen ? '両はしが 開いた 管（リコーダー・フルート）' : '片はしが とじた 管（クラリネット・ビンの 口）'}、長さ ${L}cm
+             → <b class="num text-purple-800">${f.toFixed(1)} Hz</b><br>
+             <span class="text-xs text-slate-600">
+             ・同じ 長さで ${ppOpen ? 'とじた' : '開いた'} 管に すると ${other.toFixed(1)}Hz ＝ <b>${ppOpen ? '半分（1オクターブ 低い）' : '2倍（1オクターブ 高い）'}</b><br>
+             ・管を 長く すると 低く なる。だから 低い 音の 楽器は 大きい（コントラバス・チューバ）。<br>
+             💡 ビンに 水を 入れると 空気の 部分が 短く なって 音が 高く なる。これで 楽器が 作れる。</span>`;
+    }
+    function ppPlay() {
+        const f = pipeFreq();
+        const list = [{ f, dur: 1.2, type: 'triangle', vol: 0.26 }];
+        // とじた 管は 奇数倍音、開いた 管は 全部の 倍音が 出る
+        if (ppOpen) { list.push({ f: f * 2, dur: 1.2, type: 'triangle', vol: 0.08 }); list.push({ f: f * 3, dur: 1.2, type: 'triangle', vol: 0.04 }); }
+        else { list.push({ f: f * 3, dur: 1.2, type: 'triangle', vol: 0.09 }); list.push({ f: f * 5, dur: 1.2, type: 'triangle', vol: 0.04 }); }
+        play(list);
+    }
+
+    /* --- 倍音 --- */
+    // 基音は ド（C3）。こう すると 4:5:6倍音が ちょうど「ドミソ」に なり 下の 説明と 合う
+    const HA_BASE = 130.81;
+    const haHz = n => Math.round(HA_BASE * n);
+    let haN = 1;
+    function haSet(n) { haN = n; haDraw(); haPlay(); }
+    function haPlay() { play([{ f: HA_BASE * haN, dur: 1.1, type: 'sine', vol: 0.3 }]); }
+    function haDraw() {
+        document.getElementById('ha-btns').innerHTML = [1, 2, 3, 4, 5, 6].map(n =>
+            `<button onclick="haSet(${n})" data-ha="${n}" class="${haN === n ? 'bg-purple-700 text-white' : 'bg-white border-2 border-purple-200 text-slate-600'} font-black px-3 py-2 rounded-2xl text-xs bounce-hover">${n === 1 ? '基音' : n + '倍音'}<br><span class="num">${haHz(n)}Hz</span></button>`).join('');
+        // 480px幅に ±6px では ほぼ 直線に 見えて しまう ので、はばを せまく・ゆれを 大きく する
+        const H = 316, x0 = 56, xe = 504, y = 56, rowH = 44;
+        let g = bg(H);
+        g += `<text x="${W / 2}" y="22" text-anchor="middle" font-size="12" font-weight="900" fill="#7e22ce">1本の 弦が 同時に これ ぜんぶで ふるえて いる</text>`;
+        for (let n = 1; n <= 6; n++) {
+            const yy = y + (n - 1) * rowH;
+            const on = n === haN;
+            const a = on ? 19 : 13;
+            // ゆれの はんい（上下 両方）を うすく ぬって「ふくらみ」を 見せる
+            const up = [], dn = [];
+            for (let i = 0; i <= 180; i++) {
+                const t = i / 180;
+                const v = Math.sin(t * Math.PI * n) * a;
+                const x = (x0 + (xe - x0) * t).toFixed(1);
+                up.push(`${x},${(yy - v).toFixed(1)}`);
+                dn.push(`${x},${(yy + v).toFixed(1)}`);
+            }
+            g += `<polygon points="${up.join(' ')} ${dn.slice().reverse().join(' ')}" fill="${on ? '#c4b5fd' : '#ede9fe'}" opacity="${on ? 0.7 : 0.9}"/>`;
+            g += `<polyline data-harm="${n}" points="${up.join(' ')}" fill="none" stroke="${on ? '#9333ea' : '#d8b4fe'}" stroke-width="${on ? 3 : 1.8}"/>`;
+            g += `<polyline points="${dn.join(' ')}" fill="none" stroke="${on ? '#9333ea' : '#d8b4fe'}" stroke-width="${on ? 3 : 1.8}" opacity="0.5"/>`;
+            g += `<line x1="${x0}" y1="${yy}" x2="${xe}" y2="${yy}" stroke="${on ? '#7e22ce' : '#ddd6fe'}" stroke-width="1"/>`;
+            // 動かない 点（節）
+            for (let k = 0; k <= n; k++) g += `<circle cx="${(x0 + (xe - x0) * k / n).toFixed(1)}" cy="${yy}" r="${on ? 4.5 : 3}" fill="${on ? '#4c1d95' : '#a78bfa'}"/>`;
+            g += `<text x="26" y="${yy + 4}" text-anchor="middle" font-size="11" font-weight="900" fill="${on ? '#4c1d95' : '#a78bfa'}">${n === 1 ? '基' : n}</text>`;
+            g += `<text x="${xe + 8}" y="${yy + 4}" font-size="10" font-weight="800" fill="${on ? '#4c1d95' : '#c4b5fd'}">${haHz(n)}</text>`;
+        }
+        document.getElementById('ha-fig').innerHTML = svg(W, H, g);
+        const names = { 1: '基音＝ド（いちばん 低い）', 2: '1オクターブ 上の ド', 3: 'その 上の ソ', 4: '2オクターブ 上の ド', 5: 'その 上の ミ', 6: 'その 上の ソ' };
+        document.getElementById('ha-info').innerHTML =
+            `<b>${haN === 1 ? '基音' : haN + '倍音'}</b>＝${haHz(1)} × ${haN} ＝ <b class="num text-purple-800">やく ${haHz(haN)} Hz</b>（${names[haN]}）<br>
+             <span class="text-xs text-slate-600">
+             弦は ぜんたいで ふるえる（基音）だけでなく、2つ・3つ…に 分かれて 同時に ふるえて いる。
+             丸い 点は <b>動かない ところ（節{せつ}）</b>。<br>
+             💡 4倍音・5倍音・6倍音の 比は <b>4 : 5 : 6</b>＝ちょうど「ドミソ」。
+             和音が きれいに 聞こえるのは、もともと 1つの 音の 中に 入って いる 音だから。</span>`;
+    }
+
+    /* --- うなり --- */
+    function btDraw() {
+        const f2 = +document.getElementById('bt-f').value, f1 = 440;
+        document.getElementById('bt-fv').innerText = f2;
+        const beat = Math.abs(f2 - f1);
+        // 上下 2だんの 図。440Hzの 波1本と うなり1回は 時間の スケールが 100倍 ちがうので
+        // 「ズーム（10ミリ秒）」と「1秒ぶん」を 分けて かく。同じ 図に すると どちらも 見えない。
+        const H = 286, x0 = 34, xe = 534, wid = xe - x0;
+        const ZOOM = 0.01;                        // 上の だん＝0.01秒（10ミリ秒）
+        const midA = 62, midB = 196, ampA = 26, ampB = 40;
+        let g = bg(H);
+
+        /* ── 上の だん：波の 形そのもの ── */
+        g += `<text x="${x0}" y="20" font-size="12" font-weight="900" fill="#7e22ce">① ズーム：10ミリ秒（0.01秒）ぶん</text>`;
+        g += `<line x1="${x0}" y1="${midA}" x2="${xe}" y2="${midA}" stroke="#d8b4fe" stroke-width="1.5"/>`;
+        const pts = [];
+        for (let i = 0; i <= 600; i++) {
+            const t = i / 600 * ZOOM;              // 実さいの 秒
+            const v = Math.sin(2 * Math.PI * f1 * t) + Math.sin(2 * Math.PI * f2 * t);
+            pts.push(`${(x0 + wid * i / 600).toFixed(1)},${(midA - v * ampA / 2).toFixed(1)}`);
+        }
+        g += `<polyline data-beat points="${pts.join(' ')}" fill="none" stroke="#9333ea" stroke-width="2"/>`;
+        g += `<text x="${xe}" y="${midA + 40}" text-anchor="end" font-size="11" font-weight="900" fill="#6b7280">
+              ここまで 小さく すると 2つの 波は ほとんど 同じ 形</text>`;
+
+        /* ── 下の だん：1秒ぶんの 大きさ（包絡{ほうらく}線） ── */
+        g += `<text x="${x0}" y="${midB - 62}" font-size="12" font-weight="900" fill="#7e22ce">② 1秒ぶん：音の 大きさの 変化</text>`;
+        const up = [], dn = [];
+        for (let i = 0; i <= 600; i++) {
+            const t = i / 600;                     // 0〜1秒
+            const a = Math.abs(Math.cos(Math.PI * beat * t));   // 0〜1
+            const x = (x0 + wid * i / 600).toFixed(1);
+            up.push(`${x},${(midB - a * ampB).toFixed(1)}`);
+            dn.push(`${x},${(midB + a * ampB).toFixed(1)}`);
+        }
+        g += `<polygon data-env points="${up.join(' ')} ${dn.reverse().join(' ')}" fill="#e9d5ff" stroke="none"/>`;
+        g += `<polyline points="${up.join(' ')}" fill="none" stroke="#db2777" stroke-width="2.5"/>`;
+        g += `<line x1="${x0}" y1="${midB}" x2="${xe}" y2="${midB}" stroke="#a855f7" stroke-width="1.5"/>`;
+        // 大きく なる ところ（山）に 点を うつ。t ＝ 0, 1/beat, 2/beat … なので ちょうど beat個
+        for (let k = 0; k < beat; k++)
+            g += `<circle data-peak cx="${(x0 + wid * k / beat).toFixed(1)}" cy="${midB - ampB}" r="4" fill="#db2777"/>`;
+        g += `<text x="${x0}" y="${midB + ampB + 18}" font-size="11" font-weight="900" fill="#6b7280">0秒</text>`;
+        g += `<text x="${xe}" y="${midB + ampB + 18}" text-anchor="end" font-size="11" font-weight="900" fill="#6b7280">1秒</text>`;
+
+        g += `<text x="${W / 2}" y="${H - 28}" text-anchor="middle" font-size="12" font-weight="900" fill="#db2777">
+              ${beat === 0 ? 'ぴったり 同じ → ずっと 同じ 大きさ（うなりは 出ない）' : `● が ${beat}こ ＝ 1秒間に ${beat}回 大きく なる`}</text>`;
+        g += `<text x="${W / 2}" y="${H - 8}" text-anchor="middle" font-size="13" font-weight="900" fill="#7e22ce">
+              |${f2} − ${f1}| ＝ ${beat} 回/秒</text>`;
+        document.getElementById('bt-fig').innerHTML = svg(W, H, g);
+        document.getElementById('bt-info').innerHTML = beat === 0
+            ? `2つの 音が <b>ぴったり 同じ</b>！ うなりが 消えた。<br>
+               <span class="text-xs text-slate-600">💡 これが <b>チューニング（調律{ちょうりつ}）</b>。
+               ピアノの 調律師{ちょうりつし}や オーケストラは、この「うなりが 消える」ところを 耳で さがして 音を あわせて いる。</span>`
+            : `440Hz と ${f2}Hz を 同時に 鳴らすと、1秒間に <b class="num text-pink-700">${beat}回</b> 音が 大きく なったり 小さく なったり する。<br>
+               <span class="text-xs text-slate-600">うなりの 回数 ＝ <b>2つの Hzの 差</b>。
+               ${f2 === 440 ? '' : 'スライダーを 440に あわせると うなりが 消える。'}<br>
+               💡 波の 山と 山が かさなる ときは 大きく、山と 谷が かさなる ときは 打ち消しあって 小さく なる から。</span>`;
+    }
+    function btPlay() {
+        const f2 = +document.getElementById('bt-f').value;
+        play([{ f: 440, dur: 3.0, type: 'sine', vol: 0.22 }, { f: f2, dur: 3.0, type: 'sine', vol: 0.22 }]);
+    }
+
+    /* =====================================================================
+       ⑤ クイズ
+       ===================================================================== */
+    const QS = [
+        { f: '音の きほん', q: '音は 何が つたわって いる？', a: '空気の ふるえ（波）', x: ['光', '電気', '風そのもの'], e: '空気が おされたり ひっぱられたり して 波に なり、耳に とどく。空気が ない 宇宙では 音は つたわらない。' },
+        { f: '音の きほん', q: '1秒間に ふるえる 回数の 単位は？', a: 'ヘルツ（Hz）', x: ['デシベル（dB）', 'メートル', 'ワット'], e: 'デシベルは 音の 大きさの 単位。Hzが 大きいほど 高い 音に なる。' },
+        { f: '音の きほん', q: '音が 高く なるのは どんな とき？', a: 'ふるえる 回数（Hz）が ふえた とき', x: ['ゆれの 幅が 大きく なった とき', '波の 形が 変わった とき', '空気が あつく なった とき'], e: 'ゆれの 幅（振幅）は 大きさ、波の 形は 音色を 決める。' },
+        { f: '音の きほん', q: '音の 大きさを 決めるのは？', a: 'ゆれの 幅（振幅）', x: ['ふるえる 回数', '波の 形', '音の 速さ'], e: '強く はじくと ゆれが 大きく なり、大きな 音に なる。高さは 変わらない。' },
+        { f: '音の きほん', q: '「音色{ねいろ}」の ちがいを 作って いるのは？', a: '波の 形（倍音の 混ざり方）', x: ['音の 大きさ', 'ふるえる 回数だけ', '聞く 人の 気分'], e: '同じ ラの 音でも ピアノと バイオリンで ちがって 聞こえるのは、倍音の 混ざり方が ちがう から。' },
+        { f: '音の きほん', q: '空気中の 音の 速さは およそ？', a: '秒速 340m', x: ['秒速 34m', '秒速 3400m', '秒速 30万km'], e: '秒速 30万kmは 光の 速さ。だから かみなりは 光が 先に 見える。' },
+        { f: '音の きほん', q: 'かみなりが 光ってから 3秒後に 音が 来た。きょりは およそ？', a: 'やく 1000m', x: ['やく 100m', 'やく 3000m', 'やく 10km'], e: '340 × 3 ＝ 1020m。「光ってからの 秒数 × 340」で きょりが わかる。' },
+        { f: '音の きほん', q: '人が 聞こえる 音の 高さは およそ？', a: '20Hz 〜 20000Hz', x: ['1Hz 〜 100Hz', '100Hz 〜 1000Hz', '1Hz 〜 100万Hz'], e: '20000Hzより 高い 音は 超音波{ちょうおんぱ}。コウモリや イルカは これを つかって 物の 位置を 知る。' },
+        { f: '音の きほん', q: '宇宙（空気の ない ところ）で 音は？', a: 'つたわらない', x: ['もっと 速く つたわる', '同じように つたわる', 'ゆっくり つたわる'], e: '音は 空気の ふるえ。ふるえる ものが ないと つたわらない。映画の 宇宙の 爆発音は 演出。' },
+
+        { f: '音階', q: '1オクターブ 上の 音の Hzは？', a: 'ちょうど 2倍', x: ['1.5倍', '8倍', '12倍'], e: 'ラ440Hzの 1オクターブ 上は 880Hz。だから 同時に 鳴らすと とけあって 聞こえる。' },
+        { f: '音階', q: 'となりの けん（半音）に 行くと Hzは 何倍？', a: 'やく 1.0595倍', x: ['2倍', '1.5倍', '1.1倍'], e: '2の 12乗根。12回 かけると ちょうど 2倍（1オクターブ）に なる しくみ（平均律{へいきんりつ}）。' },
+        { f: '音階', q: '1オクターブは 半音 いくつ 分？', a: '12', x: ['7', '8', '10'], e: '白けん 7つ＋黒けん 5つ＝12。だから 半音を 12回 上げると 1オクターブ。' },
+        { f: '音階', q: 'ラ（A4）の 高さは 国際的に 何Hz？', a: '440Hz', x: ['400Hz', '500Hz', '1000Hz'], e: 'チューナーや 音さが 出す 音。世界中の 楽器が これを 基準に 合わせる。' },
+        { f: '音階', q: '「ドミソ」が きれいに ひびく りゆうは？', a: 'Hzが かんたんな 整数の 比（4:5:6）に 近い から', x: ['音が 大きい から', '3つ とも 白けん だから', '習って いる から'], e: '比が かんたんなほど 波の 山が そろいやすく、とけあって 聞こえる。' },
+        { f: '音階', q: 'ド と ド♯ を 同時に 鳴らすと？', a: 'ぶつかって 聞こえる（不協和）', x: ['いちばん きれいに ひびく', '1つの 音に 聞こえる', '何も 聞こえない'], e: '比が 15:16 のように 複雑。こわい 場面や 不安な 場面の 音楽に つかわれる。' },
+        { f: '音階', q: 'ピアノの 音の 数は？', a: '88音', x: ['48音', '61音', '100音'], e: 'やく 7オクターブ。いちばん 低い 音は 27.5Hz、高い 音は 4186Hz。' },
+
+        { f: '楽器', q: 'どの 楽器にも 共通する 3ステップは？', a: 'ふるわせる → 高さを 決める → 大きく する', x: ['息を 入れる → たたく → 止める', '電気を 入れる → 光る → 鳴る', 'ドレミを 覚える → ひく → 歌う'], e: '何を ふるわせるか（弦・空気・膜・板・声帯）で 楽器の なかまが 分かれる。' },
+        { f: '楽器', q: 'ギターの 弦を 短く おさえると？', a: '高い 音に なる', x: ['低い 音に なる', '大きい 音に なる', '変わらない'], e: '長さが 半分に なると Hzは 2倍（1オクターブ 上）。フレットは この ための 目じるし。' },
+        { f: '楽器', q: '弦を 強く 張ると 音は？', a: '高く なる', x: ['低く なる', '大きく なる だけ', '消える'], e: 'はりを 4倍に すると Hzは 2倍（√4＝2）。ペグを まわして 調律する のは この ため。' },
+        { f: '楽器', q: '太い 弦と 細い 弦、低い 音が 出るのは？', a: '太い 弦', x: ['細い 弦', '同じ', '長さで 決まるので 関係ない'], e: '重い ものは ゆっくり ふるえる。ギターの 6本の 弦は 太さが ちがう。' },
+        { f: '楽器', q: 'ピアノは どうやって 弦を ふるわせる？', a: 'ハンマーで たたく', x: ['弓で こする', '指で はじく', '息を あてる'], e: 'だから「打弦楽器」とも 言われる。チェンバロは 弦を はじく ので 音が ちがう。' },
+        { f: '楽器', q: 'バイオリンの 弓に 松やにを ぬる りゆうは？', a: 'ざらざらに して 弦を 引っかける ため', x: ['よい においを つける ため', 'すべりを よく する ため', 'こわれない ように する ため'], e: '「引っかけて 離す」を 高速で くりかえして 弦を ふるわせて いる。ぬらないと 音が 出ない。' },
+        { f: '楽器', q: 'ギターの 胴（ボディ）の 役目は？', a: '共鳴して 音を 大きく する', x: ['音の 高さを 決める', '弦を まっすぐに する', 'かざり'], e: '弦だけでは 空気を あまり 動かせない。箱の 中の 空気が いっしょに ふるえて 大きく なる。' },
+        { f: '楽器', q: 'リコーダーの あなを ふさぐと？', a: '低い 音に なる', x: ['高い 音に なる', '大きい 音に なる', '何も 変わらない'], e: '空気が ふるえる 部分が 長く なる から。管が 長い＝低い。' },
+        { f: '楽器', q: 'クラリネットの 音の もとは？', a: 'リード（うすい 板）の ふるえ', x: ['くちびるの ふるえ', 'あなの ふちに あてた 息', '弦の ふるえ'], e: 'トランペットは くちびる、フルートは あなの ふち。同じ 管楽器でも ふるわせ方が ちがう。' },
+        { f: '楽器', q: 'トランペットの バルブを おすと？', a: '管が 長く なって 音が 下がる', x: ['管が 短く なって 上がる', '音が 大きく なる', '音色が 変わる だけ'], e: '回り道の 管が つながる。くちびるの しめ方（倍音）と 組みあわせて 全部の 音を 出す。' },
+        { f: '楽器', q: '太鼓の 膜を 強く 張ると？', a: '高い 音に なる', x: ['低い 音に なる', '大きい 音に なる だけ', '音が 出なく なる'], e: '弦の「はり」と 同じ。ティンパニは ペダルで 張りを 変えて 音の 高さを 決める。' },
+        { f: '楽器', q: '鉄琴・木琴で 高い 音が 出る 板は？', a: '短い 板', x: ['長い 板', '厚い 板', '下の 筒が 長い 板'], e: '弦や 管と 同じ「短い＝高い」。板の 下の 筒は その 音で 共鳴する 長さに 切って ある。' },
+        { f: '楽器', q: '声の 高さを 変えて いるのは？', a: '声帯の はり方と 厚さ', x: ['口の 大きさ', '息の 量', '舌の 位置'], e: '引っぱって うすく すると 高い 声。口の 形は 音色（あいうえお）を 決める。' },
+        { f: '楽器', q: '声変わりで 声が 低く なる りゆうは？', a: '声帯が 長く 厚く なる から', x: ['のどが 細く なる から', '肺が 大きく なる から', '舌が 長く なる から'], e: '弦が 長く 太く なると 低く なる のと 同じ 理屈。' },
+        { f: '楽器', q: '電子キーボードで ふるえて いるのは？', a: 'スピーカーの 紙（コーン）', x: ['中の 弦', '中の 管の 空気', '何も ふるえて いない'], e: '電気の 波を 計算で 作り、最後に スピーカーが 空気を ふるわせる。だから 音が くるわない。' },
+
+        { f: 'じっけん', q: '弦の 長さを 半分に すると Hzは？', a: '2倍（1オクターブ 上）', x: ['半分', '4倍', '変わらない'], e: '長さと Hzは 反比例。だから 12フレット（半分の ところ）を おさえると 1オクターブ 上に なる。' },
+        { f: 'じっけん', q: '同じ 長さで、片はしを とじた 管の 音は 開いた 管と くらべて？', a: '1オクターブ 低い', x: ['1オクターブ 高い', '同じ', '半音 低い'], e: '開管 f＝340÷(2L)、閉管 f＝340÷(4L)。だから 閉管は 半分の Hz＝1オクターブ 低い。' },
+        { f: 'じっけん', q: '長さ 39cmの 両はしが 開いた 管の 音は およそ？', a: 'やく 436Hz', x: ['やく 218Hz', 'やく 872Hz', 'やく 130Hz'], e: '340 ÷ (2 × 0.39) ＝ 435.9Hz。ラ（440Hz）に 近い。' },
+        { f: 'じっけん', q: 'ビンに 水を 入れて ふくと 音は？', a: '高く なる', x: ['低く なる', '変わらない', '出なく なる'], e: '空気の 部分が 短く なる から。水の 量を 変えれば 楽器に なる。' },
+        { f: 'じっけん', q: '倍音の 4・5・6倍の 比は 何の 和音？', a: 'ドミソ（メジャー）', x: ['ドレミ', 'ドファラ', '半音の ぶつかり'], e: '和音が きれいに 聞こえるのは、もともと 1つの 音の 倍音の 中に 入って いる 音だから。' },
+        { f: 'じっけん', q: '弦の「節{せつ}」とは？', a: 'ふるえて いない（動かない）ところ', x: ['いちばん 大きく ゆれる ところ', '弦を おさえる 場所', '弦の はし だけ'], e: '3倍音なら 弦を 3つに 分ける 位置に 節が できる。ハーモニクス奏法は ここを 軽く さわって 出す。' },
+        { f: 'じっけん', q: '440Hzと 444Hzを 同時に 鳴らすと 1秒に 何回 うなる？', a: '4回', x: ['2回', '8回', '440回'], e: 'うなりの 回数 ＝ 2つの Hzの 差。|444 − 440| ＝ 4。' },
+        { f: 'じっけん', q: 'うなりが 消えた とき、2つの 音は？', a: 'ぴったり 同じ 高さ', x: ['1オクターブ ちがう', '半音 ちがう', '音が 止まった'], e: 'これが チューニング。調律師は うなりを 聞いて 音を あわせて いる。' },
+        { f: 'じっけん', q: '低い 音の 楽器が 大きい りゆうは？', a: '低い 音を 出すには 長い 弦や 管が 必要 だから', x: ['たくさん 空気が いる から', 'じょうぶに 作る ため', '見た目の ため'], e: 'コントラバス・チューバ・パイプオルガンの 太い パイプ。すべて「長い＝低い」。' }
+    ];
+    let qz = null, qzField = 'all';
+    function newQuiz() {
+        const pool = qzField === 'all' ? QS : QS.filter(q => q.f === qzField);
+        const q = pool[rnd(pool.length)];
+        qz = { q, choices: shuffle([q.a].concat(q.x)), done: false };
+        const fields = ['all'].concat([...new Set(QS.map(x => x.f))]);
+        document.getElementById('qz-fields').innerHTML = fields.map(f =>
+            `<button onclick="setField('${f}')" data-qf="${f}" class="${qzField === f ? 'bg-purple-700 text-white' : 'bg-white border-2 border-purple-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${f === 'all' ? 'ぜんぶ ' + QS.length : f + ' ' + QS.filter(x => x.f === f).length}</button>`).join('');
+        document.getElementById('qz-q').innerHTML = `<span class="text-xs font-black text-purple-700 bg-purple-100 px-2 py-1 rounded-lg mr-2">${esc(q.f)}</span>${esc(q.q)}`;
+        document.getElementById('qz-choices').innerHTML = qz.choices.map((c, i) =>
+            `<button onclick="ansQuiz(${i})" data-qzc="${i}" class="bg-white border-2 border-slate-200 hover:border-purple-500 font-bold text-left px-4 py-3 rounded-2xl bounce-hover">${esc(c)}</button>`).join('');
+        document.getElementById('qz-res').innerHTML = '';
+        scoreBox('qz-score', S.quiz);
+    }
+    function setField(f) { qzField = f; newQuiz(); }
+    function ansQuiz(i) {
+        if (!qz || qz.done) return;
+        qz.done = true;
+        const ok = qz.choices[i] === qz.q.a;
+        S.quiz[1]++; if (ok) S.quiz[0]++;
+        markChoices('[data-qzc]', j => qz.choices[j] === qz.q.a, i, 'font-bold text-left px-4 py-3 rounded-2xl');
+        document.getElementById('qz-res').innerHTML = resultBox(ok, ok ? '⭕ せいかい！' : `❌ こたえは 「${esc(qz.q.a)}」`, qz.q.e);
+        scoreBox('qz-score', S.quiz);
+    }
+
+    /* ===================== 起動 ===================== */
+    renderNav();
+    wvDraw();
+    spDraw();
+    rubify(document.body);
+</script>
+</body>
+</html>
