@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1024 パズル おなじ数をくっつけよう</title>
+    <meta name="description" content="同じ数どうしをくっつけて1024をめざすスライドパズル。矢印キー・スワイプ・ボタンで操作、ひとつ前にもどす機能つき。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums }
+        .bounce-hover { transition: transform .12s cubic-bezier(.175,.885,.32,1.275) }
+        .bounce-hover:active { transform: scale(.94) }
+        #board { touch-action: none }
+        .tile { position: absolute; display: flex; align-items: center; justify-content: center;
+                border-radius: 12px; font-weight: 900; transition: transform .12s ease-out; will-change: transform }
+        @keyframes appear { from { transform: scale(.1); opacity: 0 } to { opacity: 1 } }
+        .tile-new > span { animation: appear .16s ease-out }
+        @keyframes bump { 0% { transform: scale(1) } 45% { transform: scale(1.22) } 100% { transform: scale(1) } }
+        .tile-merged > span { animation: bump .2s ease-out }
+        @keyframes pop { 0% { transform: scale(.5); opacity: 0 } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275) }
+    </style>
+</head>
+<body class="bg-orange-50 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 text-white p-3 shadow-lg sticky top-0 z-30">
+        <div class="max-w-2xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">🔢</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">1024 パズル</h1>
+                    <p class="text-xs text-amber-50 font-bold hidden sm:block">おなじ数を くっつけよう</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <main class="max-w-2xl mx-auto w-full p-3 sm:p-5 flex-grow space-y-3">
+
+        <div class="flex gap-2">
+            <div class="flex-1 bg-white rounded-2xl p-2 text-center shadow border-2 border-amber-100">
+                <p class="text-[11px] font-black text-slate-400">スコア</p>
+                <p id="score" class="num text-2xl font-black text-amber-600">0</p>
+            </div>
+            <div class="flex-1 bg-white rounded-2xl p-2 text-center shadow border-2 border-amber-100">
+                <p class="text-[11px] font-black text-slate-400">さいこう</p>
+                <p id="best" class="num text-2xl font-black text-slate-500">0</p>
+            </div>
+            <div class="flex-1 bg-white rounded-2xl p-2 text-center shadow border-2 border-amber-100">
+                <p class="text-[11px] font-black text-slate-400">いちばん 大きい数</p>
+                <p id="maxtile" class="num text-2xl font-black text-rose-500">2</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-3xl p-3 shadow-md border-2 border-amber-100">
+            <div id="board" class="relative mx-auto rounded-2xl bg-amber-200/70" style="width:100%;max-width:420px;aspect-ratio:1/1"></div>
+            <p id="msg" class="text-center font-black mt-2 min-h-[1.75rem]"></p>
+            <div class="flex gap-2 mt-1">
+                <button onclick="undo()" id="btn-undo" class="flex-1 bg-white border-2 border-slate-200 text-slate-600 font-black py-2.5 rounded-xl bounce-hover text-sm">↩ ひとつ もどす</button>
+                <button onclick="newGame()" class="flex-1 bg-white border-2 border-amber-200 text-amber-700 font-black py-2.5 rounded-xl bounce-hover text-sm">🔄 さいしょから</button>
+            </div>
+        </div>
+
+        <!-- そうさボタン（スマホ用） -->
+        <div class="bg-white rounded-3xl p-3 shadow-md border-2 border-amber-100">
+            <div class="grid grid-cols-3 gap-2 max-w-[260px] mx-auto">
+                <div></div>
+                <button onclick="move('up')" class="bg-amber-100 border-b-4 border-amber-300 rounded-xl py-3 font-black text-2xl bounce-hover">↑</button>
+                <div></div>
+                <button onclick="move('left')" class="bg-amber-100 border-b-4 border-amber-300 rounded-xl py-3 font-black text-2xl bounce-hover">←</button>
+                <button onclick="move('down')" class="bg-amber-100 border-b-4 border-amber-300 rounded-xl py-3 font-black text-2xl bounce-hover">↓</button>
+                <button onclick="move('right')" class="bg-amber-100 border-b-4 border-amber-300 rounded-xl py-3 font-black text-2xl bounce-hover">→</button>
+            </div>
+            <p class="text-center text-xs font-bold text-slate-400 mt-2">
+                やじるしキー・スワイプ・このボタン、どれでも うごかせるよ
+            </p>
+        </div>
+
+        <details class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+            <summary class="font-black cursor-pointer">💡 あそびかた と コツ</summary>
+            <ul class="text-sm font-bold text-slate-600 mt-2 space-y-1 leading-relaxed">
+                <li>・うごかすと ぜんぶの タイルが その むきに すべる。</li>
+                <li>・おなじ 数が ぶつかると <b>たされて 2ばい</b>（2＋2＝4、4＋4＝8…）。</li>
+                <li>・1回の うごきで、ひとつの タイルは <b>1度しか</b> くっつかない。</li>
+                <li>・うごくたびに 新しい <b>2</b>（たまに 4）が 出てくる。</li>
+                <li>・コツ：いちばん 大きい数を <b>すみっこ</b>に おいて、その れつを くずさない。</li>
+                <li>・<b>1024</b> を つくれたら クリア！ そのまま 2048 も めざせるよ。</li>
+            </ul>
+        </details>
+    </main>
+
+    <footer class="text-center py-3 text-xs text-slate-400 font-bold">1024 パズル © 2026</footer>
+
+    <script>
+        const SIZE = 4, GOAL = 1024;
+        const COLORS = {
+            2: ['#fef3c7', '#92400e'], 4: ['#fde68a', '#92400e'], 8: ['#fdba74', '#7c2d12'],
+            16: ['#fb923c', '#ffffff'], 32: ['#f87171', '#ffffff'], 64: ['#ef4444', '#ffffff'],
+            128: ['#facc15', '#7c2d12'], 256: ['#eab308', '#ffffff'], 512: ['#84cc16', '#ffffff'],
+            1024: ['#22c55e', '#ffffff'], 2048: ['#06b6d4', '#ffffff'], 4096: ['#8b5cf6', '#ffffff'],
+            8192: ['#ec4899', '#ffffff']
+        };
+        const SAVE_KEY = 'kids-1024-best-v1';
+
+        const state = { tiles: [], score: 0, best: 0, over: false, won: false, prev: null, nextId: 1 };
+
+        /* ---------- ばんの そうさ ---------- */
+        const emptyGrid = () => Array.from({ length: SIZE }, () => Array(SIZE).fill(null));
+        function gridOf(tiles) {
+            const g = emptyGrid();
+            tiles.forEach(t => { g[t.r][t.c] = t; });
+            return g;
+        }
+        const values = () => {
+            const g = gridOf(state.tiles);
+            return g.map(row => row.map(t => t ? t.v : 0));
+        };
+
+        // 1れつを 0がわへ よせる。もどり値は {line, gained, moved}
+        function slideLine(line) {
+            const a = line.filter(v => v);
+            const out = [];
+            let gained = 0;
+            for (let i = 0; i < a.length; i++) {
+                if (a[i] === a[i + 1]) { out.push(a[i] * 2); gained += a[i] * 2; i++; }
+                else out.push(a[i]);
+            }
+            while (out.length < SIZE) out.push(0);
+            return { line: out, gained, moved: out.some((v, i) => v !== line[i]) };
+        }
+
+        // 数字だけで 動かした けっかを かえす（テストにも つかう）
+        function moveValues(vals, dir) {
+            const get = (i, j) => {                    // i=れつ番号, j=よせる がわからの きょり
+                if (dir === 'left') return vals[i][j];
+                if (dir === 'right') return vals[i][SIZE - 1 - j];
+                if (dir === 'up') return vals[j][i];
+                return vals[SIZE - 1 - j][i];
+            };
+            const set = (i, j, v) => {
+                if (dir === 'left') vals2[i][j] = v;
+                else if (dir === 'right') vals2[i][SIZE - 1 - j] = v;
+                else if (dir === 'up') vals2[j][i] = v;
+                else vals2[SIZE - 1 - j][i] = v;
+            };
+            const vals2 = emptyGrid().map(r => r.map(() => 0));
+            let gained = 0, moved = false;
+            for (let i = 0; i < SIZE; i++) {
+                const line = Array.from({ length: SIZE }, (_, j) => get(i, j));
+                const r = slideLine(line);
+                if (r.moved) moved = true;
+                gained += r.gained;
+                r.line.forEach((v, j) => set(i, j, v));
+            }
+            return { vals: vals2, gained, moved };
+        }
+
+        function canMove(vals) {
+            return ['left', 'right', 'up', 'down'].some(d => moveValues(vals, d).moved);
+        }
+
+        /* ---------- タイル（見た目つき）の うごき ---------- */
+        function move(dir) {
+            if (state.over) return;
+            const before = values();
+            const res = moveValues(before, dir);
+            if (!res.moved) return;
+
+            state.prev = { vals: before, score: state.score, won: state.won };
+
+            // 数字の けっかに 合わせて タイルを 作りなおす（動きは 位置の 変化で 見せる）
+            const g = gridOf(state.tiles);
+            const order = [];                           // よせる がわから 順に
+            for (let i = 0; i < SIZE; i++) {
+                for (let j = 0; j < SIZE; j++) {
+                    const pos = dir === 'left' ? [i, j] : dir === 'right' ? [i, SIZE - 1 - j]
+                        : dir === 'up' ? [j, i] : [SIZE - 1 - j, i];
+                    order.push(pos);
+                }
+            }
+            // れつごとに 「どの タイルが どこへ 行くか」を 計算
+            const moved = [], removed = [];
+            for (let i = 0; i < SIZE; i++) {
+                const cells = [];
+                for (let j = 0; j < SIZE; j++) {
+                    const [r, c] = dir === 'left' ? [i, j] : dir === 'right' ? [i, SIZE - 1 - j]
+                        : dir === 'up' ? [j, i] : [SIZE - 1 - j, i];
+                    if (g[r][c]) cells.push({ t: g[r][c], r, c });
+                }
+                let slot = 0;
+                for (let k = 0; k < cells.length; k++) {
+                    const cur = cells[k], nxt = cells[k + 1];
+                    const target = dir === 'left' ? [i, slot] : dir === 'right' ? [i, SIZE - 1 - slot]
+                        : dir === 'up' ? [slot, i] : [SIZE - 1 - slot, i];
+                    if (nxt && cur.t.v === nxt.t.v) {
+                        moved.push({ t: cur.t, r: target[0], c: target[1], v: cur.t.v * 2, merged: true });
+                        moved.push({ t: nxt.t, r: target[0], c: target[1], v: nxt.t.v, gone: true });
+                        removed.push(nxt.t);
+                        k++;
+                    } else {
+                        moved.push({ t: cur.t, r: target[0], c: target[1], v: cur.t.v });
+                    }
+                    slot++;
+                }
+            }
+            moved.forEach(m => { m.t.r = m.r; m.t.c = m.c; m.t.nextV = m.v; m.t.mergedNow = !!m.merged; m.t.gone = !!m.gone; });
+            render();                                   // まず 位置だけ うごかす
+
+            setTimeout(() => {
+                state.tiles = state.tiles.filter(t => !t.gone);
+                state.tiles.forEach(t => { t.v = t.nextV; });
+                state.score += res.gained;
+                if (state.score > state.best) {
+                    state.best = state.score;
+                    try { localStorage.setItem(SAVE_KEY, String(state.best)); } catch (e) { }
+                }
+                spawn();
+                render();
+                checkEnd();
+            }, 125);
+        }
+
+        function spawn() {
+            const g = gridOf(state.tiles);
+            const free = [];
+            for (let r = 0; r < SIZE; r++) for (let c = 0; c < SIZE; c++) if (!g[r][c]) free.push([r, c]);
+            if (!free.length) return null;
+            const [r, c] = free[Math.floor(Math.random() * free.length)];
+            const t = { id: state.nextId++, r, c, v: Math.random() < 0.9 ? 2 : 4, isNew: true };
+            state.tiles.push(t);
+            return t;
+        }
+
+        function checkEnd() {
+            const vals = values();
+            const max = Math.max(...vals.flat());
+            if (!state.won && max >= GOAL) {
+                state.won = true;
+                document.getElementById('msg').innerHTML =
+                    `<span class="text-emerald-600">🎉 ${GOAL} できた！ このまま つづけられるよ</span>`;
+            }
+            if (!canMove(vals)) {
+                state.over = true;
+                document.getElementById('msg').innerHTML =
+                    `<span class="text-rose-500">😵 うごかせる ところが ない…「さいしょから」で もういちど</span>`;
+            }
+        }
+
+        function undo() {
+            if (!state.prev) return;
+            const p = state.prev;
+            state.tiles = [];
+            p.vals.forEach((row, r) => row.forEach((v, c) => {
+                if (v) state.tiles.push({ id: state.nextId++, r, c, v });
+            }));
+            state.score = p.score;
+            state.won = p.won;
+            state.over = false;
+            state.prev = null;
+            document.getElementById('msg').innerText = '';
+            render();
+        }
+
+        function newGame() {
+            state.tiles = [];
+            state.score = 0;
+            state.over = false;
+            state.won = false;
+            state.prev = null;
+            document.getElementById('msg').innerText = '';
+            spawn(); spawn();
+            render();
+        }
+
+        /* ---------- えがく ---------- */
+        function render() {
+            const board = document.getElementById('board');
+            const gap = 8;
+            const cell = (board.clientWidth - gap * (SIZE + 1)) / SIZE;
+            // はいけいの ます（さいしょだけ）
+            if (!board.querySelector('.bg-cell')) {
+                let bg = '';
+                for (let r = 0; r < SIZE; r++) for (let c = 0; c < SIZE; c++) {
+                    bg += `<div class="bg-cell absolute rounded-xl bg-white/60"></div>`;
+                }
+                board.innerHTML = bg;
+            }
+            board.querySelectorAll('.bg-cell').forEach((el, k) => {
+                const r = Math.floor(k / SIZE), c = k % SIZE;
+                el.style.width = el.style.height = cell + 'px';
+                el.style.transform = `translate(${gap + c * (cell + gap)}px,${gap + r * (cell + gap)}px)`;
+            });
+            // タイル
+            const seen = new Set();
+            state.tiles.forEach(t => {
+                seen.add(t.id);
+                let el = document.getElementById('tile-' + t.id);
+                if (!el) {
+                    el = document.createElement('div');
+                    el.id = 'tile-' + t.id;
+                    el.className = 'tile' + (t.isNew ? ' tile-new' : '');
+                    el.innerHTML = '<span></span>';
+                    board.appendChild(el);
+                }
+                const [bg, fg] = COLORS[t.v] || ['#7c3aed', '#fff'];
+                el.style.width = el.style.height = cell + 'px';
+                el.style.transform = `translate(${gap + t.c * (cell + gap)}px,${gap + t.r * (cell + gap)}px)`;
+                el.style.background = bg;
+                el.style.color = fg;
+                el.style.fontSize = (t.v >= 1000 ? cell * 0.3 : t.v >= 100 ? cell * 0.36 : cell * 0.44) + 'px';
+                el.dataset.v = t.v;
+                el.classList.toggle('tile-merged', !!t.mergedNow);
+                el.querySelector('span').textContent = t.v;
+                t.isNew = false;
+                t.mergedNow = false;
+            });
+            board.querySelectorAll('.tile').forEach(el => {
+                if (!seen.has(+el.id.slice(5))) el.remove();
+            });
+            document.getElementById('score').innerText = state.score.toLocaleString();
+            document.getElementById('best').innerText = state.best.toLocaleString();
+            const mx = state.tiles.length ? Math.max(...state.tiles.map(t => t.v)) : 0;
+            document.getElementById('maxtile').innerText = mx;
+            document.getElementById('btn-undo').disabled = !state.prev;
+            document.getElementById('btn-undo').classList.toggle('opacity-40', !state.prev);
+        }
+
+        /* ---------- そうさ ---------- */
+        const KEYS = {
+            ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down',
+            a: 'left', d: 'right', w: 'up', s: 'down',
+            h: 'left', l: 'right', k: 'up', j: 'down'
+        };
+        document.addEventListener('keydown', e => {
+            const d = KEYS[e.key];
+            if (!d) return;
+            e.preventDefault();
+            move(d);
+        });
+        let touch = null;
+        const board = () => document.getElementById('board');
+        function onStart(e) {
+            const p = e.touches ? e.touches[0] : e;
+            touch = { x: p.clientX, y: p.clientY };
+        }
+        function onEnd(e) {
+            if (!touch) return;
+            const p = e.changedTouches ? e.changedTouches[0] : e;
+            const dx = p.clientX - touch.x, dy = p.clientY - touch.y;
+            touch = null;
+            if (Math.hypot(dx, dy) < 24) return;
+            move(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'));
+        }
+
+        window.addEventListener('load', () => {
+            try { state.best = +(localStorage.getItem(SAVE_KEY) || 0); } catch (e) { }
+            const b = board();
+            b.addEventListener('touchstart', onStart, { passive: true });
+            b.addEventListener('touchend', onEnd);
+            b.addEventListener('mousedown', onStart);
+            b.addEventListener('mouseup', onEnd);
+            newGame();
+            // ばんの 大きさが かわったら（回転・文字の よみこみ・折りたたみ など）
+            // タイルの 位置を 計算しなおす
+            let lastW = 0;
+            new ResizeObserver(() => {
+                const w = b.clientWidth;
+                if (w && w !== lastW) { lastW = w; render(); }
+            }).observe(b);
+        });
+    </script>
+</body>
+</html>
