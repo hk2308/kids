@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ルービックキューブ 解きかたナビ</title>
+    <meta name="description" content="6つの面の色を入力すると、そろえるまでの手順を1手ずつ教えてくれるルービックキューブの解説アプリ。初心者向けの層ごとの解き方で、回す面を図で示します。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums }
+        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace }
+        .bounce-hover { transition: transform .12s cubic-bezier(.175,.885,.32,1.275) }
+        .bounce-hover:active { transform: scale(.94) }
+        @keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.1) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275) }
+        .sticker { aspect-ratio: 1/1; border-radius: 5px; border: 2px solid #1e293b33; cursor: pointer;
+                   transition: transform .1s, box-shadow .1s }
+        .sticker:active { transform: scale(.9) }
+        .sticker.hl { box-shadow: 0 0 0 2px #fff, 0 0 0 5px #7c3aed }
+        rt { font-size: .55em; font-weight: 700; color: #4338ca }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-slate-800 via-indigo-800 to-slate-800 text-white p-3 shadow-lg sticky top-0 z-30">
+        <div class="max-w-4xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">🧩</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">ルービックキューブ 解きかたナビ</h1>
+                    <p class="text-xs text-indigo-200 font-bold hidden sm:block">色を 入れると 手順を 教えてくれる</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[64px] z-20 bg-slate-100/95 backdrop-blur border-b border-slate-300">
+        <div class="max-w-4xl mx-auto flex gap-2 p-3 overflow-x-auto" id="tab-nav"></div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto w-full p-3 sm:p-5 flex-grow space-y-4">
+
+        <!-- ===== ① 色を入れる ===== -->
+        <section id="tab-input" class="space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">🎨 6つの面の 色を 入れる</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    下の 色を えらんでから、ますを タップして ぬる。まん中（センター）は うごかないので 固定だよ。
+                </p>
+                <div id="palette" class="grid grid-cols-6 gap-2 mt-3"></div>
+                <div class="flex flex-wrap gap-2 mt-3">
+                    <button onclick="loadSolved()" class="bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-2 rounded-xl bounce-hover text-sm">そろった 状態に</button>
+                    <button onclick="loadScramble()" class="bg-white border-2 border-indigo-200 text-indigo-700 font-black px-3 py-2 rounded-xl bounce-hover text-sm">🎲 てきとうに まぜる</button>
+                    <button onclick="solveNow()" class="ml-auto bg-gradient-to-r from-indigo-600 to-violet-700 text-white font-black px-5 py-2 rounded-xl border-b-4 border-indigo-900 bounce-hover">🔍 解きかたを 見る</button>
+                </div>
+                <p id="input-msg" class="font-black mt-2 min-h-[1.75rem] text-sm"></p>
+            </div>
+
+            <div class="bg-white rounded-3xl p-3 sm:p-4 shadow-md border-2 border-indigo-100 overflow-x-auto">
+                <div id="net" class="mx-auto" style="min-width:340px;max-width:560px"></div>
+                <div id="net-labels" class="text-center text-xs font-bold text-slate-400 mt-2">
+                    まん中の 黄色い面が <b>U（上）</b>、みどりが <b>F（前）</b>、白が <b>D（下）</b>。白を 下に して 持つ かたちだよ。
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== ② 解きかた ===== -->
+        <section id="tab-steps" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <h2 class="font-black">📋 手順</h2>
+                    <span id="steps-count" class="num bg-indigo-100 text-indigo-700 font-black px-3 py-1 rounded-full text-xs"></span>
+                    <span id="steps-stage" class="bg-amber-100 text-amber-700 font-black px-3 py-1 rounded-full text-xs"></span>
+                </div>
+                <p id="steps-desc" class="text-sm font-bold text-slate-500 mt-2 min-h-[2.5rem]"></p>
+                <div class="flex items-center justify-center gap-2 mt-2">
+                    <span id="move-prev" class="mono text-xl font-black text-slate-300 w-16 text-center"></span>
+                    <span id="move-now" class="mono text-5xl font-black text-indigo-700 w-28 text-center">—</span>
+                    <span id="move-next" class="mono text-xl font-black text-slate-300 w-16 text-center"></span>
+                </div>
+                <p id="move-jp" class="text-center font-black text-slate-600 min-h-[1.75rem]"></p>
+                <div class="grid grid-cols-4 gap-2 mt-2">
+                    <button onclick="stepTo(0)" class="bg-white border-2 border-slate-200 font-black py-2.5 rounded-xl bounce-hover text-sm">⏮ さいしょ</button>
+                    <button onclick="stepBy(-1)" class="bg-white border-2 border-slate-200 font-black py-2.5 rounded-xl bounce-hover text-sm">◀ もどる</button>
+                    <button onclick="stepBy(1)" class="bg-gradient-to-r from-indigo-600 to-violet-700 text-white font-black py-2.5 rounded-xl border-b-4 border-indigo-900 bounce-hover">つぎ ▶</button>
+                    <button onclick="stepTo(-1)" class="bg-white border-2 border-slate-200 font-black py-2.5 rounded-xl bounce-hover text-sm">⏭ さいご</button>
+                </div>
+                <div class="h-3 bg-slate-100 rounded-full mt-3 overflow-hidden border border-slate-200">
+                    <div id="steps-bar" class="h-full bg-gradient-to-r from-indigo-500 to-violet-600" style="width:0%"></div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-3 sm:p-4 shadow-md border-2 border-indigo-100 overflow-x-auto">
+                <div id="net2" class="mx-auto" style="min-width:340px;max-width:560px"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <p class="font-black text-sm mb-2">ぜんぶの 手順</p>
+                <div id="all-moves" class="text-sm leading-loose"></div>
+            </div>
+        </section>
+
+        <!-- ===== ③ 回しかた ===== -->
+        <section id="tab-help" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">🔤 記号（きごう）の 読みかた</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    白い面を 下、黄色い面を 上、みどりの面を 手前に して もつ。その ときの 面の 名まえだよ。
+                </p>
+                <div id="notation" class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-3"></div>
+                <ul class="text-sm font-bold text-slate-600 mt-3 space-y-1 leading-relaxed">
+                    <li>・<span class="mono font-black">R</span> … その面を <b>時計まわり</b>に 90度</li>
+                    <li>・<span class="mono font-black">R'</span>（アール ダッシュ）… <b>反時計まわり</b>に 90度</li>
+                    <li>・<span class="mono font-black">R2</span> … 180度（半回転）</li>
+                    <li>・時計まわりは <b>その面を 正面から 見たとき</b> の むき。</li>
+                </ul>
+            </div>
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h3 class="font-black">📚 この アプリの 解きかた（層ごとに そろえる）</h3>
+                <ol id="stage-list" class="text-sm font-bold text-slate-600 mt-2 space-y-1.5 leading-relaxed"></ol>
+                <p class="text-xs font-bold text-slate-400 mt-3">
+                    ※ いちばん 少ない 手数では なく、<b>おぼえやすい やり方</b>で 案内します。
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="text-center py-3 text-xs text-slate-400 font-bold">ルービックキューブ 解きかたナビ © 2026</footer>
+
+    <script>
+        /* ===================== キューブの あらわし方 =====================
+           ステッカー 54まいを U,R,F,D,L,B の じゅんに 9まいずつ。
+           面の 中の ばんごうは、その面を 正面から 見て 左上から 右下へ 0..8。 */
+        const FACES = ['U', 'R', 'F', 'D', 'L', 'B'];
+        const FACE_COLOR = { U: '#facc15', R: '#dc2626', F: '#16a34a', D: '#f1f5f9', L: '#f97316', B: '#2563eb' };
+        const FACE_NAME = { U: '上（黄）', R: '右（赤）', F: '前（みどり）', D: '下（白）', L: '左（オレンジ）', B: '後ろ（青）' };
+        const FI = { U: 0, R: 1, F: 2, D: 3, L: 4, B: 5 };
+
+        const solvedState = () => {
+            const s = new Uint8Array(54);
+            for (let i = 0; i < 54; i++) s[i] = Math.floor(i / 9);
+            return s;
+        };
+
+        // 4つの ばしょを a→b→c→d→a と まわす
+        const CYC = {
+            U: [[0, 2, 8, 6], [1, 5, 7, 3], [18, 36, 45, 9], [19, 37, 46, 10], [20, 38, 47, 11]],
+            R: [[9, 11, 17, 15], [10, 14, 16, 12], [2, 51, 29, 20], [5, 48, 32, 23], [8, 45, 35, 26]],
+            F: [[18, 20, 26, 24], [19, 23, 25, 21], [6, 9, 29, 44], [7, 12, 28, 41], [8, 15, 27, 38]],
+            D: [[27, 29, 35, 33], [28, 32, 34, 30], [24, 15, 51, 42], [25, 16, 52, 43], [26, 17, 53, 44]],
+            L: [[36, 38, 44, 42], [37, 41, 43, 39], [0, 18, 27, 53], [3, 21, 30, 50], [6, 24, 33, 47]],
+            B: [[45, 47, 53, 51], [46, 50, 52, 48], [2, 36, 33, 17], [1, 39, 34, 14], [0, 42, 35, 11]]
+        };
+        // うごかす ときに 「どこから 来るか」の 表を 先に つくって おく（はやく するため）
+        const SRC = {};
+        FACES.forEach(f => {
+            const p = new Uint8Array(54);
+            for (let i = 0; i < 54; i++) p[i] = i;
+            CYC[f].forEach(([a, b, c, d]) => { p[b] = a; p[c] = b; p[d] = c; p[a] = d; });
+            SRC[f] = p;
+            const two = new Uint8Array(54), three = new Uint8Array(54);
+            for (let i = 0; i < 54; i++) two[i] = p[p[i]];
+            for (let i = 0; i < 54; i++) three[i] = p[two[i]];
+            SRC[f + '2'] = two;
+            SRC[f + "'"] = three;
+        });
+
+        function applyMove(s, mv) {
+            const p = SRC[mv], out = new Uint8Array(54);
+            for (let i = 0; i < 54; i++) out[i] = s[p[i]];
+            return out;
+        }
+        const applySeq = (s, seq) => seq.reduce((st, m) => applyMove(st, m), s);
+        const ALL_MOVES = [];
+        FACES.forEach(f => { ALL_MOVES.push(f, f + "'", f + '2'); });
+        const isSolved = s => { for (let i = 0; i < 54; i++) if (s[i] !== (i / 9 | 0)) return false; return true; };
+
+        /* ===================== パーツの ばしょ ===================== */
+        const EDGES = [
+            [7, 19], [5, 10], [1, 46], [3, 37],      // UF UR UB UL
+            [28, 25], [32, 16], [34, 52], [30, 43],  // DF DR DB DL
+            [23, 12], [14, 48], [50, 39], [41, 21]   // FR RB BL LF
+        ];
+        const CORNERS = [
+            [8, 9, 20], [6, 18, 38], [0, 36, 47], [2, 45, 11],     // URF UFL ULB UBR
+            [29, 26, 15], [27, 44, 24], [33, 53, 42], [35, 17, 51] // DFR DLF DBL DRB
+        ];
+        function findEdge(s, c1, c2) {
+            for (const e of EDGES) {
+                if (s[e[0]] === c1 && s[e[1]] === c2) return [e[0], e[1]];
+                if (s[e[0]] === c2 && s[e[1]] === c1) return [e[1], e[0]];
+            }
+            return null;
+        }
+        // c1 の ステッカーが さいしょに くるように かえす
+        function findCorner(s, c1, c2, c3) {
+            const want = [c1, c2, c3].slice().sort().join();
+            for (const k of CORNERS) {
+                if ([s[k[0]], s[k[1]], s[k[2]]].sort().join() !== want) continue;
+                return [c1, c2, c3].map(c => k.find(i => s[i] === c));
+            }
+            return null;
+        }
+
+        /* ===================== まわりの 4面の 名まえを ずらす ===================== */
+        const RING = ['F', 'R', 'B', 'L'];
+        function shiftAlg(alg, k) {
+            if (!k) return alg.slice();
+            return alg.map(m => {
+                const i = RING.indexOf(m[0]);
+                return (i < 0 ? m[0] : RING[(i + k) % 4]) + m.slice(1);
+            });
+        }
+
+        /* ===================== 解く（層ごとの 初心者むけ 手順） ===================== */
+        const U_COLOR = FI.U, D_COLOR = FI.D;
+        const CROSS_SLOT = { 2: [28, 25], 1: [32, 16], 5: [34, 52], 4: [30, 43] };   // 色 -> [D面, よこ面]
+        const CORNER_SLOT = [[29, 26, 15], [35, 17, 51], [33, 53, 42], [27, 44, 24]];// k -> [D, RING[k], RING[k+1]]
+        const U_CORNER = [[8, 9, 20], [2, 45, 11], [0, 36, 47], [6, 18, 38]];        // スロット k の 真上
+        const MID_SLOT = [[23, 12], [14, 48], [50, 39], [41, 21]];                   // k -> [RING[k], RING[k+1]]
+        const U_EDGE = [[7, 19], [5, 10], [1, 46], [3, 37]];                         // RING[j] がわの U エッジ
+
+        const RIGHT_INSERT = ['U', 'R', "U'", "R'", "U'", "F'", 'U', 'F'];
+        const LEFT_INSERT = ["U'", "L'", 'U', 'L', 'U', 'F', "U'", "F'"];
+        const CORNER_CYCLE = ['U', 'R', "U'", "L'", 'U', "R'", "U'", 'L'];
+        const EDGE_CYCLE = ['R', "U'", 'R', 'U', 'R', 'U', 'R', "U'", "R'", "U'", 'R2'];
+
+        function makeSolver(start) {
+            let s = Uint8Array.from(start);
+            const moves = [];
+            let stage = 0;
+            const run = seq => {
+                for (const m of seq) {
+                    s = applyMove(s, m);
+                    moves.push({ m, stage });
+                    if (moves.length > 3000) throw new Error('手順が 長すぎます');
+                }
+            };
+            const fail = msg => { const e = new Error(msg); e.dbg = { state: Array.from(s), moves: moves.map(x => x.m), stage }; throw e; };
+            const crossOK = c => s[CROSS_SLOT[c][0]] === D_COLOR && s[CROSS_SLOT[c][1]] === c;
+
+            /* --- ① 白の クロス --- */
+            stage = 1;
+            const done = [];
+            for (const f of RING) {
+                const c = FI[f];
+                if (!crossOK(c)) {
+                    for (let g = 0; g < 10 && !crossOK(c); g++) {
+                        liftToU(c);
+                        const seq = search(
+                            st => st[CROSS_SLOT[c][0]] === D_COLOR && st[CROSS_SLOT[c][1]] === c,
+                            st => done.every(d => st[CROSS_SLOT[d][0]] === D_COLOR && st[CROSS_SLOT[d][1]] === d),
+                            5);
+                        if (seq) run(seq);
+                    }
+                }
+                if (!crossOK(c)) fail('クロスが つくれません');
+                done.push(c);
+            }
+
+            /* --- ② 白の コーナー（1段目） --- */
+            stage = 2;
+            for (let k = 0; k < 4; k++) {
+                const cols = [D_COLOR, FI[RING[k]], FI[RING[(k + 1) % 4]]];
+                const slot = CORNER_SLOT[k];
+                const ok = () => s[slot[0]] === cols[0] && s[slot[1]] === cols[1] && s[slot[2]] === cols[2];
+                if (ok()) continue;
+                // D層の どこかに いたら 出す
+                for (let g = 0; g < 5 && !inU(cols); g++) {
+                    const at = dSlotOf(cols);
+                    run(shiftAlg(['R', 'U', "R'"], at < 0 ? 0 : at));
+                }
+                // 真上に もってきて、入るまで くりかえす
+                for (let g = 0; g < 4 && !above(cols, k); g++) run(['U']);
+                for (let g = 0; g < 6 && !ok(); g++) run(shiftAlg(['R', 'U', "R'", "U'"], k));
+                if (!ok()) fail('1段目の コーナーが 入りません');
+            }
+
+            /* --- ③ 2段目の エッジ --- */
+            stage = 3;
+            for (let k = 0; k < 4; k++) {
+                const c1 = FI[RING[k]], c2 = FI[RING[(k + 1) % 4]];
+                const slot = MID_SLOT[k];
+                const ok = () => s[slot[0]] === c1 && s[slot[1]] === c2;
+                if (ok()) continue;
+                // 中段に いたら いったん 上に 出す
+                for (let g = 0; g < 5 && !edgeInU(c1, c2); g++) {
+                    const at = midSlotOf(c1, c2);
+                    run(shiftAlg(RIGHT_INSERT, at < 0 ? 0 : at));
+                }
+                // よこの 色を センターに あわせて、右か 左に さしこむ
+                let inserted = false;
+                for (let g = 0; g < 4 && !inserted; g++) {
+                    const j = uEdgeFace(c1, c2);
+                    if (j >= 0) {
+                        const e = findEdge(s, c1, c2);
+                        const up = e[0] < 9 ? e[0] : e[1];
+                        const upColor = s[up];
+                        const sideColor = s[e[0] < 9 ? e[1] : e[0]];
+                        // よこの 色の 面を 前と みなす
+                        if (upColor === FI[RING[(j + 1) % 4]]) { run(shiftAlg(RIGHT_INSERT, j)); inserted = true; }
+                        else if (upColor === FI[RING[(j + 3) % 4]]) { run(shiftAlg(LEFT_INSERT, j)); inserted = true; }
+                    }
+                    if (!inserted) run(['U']);
+                }
+                if (!ok()) fail('2段目が 入りません');
+            }
+
+            /* --- ④ 黄色の 十字 --- */
+            stage = 4;
+            for (let g = 0; g < 8 && !yellowCross(); g++) {
+                const pat = pattern();
+                if (pat === 'line') { for (let t = 0; t < 4 && !(s[3] === U_COLOR && s[5] === U_COLOR); t++) run(['U']); }
+                else if (pat === 'L') { for (let t = 0; t < 4 && !(s[1] === U_COLOR && s[3] === U_COLOR); t++) run(['U']); }
+                run(['F', 'R', 'U', "R'", "U'", "F'"]);
+            }
+            if (!yellowCross()) fail('上の 十字が できません');
+
+            /* --- ⑤ 上の コーナーの ばしょ（むきは まだ そろわなくて いい） --- */
+            stage = 5;
+            for (let g = 0; g < 10 && !cornersPlaced(); g++) {
+                // U を まわして「1つだけ ばしょが あっていて、のこりが 3つまわし」の かたちを さがす
+                let t = 0;
+                for (; t < 4; t++) {
+                    if (cornersPlaced() || (cornerPermEven() && correctCorner() >= 0)) break;
+                    run(['U']);
+                }
+                if (cornersPlaced()) break;
+                // 3つまわしでは なおせない かたち（2つずつ 入れかえ）は、まず 1回 まわして くずす
+                if (t === 4) for (let u = 0; u < 4 && !cornerPermEven(); u++) run(['U']);
+                const k = correctCorner();
+                run(shiftAlg(CORNER_CYCLE, k < 0 ? 0 : (k - CORNER_CYCLE_FIX + 4) % 4));
+            }
+            if (!cornersPlaced()) fail('上の コーナーが そろいません');
+
+            /* --- ⑥ 上の 面を ぜんぶ 黄色に --- */
+            stage = 6;
+            for (let c = 0; c < 4; c++) {
+                for (let g = 0; g < 6 && s[8] !== U_COLOR; g++) run(["R'", "D'", 'R', 'D']);
+                if (s[8] !== U_COLOR) fail('上の 面が そろいません');
+                run(['U']);
+            }
+            if (!topDone()) fail('上の 面が そろいません');
+
+            /* --- ⑦ 上の エッジ --- */
+            // ここで U を まわすと コーナーが ずれるので、まわさない
+            stage = 7;
+            for (let g = 0; g < 8 && !isSolved(s); g++) {
+                const k = placedEdge();
+                run(shiftAlg(EDGE_CYCLE, k < 0 ? 0 : (k - EDGE_CYCLE_FIX + 4) % 4));
+            }
+            if (!isSolved(s)) fail('さいごが そろいません');
+
+            return { moves, state: s };
+
+            /* ---- 部品 ---- */
+            function inU(cols) { return findCorner(s, cols[0], cols[1], cols[2]).some(i => i < 9); }
+            function dSlotOf(cols) {
+                const p = findCorner(s, cols[0], cols[1], cols[2]);
+                for (let k = 0; k < 4; k++) if (p.every(i => CORNER_SLOT[k].includes(i))) return k;
+                return -1;
+            }
+            function above(cols, k) {
+                const p = findCorner(s, cols[0], cols[1], cols[2]);
+                return p.every(i => U_CORNER[k].includes(i));
+            }
+            function edgeInU(c1, c2) { const e = findEdge(s, c1, c2); return e[0] < 9 || e[1] < 9; }
+            function midSlotOf(c1, c2) {
+                const e = findEdge(s, c1, c2);
+                for (let k = 0; k < 4; k++) if (MID_SLOT[k].includes(e[0]) && MID_SLOT[k].includes(e[1])) return k;
+                return -1;
+            }
+            // U層の エッジの よこ色が その面の センターと あっていれば その面の ばんごう
+            function uEdgeFace(c1, c2) {
+                const e = findEdge(s, c1, c2);
+                if (!(e[0] < 9 || e[1] < 9)) return -1;
+                const side = e[0] < 9 ? e[1] : e[0];
+                for (let j = 0; j < 4; j++) if (U_EDGE[j][1] === side && s[side] === FI[RING[j]]) return j;
+                return -1;
+            }
+            function liftToU(c) {
+                for (let g = 0; g < 6; g++) {
+                    const e = findEdge(s, D_COLOR, c);
+                    if (e[0] < 9 || e[1] < 9) return;
+                    const a = e[0], b = e[1];
+                    let k = -1;
+                    for (let i = 0; i < 4; i++) if (MID_SLOT[i].includes(a) && MID_SLOT[i].includes(b)) k = i;
+                    if (k >= 0) { run(shiftAlg(['R', 'U', "R'"], k)); return; }   // 中段 → 上へ
+                    for (const col of [2, 1, 5, 4]) {                            // D層 → 2回まわして 上へ
+                        if (CROSS_SLOT[col].includes(a)) { run([FACES[col] + '2']); return; }
+                    }
+                    return;
+                }
+            }
+            function search(goal, keep, maxDepth) {
+                const bufs = [];
+                for (let i = 0; i <= maxDepth; i++) bufs.push(new Uint8Array(54));
+                bufs[0].set(s);
+                const path = [];
+                for (let d = 1; d <= maxDepth; d++) {
+                    if (dfs(0, d, '')) return path.slice();
+                }
+                return null;
+                function dfs(level, depth, lastFace) {
+                    if (depth === 0) return goal(bufs[level]) && keep(bufs[level]);
+                    const cur = bufs[level], nxt = bufs[level + 1];
+                    for (const m of ALL_MOVES) {
+                        if (m[0] === lastFace) continue;
+                        const p = SRC[m];
+                        for (let i = 0; i < 54; i++) nxt[i] = cur[p[i]];
+                        path.push(m);
+                        if (dfs(level + 1, depth - 1, m[0])) return true;
+                        path.pop();
+                    }
+                    return false;
+                }
+            }
+            function yellowCross() { return s[1] === U_COLOR && s[3] === U_COLOR && s[5] === U_COLOR && s[7] === U_COLOR; }
+            function pattern() {
+                const n = [1, 3, 5, 7].filter(i => s[i] === U_COLOR).length;
+                if (n === 0) return 'dot';
+                if (n === 2) return (s[3] === U_COLOR && s[5] === U_COLOR) || (s[1] === U_COLOR && s[7] === U_COLOR) ? 'line' : 'L';
+                return 'cross';
+            }
+            function topDone() { return [0, 1, 2, 3, 5, 6, 7, 8].every(i => s[i] === U_COLOR); }
+            function cornerColorsAt(i) {
+                const c = U_CORNER[i];
+                return [s[c[0]], s[c[1]], s[c[2]]].slice().sort().join();
+            }
+            function wantColorsAt(i) {
+                return [U_COLOR, FI[RING[i]], FI[RING[(i + 1) % 4]]].slice().sort().join();
+            }
+            function cornersPlaced() { return [0, 1, 2, 3].every(i => cornerColorsAt(i) === wantColorsAt(i)); }
+            function correctCorner() {
+                for (let i = 0; i < 4; i++) if (cornerColorsAt(i) === wantColorsAt(i)) return i;
+                return -1;
+            }
+            // 4つの コーナーの ならびが「3つまわし」で なおせる かたちか（ぐうすう置換か）
+            function cornerPermEven() {
+                const perm = [];
+                for (let i = 0; i < 4; i++) {
+                    const want = wantColorsAt(i);
+                    for (let j = 0; j < 4; j++) if (cornerColorsAt(j) === want) { perm.push(j); break; }
+                }
+                if (perm.length < 4) return false;
+                let even = true;
+                for (let a = 0; a < 4; a++) for (let b = a + 1; b < 4; b++) if (perm[a] > perm[b]) even = !even;
+                return even;
+            }
+            function placedEdge() {
+                for (let j = 0; j < 4; j++) {
+                    const [u, side] = U_EDGE[j];
+                    if (s[u] === U_COLOR && s[side] === FI[RING[j]]) return j;
+                }
+                return -1;
+            }
+        }
+
+        // ⑥⑦の 手順が 「どこを 動かさないか」は 下の しらべで きまる（読みこみ時に 計算）
+        let CORNER_CYCLE_FIX = 0, EDGE_CYCLE_FIX = 0;
+        function calibrate() {
+            const cSlots = [[8, 9, 20], [2, 45, 11], [0, 36, 47], [6, 18, 38]];
+            let st = applySeq(solvedState(), CORNER_CYCLE);
+            for (let i = 0; i < 4; i++) {
+                const c = cSlots[i];
+                if ([st[c[0]], st[c[1]], st[c[2]]].sort().join() ===
+                    [FI.U, FI[RING[i]], FI[RING[(i + 1) % 4]]].sort().join()) { CORNER_CYCLE_FIX = i; break; }
+            }
+            const eSlots = [[7, 19], [5, 10], [1, 46], [3, 37]];
+            st = applySeq(solvedState(), EDGE_CYCLE);
+            for (let j = 0; j < 4; j++) {
+                if (st[eSlots[j][0]] === FI.U && st[eSlots[j][1]] === FI[RING[j]]) { EDGE_CYCLE_FIX = j; break; }
+            }
+        }
+        calibrate();
+
+        // むだな 手を まとめる（R R → R2、R R' → なし）
+        function tidy(moves) {
+            const out = [];
+            for (const mv of moves) {
+                const last = out[out.length - 1];
+                if (last && last.m[0] === mv.m[0]) {
+                    const amt = x => x.length === 1 ? 1 : (x[1] === '2' ? 2 : 3);
+                    const total = (amt(last.m) + amt(mv.m)) % 4;
+                    out.pop();
+                    if (total === 1) out.push({ m: mv.m[0], stage: mv.stage });
+                    else if (total === 2) out.push({ m: mv.m[0] + '2', stage: mv.stage });
+                    else if (total === 3) out.push({ m: mv.m[0] + "'", stage: mv.stage });
+                } else out.push(mv);
+            }
+            return out;
+        }
+
+        function solveCube(start) {
+            const r = makeSolver(start);
+            const moves = tidy(r.moves);
+            const check = applySeq(Uint8Array.from(start), moves.map(m => m.m));
+            if (!isSolved(check)) throw new Error('手順の たしかめに しっぱいしました');
+            return moves;
+        }
+
+        /* ===================== 入力の チェック ===================== */
+        function validate(st) {
+            const cnt = new Array(6).fill(0);
+            st.forEach(v => cnt[v]++);
+            for (let i = 0; i < 6; i++) if (cnt[i] !== 9) return `${FACE_NAME[FACES[i]]} の 色が ${cnt[i]}まい です（9まいに してね）`;
+            for (let i = 0; i < 6; i++) if (st[i * 9 + 4] !== i) return 'まん中の 色は うごかせません';
+            // エッジ・コーナーが ありえる 組みあわせか
+            const eset = new Set();
+            for (const e of EDGES) {
+                const a = st[e[0]], b = st[e[1]];
+                if (a === b) return 'おなじ色が 2つ ならんだ エッジが あります';
+                if ((a === FI.U && b === FI.D) || (a === FI.D && b === FI.U)) return '白と黄が となりの エッジは ありません';
+                if ((a === FI.F && b === FI.B) || (a === FI.B && b === FI.F)) return 'みどりと青が となりの エッジは ありません';
+                if ((a === FI.R && b === FI.L) || (a === FI.L && b === FI.R)) return '赤とオレンジが となりの エッジは ありません';
+                const key = [a, b].sort().join();
+                if (eset.has(key)) return 'おなじ エッジが 2つ あります';
+                eset.add(key);
+            }
+            const cset = new Set();
+            for (const c of CORNERS) {
+                const t = [st[c[0]], st[c[1]], st[c[2]]];
+                if (new Set(t).size !== 3) return 'おなじ色が 2つ ある コーナーが あります';
+                const key = t.slice().sort().join();
+                if (cset.has(key)) return 'おなじ コーナーが 2つ あります';
+                cset.add(key);
+            }
+            return null;
+        }
+
+        /* ===================== 画面 ===================== */
+        const NET_POS = { U: [3, 0], L: [0, 3], F: [3, 3], R: [6, 3], B: [9, 3], D: [3, 6] };
+        const state = { tab: 'input', cube: solvedState(), paint: 'U', steps: [], at: 0, playState: null };
+
+        function renderNet(hostId, st, hl) {
+            const host = document.getElementById(hostId);
+            let html = `<div class="grid gap-[3px]" style="grid-template-columns:repeat(12,1fr)">`;
+            const cells = {};
+            Object.entries(NET_POS).forEach(([f, [cx, cy]]) => {
+                for (let i = 0; i < 9; i++) {
+                    const x = cx + (i % 3), y = cy + Math.floor(i / 3);
+                    cells[y * 12 + x] = { f, i };
+                }
+            });
+            for (let y = 0; y < 9; y++) {
+                for (let x = 0; x < 12; x++) {
+                    const c = cells[y * 12 + x];
+                    if (!c) { html += `<div></div>`; continue; }
+                    const idx = FI[c.f] * 9 + c.i;
+                    const col = FACE_COLOR[FACES[st[idx]]];
+                    const center = c.i === 4;
+                    const on = hl && hl.includes(c.f) ? ' hl' : '';
+                    html += `<div class="sticker${on}" data-idx="${idx}" data-face="${c.f}"
+                        style="background:${col}${center ? ';box-shadow:inset 0 0 0 3px #0f172a55' : ''}"></div>`;
+                }
+            }
+            html += `</div>`;
+            host.innerHTML = html;
+            if (hostId === 'net') {
+                host.querySelectorAll('.sticker').forEach(el => {
+                    el.addEventListener('click', () => {
+                        const idx = +el.dataset.idx;
+                        if (idx % 9 === 4) return;                 // まん中は かえられない
+                        state.cube[idx] = FI[state.paint];
+                        renderNet('net', state.cube);
+                        document.getElementById('input-msg').innerText = '';
+                    });
+                });
+            }
+        }
+
+        function renderPalette() {
+            document.getElementById('palette').innerHTML = FACES.map(f => {
+                const on = state.paint === f;
+                return `<button onclick="setPaint('${f}')" data-paint="${f}"
+                    class="${on ? 'ring-4 ring-indigo-500' : 'ring-2 ring-slate-200'} rounded-xl py-3 font-black text-xs bounce-hover"
+                    style="background:${FACE_COLOR[f]};color:${f === 'U' || f === 'D' ? '#1e293b' : '#fff'}">${f}</button>`;
+            }).join('');
+        }
+        function setPaint(f) { state.paint = f; renderPalette(); }
+
+        const TABS = { input: '🎨 色を入れる', steps: '📋 解きかた', help: '🔤 記号' };
+        function renderNav() {
+            document.getElementById('tab-nav').innerHTML = Object.entries(TABS).map(([k, label]) => {
+                const on = state.tab === k;
+                return `<button onclick="setTab('${k}')" data-tab="${k}" class="${on ? 'bg-indigo-700 text-white' : 'bg-white border-2 border-indigo-200 text-slate-600'} font-black px-4 py-2 rounded-full text-sm whitespace-nowrap bounce-hover">${label}</button>`;
+            }).join('');
+        }
+        function setTab(k) {
+            state.tab = k;
+            Object.keys(TABS).forEach(t => document.getElementById('tab-' + t).classList.toggle('hidden', t !== k));
+            renderNav();
+        }
+
+        function loadSolved() {
+            state.cube = solvedState();
+            renderNet('net', state.cube);
+            document.getElementById('input-msg').innerText = '';
+        }
+        function loadScramble() {
+            let s = solvedState();
+            const seq = [];
+            let last = '';
+            for (let i = 0; i < 25; i++) {
+                let m;
+                do { m = ALL_MOVES[Math.floor(Math.random() * ALL_MOVES.length)]; } while (m[0] === last);
+                last = m[0];
+                seq.push(m);
+                s = applyMove(s, m);
+            }
+            state.cube = s;
+            renderNet('net', state.cube);
+            document.getElementById('input-msg').innerHTML =
+                `<span class="text-slate-500">まぜました：<span class="mono">${seq.join(' ')}</span></span>`;
+        }
+
+        const STAGES = [
+            '', '① 白の クロス（下の 面に 十字）', '② 白の コーナー（1段目 かんせい）',
+            '③ 2段目の エッジ', '④ 黄色の 十字', '⑤ 上の コーナーの ばしょ',
+            '⑥ 上の 面を 黄色に', '⑦ 上の エッジの ばしょ（かんせい！）'
+        ];
+        const STAGE_DESC = [
+            '', '白い面（下）に 十字を つくる。よこの 色も センターと あわせる。',
+            '白い コーナーを 入れて、1段目を かんぺきに する。',
+            '2段目の エッジを 入れる。上の 段から すべりこませる。',
+            '上の面（黄）に 十字を つくる。まだ かどは そろわなくて いい。',
+            '上の コーナーを 正しい ばしょへ 入れかえる。むきは まだ バラバラで いい。',
+            '上の面を ぜんぶ 黄色に する。R\' D\' R D を くりかえす。',
+            'さいごに 上の エッジを 入れかえたら かんせい！'
+        ];
+
+        function solveNow() {
+            const err = validate(state.cube);
+            const msg = document.getElementById('input-msg');
+            if (err) {
+                msg.innerHTML = `<span class="text-rose-600">⚠️ ${err}</span>`;
+                return;
+            }
+            let moves;
+            try {
+                moves = solveCube(state.cube);
+            } catch (e) {
+                msg.innerHTML = `<span class="text-rose-600">⚠️ この ならびは 作れない かも。もう いちど 色を たしかめてね（${e.message}）</span>`;
+                return;
+            }
+            state.steps = moves;
+            state.at = 0;
+            state.playState = Uint8Array.from(state.cube);
+            msg.innerHTML = `<span class="text-emerald-600">✅ ${moves.length}手で そろいます！</span>`;
+            renderSteps();
+            setTab('steps');
+        }
+
+        const MOVE_JP = m => {
+            const f = m[0];
+            const dir = m.length === 1 ? '時計まわりに 90度' : (m[1] === '2' ? '180度' : '反時計まわりに 90度');
+            return `${FACE_NAME[f]} の面を ${dir}`;
+        };
+
+        function renderSteps() {
+            const n = state.steps.length;
+            document.getElementById('steps-count').innerText = `${state.at} / ${n} 手`;
+            const cur = state.steps[state.at];
+            const stg = cur ? cur.stage : (state.steps[n - 1] ? state.steps[n - 1].stage : 1);
+            document.getElementById('steps-stage').innerText = STAGES[stg] || '';
+            document.getElementById('steps-desc').innerText = STAGE_DESC[stg] || '';
+            document.getElementById('move-prev').innerText = state.at > 0 ? state.steps[state.at - 1].m : '';
+            document.getElementById('move-now').innerText = cur ? cur.m : '🎉';
+            document.getElementById('move-next').innerText = state.at + 1 < n ? state.steps[state.at + 1].m : '';
+            document.getElementById('move-jp').innerText = cur ? MOVE_JP(cur.m) : 'かんせい！';
+            document.getElementById('steps-bar').style.width = (n ? state.at / n * 100 : 0) + '%';
+            renderNet('net2', state.playState, cur ? [cur.m[0]] : null);
+            document.getElementById('all-moves').innerHTML = state.steps.map((mv, i) =>
+                `<span data-mi="${i}" class="mono inline-block px-1.5 py-0.5 m-0.5 rounded font-black ${i === state.at ? 'bg-indigo-600 text-white' : i < state.at ? 'bg-slate-100 text-slate-400' : 'bg-indigo-50 text-indigo-800'}">${mv.m}</span>`).join('');
+        }
+        function stepBy(d) {
+            const n = state.steps.length;
+            let at = state.at + d;
+            at = Math.max(0, Math.min(n, at));
+            stepTo(at);
+        }
+        function stepTo(at) {
+            const n = state.steps.length;
+            if (at < 0) at = n;
+            state.at = Math.max(0, Math.min(n, at));
+            state.playState = applySeq(Uint8Array.from(state.cube), state.steps.slice(0, state.at).map(x => x.m));
+            renderSteps();
+        }
+
+        function renderHelp() {
+            document.getElementById('notation').innerHTML = FACES.map(f =>
+                `<div class="flex items-center gap-2 border-2 border-slate-200 rounded-xl p-2">
+                    <span class="w-8 h-8 rounded-lg border-2 border-slate-300" style="background:${FACE_COLOR[f]}"></span>
+                    <span class="mono font-black text-lg">${f}</span>
+                    <span class="text-sm font-bold text-slate-600">${FACE_NAME[f]}</span>
+                </div>`).join('');
+            document.getElementById('stage-list').innerHTML = STAGES.slice(1).map((s, i) =>
+                `<li><b>${s}</b><br><span class="text-slate-500">${STAGE_DESC[i + 1]}</span></li>`).join('');
+        }
+
+        window.addEventListener('load', () => {
+            renderNav();
+            renderPalette();
+            renderNet('net', state.cube);
+            renderNet('net2', state.cube);
+            renderHelp();
+        });
+    </script>
+</body>
+</html>
