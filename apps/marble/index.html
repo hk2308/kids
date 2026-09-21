@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ビー玉コース工作室 ころがし装置をつくろう</title>
+    <meta name="description" content="さか・カーブ・ジャンプ台・トランポリン・ベルト・風車・シーソー・ワープなど形のちがうパーツをならべて、ビー玉の転がるコースを自分で作れる工作ゲーム。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums }
+        .bounce-hover { transition: transform .12s cubic-bezier(.175,.885,.32,1.275) }
+        .bounce-hover:active { transform: scale(.94) }
+        @keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.1) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275) }
+        canvas { touch-action: manipulation; image-rendering: auto }
+        .pal { scrollbar-width: thin }
+        rt { font-size: .55em; font-weight: 700; color: #7c3aed }
+    </style>
+</head>
+<body class="bg-violet-50 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white p-3 shadow-lg sticky top-0 z-30">
+        <div class="max-w-4xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">🔮</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">ビー玉コース工作室</h1>
+                    <p class="text-xs text-violet-100 font-bold hidden sm:block">パーツを ならべて ころがそう</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto w-full p-2 sm:p-4 flex-grow space-y-3">
+
+        <!-- そうさ -->
+        <div class="bg-white rounded-2xl p-2 shadow-md border-2 border-violet-100 flex flex-wrap items-center gap-2">
+            <button id="btn-run" onclick="toggleRun()" class="bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black px-4 py-2.5 rounded-xl border-b-4 border-emerald-700 bounce-hover">▶ スタート</button>
+            <button onclick="resetBall()" class="bg-white border-2 border-violet-200 text-violet-700 font-black px-3 py-2.5 rounded-xl bounce-hover text-sm">↩ もどす</button>
+            <span id="status" class="num font-black text-sm text-slate-500 ml-1"></span>
+            <div class="ml-auto flex gap-2">
+                <button onclick="openSamples()" class="bg-white border-2 border-amber-200 text-amber-700 font-black px-3 py-2.5 rounded-xl bounce-hover text-sm">📋 おてほん</button>
+                <button onclick="saveCourse()" class="bg-white border-2 border-sky-200 text-sky-700 font-black px-3 py-2.5 rounded-xl bounce-hover text-sm">💾 ほぞん</button>
+                <button onclick="loadCourse()" class="bg-white border-2 border-sky-200 text-sky-700 font-black px-3 py-2.5 rounded-xl bounce-hover text-sm">📂 よみこみ</button>
+                <button onclick="clearAll()" class="bg-white border-2 border-rose-200 text-rose-600 font-black px-3 py-2.5 rounded-xl bounce-hover text-sm">🗑 ぜんぶ</button>
+            </div>
+        </div>
+
+        <!-- ばん -->
+        <div class="bg-white rounded-2xl p-2 shadow-md border-2 border-violet-100">
+            <canvas id="cv" width="640" height="800" class="w-full h-auto rounded-xl block" style="max-height:72vh"></canvas>
+            <p id="hint" class="text-center text-xs font-bold text-slate-400 mt-1">
+                あいている ますを タップ → パーツを おく／おいた パーツを タップ → むきが かわる
+            </p>
+        </div>
+
+        <!-- パーツ -->
+        <div class="bg-white rounded-2xl p-2 shadow-md border-2 border-violet-100">
+            <div class="flex items-center gap-2 mb-2">
+                <span class="font-black text-sm text-slate-500">パーツ</span>
+                <button id="btn-erase" onclick="toggleErase()" class="bg-white border-2 border-rose-200 text-rose-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">🧽 けす</button>
+                <span id="part-desc" class="text-xs font-bold text-slate-500 ml-auto text-right"></span>
+            </div>
+            <div id="palette" class="pal grid grid-cols-5 sm:grid-cols-8 gap-1.5"></div>
+        </div>
+
+        <details class="bg-white rounded-2xl p-3 shadow-md border-2 border-violet-100">
+            <summary class="font-black cursor-pointer text-sm">💡 うまく ころがす コツ</summary>
+            <ul class="text-sm font-bold text-slate-600 mt-2 space-y-1 leading-relaxed">
+                <li>・さかは <b>ななめ 下がり</b>に つなげる。ますの 右下 → つぎの ますの 左上 へ つながるよ。</li>
+                <li>・はやく なりすぎたら <b>スポンジ</b>や <b>じょうご</b>で スピードを おとす。</li>
+                <li>・<b>ジャンプ台</b>の あとは 下に うける パーツを おくのを わすれずに。</li>
+                <li>・<b>ワープ</b>は 入口と 出口を 1つずつ おくと つながる。</li>
+                <li>・玉が 下まで おちたら「もどす」で やりなおし。</li>
+            </ul>
+        </details>
+    </main>
+
+    <!-- おてほん -->
+    <div id="modal" class="hidden fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4" onclick="closeSamples(event)">
+        <div class="bg-white rounded-3xl p-4 max-w-md w-full shadow-2xl pop" onclick="event.stopPropagation()">
+            <h2 class="text-lg font-black">📋 おてほんコース</h2>
+            <p class="text-sm font-bold text-slate-500 mt-1">よみこんで、じぶんで かいぞうしても いいよ。</p>
+            <div id="sample-list" class="space-y-2 mt-3"></div>
+            <button onclick="closeSamples()" class="w-full mt-3 bg-slate-100 font-black py-2.5 rounded-xl bounce-hover">とじる</button>
+        </div>
+    </div>
+
+    <footer class="text-center py-3 text-xs text-slate-400 font-bold">ビー玉コース工作室 © 2026</footer>
+
+    <script>
+        /* ===================== ばんの 大きさ ===================== */
+        const COLS = 8, ROWS = 10, CELL = 80;
+        const W = COLS * CELL, H = ROWS * CELL;
+        const R = 13;                       // ビー玉の 半径
+        const G = 1700;                     // 重力
+        const VMAX = 2000;                  // はやさの 上げん（すりぬけ ぼうし）
+
+        /* ===================== パーツの 形 ===================== */
+        // 形は ます1つを 0〜1 の しかくとして 書く（y は 下むき）
+        const PARTS = {
+            ramp: {
+                name: 'さか', emoji: '📐', color: '#0ea5e9', orients: ['id', 'mx', 'my', 'mxy'],
+                desc: 'ゆるい さか。ななめに つなげて すべらせる。',
+                segs: [[0.0, 0.42, 1.0, 0.86]]
+            },
+            steep: {
+                name: 'きゅうな さか', emoji: '📏', color: '#0369a1', orients: ['id', 'mx', 'my', 'mxy'],
+                desc: 'きつい さか。いきおいが つく。',
+                segs: [[0.0, 0.02, 1.0, 0.98]]
+            },
+            curve: {
+                name: 'カーブ', emoji: '🌙', color: '#6366f1', orients: ['id', 'r90', 'r180', 'r270'],
+                desc: 'まるい かべ。よこ から 下へ なめらかに まがる。',
+                arc: [1.0, 0.0, 0.96, 92, 178]
+            },
+            wall: {
+                name: 'かべ', emoji: '🧱', color: '#78716c', orients: ['id', 'r90'],
+                desc: 'まっすぐな かべ。うけとめたり はねかえしたり。',
+                segs: [[0.5, 0.02, 0.5, 0.98]]
+            },
+            jump: {
+                name: 'ジャンプ台', emoji: '🛫', color: '#f59e0b', orients: ['id', 'mx'],
+                desc: 'さいごが そり上がる。とばす。',
+                segs: [[0.0, 0.92, 0.5, 0.92], [0.5, 0.92, 1.0, 0.52]]
+            },
+            tramp: {
+                name: 'トランポリン', emoji: '🟩', color: '#22c55e', orients: ['id', 'r90'],
+                desc: 'とても よく はねる。',
+                segs: [[0.06, 0.74, 0.94, 0.74]], e: 0.9, f: 0.02
+            },
+            sponge: {
+                name: 'スポンジ', emoji: '🧽', color: '#f472b6', orients: ['id', 'r90'],
+                desc: 'はねない。スピードを おとす（たいらだと 止まることも）。',
+                segs: [[0.04, 0.76, 0.96, 0.76]], e: 0.02, f: 0.3
+            },
+            belt: {
+                name: 'ベルトコンベア', emoji: '🎞️', color: '#a855f7', orients: ['id', 'flip'],
+                desc: '玉を よこに はこぶ。むきを かえられる。',
+                segs: [[0.0, 0.7, 1.0, 0.7]], belt: 330, e: 0.05, f: 0.9
+            },
+            pin: {
+                name: 'ピン', emoji: '⚫', color: '#475569', orients: ['id'],
+                desc: 'まるい じゃま。あたると はじける。',
+                circles: [[0.5, 0.5, 0.17]], e: 0.55
+            },
+            mill: {
+                name: 'ふうしゃ', emoji: '✳️', color: '#ef4444', orients: ['id', 'flip'],
+                desc: 'くるくる まわる はね。玉を はじきとばす。',
+                mill: 1.5
+            },
+            seesaw: {
+                name: 'シーソー', emoji: '⚖️', color: '#0d9488', orients: ['id'],
+                desc: '玉が のった ほうに かたむく。',
+                seesaw: true
+            },
+            funnel: {
+                name: 'じょうご', emoji: '🔻', color: '#eab308', orients: ['id', 'r180'],
+                desc: 'まん中の すきまに 玉を あつめる。',
+                segs: [[0.0, 0.0, 0.3, 0.95], [1.0, 0.0, 0.7, 0.95]]
+            },
+            warpIn: {
+                name: 'ワープ 入口', emoji: '🕳️', color: '#1e293b', orients: ['id'],
+                desc: '入ると 出口へ とぶ。出口から ぽとりと おちる。',
+                warp: 'in'
+            },
+            warpOut: {
+                name: 'ワープ 出口', emoji: '✨', color: '#8b5cf6', orients: ['id'],
+                desc: 'ワープの 出口。',
+                warp: 'out'
+            },
+            start: {
+                name: 'スタート', emoji: '🚩', color: '#0891b2', orients: ['id'],
+                desc: 'ここから 玉が ころがりだす。1つだけ。',
+                start: true
+            },
+            goal: {
+                name: 'ゴール', emoji: '🏁', color: '#e11d48', orients: ['id'],
+                desc: 'ここに 玉が 入ったら クリア！',
+                segs: [[0.06, 0.55, 0.06, 0.96], [0.06, 0.96, 0.94, 0.96], [0.94, 0.96, 0.94, 0.55]],
+                goal: true, e: 0.1, f: 0.4
+            }
+        };
+        const PART_KEYS = Object.keys(PARTS);
+
+        /* ===================== ばんの じょうたい ===================== */
+        const grid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));   // {type, rot}
+        const state = {
+            sel: 'ramp', erase: false, running: false, t: 0, cleared: false, lost: false,
+            elapsed: 0, best: null, seesawAngle: {}, warpCool: 0
+        };
+        const ball = { x: CELL / 2, y: CELL / 2, vx: 0, vy: 0, trail: [] };
+
+        const cellAt = (c, r) => (r >= 0 && r < ROWS && c >= 0 && c < COLS) ? grid[r][c] : null;
+        const findPart = key => {
+            for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++)
+                if (grid[r][c] && grid[r][c].type === key) return { c, r };
+            return null;
+        };
+
+        /* ===================== 形を ワールド座標に ===================== */
+        // ます内の (x,y) を 「まわす／うら返す」
+        const XF = {
+            id: (x, y) => [x, y],
+            mx: (x, y) => [1 - x, y],            // 左右 はんてん（さかの むきが 逆に なる）
+            my: (x, y) => [x, 1 - y],            // 上下 はんてん
+            mxy: (x, y) => [1 - x, 1 - y],
+            r90: (x, y) => [1 - y, x],
+            r180: (x, y) => [1 - x, 1 - y],
+            r270: (x, y) => [y, 1 - x],
+            flip: (x, y) => [x, y]               // むきだけ かえる パーツ（ベルト・ふうしゃ）
+        };
+        const orientsOf = P => P.orients || ['id'];
+        const xfPoint = (P, rot, x, y) => (XF[orientsOf(P)[rot % orientsOf(P).length]] || XF.id)(x, y);
+
+        function arcSegs(P, rot, n = 10) {
+            const [cx, cy, rr, a0, a1] = P.arc;
+            const pts = [];
+            for (let i = 0; i <= n; i++) {
+                const a = (a0 + (a1 - a0) * i / n) * Math.PI / 180;
+                pts.push(xfPoint(P, rot, cx + rr * Math.cos(a), cy + rr * Math.sin(a)));
+            }
+            const segs = [];
+            for (let i = 0; i < n; i++) segs.push([pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1]]);
+            return segs;
+        }
+
+        // その ますの 当たり判定（線分と 円）を ワールド座標で かえす
+        function geometry(c, r, cell, time) {
+            const P = PARTS[cell.type];
+            const ox = c * CELL, oy = r * CELL;
+            const toW = (x, y) => [ox + x * CELL, oy + y * CELL];
+            const out = { segs: [], circles: [], part: P, cell, c, r };
+            const o = { e: P.e, f: P.f, goal: P.goal };
+
+            let localSegs = [];
+            if (P.segs) localSegs = P.segs.map(s => {
+                const a = xfPoint(P, cell.rot, s[0], s[1]), b = xfPoint(P, cell.rot, s[2], s[3]);
+                return [a[0], a[1], b[0], b[1]];
+            });
+            if (P.arc) localSegs = arcSegs(P, cell.rot);
+
+            if (P.belt) {
+                // ベルトの rot は「むき」だけ。板そのものは 回さない（回すと たてに なってしまう）
+                const dir = cell.rot === 0 ? 1 : -1;
+                localSegs = P.segs.map(s => [s[0], s[1], s[2], s[3]]);
+                localSegs.forEach(s => {
+                    const [x1, y1] = toW(s[0], s[1]), [x2, y2] = toW(s[2], s[3]);
+                    out.segs.push([x1, y1, x2, y2, { ...o, sx: dir * P.belt, sy: 0, belt: dir }]);
+                });
+            } else {
+                localSegs.forEach(s => {
+                    const [x1, y1] = toW(s[0], s[1]), [x2, y2] = toW(s[2], s[3]);
+                    out.segs.push([x1, y1, x2, y2, o]);
+                });
+            }
+
+            if (P.circles) P.circles.forEach(ci0 => {
+                const ci = [...xfPoint(P, cell.rot, ci0[0], ci0[1]), ci0[2]];
+                const [x, y] = toW(ci[0], ci[1]);
+                out.circles.push([x, y, ci[2] * CELL, o]);
+            });
+
+            if (P.mill) {                       // まわる はね
+                const dir = cell.rot === 0 ? 1 : -1;
+                const w = P.mill * dir;
+                const ang = time * w;
+                const [mx, my] = toW(0.5, 0.5);
+                const len = 0.46 * CELL;
+                for (let k = 0; k < 4; k++) {
+                    const a = ang + k * Math.PI / 2;
+                    out.segs.push([mx, my, mx + Math.cos(a) * len, my + Math.sin(a) * len,
+                    { ...o, e: 0.3, rotCenter: [mx, my], omega: w }]);
+                }
+                out.millAngle = ang;
+                out.millCenter = [mx, my];
+            }
+
+            if (P.seesaw) {                     // かたむく いた
+                const key = `${c},${r}`;
+                const ang = state.seesawAngle[key] || 0;
+                const [sx, sy] = toW(0.5, 0.52);
+                const len = 0.46 * CELL;
+                const dx = Math.cos(ang) * len, dy = Math.sin(ang) * len;
+                const om = state.seesawOmega && state.seesawOmega[key] || 0;
+                out.segs.push([sx - dx, sy - dy, sx + dx, sy + dy,
+                { ...o, e: 0.15, f: 0.15, rotCenter: [sx, sy], omega: om }]);
+                out.seesawCenter = [sx, sy];
+                out.seesawAngle = ang;
+            }
+
+            return out;
+        }
+
+        function allGeometry(time) {
+            const list = [];
+            for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++)
+                if (grid[r][c]) list.push(geometry(c, r, grid[r][c], time));
+            return list;
+        }
+
+        /* ===================== 物理 ===================== */
+        function collideSeg(b, x1, y1, x2, y2, o) {
+            const dx = x2 - x1, dy = y2 - y1;
+            const L2 = dx * dx + dy * dy;
+            let t = L2 ? ((b.x - x1) * dx + (b.y - y1) * dy) / L2 : 0;
+            t = Math.max(0, Math.min(1, t));
+            const px = x1 + dx * t, py = y1 + dy * t;
+            let nx = b.x - px, ny = b.y - py;
+            let d = Math.hypot(nx, ny);
+            if (d > R) return null;
+            if (d < 1e-6) { nx = -dy; ny = dx; d = Math.hypot(nx, ny) || 1; }
+            nx /= d; ny /= d;
+            b.x += nx * (R - d + 0.01);
+            b.y += ny * (R - d + 0.01);
+
+            // うごく めん（ベルト・はね・シーソー）の 速さ
+            let sx = o.sx || 0, sy = o.sy || 0;
+            if (o.rotCenter && o.omega) {
+                const rx = px - o.rotCenter[0], ry = py - o.rotCenter[1];
+                sx += -o.omega * ry; sy += o.omega * rx;
+            }
+            let vx = b.vx - sx, vy = b.vy - sy;
+            const vn = vx * nx + vy * ny;
+            if (vn < 0) {
+                const e = o.e === undefined ? 0.22 : o.e;
+                vx -= (1 + e) * vn * nx; vy -= (1 + e) * vn * ny;
+                const tx = -ny, ty = nx;
+                const vt = vx * tx + vy * ty;
+                const f = o.f === undefined ? 0.03 : o.f;
+                vx -= tx * vt * f; vy -= ty * vt * f;
+            }
+            b.vx = vx + sx; b.vy = vy + sy;
+            return o;
+        }
+
+        function collideCircle(b, cx, cy, rr, o) {
+            let nx = b.x - cx, ny = b.y - cy;
+            let d = Math.hypot(nx, ny);
+            if (d > R + rr) return null;
+            if (d < 1e-6) { nx = 0; ny = -1; d = 1; }
+            nx /= d; ny /= d;
+            b.x = cx + nx * (R + rr + 0.01);
+            b.y = cy + ny * (R + rr + 0.01);
+            const vn = b.vx * nx + b.vy * ny;
+            if (vn < 0) {
+                const e = o.e === undefined ? 0.5 : o.e;
+                b.vx -= (1 + e) * vn * nx; b.vy -= (1 + e) * vn * ny;
+            }
+            return o;
+        }
+
+        function physicsStep(dt) {
+            if (state.cleared || state.lost) return;
+            state.t += dt;
+            state.elapsed += dt;
+            const geos = allGeometry(state.t);
+
+            // シーソーの かたむきを 更新
+            geos.filter(g => g.part.seesaw).forEach(g => {
+                const key = `${g.c},${g.r}`;
+                const cur = state.seesawAngle[key] || 0;
+                const cx = g.seesawCenter[0], cy = g.seesawCenter[1];
+                const on = Math.abs(ball.x - cx) < CELL * 0.55 && Math.abs(ball.y - cy) < CELL * 0.6;
+                const target = on ? (ball.x < cx ? -0.5 : 0.5) : 0;
+                const next = cur + (target - cur) * Math.min(1, dt * 6);
+                if (!state.seesawOmega) state.seesawOmega = {};
+                state.seesawOmega[key] = (next - cur) / Math.max(dt, 1e-4);
+                state.seesawAngle[key] = next;
+            });
+
+            const b = ball;
+            b.vy += G * dt;
+            const sp = Math.hypot(b.vx, b.vy);
+            if (sp > VMAX) { b.vx *= VMAX / sp; b.vy *= VMAX / sp; }
+            b.x += b.vx * dt;
+            b.y += b.vy * dt;
+
+            // まわりの かべ
+            if (b.x < R) { b.x = R; b.vx = Math.abs(b.vx) * 0.4; }
+            if (b.x > W - R) { b.x = W - R; b.vx = -Math.abs(b.vx) * 0.4; }
+            if (b.y < R) { b.y = R; b.vy = Math.abs(b.vy) * 0.4; }
+
+            // パーツ
+            for (const g of geos) {
+                for (const s of g.segs) {
+                    const hit = collideSeg(b, s[0], s[1], s[2], s[3], s[4]);
+                    if (hit && hit.goal) checkGoal(g);
+                }
+                for (const ci of g.circles) collideCircle(b, ci[0], ci[1], ci[2], ci[3]);
+                if (g.part.goal) checkGoal(g);
+            }
+
+            // ワープ
+            state.warpCool = Math.max(0, state.warpCool - dt);
+            const wi = geos.find(g => g.part.warp === 'in');
+            const wo = geos.find(g => g.part.warp === 'out');
+            if (wi && wo && state.warpCool === 0) {
+                const ix = wi.c * CELL + CELL / 2, iy = wi.r * CELL + CELL / 2;
+                if (Math.hypot(b.x - ix, b.y - iy) < CELL * 0.32) {
+                    b.x = wo.c * CELL + CELL / 2;
+                    b.y = wo.r * CELL + CELL / 2;
+                    // 出口からは まっすぐ ぽとりと おちる（入った ときの いきおいは のこさない）
+                    b.vx = 0; b.vy = 120;
+                    b.trail = [];
+                    state.warpCool = 0.4;
+                }
+            }
+
+            // 下に おちた
+            if (b.y > H + 40) { state.lost = true; state.running = false; showStatus(); }
+
+            b.trail.push([b.x, b.y]);
+            if (b.trail.length > 90) b.trail.shift();
+        }
+
+        function checkGoal(g) {
+            const cx = g.c * CELL + CELL / 2, cy = g.r * CELL + CELL * 0.78;
+            if (Math.abs(ball.x - cx) < CELL * 0.42 && Math.abs(ball.y - cy) < CELL * 0.32) {
+                if (!state.cleared) {
+                    state.cleared = true;
+                    state.running = false;
+                    if (state.best === null || state.elapsed < state.best) state.best = state.elapsed;
+                    showStatus();
+                }
+            }
+        }
+
+        /* ===================== えがく ===================== */
+        const cv = document.getElementById('cv');
+        const ctx = cv.getContext('2d');
+
+        function draw() {
+            ctx.clearRect(0, 0, W, H);
+            // はいけい
+            const bg = ctx.createLinearGradient(0, 0, 0, H);
+            bg.addColorStop(0, '#f5f3ff'); bg.addColorStop(1, '#ede9fe');
+            ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+            // ます目
+            ctx.strokeStyle = '#ddd6fe'; ctx.lineWidth = 1;
+            for (let c = 1; c < COLS; c++) { ctx.beginPath(); ctx.moveTo(c * CELL, 0); ctx.lineTo(c * CELL, H); ctx.stroke(); }
+            for (let r = 1; r < ROWS; r++) { ctx.beginPath(); ctx.moveTo(0, r * CELL); ctx.lineTo(W, r * CELL); ctx.stroke(); }
+
+            const geos = allGeometry(state.t);
+
+            // パーツ
+            for (const g of geos) {
+                const P = g.part;
+                ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+                if (P.warp) {
+                    const cx = g.c * CELL + CELL / 2, cy = g.r * CELL + CELL / 2;
+                    ctx.fillStyle = P.warp === 'in' ? '#1e293b' : '#8b5cf6';
+                    ctx.beginPath(); ctx.ellipse(cx, cy, CELL * 0.3, CELL * 0.22, 0, 0, 7); ctx.fill();
+                    ctx.fillStyle = '#fff'; ctx.font = 'bold 22px sans-serif';
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillText(P.warp === 'in' ? '⬇' : '⬆', cx, cy);
+                }
+                if (P.start) {
+                    const cx = g.c * CELL + CELL / 2, cy = g.r * CELL + CELL / 2;
+                    ctx.fillStyle = '#0891b2';
+                    ctx.beginPath(); ctx.arc(cx, cy, CELL * 0.3, 0, 7); ctx.fill();
+                    ctx.fillStyle = '#fff'; ctx.font = 'bold 26px sans-serif';
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillText('🚩', cx, cy);
+                }
+                if (P.goal) {
+                    ctx.fillStyle = 'rgba(225,29,72,.10)';
+                    ctx.fillRect(g.c * CELL + 4, g.r * CELL + CELL * 0.5, CELL - 8, CELL * 0.48);
+                    ctx.fillStyle = '#e11d48'; ctx.font = 'bold 26px sans-serif';
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillText('🏁', g.c * CELL + CELL / 2, g.r * CELL + CELL * 0.3);
+                }
+                // 線分
+                ctx.strokeStyle = P.color; ctx.lineWidth = P.mill ? 9 : 10;
+                g.segs.forEach(s => {
+                    ctx.beginPath(); ctx.moveTo(s[0], s[1]); ctx.lineTo(s[2], s[3]); ctx.stroke();
+                });
+                // 円
+                ctx.fillStyle = P.color;
+                g.circles.forEach(ci => { ctx.beginPath(); ctx.arc(ci[0], ci[1], ci[2], 0, 7); ctx.fill(); });
+                // かざり
+                if (P.belt) {
+                    const dir = g.cell.rot === 0 ? 1 : -1;
+                    const y = g.segs[0][1];
+                    ctx.fillStyle = '#fff'; ctx.font = 'bold 16px sans-serif';
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    for (let k = 0; k < 3; k++) {
+                        const x = g.c * CELL + CELL * (0.25 + k * 0.25) + ((state.t * 60 * dirSign(dir)) % (CELL * 0.25));
+                        ctx.fillText(dir > 0 ? '›' : '‹', x, y);
+                    }
+                }
+                if (P.tramp || P.e >= 0.9) {
+                    ctx.strokeStyle = '#16a34a'; ctx.lineWidth = 3;
+                    const s = g.segs[0];
+                    ctx.beginPath();
+                    for (let k = 0; k <= 8; k++) {
+                        const x = s[0] + (s[2] - s[0]) * k / 8, y = s[1] + (s[3] - s[1]) * k / 8;
+                        ctx.lineTo(x, y + (k % 2 ? 7 : -1));
+                    }
+                    ctx.stroke();
+                }
+                if (P.mill) {
+                    ctx.fillStyle = '#b91c1c';
+                    ctx.beginPath(); ctx.arc(g.millCenter[0], g.millCenter[1], 7, 0, 7); ctx.fill();
+                }
+                if (P.seesaw) {
+                    ctx.fillStyle = '#0f766e';
+                    ctx.beginPath();
+                    ctx.moveTo(g.seesawCenter[0], g.seesawCenter[1]);
+                    ctx.lineTo(g.seesawCenter[0] - 11, g.seesawCenter[1] + 20);
+                    ctx.lineTo(g.seesawCenter[0] + 11, g.seesawCenter[1] + 20);
+                    ctx.fill();
+                }
+            }
+
+            // ビー玉の あと
+            if (ball.trail.length > 1) {
+                ctx.strokeStyle = 'rgba(244,63,94,.35)'; ctx.lineWidth = 3;
+                ctx.beginPath();
+                ball.trail.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]));
+                ctx.stroke();
+            }
+            // ビー玉
+            const grd = ctx.createRadialGradient(ball.x - 4, ball.y - 5, 2, ball.x, ball.y, R);
+            grd.addColorStop(0, '#fff'); grd.addColorStop(.35, '#67e8f9'); grd.addColorStop(1, '#0e7490');
+            ctx.fillStyle = grd;
+            ctx.beginPath(); ctx.arc(ball.x, ball.y, R, 0, 7); ctx.fill();
+            ctx.strokeStyle = '#155e75'; ctx.lineWidth = 1.5; ctx.stroke();
+
+            if (state.cleared) banner('🎉 クリア！', '#059669');
+            if (state.lost) banner('💧 おちちゃった', '#e11d48');
+        }
+        const dirSign = d => d;
+
+        function banner(text, color) {
+            ctx.fillStyle = 'rgba(255,255,255,.88)';
+            ctx.fillRect(0, H / 2 - 48, W, 96);
+            ctx.fillStyle = color;
+            ctx.font = 'bold 44px system-ui, sans-serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(text, W / 2, H / 2);
+        }
+
+        /* ===================== ループ ===================== */
+        let last = 0;
+        function loop(ts) {
+            const dt = Math.min(0.033, (ts - last) / 1000 || 0);
+            last = ts;
+            if (state.running) {
+                const SUB = 8;
+                for (let i = 0; i < SUB; i++) physicsStep(dt / SUB);
+            } else {
+                state.t += dt * 0.6;         // とまっていても はねは まわす
+            }
+            draw();
+            showStatus();
+            requestAnimationFrame(loop);
+        }
+
+        function showStatus() {
+            const el = document.getElementById('status');
+            if (!el) return;
+            const t = state.elapsed.toFixed(1);
+            el.innerHTML = state.cleared
+                ? `<span class="text-emerald-600">クリア！ ${t}びょう</span>`
+                : state.lost ? `<span class="text-rose-500">おちた…「もどす」で やりなおし</span>`
+                    : state.running ? `${t}びょう` : '';
+        }
+
+        /* ===================== そうさ ===================== */
+        function startPos() {
+            const s = findPart('start');
+            return s ? [s.c * CELL + CELL / 2, s.r * CELL + CELL * 0.35] : [CELL / 2, CELL * 0.35];
+        }
+        function resetBall() {
+            const [x, y] = startPos();
+            ball.x = x; ball.y = y; ball.vx = 0; ball.vy = 0; ball.trail = [];
+            state.cleared = false; state.lost = false; state.elapsed = 0; state.warpCool = 0;
+            state.running = false;
+            document.getElementById('btn-run').innerHTML = '▶ スタート';
+            showStatus();
+        }
+        function toggleRun() {
+            if (state.cleared || state.lost) resetBall();
+            // はじめから 走らせる ときは しかけの 時計も そろえる（毎回 おなじ 動きに するため）
+            if (!state.running && state.elapsed === 0) state.t = 0;
+            state.running = !state.running;
+            document.getElementById('btn-run').innerHTML = state.running ? '⏸ とめる' : '▶ スタート';
+        }
+        function clearAll() {
+            if (!confirm('コースを ぜんぶ けします。いいですか？')) return;
+            for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) grid[r][c] = null;
+            resetBall();
+        }
+        function toggleErase() {
+            state.erase = !state.erase;
+            renderPalette();
+        }
+
+        function renderPalette() {
+            document.getElementById('palette').innerHTML = PART_KEYS.map(k => {
+                const P = PARTS[k];
+                const on = !state.erase && state.sel === k;
+                return `<button onclick="selectPart('${k}')" data-part="${k}" class="${on ? 'bg-violet-600 text-white border-violet-700' : 'bg-white border-violet-200 text-slate-600'} border-2 rounded-xl py-1.5 px-1 font-black text-[11px] leading-tight bounce-hover">
+                    <span class="block text-xl">${P.emoji}</span>${P.name}</button>`;
+            }).join('');
+            const be = document.getElementById('btn-erase');
+            be.className = `${state.erase ? 'bg-rose-500 text-white border-rose-600' : 'bg-white border-rose-200 text-rose-600'} border-2 font-black px-3 py-1.5 rounded-full text-xs bounce-hover`;
+            document.getElementById('part-desc').innerText = state.erase ? 'ますを タップすると けせる' : PARTS[state.sel].desc;
+        }
+        function selectPart(k) { state.sel = k; state.erase = false; renderPalette(); }
+
+        function cellFromEvent(ev) {
+            const rect = cv.getBoundingClientRect();
+            const p = ev.touches ? ev.touches[0] : ev;
+            const x = (p.clientX - rect.left) / rect.width * W;
+            const y = (p.clientY - rect.top) / rect.height * H;
+            return [Math.floor(x / CELL), Math.floor(y / CELL)];
+        }
+
+        function tapCell(c, r) {
+            if (c < 0 || c >= COLS || r < 0 || r >= ROWS) return;
+            const cur = grid[r][c];
+            if (state.erase) { grid[r][c] = null; afterEdit(); return; }
+            if (cur) {                                   // むきを かえる
+                const rots = orientsOf(PARTS[cur.type]).length;
+                cur.rot = (cur.rot + 1) % rots;
+            } else {
+                const P = PARTS[state.sel];
+                if (P.start) { const s = findPart('start'); if (s) grid[s.r][s.c] = null; }
+                grid[r][c] = { type: state.sel, rot: 0 };
+            }
+            afterEdit();
+        }
+        function afterEdit() {
+            if (!state.running) resetBall();
+        }
+
+        cv.addEventListener('click', ev => { const [c, r] = cellFromEvent(ev); tapCell(c, r); });
+
+        /* ===================== ほぞん ===================== */
+        const SAVE_KEY = 'kids-marble-course-v1';
+        function serialize() {
+            return grid.map(row => row.map(c => c ? `${c.type}:${c.rot}` : '').join(',')).join('|');
+        }
+        function deserialize(s) {
+            const rows = s.split('|');
+            for (let r = 0; r < ROWS; r++) {
+                const cells = (rows[r] || '').split(',');
+                for (let c = 0; c < COLS; c++) {
+                    const v = cells[c];
+                    if (v) {
+                        const [type, rot] = v.split(':');
+                        grid[r][c] = PARTS[type] ? { type, rot: +rot || 0 } : null;
+                    } else grid[r][c] = null;
+                }
+            }
+            resetBall();
+        }
+        function saveCourse() {
+            try { localStorage.setItem(SAVE_KEY, serialize()); alert('ほぞんしました！'); }
+            catch (e) { alert('ほぞんできませんでした'); }
+        }
+        function loadCourse() {
+            try {
+                const s = localStorage.getItem(SAVE_KEY);
+                if (!s) { alert('ほぞんした コースが ありません'); return; }
+                deserialize(s);
+            } catch (e) { alert('よみこめませんでした'); }
+        }
+
+        /* ===================== おてほん ===================== */
+        // put: [列, 行, パーツ, むき]
+        const SAMPLES = [
+            {
+                name: 'すべりだい', emoji: '🛝', desc: 'さかを ななめに つないだ、いちばん かんたんな コース。',
+                put: [[0, 0, 'start', 0], [0, 1, 'ramp', 0], [1, 2, 'ramp', 0], [2, 3, 'ramp', 0],
+                [3, 4, 'ramp', 0], [4, 5, 'ramp', 0], [5, 6, 'ramp', 0], [6, 7, 'ramp', 0],
+                [7, 8, 'goal', 0]]
+            },
+            {
+                name: 'ジャンプ と ベルト', emoji: '🛫', desc: 'とんで、かべに あてて、ベルトで もどる。',
+                put: [[0, 0, 'start', 0], [0, 1, 'ramp', 0], [1, 2, 'ramp', 0], [2, 3, 'jump', 0],
+                [7, 5, 'wall', 0], [6, 6, 'ramp', 1], [5, 7, 'ramp', 1],
+                [4, 8, 'belt', 1], [3, 8, 'belt', 1], [1, 9, 'goal', 0]]
+            },
+            {
+                name: 'ふうしゃ と ワープ', emoji: '🕳️', desc: 'ふうしゃで はじいて、カーブで うけとめて、ワープで 上へ。',
+                put: [[0, 0, 'start', 0], [0, 1, 'ramp', 0], [1, 2, 'mill', 0],
+                [3, 2, 'wall', 0], [3, 3, 'wall', 0], [0, 3, 'curve', 0], [2, 3, 'curve', 1],
+                [1, 4, 'funnel', 0], [1, 5, 'warpIn', 0],
+                [4, 0, 'warpOut', 0], [4, 1, 'ramp', 0], [5, 2, 'ramp', 0], [6, 3, 'ramp', 0],
+                [7, 4, 'goal', 0]]
+            },
+            {
+                name: 'シーソー と トランポリン', emoji: '⚖️', desc: 'シーソーが かたむいて、トランポリンで ひとっとび。',
+                put: [[0, 0, 'start', 0], [0, 1, 'ramp', 0], [1, 2, 'ramp', 0], [2, 3, 'seesaw', 0],
+                [4, 5, 'tramp', 0], [6, 8, 'goal', 0]]
+            }
+        ];
+        SAMPLES.forEach(s => {
+            const g = Array.from({ length: ROWS }, () => Array(COLS).fill(''));
+            s.put.forEach(([c, r, type, rot]) => { g[r][c] = `${type}:${rot}`; });
+            s.data = g.map(row => row.join(',')).join('|');
+        });
+        function openSamples() {
+            document.getElementById('sample-list').innerHTML = SAMPLES.map((s, i) =>
+                `<button onclick="loadSample(${i})" class="w-full text-left bg-violet-50 hover:bg-violet-100 border-2 border-violet-200 rounded-2xl p-3 font-black bounce-hover">
+                    ${s.emoji} ${s.name}<span class="block text-xs font-bold text-slate-500">${s.desc}</span></button>`).join('');
+            document.getElementById('modal').classList.remove('hidden');
+        }
+        function closeSamples(ev) {
+            if (ev && ev.target !== ev.currentTarget) return;
+            document.getElementById('modal').classList.add('hidden');
+        }
+        function loadSample(i) {
+            deserialize(SAMPLES[i].data);
+            closeSamples();
+        }
+
+        /* ===================== はじめ ===================== */
+        window.addEventListener('load', () => {
+            renderPalette();
+            deserialize(SAMPLES[0] ? SAMPLES[0].data : '');
+            resetBall();
+            requestAnimationFrame(loop);
+        });
+    </script>
+</body>
+</html>
