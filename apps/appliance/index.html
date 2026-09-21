@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家電のしくみラボ</title>
+    <meta name="description" content="エアコン・冷蔵庫・洗濯機（縦型とドラム式）・食洗機・電子レンジ・充電電池・プリンター・掃除機・IH・LED・炊飯器のしくみを図解。ヒートポンプの4ステップ、電気代の計算、節電と安全、クイズ。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums }
+        .bounce-hover { transition: transform .12s cubic-bezier(.175,.885,.32,1.275) }
+        .bounce-hover:active { transform: scale(.94) }
+        @keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.1) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275) }
+        @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+        .shake { animation: shake .3s ease-in-out }
+        svg text { font-family: inherit }
+        rt { font-size: .55em; font-weight: 700; color: #0e7490 }
+        input[type=range] { accent-color: #0891b2; width: 100% }
+    </style>
+</head>
+<body class="bg-cyan-50 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-cyan-700 via-teal-600 to-emerald-500 text-white p-3 shadow-lg sticky top-0 z-30">
+        <div class="max-w-4xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">🔌</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">家電のしくみラボ</h1>
+                    <p class="text-xs text-cyan-50 font-bold hidden sm:block">まほうでは ない。ぜんぶ 理科で 説明できる</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[64px] z-20 bg-cyan-50/95 backdrop-blur border-b border-cyan-200">
+        <div class="max-w-4xl mx-auto flex gap-2 p-3 overflow-x-auto" id="tab-nav"></div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto w-full p-3 sm:p-5 flex-grow space-y-4">
+
+        <!-- ===== ① しくみ ===== -->
+        <section id="tab-how" class="space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-cyan-100">
+                <h2 class="font-black">🔧 家電の 中で 何が おきて いる？</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    どの 家電も <b class="text-cyan-700">電気 → べつの エネルギー（熱・動き・光・音・電波）</b>に
+                    かえて 仕事を して いる。えらんで みよう。
+                </p>
+                <div id="ap-chips" class="flex flex-wrap gap-1.5 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-cyan-100">
+                <h2 id="ap-name" class="font-black text-lg"></h2>
+                <p id="ap-lead" class="text-sm font-bold text-slate-500 mt-1"></p>
+                <div id="ap-fig" class="mt-3"></div>
+                <p class="font-black text-sm mt-3">⚡ エネルギーの ながれ</p>
+                <div id="ap-chain" class="mt-2"></div>
+                <div id="ap-steps" class="space-y-2 mt-3"></div>
+                <div class="grid sm:grid-cols-2 gap-3 mt-3">
+                    <div class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-3">
+                        <p class="font-black text-emerald-800 text-sm">😀 よい ところ</p>
+                        <ul id="ap-pro" class="text-xs font-bold text-slate-600 mt-1 space-y-1 leading-relaxed"></ul>
+                    </div>
+                    <div class="bg-rose-50 border-2 border-rose-200 rounded-2xl p-3">
+                        <p class="font-black text-rose-800 text-sm">😣 苦手・気をつける ところ</p>
+                        <ul id="ap-con" class="text-xs font-bold text-slate-600 mt-1 space-y-1 leading-relaxed"></ul>
+                    </div>
+                </div>
+                <div id="ap-spec" class="flex flex-wrap gap-2 mt-3"></div>
+                <div id="ap-trivia" class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-3 text-sm font-bold mt-3 leading-relaxed"></div>
+            </div>
+        </section>
+
+        <!-- ===== ② ヒートポンプ ===== -->
+        <section id="tab-pump" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-cyan-100">
+                <h2 class="font-black">🌡️ エアコンと 冷蔵庫は 同じ しくみ</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    エアコンは <b class="text-cyan-700">冷たさを 作って いない</b>。
+                    部屋の 熱を <b>つかんで 外に 運び出して</b> いる。この 運び屋の しくみを
+                    <b>ヒートポンプ</b>（熱の ポンプ）と いう。冷蔵庫も 同じ。
+                </p>
+                <div id="hp-fig" class="mt-3"></div>
+                <div class="flex flex-wrap items-center gap-2 mt-2">
+                    <button onclick="hpPlay()" class="bg-cyan-700 text-white font-black px-4 py-2 rounded-full text-sm bounce-hover">▶ 1周 まわる</button>
+                    <button onclick="hpStep()" class="bg-white border-2 border-cyan-300 text-cyan-700 font-black px-4 py-2 rounded-full text-sm bounce-hover">⏭ つぎへ</button>
+                    <button onclick="hpStop()" class="bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-2 rounded-full text-sm bounce-hover">⏸ とめる</button>
+                    <span id="hp-count" class="num ml-auto bg-cyan-100 text-cyan-700 font-black px-3 py-1 rounded-full text-xs">1 / 4</span>
+                </div>
+                <div id="hp-info" class="bg-cyan-50 border-2 border-cyan-200 rounded-2xl p-3 text-sm font-bold leading-relaxed mt-2"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-cyan-100">
+                <h2 class="font-black">💧 なぜ「ゆるめると 冷たく なる」の？</h2>
+                <div id="hp-tips" class="space-y-2 mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ③ 電気代 ===== -->
+        <section id="tab-power" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-cyan-100">
+                <h2 class="font-black">⚡ どれが 電気を たくさん つかう？</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    <b class="text-cyan-700">W（ワット）</b>は「1秒あたりに つかう 電気の 量」。
+                    <b>熱を 作る 家電</b>（ドライヤー・電子レンジ・IH）が だんぜん 大きい。
+                </p>
+                <div id="pw-fig" class="mt-3"></div>
+                <p class="text-xs font-bold text-slate-400 mt-1">※ 機種に よって かわる ので、だいたいの 目安。</p>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-cyan-100">
+                <h2 class="font-black">🧮 電気代を 計算して みよう</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    <b class="text-cyan-700">W × 時間 ÷ 1000 × 31円</b>（1kWh＝31円で 計算）。
+                    家電を えらんで、つかう 時間を 動かして みよう。
+                </p>
+                <div id="pw-chips" class="flex flex-wrap gap-1.5 mt-3"></div>
+                <div class="mt-3"><input type="range" min="1" max="480" step="1" value="30" id="pw-t" oninput="pwCalc()">
+                    <p class="text-xs font-black text-slate-600 text-center"><span id="pw-tv" class="num">30</span> 分</p></div>
+                <div id="pw-res" class="bg-cyan-50 border-2 border-cyan-200 rounded-2xl p-3 text-sm font-bold leading-relaxed"></div>
+            </div>
+        </section>
+
+        <!-- ===== ④ 上手な つかい方 ===== -->
+        <section id="tab-use" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-cyan-100">
+                <h2 class="font-black">💡 かしこい つかい方（節電{せつでん}）</h2>
+                <div id="us-save" class="space-y-2 mt-3"></div>
+            </div>
+            <div class="bg-rose-50 rounded-3xl p-4 shadow-md border-2 border-rose-300">
+                <h2 class="font-black text-rose-800">⚠️ 安全の やくそく</h2>
+                <div id="us-safe" class="space-y-2 mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ⑤ クイズ ===== -->
+        <section id="tab-quiz" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-cyan-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">❓ 家電クイズ</h2>
+                    <span id="qz-score" class="num bg-cyan-100 text-cyan-700 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newQuiz()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <div id="qz-fields" class="flex flex-wrap gap-2 mt-3"></div>
+                <p id="qz-q" class="font-black text-base sm:text-lg mt-3 leading-relaxed"></p>
+                <div id="qz-choices" class="grid gap-2 mt-3"></div>
+                <div id="qz-res" class="mt-3"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center text-xs text-slate-400 font-bold p-4">家電のしくみラボ © 2026</footer>
+
+<script>
+    /* ===================== きょうつう ===================== */
+    const rnd = n => Math.floor(Math.random() * n);
+    const pickOne = a => a[rnd(a.length)];
+    function shuffle(a) { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = rnd(i + 1); const t = b[i]; b[i] = b[j]; b[j] = t; } return b; }
+    function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    const W = 560;
+    function svg(w, h, body) {
+        return `<svg viewBox="0 0 ${w} ${h}" class="w-full h-auto block mx-auto" style="max-width:${w}px" role="img">${body}</svg>`;
+    }
+    function resultBox(ok, title, body) {
+        return `<div class="pop ${ok ? 'bg-green-50 border-green-300' : 'bg-amber-50 border-amber-300'} border-2 rounded-2xl p-3">
+            <p class="font-black ${ok ? 'text-green-700' : 'text-amber-700'}">${title}</p>
+            <div class="font-bold text-sm mt-1 leading-relaxed">${body}</div></div>`;
+    }
+    const S = { quiz: [0, 0] };
+    function scoreBox(id, s) { document.getElementById(id).innerText = `${s[0]} / ${s[1]}`; }
+    function markChoices(sel, isRight, picked, cls) {
+        document.querySelectorAll(sel).forEach((el, j) => {
+            el.className = `${isRight(j) ? 'bg-green-50 border-green-500' : (j === picked ? 'bg-red-50 border-red-400 shake' : 'bg-white border-slate-200 opacity-60')} border-2 ${cls}`;
+        });
+    }
+    const plain = t => String(t).replace(/\{[^{}]*\}/g, '');
+    const nf = n => n.toLocaleString('ja-JP');
+
+    /* 漢字{よみ} を ルビに */
+    const RUBY_RE = /([一-鿿々]+)\{([^{}]+)\}/g;
+    function rubySkip(el) {
+        for (let n = el; n; n = n.parentNode) {
+            const tag = n.nodeType === 1 ? n.tagName.toLowerCase() : '';
+            if (tag === 'script' || tag === 'style' || tag === 'svg' || tag === 'ruby') return true;
+        }
+        return false;
+    }
+    function rubifyText(node) {
+        const t = node.nodeValue;
+        if (t.indexOf('{') < 0 || !node.parentNode || rubySkip(node.parentNode)) return;
+        RUBY_RE.lastIndex = 0;
+        if (!RUBY_RE.test(t)) return;
+        RUBY_RE.lastIndex = 0;
+        const frag = document.createDocumentFragment();
+        let last = 0, m;
+        while ((m = RUBY_RE.exec(t))) {
+            if (m.index > last) frag.appendChild(document.createTextNode(t.slice(last, m.index)));
+            const ruby = document.createElement('ruby');
+            ruby.appendChild(document.createTextNode(m[1]));
+            const rt = document.createElement('rt');
+            rt.textContent = m[2];
+            ruby.appendChild(rt);
+            frag.appendChild(ruby);
+            last = m.index + m[0].length;
+        }
+        if (last < t.length) frag.appendChild(document.createTextNode(t.slice(last)));
+        node.parentNode.replaceChild(frag, node);
+    }
+    function rubify(root) {
+        if (root.nodeType === 3) return rubifyText(root);
+        if (root.nodeType !== 1 || rubySkip(root)) return;
+        const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        const list = [];
+        while (w.nextNode()) if (w.currentNode.nodeValue.indexOf('{') >= 0) list.push(w.currentNode);
+        list.forEach(rubifyText);
+    }
+    new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(rubify)))
+        .observe(document.body, { childList: true, subtree: true });
+
+    const TABS = { how: '🔧 しくみ', pump: '🌡️ ヒートポンプ', power: '⚡ 電気代', use: '💡 つかい方', quiz: '❓ クイズ' };
+    let tab = 'how';
+    function renderNav() {
+        document.getElementById('tab-nav').innerHTML = Object.entries(TABS).map(([k, label]) =>
+            `<button onclick="setTab('${k}')" data-tab="${k}" class="${tab === k ? 'bg-cyan-700 text-white' : 'bg-white border-2 border-cyan-200 text-slate-600'} font-black px-4 py-2 rounded-full text-sm whitespace-nowrap bounce-hover">${label}</button>`).join('');
+    }
+    function setTab(k) {
+        tab = k;
+        hpStop();
+        Object.keys(TABS).forEach(t => document.getElementById('tab-' + t).classList.toggle('hidden', t !== k));
+        renderNav();
+        if (k === 'pump' && !pumpReady) { hpDraw(); hpTips(); pumpReady = true; }
+        if (k === 'power' && !powerReady) { pwFig(); pwCalc(); powerReady = true; }
+        if (k === 'use' && !useReady) { usDraw(); useReady = true; }
+        if (k === 'quiz' && !qz) newQuiz();
+    }
+
+    /* =====================================================================
+       絵の 部品
+       ===================================================================== */
+    function bg(h, fill) { return `<rect x="0" y="0" width="${W}" height="${h}" rx="14" fill="${fill || '#ecfeff'}"/>`; }
+    function tag(x, y, tx, ty, text, col) {
+        const c = col || '#0e7490';
+        const anchor = tx < x ? 'end' : 'start';
+        return `<line x1="${x}" y1="${y}" x2="${tx}" y2="${ty}" stroke="${c}" stroke-width="1.5" stroke-dasharray="3 3"/>
+                <circle cx="${x}" cy="${y}" r="3" fill="${c}"/>
+                <text x="${tx + (anchor === 'end' ? -4 : 4)}" y="${ty + 4}" text-anchor="${anchor}" font-size="11" font-weight="900" fill="${c}">${text}</text>`;
+    }
+    function arrow(x1, y1, x2, y2, col, w) {
+        const a = Math.atan2(y2 - y1, x2 - x1), L = 9;
+        return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="${w || 3}" stroke-linecap="round"/>
+                <polygon points="${x2},${y2} ${(x2 - Math.cos(a - .45) * L).toFixed(1)},${(y2 - Math.sin(a - .45) * L).toFixed(1)} ${(x2 - Math.cos(a + .45) * L).toFixed(1)},${(y2 - Math.sin(a + .45) * L).toFixed(1)}" fill="${col}"/>`;
+    }
+    function coil(x, y, w, h, n, col) {   // ヒートパイプの フィン（熱こうかんき）
+        let s = `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="#fff" stroke="${col}" stroke-width="2.5"/>`;
+        for (let i = 1; i < n; i++) s += `<line x1="${x + w * i / n}" y1="${y + 3}" x2="${x + w * i / n}" y2="${y + h - 3}" stroke="${col}" stroke-width="2"/>`;
+        return s;
+    }
+
+    /* =====================================================================
+       ① 家電の しくみ
+       ===================================================================== */
+    const APPS = [
+        {
+            id: 'aircon', e: '❄️', n: 'エアコン（クーラー）',
+            lead: '部屋の 熱を つかんで 外へ 運び出す 機械。冷たさを 作って いる のでは ない。',
+            chain: [['🔌', '電気'], ['🌀', '圧縮機{あっしゅくき}'], ['💧', '冷媒{れいばい}が 行き来'], ['🌬️', '熱を 外へ']],
+            steps: [['冷媒{れいばい}という 名の 運び屋', '中を ぐるぐる まわって いる 液体・気体。あたたまると 気体、冷えると 液体に 変わる ものを つかう。'],
+                    ['室内機で 熱を うばう', '冷たい 冷媒が 部屋の 空気から 熱を もらって 気体に なる。空気は 熱を とられて 冷える。'],
+                    ['室外機で 熱を すてる', '圧縮機で ぎゅっと おした あつい 冷媒を、外の 空気に 熱を わたして 液体に もどす。'],
+                    ['暖房は 逆向き', '同じ 機械で 冷媒の 流れを 逆に すると、外の 空気から 熱を あつめて 部屋に 運べる。'],
+                    ['除湿{じょしつ}の ひみつ', '冷たい フィンに 空気が ふれると、空気中の 水が つぶに なって つく。それが ホースから 出る 水。']],
+            pro: ['熱を「運ぶ」ので 電気1に対して 熱を 3〜6倍 動かせる', '1台で 冷房も 暖房も できる', '部屋の 温度を 細かく 調節できる', '空気を きれいに する 機能つきも ある'],
+            con: ['室外機の まわりを ふさぐと 効きが 悪く なる', 'フィルターが つまると 電気を むだに つかう', '外との 温度差が 大きいと 苦しく なる', '外に 熱を すてる ので 街が あつく なる'],
+            spec: [['冷房の 電気', 'やく 500W'], ['運べる 熱', '電気の 3〜6倍'], ['おすすめ設定', '夏 28℃・冬 20℃']],
+            trivia: 'エアコンが 電気の 何倍もの 熱を 動かせるのは、熱を「作って いる」のでは なく「運んで いる」から。バケツリレーで 水を 運ぶのに、水を 作る 必要が ない のと 同じ。この 運ぶ 力を COP と いう。',
+            fig: () => {
+                let g = bg(240);
+                g += `<line x1="272" y1="10" x2="272" y2="230" stroke="#94a3b8" stroke-width="6"/>`;
+                g += `<text x="140" y="26" text-anchor="middle" font-size="12" font-weight="900" fill="#0e7490">部屋の 中</text>`;
+                g += `<text x="420" y="26" text-anchor="middle" font-size="12" font-weight="900" fill="#b45309">外</text>`;
+                // 室内機
+                g += `<rect x="40" y="46" width="180" height="50" rx="8" fill="#f8fafc" stroke="#0e7490" stroke-width="3"/>`;
+                g += coil(52, 56, 90, 30, 8, '#2563eb');
+                [0, 1, 2].forEach(i => g += arrow(90 + i * 46, 104, 74 + i * 46, 146, '#2563eb', 2.5));
+                g += `<text x="60" y="166" font-size="11" font-weight="900" fill="#2563eb">冷たい 風</text>`;
+                // 室外機
+                g += `<rect x="330" y="96" width="170" height="106" rx="8" fill="#f8fafc" stroke="#b45309" stroke-width="3"/>`;
+                g += `<circle cx="415" cy="150" r="34" fill="none" stroke="#b45309" stroke-width="3"/>`;
+                [0, 1, 2, 3].forEach(i => { const a = i * Math.PI / 2 + 0.5;
+                    g += `<path d="M415 150 q${Math.cos(a) * 30} ${Math.sin(a) * 30} ${Math.cos(a + 0.7) * 32} ${Math.sin(a + 0.7) * 32}" fill="#fed7aa" stroke="#b45309" stroke-width="2"/>`; });
+                [0, 1, 2].forEach(i => g += arrow(508, 120 + i * 30, 548, 120 + i * 30, '#dc2626', 2.5));
+                g += `<text x="546" y="214" text-anchor="end" font-size="11" font-weight="900" fill="#dc2626">熱い 風</text>`;
+                // 冷媒の パイプ
+                g += `<path d="M212 88 L250 88 L250 180 L340 180" fill="none" stroke="#2563eb" stroke-width="5"/>`;
+                g += `<path d="M212 62 L292 62 L292 118 L340 118" fill="none" stroke="#dc2626" stroke-width="5"/>`;
+                g += `<rect x="352" y="168" width="34" height="26" rx="5" fill="#475569"/>`;
+                g += tag(369, 180, 300, 226, '圧縮機', '#334155') + tag(250, 140, 190, 200, '冷たい 冷媒', '#2563eb');
+                g += tag(292, 96, 370, 62, 'あつい 冷媒', '#dc2626');
+                return svg(W, 240, g);
+            }
+        },
+        {
+            id: 'fridge', e: '🧊', n: '冷蔵庫{れいぞうこ}',
+            lead: 'エアコンと まったく 同じ ヒートポンプ。中の 熱を つかんで 背中から すてて いる。',
+            chain: [['🔌', '電気'], ['🌀', '圧縮機'], ['💧', '冷媒が まわる'], ['♨️', '背中から 放熱']],
+            steps: [['中の 熱を うばう', '冷凍室の うらの 冷たい パイプが、庫内の 空気から 熱を もらう。'],
+                    ['背中や よこから すてる', 'あつく なった 冷媒が 外がわの パイプを 通る とき 熱を 出す。だから 冷蔵庫の よこは あたたかい。'],
+                    ['冷気を まわす', 'ファンで 冷たい 空気を 冷凍室 → 冷蔵室 へ 送る。だから 上下で 温度が ちがう。'],
+                    ['ドアの ゴムが 大事', 'ゴムの パッキンで 冷気を にがさない。ここが よごれると 効きが 落ちる。'],
+                    ['霜{しも}とり', '自動で 少し あたためて 霜を とかす（霜とり運転）。だから ときどき「ゴー」と 音が する。']],
+            pro: ['食べものが くさりにくく なる（菌が ふえにくい）', '1年中 休まず はたらく', '最近の ものは 昔より ずっと 電気を つかわない', '冷凍で 長く 保存できる'],
+            con: ['開けっぱなしに すると 冷気が 出て いく', 'つめこみすぎると 冷気が まわらない', '背中を かべに くっつけすぎると 熱が すてられない', '止められない ので 1年で いちばん 電気を つかう 家電に なりやすい'],
+            spec: [['平均の 電気', 'やく 40W'], ['冷蔵室', '3〜6℃'], ['冷凍室', '−18℃ 以下']],
+            trivia: '冷蔵庫は 家の 中で ほぼ 唯一「24時間 365日 動きつづける」家電。1台の 消費電力は 小さいのに、1年で 合計すると 家の 電気の 1〜2割を しめる。中身を 7割くらいに して おくと 冷気が よく まわって 節電に なる。',
+            fig: () => {
+                let g = bg(250);
+                g += `<rect x="150" y="30" width="180" height="200" rx="10" fill="#f1f5f9" stroke="#0e7490" stroke-width="3"/>`;
+                g += `<line x1="150" y1="110" x2="330" y2="110" stroke="#0e7490" stroke-width="3"/>`;
+                g += `<text x="240" y="70" text-anchor="middle" font-size="12" font-weight="900" fill="#0e7490">冷蔵室 3〜6℃</text>`;
+                g += `<text x="240" y="150" text-anchor="middle" font-size="12" font-weight="900" fill="#1d4ed8">冷凍室 −18℃</text>`;
+                [0, 1].forEach(i => g += `<line x1="160" y1="${86 + i * 0}" x2="320" y2="${86}" stroke="#94a3b8" stroke-width="2"/>`);
+                g += coil(160, 160, 160, 26, 10, '#1d4ed8');
+                g += `<rect x="330" y="46" width="22" height="170" rx="4" fill="none" stroke="#dc2626" stroke-width="4"/>`;
+                [0, 1, 2, 3].forEach(i => g += arrow(356, 70 + i * 40, 400, 70 + i * 40, '#dc2626', 2.5));
+                g += `<text x="404" y="228" text-anchor="end" font-size="11" font-weight="900" fill="#dc2626">背中から 熱を すてる</text>`;
+                g += `<rect x="168" y="196" width="40" height="28" rx="5" fill="#475569"/>`;
+                g += tag(188, 210, 120, 238, '圧縮機', '#334155') + tag(240, 172, 90, 150, '冷たい パイプ', '#1d4ed8');
+                g += `<rect x="146" y="60" width="8" height="40" rx="3" fill="#0e7490"/>`;
+                g += tag(150, 80, 84, 56, 'ドアの ゴム');
+                return svg(W, 250, g);
+            }
+        },
+        {
+            id: 'wash-top', e: '🌀', n: '洗濯機{せんたくき}（たて型）',
+            lead: '水の うずで 服どうしを こすりあわせて 洗う、日本で 長く つかわれて きた 方式。',
+            chain: [['🔌', '電気'], ['🔄', 'モーター'], ['🌊', '水の うず'], ['👕', 'こすって 洗う']],
+            steps: [['たっぷりの 水を ためる', 'そうの 中に 水を ためて、洗ざいを とかす。'],
+                    ['羽（パルセーター）を 回す', '底の 羽が 左右 交互に 回って 強い 水流を つくる。'],
+                    ['服どうしが こすれる', '「もみ洗い」と 同じ 動き。よごれを こすり落とす 力が 強い。'],
+                    ['すすぎ・だっ水', '水を 入れかえて 洗ざいを 落とし、高速で 回して 水を とばす（遠心力{えんしんりょく}）。'],
+                    ['洗ざいの 役目', '洗ざいの 分子は「水と なかよしの 側」と「あぶらと なかよしの 側」を 持ち、あぶら よごれを 水の 中に 引き出す。']],
+            pro: ['よごれを 落とす 力が 強い', 'ドラム式より 本体が 安い', '洗い上がりが ふんわり しやすい', 'とちゅうで ふたを 開けて 服を 足せる'],
+            con: ['水を たくさん つかう（ドラム式の 2倍ほど）', '服が からまりやすく いためやすい', '乾燥{かんそう}機能は 弱い ものが 多い', '上から 入れるので 洗そうの 底が 見にくい'],
+            spec: [['洗濯の 電気', 'やく 250W'], ['水の 量', '1回 100L ほど'], ['洗い方', 'こすり洗い']],
+            trivia: 'だっ水で 水が とぶのは「遠心力」。回ると 服の 中の 水が 外へ 出ようとして、あなから 飛び出す。回転は 1分で 800〜1000回。手で しぼるより はるかに 強い 力が かかって いる。',
+            fig: () => {
+                let g = bg(240);
+                g += `<rect x="170" y="36" width="220" height="190" rx="14" fill="#f8fafc" stroke="#0e7490" stroke-width="3"/>`;
+                g += `<rect x="186" y="52" width="188" height="16" rx="8" fill="#cbd5e1"/>`;
+                g += `<ellipse cx="280" cy="86" rx="86" ry="20" fill="#e0f2fe" stroke="#0369a1" stroke-width="2.5"/>`;
+                g += `<path d="M196 88 L206 200 L354 200 L364 88" fill="#7dd3fc" opacity="0.6" stroke="#0369a1" stroke-width="2.5"/>`;
+                g += `<path d="M262 200 L262 160 q18 -10 36 0 L298 200 Z" fill="#94a3b8" stroke="#475569" stroke-width="2.5"/>`;
+                [0, 1].forEach(i => g += `<path d="M${226 + i * 76} 132 q54 ${i ? 22 : -22} 108 0" fill="none" stroke="#1d4ed8" stroke-width="3"/>`);
+                g += arrow(232, 120, 214, 148, '#1d4ed8', 3) + arrow(330, 148, 348, 120, '#1d4ed8', 3);
+                [0, 1, 2].forEach(i => g += `<ellipse cx="${240 + i * 42}" cy="${118 + (i % 2) * 34}" rx="20" ry="12" fill="#fbcfe8" stroke="#be185d" stroke-width="2"/>`);
+                g += tag(280, 178, 160, 216, '羽（パルセーター）', '#334155') + tag(214, 148, 120, 120, '水の うず', '#1d4ed8');
+                g += tag(322, 118, 428, 96, '服どうしが こすれる', '#be185d');
+                g += `<text x="280" y="24" text-anchor="middle" font-size="12" font-weight="900" fill="#0e7490">上から 見て 水を ためて まわす</text>`;
+                return svg(W, 240, g);
+            }
+        },
+        {
+            id: 'wash-drum', e: '🥁', n: '洗濯機（ドラム式）',
+            lead: 'よこに ねた たいこ（ドラム）を まわし、服を <b>持ち上げて 落として</b> 洗う。水が 少なくて すむ。',
+            chain: [['🔌', '電気'], ['🔄', 'ドラムが 回る'], ['⬇️', '服が 落ちる'], ['👕', 'たたいて 洗う']],
+            steps: [['少しの 水で 洗う', '水は ドラムの 下に 少しだけ。服は 水に つかりきらない。'],
+                    ['持ち上げて 落とす', 'ドラムの 内がわの 出っぱりが 服を 上まで 運び、下へ 落とす（たたき洗い）。'],
+                    ['なぜ 水が 少なくて よい？', '落ちる ときの 力で 洗うので、水の 中で こする 必要が ない。だから 縦型の 半分ほどの 水で すむ。'],
+                    ['温水と 乾燥', '水を あたためて 酵素{こうそ}の 力を 引き出したり、そのまま 温風で 乾燥まで できる ものが 多い。'],
+                    ['乾燥は 2方式', '「ヒーター式」＝ヒーターで あたためる。「ヒートポンプ式」＝エアコンと 同じ しくみで 少ない 電気で 乾かす。']],
+            pro: ['水が 少なくて すむ（節水）', '服が からまりにくく いためにくい', '洗濯から 乾燥まで 1台で できる', 'かがまずに 出し入れできる 機種も'],
+            con: ['本体が 高い・重い', 'どろ よごれは 縦型の ほうが 得意', '乾燥に 電気を たくさん つかう', 'とちゅうで ドアを 開けにくい'],
+            spec: [['洗濯＋乾燥', 'やく 900W'], ['水の 量', '1回 50〜80L'], ['洗い方', 'たたき洗い']],
+            trivia: '「たたき洗い」は ヨーロッパで 川の 石に 洗濯物を 打ちつけて 洗って いた やり方が もと。日本で 昔から やって いた「もみ洗い」が 縦型に なり、文化の ちがいが 機械の 形に のこって いる。',
+            fig: () => {
+                let g = bg(240);
+                g += `<rect x="170" y="36" width="220" height="190" rx="14" fill="#f8fafc" stroke="#0e7490" stroke-width="3"/>`;
+                g += `<circle cx="280" cy="130" r="82" fill="#e0f2fe" stroke="#0369a1" stroke-width="3"/>`;
+                g += `<circle cx="280" cy="130" r="94" fill="none" stroke="#94a3b8" stroke-width="4"/>`;
+                g += `<path d="M198 168 a82 82 0 0 0 164 0 z" fill="#7dd3fc" opacity="0.7"/>`;
+                [0, 1, 2].forEach(i => { const a = i * 2 * Math.PI / 3 - 0.6;
+                    g += `<path d="M${(280 + Math.cos(a) * 82).toFixed(1)} ${(130 + Math.sin(a) * 82).toFixed(1)} l${(-Math.cos(a) * 22).toFixed(1)} ${(-Math.sin(a) * 22).toFixed(1)} l${(-Math.sin(a) * 14).toFixed(1)} ${(Math.cos(a) * 14).toFixed(1)} z" fill="#94a3b8" stroke="#475569" stroke-width="2"/>`; });
+                g += `<ellipse cx="256" cy="72" rx="20" ry="12" fill="#fbcfe8" stroke="#be185d" stroke-width="2" transform="rotate(-20 256 72)"/>`;
+                g += `<ellipse cx="300" cy="156" rx="22" ry="13" fill="#fbcfe8" stroke="#be185d" stroke-width="2"/>`;
+                g += arrow(268, 84, 292, 136, '#be185d', 3);
+                g += `<path d="M330 66 a94 94 0 0 1 36 52" fill="none" stroke="#1d4ed8" stroke-width="3"/>` + arrow(362, 106, 368, 124, '#1d4ed8', 3);
+                g += tag(340, 60, 440, 46, 'ドラムが 回る', '#1d4ed8') + tag(292, 136, 430, 176, '持ち上げて 落とす', '#be185d');
+                g += tag(280, 200, 168, 228, '水は 下に 少しだけ', '#0369a1');
+                g += `<text x="280" y="24" text-anchor="middle" font-size="12" font-weight="900" fill="#0e7490">よこから 見て ドラムを まわす</text>`;
+                return svg(W, 240, g);
+            }
+        },
+        {
+            id: 'dish', e: '🍽️', n: '食洗機{しょくせんき}（食器洗い機）',
+            lead: '手では さわれない <b>熱い 水</b>を 高い いきおいで ふきつけて 洗う。だから 少ない 水で きれいに なる。',
+            chain: [['🔌', '電気'], ['♨️', '水を 60〜70℃に'], ['💦', 'ノズルが 回って 噴射{ふんしゃ}'], ['🍽️', 'よごれが はがれる']],
+            steps: [['お湯を つくる', 'ヒーターで 60〜70℃に する。手では つかえない 温度なので あぶらが よく とける。'],
+                    ['回る ノズルから 噴射', '下（と 上）の うでが 水の いきおいで 回り、あらゆる 方向から 水を ぶつける。'],
+                    ['せんようの 洗ざい', '酵素{こうそ}が でんぷんや たんぱく質の よごれを 細かく 切る。あわが 立たない ように 作られて いる。'],
+                    ['すすいで 乾燥', '高温の 水で すすぐと、あとは 予熱で 水が じょう発して 自然に 乾く。'],
+                    ['水が 少ない りゆう', '同じ 水を ポンプで 何回も 循環{じゅんかん}させる ので、手洗いの 5分の1 ほどの 水で すむ。']],
+            pro: ['手洗いより 水が ずっと 少ない', '高温なので 消どく効果も 高い', '手が あれない・時間が あく', 'ふきんを つかわないので 衛生的'],
+            con: ['入れ方に コツが いる（水が 当たる 向きに）', '入れられない ものが ある（木・漆{うるし}・一部の プラスチック）', '本体が 高く 場所を とる', '大きな 食べのこしは 先に 落とす 必要が ある'],
+            spec: [['つかう 電気', 'やく 800W'], ['お湯の 温度', '60〜70℃'], ['水の 量', '手洗いの 1/5 ほど']],
+            trivia: '食洗機が 手洗いより 水を つかわないのは、同じ 水を 何度も まわして つかう から。手洗いは 流しっぱなしに なりやすく、1回の 食器洗いで 60〜100Lも つかう ことが ある。',
+            fig: () => {
+                let g = bg(240);
+                g += `<rect x="160" y="34" width="240" height="192" rx="12" fill="#f8fafc" stroke="#0e7490" stroke-width="3"/>`;
+                // 食器ラック
+                [0, 1, 2, 3, 4].forEach(i => g += `<ellipse cx="${196 + i * 42}" cy="86" rx="12" ry="30" fill="#e2e8f0" stroke="#475569" stroke-width="2"/>`);
+                [0, 1, 2].forEach(i => g += `<rect x="${200 + i * 60}" y="130" width="44" height="16" rx="4" fill="#e2e8f0" stroke="#475569" stroke-width="2"/>`);
+                // 回る ノズル
+                g += `<line x1="200" y1="180" x2="360" y2="180" stroke="#0891b2" stroke-width="7" stroke-linecap="round"/>`;
+                g += `<circle cx="280" cy="180" r="9" fill="#0891b2"/>`;
+                [0, 1, 2, 3, 4, 5].forEach(i => g += arrow(212 + i * 28, 174, 212 + i * 28, 150 - (i % 2) * 14, '#0891b2', 2.5));
+                g += `<path d="M366 184 a34 34 0 0 1 -12 22" fill="none" stroke="#0891b2" stroke-width="3"/>` + arrow(356, 202, 344, 208, '#0891b2', 2.5);
+                g += `<rect x="196" y="204" width="168" height="14" rx="5" fill="#7dd3fc"/>`;
+                g += `<rect x="240" y="216" width="80" height="10" rx="4" fill="#dc2626"/>`;
+                g += tag(280, 221, 170, 228, 'ヒーター（水を あつく）', '#dc2626');
+                g += tag(300, 180, 434, 196, '回る ノズル', '#0891b2') + tag(240, 158, 430, 130, '熱い 水を ふきつける', '#0891b2');
+                g += `<text x="280" y="24" text-anchor="middle" font-size="12" font-weight="900" fill="#0e7490">60〜70℃の 水を ぐるぐる まわして つかう</text>`;
+                return svg(W, 240, g);
+            }
+        },
+        {
+            id: 'micro', e: '📡', n: '電子レンジ',
+            lead: '<b>食べものの 中の 水の つぶ</b>を ゆらして、内がわから 熱を 出させる。外から あたためて いない。',
+            chain: [['🔌', '電気'], ['📡', 'マグネトロン'], ['〰️', 'マイクロ波'], ['💧', '水が ふるえて 熱']],
+            steps: [['マイクロ波を 出す', 'マグネトロンという 部品が、電子レンジ用の 電波（マイクロ波）を 作る。'],
+                    ['水の つぶが 向きを 変える', '水の つぶは プラスと マイナスの 向きが ある。電波の 向きが 1秒に 24億回 入れかわるので、水も 必死に 向きを 変える。'],
+                    ['こすれて 熱に なる', 'その 動きが まわりと こすれて 熱に なる。だから <b>水の 多い ところだけ</b> 熱く なる。'],
+                    ['金ぞくは だめ', '金ぞくは 電波を はね返し、とがった ところに 電気が あつまって 火花が 出る。'],
+                    ['ムラが できる りゆう', '電波が 強い ところと 弱い ところが できる。ターンテーブルで 回したり、とちゅうで まぜると そろう。']],
+            pro: ['とても 速い（外から 熱を 伝えないので）', '油も 水も いらない', '水に とける 栄養が にげにくい', 'なべも フライパンも 洗わなくて よい'],
+            con: ['焼き色や こうばしさは つかない', '水の 少ない ところは あたたまらない・ムラが できる', '金ぞく・から の 容器は 危険', '殻つきの 卵は 中で ふくらんで 破裂{はれつ}する'],
+            spec: [['つかう 電気', 'やく 1300W'], ['電波の ふるえ', '1秒に 24億回'], ['得意', 'あたため直し']],
+            trivia: '電子レンジは レーダーの 研究中に「ポケットの チョコが とけた」ことから 生まれた。研究者が つぎに ためしたのは ポップコーン。だから 電子レンジの 最初の 料理は ポップコーンだった。',
+            fig: () => {
+                let g = bg(240);
+                g += `<rect x="120" y="50" width="320" height="150" rx="10" fill="#e2e8f0" stroke="#334155" stroke-width="4"/>`;
+                g += `<rect x="140" y="68" width="200" height="114" rx="6" fill="#f8fafc" stroke="#475569" stroke-width="2.5"/>`;
+                g += `<rect x="352" y="68" width="74" height="114" rx="6" fill="#cbd5e1" stroke="#475569" stroke-width="2"/>`;
+                g += `<rect x="362" y="80" width="54" height="34" rx="4" fill="#475569"/>`;
+                g += `<text x="389" y="102" text-anchor="middle" font-size="11" font-weight="900" fill="#fff">📡</text>`;
+                // マイクロ波
+                [0, 1, 2].forEach(i => g += `<path d="M352 ${90 + i * 32} q-16 -12 -32 0 q-16 12 -32 0 q-16 -12 -32 0 q-16 12 -32 0" fill="none" stroke="#dc2626" stroke-width="2.5"/>`);
+                // 食べものと 水の つぶ
+                g += `<ellipse cx="200" cy="150" rx="44" ry="20" fill="#fdba74" stroke="#92400e" stroke-width="2.5"/>`;
+                [0, 1, 2, 3].forEach(i => {
+                    const x = 176 + i * 16, y = 148 - (i % 2) * 10;
+                    g += `<circle cx="${x}" cy="${y}" r="5" fill="#2563eb"/>`;
+                    g += `<path d="M${x - 8} ${y - 8} a10 10 0 0 1 16 0" fill="none" stroke="#2563eb" stroke-width="1.8"/>`;
+                });
+                g += `<rect x="150" y="172" width="180" height="8" rx="4" fill="#94a3b8"/>`;
+                g += tag(389, 98, 428, 56, 'マイクロ波を 作る 部品', '#dc2626');
+                g += tag(300, 122, 456, 146, '電波', '#dc2626');
+                g += tag(192, 144, 178, 216, '水の つぶが ふるえて 熱に なる', '#2563eb');
+                g += `<text x="240" y="36" text-anchor="middle" font-size="12" font-weight="900" fill="#0e7490">熱は 外から では なく 中から 生まれる</text>`;
+                return svg(W, 240, g);
+            }
+        },
+        {
+            id: 'battery', e: '🔋', n: '充電電池{じゅうでんでんち}（リチウムイオン）',
+            lead: '小さな <b>リチウムイオン</b>が 2つの 電極の あいだを 行ったり 来たり する。だから 何度も つかえる。',
+            chain: [['🔌', '充電の 電気'], ['➡️', 'イオンが 動く'], ['🔋', 'ためる'], ['💡', 'つかう']],
+            steps: [['電池の 中みは 3層', 'プラス極（金ぞくの 酸化物）・マイナス極（炭素）・その あいだを 通す 液（電解液{でんかいえき}）と セパレーター。'],
+                    ['充電＝イオンを 押しもどす', '電気の 力で リチウムイオンを プラス極から マイナス極へ 移す。ばねを ちぢめて おく ような もの。'],
+                    ['放電＝イオンが もどる', 'イオンが マイナス極から プラス極へ 自然に もどる とき、いっしょに 電子が 回路を 通って 電気に なる。'],
+                    ['なぜ 何度も つかえる？', 'イオンが 出入りする だけで、材料が こわれて しまわない から。ふつうの 乾電池は 化学変化が もどらない ので 使いきり。'],
+                    ['ひえと 熱に 弱い', '熱いと いたむのが 早く なり、氷点下では 力が 出ない。80%くらいまでの 充電が いちばん 長もち する。']],
+            pro: ['何百回も くりかえし つかえる', '軽くて たくさん ためられる', 'つかって いない ときの へりが 少ない', 'つぎたし充電が できる（つぎたして よい）'],
+            con: ['強い 力で こわすと 発火する ことが ある', '使うほど 少しずつ へたって いく', '氷点下や 高温が 苦手', '水に ぬらすと 危険'],
+            spec: [['スマホ充電', 'やく 15W'], ['くりかえし', '500〜1000回 ほど'], ['長もちの コツ', '20〜80%で つかう']],
+            trivia: 'リチウムイオン電池を つくった 吉野彰{よしのあきら}さんは、2019年に ノーベル化学賞を 受けた。スマホ・ノートパソコン・電気自動車が いま あるのは、この 小さな 電池の おかげ。',
+            fig: () => {
+                let g = bg(230);
+                g += `<rect x="120" y="60" width="330" height="120" rx="10" fill="#f8fafc" stroke="#334155" stroke-width="3"/>`;
+                g += `<rect x="132" y="72" width="66" height="96" rx="5" fill="#fca5a5" stroke="#b91c1c" stroke-width="2.5"/>`;
+                g += `<text x="165" y="126" text-anchor="middle" font-size="13" font-weight="900" fill="#7f1d1d">＋極</text>`;
+                g += `<rect x="372" y="72" width="66" height="96" rx="5" fill="#a5b4fc" stroke="#3730a3" stroke-width="2.5"/>`;
+                g += `<text x="405" y="126" text-anchor="middle" font-size="13" font-weight="900" fill="#312e81">−極</text>`;
+                g += `<rect x="280" y="72" width="10" height="96" fill="#cbd5e1"/>`;
+                g += `<rect x="198" y="72" width="174" height="96" fill="#dbeafe" opacity="0.7"/>`;
+                [0, 1, 2, 3].forEach(i => {
+                    const y = 88 + i * 22;
+                    g += `<circle cx="${218 + (i % 2) * 20}" cy="${y}" r="8" fill="#0891b2"/>`;
+                    g += `<text x="${218 + (i % 2) * 20}" y="${y + 4}" text-anchor="middle" font-size="9" font-weight="900" fill="#fff">Li</text>`;
+                });
+                g += arrow(236, 200, 350, 200, '#0891b2', 4);
+                g += `<text x="293" y="222" text-anchor="middle" font-size="11" font-weight="900" fill="#0891b2">充電：イオンが −極へ</text>`;
+                g += arrow(350, 44, 236, 44, '#16a34a', 4);
+                g += `<text x="293" y="34" text-anchor="middle" font-size="11" font-weight="900" fill="#16a34a">放電：イオンが ＋極へ ＝ 電気が つかえる</text>`;
+                g += tag(285, 160, 210, 190, 'セパレーター', '#334155');
+                return svg(W, 230, g);
+            }
+        },
+        {
+            id: 'inkjet', e: '🖨️', n: 'プリンター（インクジェット）',
+            lead: '目に 見えない ほど 小さな インクの つぶを、紙に <b>正確に 飛ばして</b> 絵を かく。',
+            chain: [['🔌', '電気'], ['🔥', 'インクを 一瞬 あたためる'], ['💧', 'つぶが 飛ぶ'], ['📄', '紙に 着地']],
+            steps: [['ノズルは かみの毛より 細い', 'ヘッドに 何百〜何千の 穴が あり、1つの 穴から 出る つぶは 1粒 1兆分の 1リットル ほど。'],
+                    ['あたためて 飛ばす', 'インクを 一瞬（百万分の 1秒）あたためて あわを 作り、その 力で つぶを おし出す 方式（サーマル）。'],
+                    ['ふるわせて 飛ばす', 'もう 1つは、電気で 形の 変わる 板（ピエゾ素子）を ふるわせて おし出す 方式。'],
+                    ['4色で ぜんぶの 色を つくる', 'シアン（水色）・マゼンタ（赤紫）・イエロー・ブラックの 4色（CMYK）を かさねて 色を 作る。'],
+                    ['ヘッドが 行き来する', 'ヘッドが 左右に 動きながら、紙が 少しずつ 送られて いく。だから 1行ずつ 絵が できて いく。']],
+            pro: ['写真が きれいに 出る', '本体が 安い', '小さくて 家に おきやすい', '紙の 種類を えらばない'],
+            con: ['印刷が おそい', '使わないと ノズルが かわいて つまる', 'インク代が 高くつく', '水に ぬれると にじむ'],
+            spec: [['印刷中の 電気', 'やく 20W'], ['色の 数', '4色（CMYK）'], ['得意', '写真・少ない 枚数']],
+            trivia: 'インクジェットの つぶの 大きさは 1ピコリットル（1兆分の 1リットル）ほど。ノズルの 穴は かみの毛より 細く、そこから 1秒に 何万回も つぶを 飛ばして、狙った 場所に 1000分の 1ミリの 精度で 着地させて いる。',
+            fig: () => {
+                let g = bg(230);
+                g += `<rect x="90" y="140" width="380" height="60" rx="6" fill="#f8fafc" stroke="#475569" stroke-width="3"/>`;
+                g += `<text x="112" y="176" font-size="12" font-weight="900" fill="#475569">紙</text>`;
+                g += `<rect x="230" y="50" width="110" height="52" rx="8" fill="#e2e8f0" stroke="#334155" stroke-width="3"/>`;
+                ['#0891b2', '#db2777', '#eab308', '#1e293b'].forEach((c, i) =>
+                    g += `<rect x="${238 + i * 26}" y="58" width="20" height="26" rx="3" fill="${c}"/>`);
+                g += `<rect x="248" y="102" width="74" height="12" rx="3" fill="#334155"/>`;
+                [0, 1, 2, 3, 4, 5].forEach(i => {
+                    const x = 256 + i * 12;
+                    ['#0891b2', '#db2777', '#eab308', '#1e293b'][i % 4];
+                    g += `<line x1="${x}" y1="114" x2="${x}" y2="138" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3 3"/>`;
+                    g += `<circle cx="${x}" cy="${120 + (i % 3) * 6}" r="3" fill="${['#0891b2', '#db2777', '#eab308', '#1e293b'][i % 4]}"/>`;
+                });
+                g += arrow(350, 76, 430, 76, '#16a34a', 3);
+                g += `<text x="434" y="80" font-size="11" font-weight="900" fill="#16a34a">ヘッドが 動く</text>`;
+                [0, 1, 2].forEach(i => g += `<rect x="${150 + i * 84}" y="156" width="56" height="10" rx="3" fill="#0e7490" opacity="${0.8 - i * 0.2}"/>`);
+                g += tag(285, 108, 160, 96, 'ノズル（とても 細い 穴）', '#334155');
+                g += tag(268, 126, 400, 126, '飛ぶ インクの つぶ', '#db2777');
+                g += `<text x="280" y="34" text-anchor="middle" font-size="12" font-weight="900" fill="#0e7490">4色の つぶを かさねて 色を つくる</text>`;
+                g += `<text x="470" y="196" text-anchor="end" font-size="11" font-weight="900" fill="#0e7490">紙が 少しずつ 送られる</text>`;
+                return svg(W, 230, g);
+            }
+        },
+        {
+            id: 'laser', e: '⚡', n: 'プリンター（レーザー）',
+            lead: '<b>静電気{せいでんき}</b>で 粉（トナー）を くっつけ、熱で 紙に とかしつける。だから 速くて にじまない。',
+            chain: [['🔌', '電気'], ['🔆', 'レーザーで 絵を かく'], ['🧲', '静電気で トナーが つく'], ['♨️', '熱で 定着{ていちゃく}']],
+            steps: [['ドラムに 静電気を つける', '筒（感光{かんこう}ドラム）の 表面 ぜんたいに 静電気を のせる。'],
+                    ['レーザーで 絵を かく', '光が 当たった ところだけ 静電気が 消える。つまり 光で「見えない 絵」を かいて いる。'],
+                    ['トナーが くっつく', '静電気の ある／ない の ちがいで、粉の トナーが 絵の ところだけに つく。'],
+                    ['紙に うつす', '紙の 裏から 静電気を かけて、トナーを ドラムから 紙へ 移す。'],
+                    ['熱で とかして 定着', '最後に 180℃ ほどの ローラーで 粉を とかし、紙に しみこませる。だから 出てきた 紙は あたたかい。']],
+            pro: ['とても 速い（1分に 何十枚も）', '文字が くっきり・水に ぬれても にじみにくい', '1枚あたりの 費用が 安い', '長く つかわなくても つまらない'],
+            con: ['本体が 大きく 高い', '温める ときに 電気を たくさん つかう', '写真は インクジェットに おとる ことが 多い', '紙が あたたかく 出て くる'],
+            spec: [['印刷中の 電気', 'やく 500W'], ['定着の 温度', 'やく 180℃'], ['得意', '文字・たくさん 印刷']],
+            trivia: 'コピー機も レーザープリンターも 原理は 同じ「静電気で 粉を つける」方法（電子写真）。1938年に カールソンが 発明した とき、だれも 役に 立つと 思わず、20社以上に ことわられた。',
+            fig: () => {
+                let g = bg(240);
+                g += `<circle cx="250" cy="110" r="52" fill="#e2e8f0" stroke="#334155" stroke-width="3"/>`;
+                g += `<text x="250" y="114" text-anchor="middle" font-size="11" font-weight="900" fill="#475569">ドラム</text>`;
+                for (let i = 0; i < 10; i++) { const a = i * Math.PI / 5;
+                    g += `<text x="${(250 + Math.cos(a) * 60).toFixed(0)}" y="${(112 + Math.sin(a) * 60).toFixed(0)}" text-anchor="middle" font-size="10" font-weight="900" fill="#0891b2">＋</text>`; }
+                g += `<rect x="100" y="52" width="70" height="34" rx="6" fill="#475569"/>`;
+                g += `<text x="135" y="74" text-anchor="middle" font-size="11" font-weight="900" fill="#fff">レーザー</text>`;
+                g += arrow(172, 70, 226, 92, '#dc2626', 3);
+                g += `<rect x="330" y="60" width="66" height="40" rx="5" fill="#1e293b"/>`;
+                g += `<text x="363" y="85" text-anchor="middle" font-size="11" font-weight="900" fill="#fff">トナー</text>`;
+                [0, 1, 2].forEach(i => g += arrow(330, 74 + i * 12, 300, 86 + i * 10, '#1e293b', 2.5));
+                g += `<rect x="90" y="176" width="380" height="42" rx="6" fill="#f8fafc" stroke="#475569" stroke-width="3"/>`;
+                [0, 1, 2].forEach(i => g += `<rect x="${140 + i * 70}" y="190" width="48" height="10" rx="3" fill="#1e293b" opacity="${0.85 - i * 0.2}"/>`);
+                g += arrow(250, 168, 250, 182, '#1e293b', 3);
+                g += `<circle cx="400" cy="160" r="22" fill="#fca5a5" stroke="#b91c1c" stroke-width="3"/>`;
+                g += `<circle cx="400" cy="200" r="22" fill="#fca5a5" stroke="#b91c1c" stroke-width="3"/>`;
+                g += tag(400, 180, 452, 140, '熱ローラー 180℃', '#b91c1c');
+                g += tag(310, 68, 400, 40, '粉（トナー）', '#334155');
+                g += tag(206, 100, 120, 130, '光が 当たった ところ', '#dc2626');
+                g += `<text x="100" y="236" font-size="11" font-weight="900" fill="#0e7490">紙 → 熱で とかして しみこませる</text>`;
+                return svg(W, 240, g);
+            }
+        },
+        {
+            id: 'vacuum', e: '🧹', n: '掃除機{そうじき}',
+            lead: 'ファンで 空気を 外へ 出し、<b>中を 気圧が 低い 状態</b>に する。すると 外の 空気が ごみを つれて 入って くる。',
+            chain: [['🔌', '電気'], ['🔄', 'ファンが 回る'], ['🌬️', '中の 気圧が 下がる'], ['🗑️', '空気と ごみが 入る']],
+            steps: [['「吸う」は じつは「おされて 入る」', 'ファンが 中の 空気を どんどん 外へ 出すので 中が うすく なり、まわりの 空気が おし入る。'],
+                    ['ごみが いっしょに 来る', '入って くる 空気の 流れに のって、ほこりや かみの毛が 運ばれる。'],
+                    ['ごみと 空気を 分ける', '紙パック式は ふくろで こしとる。サイクロン式は 空気を うずに して 遠心力で ごみを 外へ とばす。'],
+                    ['フィルターで 仕上げ', '細かい ほこりは フィルターで とる。ここが つまると 吸う 力が いっきに 落ちる。'],
+                    ['ヘッドの くふう', '回る ブラシで じゅうたんの 毛を おこして、おくの ごみを かき出す。']],
+            pro: ['ほうきと ちがい ほこりを まい上げにくい', 'じゅうたんの おくの ごみも とれる', 'ロボット型なら 留守中も 掃除できる', 'すきま用の ノズルで こまかい ところも'],
+            con: ['音が 大きい', 'フィルターや パックの 手入れが 必要', 'コードや 充電の 手間', '水や とがった ものは 吸わせては いけない'],
+            spec: [['つかう 電気', 'やく 600W'], ['分け方', '紙パック／サイクロン'], ['大事な 手入れ', 'フィルター清そう']],
+            trivia: '掃除機が ごみを「吸いこむ」と 言うが、正しくは「まわりの 空気が ごみを おしこんで いる」。宇宙（空気の ない ところ）では 掃除機は まったく 役に 立たない。',
+            fig: () => {
+                let g = bg(230);
+                g += `<path d="M280 70 q90 -10 130 40 q22 28 -6 52 q-48 34 -124 12 q-40 -12 -34 -48 q6 -38 34 -56 z" fill="#f8fafc" stroke="#334155" stroke-width="3"/>`;
+                g += `<circle cx="366" cy="128" r="30" fill="none" stroke="#0891b2" stroke-width="3"/>`;
+                [0, 1, 2, 3].forEach(i => { const a = i * Math.PI / 2 + 0.4;
+                    g += `<path d="M366 128 q${Math.cos(a) * 26} ${Math.sin(a) * 26} ${Math.cos(a + 0.7) * 28} ${Math.sin(a + 0.7) * 28}" fill="#a5f3fc" stroke="#0891b2" stroke-width="2"/>`; });
+                // うず（サイクロン）
+                g += `<path d="M300 100 q34 -6 40 26 q-6 34 -40 26 q-28 -8 -22 -26 q6 -18 22 -14" fill="none" stroke="#1d4ed8" stroke-width="3"/>`;
+                [0, 1, 2].forEach(i => g += `<circle cx="${292 + i * 12}" cy="${146 - i * 6}" r="4" fill="#a16207"/>`);
+                // ホースと ヘッド
+                g += `<path d="M256 118 q-60 20 -90 50" fill="none" stroke="#475569" stroke-width="10" stroke-linecap="round"/>`;
+                g += `<rect x="60" y="164" width="110" height="20" rx="6" fill="#334155"/>`;
+                [0, 1, 2, 3].forEach(i => g += arrow(80 + i * 28, 206, 80 + i * 28, 186, '#16a34a', 2.5));
+                [0, 1, 2, 3].forEach(i => g += `<circle cx="${80 + i * 28}" cy="212" r="4" fill="#a16207"/>`);
+                [0, 1, 2].forEach(i => g += arrow(408, 106 + i * 22, 456, 106 + i * 22, '#16a34a', 2.5));
+                g += `<text x="460" y="176" text-anchor="end" font-size="11" font-weight="900" fill="#16a34a">きれいな 空気が 出る</text>`;
+                g += tag(366, 128, 430, 62, 'ファン（空気を 外へ）', '#0891b2');
+                g += tag(310, 126, 250, 62, 'うずで ごみを 分ける', '#1d4ed8');
+                g += `<text x="56" y="228" font-size="11" font-weight="900" fill="#16a34a">↑ 空気が ごみを つれて 入る</text>`;
+                return svg(W, 230, g);
+            }
+        },
+        {
+            id: 'ih', e: '🍳', n: 'IHクッキングヒーター',
+            lead: 'コンロが あつく なるのでは なく、<b>なべ自身が 発熱</b>する。だから 上に 手を おいても やけどしない（なべの 熱は 別）。',
+            chain: [['🔌', '電気'], ['🌀', 'コイルに 電流'], ['🧲', '磁力{じりょく}が 変わる'], ['🍳', 'なべ底に うず電流']],
+            steps: [['コイルに 電気を 流す', 'ガラスの 下の コイルに、向きが 高速で 入れかわる 電気を 流す。'],
+                    ['磁力が 高速で 入れかわる', 'そのため コイルの まわりの 磁力も 1秒に 2万回以上 向きを 変える。'],
+                    ['なべ底に 電流が 生まれる', '変わる 磁力の 中に 金ぞくが あると、その 中に うず状の 電流（うず電流）が 生まれる（電磁誘導{でんじゆうどう}）。'],
+                    ['金ぞくの ていこうで 発熱', 'なべ底の 金ぞくが その 電流に 少し ていこうする ので 熱が 生まれる。<b>熱の 出どころは なべ</b>。'],
+                    ['使える なべが ある', '鉄や ステンレスは よく 発熱する。アルミや 銅、土なべは 発熱しにくいので 専用の ものが 必要。']],
+            pro: ['なべに 直接 熱が 出るので むだが 少ない', '火が 出ないので 火事の 心配が 少ない', '天板が 平らで 手入れが かんたん', '温度を 数字で 決められる'],
+            con: ['使えない なべが ある', '大きな 電気が 必要（工事が いる ことも）', '天板は なべの 熱で あつく なる（やけど注意）', '停電すると つかえない'],
+            spec: [['つかう 電気', '1400〜3000W'], ['磁力の 変化', '1秒に 2万回以上'], ['つかえる なべ', '鉄・ステンレス']],
+            trivia: 'IH の上に 紙を しいて その上に 鉄の なべを おくと、紙は こげずに なべだけ あつく なる。熱を 出して いるのが コンロでは なく なべ自身だと わかる 実験。（まねは しない こと）',
+            fig: () => {
+                let g = bg(230);
+                g += `<rect x="130" y="132" width="300" height="40" rx="6" fill="#e2e8f0" stroke="#334155" stroke-width="3"/>`;
+                g += `<text x="140" y="192" font-size="11" font-weight="900" fill="#334155">ガラスの 天板</text>`;
+                // コイル
+                [0, 1, 2, 3].forEach(i => {
+                    g += `<ellipse cx="280" cy="158" rx="${28 + i * 24}" ry="${8 + i * 3}" fill="none" stroke="#0891b2" stroke-width="3"/>`;
+                });
+                // なべ
+                g += `<path d="M180 128 L180 66 q0 -10 12 -10 L368 56 q12 0 12 10 L380 128 Z" fill="#cbd5e1" stroke="#334155" stroke-width="3"/>`;
+                g += `<rect x="186" y="118" width="188" height="12" rx="3" fill="#dc2626"/>`;
+                g += `<rect x="188" y="76" width="184" height="40" rx="4" fill="#7dd3fc" opacity="0.8"/>`;
+                // うず電流
+                [0, 1, 2].forEach(i => {
+                    const cx = 224 + i * 56;
+                    g += `<path d="M${cx} 112 a14 14 0 1 1 10 -10" fill="none" stroke="#dc2626" stroke-width="2.5"/>`;
+                    g += `<polygon points="${cx + 10},102 ${cx + 16},108 ${cx + 6},110" fill="#dc2626"/>`;
+                });
+                // 磁力線
+                [0, 1, 2].forEach(i => g += `<path d="M${236 + i * 44} 132 q0 -12 0 -18" fill="none" stroke="#7c3aed" stroke-width="2.5" stroke-dasharray="4 3"/>`);
+                g += tag(280, 168, 170, 214, 'コイル（電気の わ）', '#0891b2');
+                g += tag(280, 124, 388, 200, 'なべ底に うず電流 → 発熱', '#dc2626');
+                g += tag(258, 122, 440, 98, '変わる 磁力', '#7c3aed');
+                g += `<text x="280" y="34" text-anchor="middle" font-size="12" font-weight="900" fill="#0e7490">熱を 出して いるのは コンロでは なく「なべ」</text>`;
+                return svg(W, 230, g);
+            }
+        },
+        {
+            id: 'led', e: '💡', n: 'LED電球{でんきゅう}',
+            lead: '熱くなる 線で 光らせるのでは なく、<b>半導体{はんどうたい}に 電気を 流すと 直接 光る</b>。だから むだな 熱が 少ない。',
+            chain: [['🔌', '電気'], ['🔬', '半導体を 通る'], ['✨', '光に なる'], ['💡', '明るい']],
+            steps: [['白熱電球は「熱くして 光らせる」', '細い 線を 2500℃ 近くまで 熱して 光らせる。エネルギーの 9割以上が 熱に なって しまう。'],
+                    ['LEDは「電気が 直接 光に なる」', '2種類の 半導体を 重ねた ところで、電気の つぶが 出会う と その ぶんが 光と して 出る。'],
+                    ['同じ 明るさで 電気は 7分の1', '60W相当の 明るさが 8Wほどで 出せる。'],
+                    ['長もち', '線が 切れる しくみでは ない ので、4万時間（1日 8時間で 13年ほど）もつ。'],
+                    ['青色が むずかしかった', '赤と 緑は 早くから あったが、青が 作れず 白色に できなかった。青色LEDの 発明で 照明に つかえる ように なった。']],
+            pro: ['同じ 明るさで 電気は 7分の1ほど', 'とても 長もち（10年 以上）', '熱く なりにくい', 'すぐ ついて 点けたり 消したりに つよい'],
+            con: ['電球じたいの ねだんは 高め', '光が まっすぐ 進みやすく かげが きつく 出る ことも', '安い ものは 色が 不自然な ことが ある', '熱に 弱い（密閉した 器具は 専用品を）'],
+            spec: [['LED（60W相当）', 'やく 8W'], ['白熱電球（60W）', 'やく 54W'], ['寿命{じゅみょう}', 'やく 4万時間']],
+            trivia: '青色LEDを 実用化した 赤崎勇{あかさきいさむ}・天野浩{あまのひろし}・中村修二{なかむらしゅうじ}の 3人が 2014年に ノーベル物理学賞を 受けた。赤・緑・青が そろって はじめて 白い 光が 作れ、世界中の 照明が 変わった。',
+            fig: () => {
+                let g = bg(240);
+                // 白熱電球
+                g += `<circle cx="150" cy="100" r="48" fill="#fef3c7" stroke="#92400e" stroke-width="3"/>`;
+                g += `<rect x="134" y="146" width="32" height="26" rx="4" fill="#94a3b8" stroke="#475569" stroke-width="2"/>`;
+                g += `<path d="M138 116 l8 -22 l8 16 l8 -16 l8 22" fill="none" stroke="#dc2626" stroke-width="3"/>`;
+                [0, 1, 2, 3, 4].forEach(i => g += `<path d="M${118 + i * 16} 62 q4 -12 0 -20" fill="none" stroke="#dc2626" stroke-width="2.5"/>`);
+                g += `<text x="150" y="196" text-anchor="middle" font-size="12" font-weight="900" fill="#92400e">白熱電球 54W</text>`;
+                g += `<text x="150" y="216" text-anchor="middle" font-size="11" font-weight="900" fill="#dc2626">ほとんど 熱に なる</text>`;
+                // LED
+                g += `<path d="M410 56 q44 0 44 44 q0 30 -22 46 L388 146 q-22 -16 -22 -46 q0 -44 44 -44 z" fill="#e0f2fe" stroke="#0e7490" stroke-width="3"/>`;
+                g += `<rect x="394" y="146" width="32" height="26" rx="4" fill="#94a3b8" stroke="#475569" stroke-width="2"/>`;
+                [0, 1, 2, 3].forEach(i => g += `<rect x="${384 + i * 14}" y="96" width="9" height="9" rx="2" fill="#fbbf24"/>`);
+                [0, 1, 2, 3, 4].forEach(i => g += `<line x1="${380 + i * 15}" y1="80" x2="${374 + i * 15}" y2="62" stroke="#fbbf24" stroke-width="2.5"/>`);
+                g += `<text x="410" y="196" text-anchor="middle" font-size="12" font-weight="900" fill="#0e7490">LED 8W</text>`;
+                g += `<text x="410" y="216" text-anchor="middle" font-size="11" font-weight="900" fill="#16a34a">電気が 直接 光に なる</text>`;
+                g += arrow(216, 110, 340, 110, '#16a34a', 4);
+                g += `<text x="278" y="96" text-anchor="middle" font-size="13" font-weight="900" fill="#16a34a">同じ 明るさ</text>`;
+                g += `<text x="278" y="134" text-anchor="middle" font-size="12" font-weight="900" fill="#16a34a">電気は 7分の1</text>`;
+                return svg(W, 240, g);
+            }
+        },
+        {
+            id: 'rice', e: '🍚', n: '炊飯器{すいはんき}',
+            lead: '温度を <b>細かく 決められた とおりに</b> 上下させて、でんぷんを いちばん おいしい 状態に 変える 機械。',
+            chain: [['🔌', '電気'], ['♨️', 'ヒーター（または IH）'], ['🌡️', '温度を 制御{せいぎょ}'], ['🍚', 'ごはんが たける']],
+            steps: [['① 吸水{きゅうすい}', '40〜50℃ くらいで しばらく おき、米の 中まで 水を 入れる。ここが 味を 決める。'],
+                    ['② 加熱・ふっとう', '強く 熱して ふっとうさせ、98℃ くらいを たもつ。でんぷんが のり化（α化）して やわらかく なる。'],
+                    ['③ 蒸{む}らし', '火を 止めて 10分ほど おき、残った 水じょう気を 米ぜんたいに 行きわたらせる。'],
+                    ['④ 保温', '70℃ くらいに たもつ。低すぎると 菌が ふえ、高すぎると 黄色く なる。'],
+                    ['なぜ ふたが 重い？', '中の 圧力を 少し 上げると 100℃ より 高く でき、ふっくら たける（圧力式）。']],
+            pro: ['ボタン1つで 失敗しにくい', '予約や 保温が できる', 'おかゆ・炊きこみなど 何通りも できる', 'IH式は なべ全体を 熱く できる'],
+            con: ['保温を 長く すると 味が 落ちる・電気も つかう', '本体が 大きい', '内なべの コーティングが いたむ', 'ふたの パッキンの 手入れが 必要'],
+            spec: [['炊飯中の 電気', 'やく 700W'], ['保温中', 'やく 15〜40W'], ['たく 温度', '98℃ ほどを たもつ']],
+            trivia: 'ごはんが おいしく なるのは でんぷんの「のり化（α化）」。冷えると もとの かたい 形に もどりはじめる（老化）が、あたためると また のり化する。だから 冷めた ごはんは レンジで あたためると おいしく なる。',
+            fig: () => {
+                let g = bg(240);
+                g += `<path d="M150 90 L150 190 q0 22 24 22 L386 212 q24 0 24 -22 L410 90 Z" fill="#f1f5f9" stroke="#334155" stroke-width="3"/>`;
+                g += `<path d="M144 90 q136 -26 272 0 q0 -22 -18 -26 q-118 -18 -236 0 q-18 4 -18 26 z" fill="#cbd5e1" stroke="#334155" stroke-width="3"/>`;
+                g += `<path d="M176 100 L176 184 q0 12 14 12 L370 196 q14 0 14 -12 L384 100 Z" fill="#94a3b8" stroke="#475569" stroke-width="2.5"/>`;
+                g += `<path d="M180 132 L180 182 q0 10 12 10 L368 192 q12 0 12 -10 L380 132 Z" fill="#fff7ed" stroke="#92400e" stroke-width="2"/>`;
+                for (let i = 0; i < 18; i++) g += `<ellipse cx="${192 + (i % 9) * 20}" cy="${150 + Math.floor(i / 9) * 22}" rx="7" ry="5" fill="#fef3c7" stroke="#d6d3d1" stroke-width="1"/>`;
+                g += `<rect x="178" y="198" width="204" height="10" rx="4" fill="#dc2626"/>`;
+                [0, 1, 2, 3].forEach(i => g += `<path d="M${216 + i * 44} 128 q6 -14 0 -26" fill="none" stroke="#cbd5e1" stroke-width="3"/>`);
+                g += `<circle cx="280" cy="206" r="8" fill="#16a34a"/>`;
+                g += tag(280, 203, 168, 232, '温度センサー', '#16a34a');
+                g += tag(340, 203, 470, 214, 'ヒーター', '#dc2626');
+                g += tag(300, 128, 460, 108, '水じょう気', '#475569');
+                g += tag(200, 68, 152, 46, 'ふたで 圧力を 少し 上げる', '#334155');
+                g += `<text x="280" y="30" text-anchor="middle" font-size="12" font-weight="900" fill="#0e7490">吸水 → ふっとう → 蒸らし → 保温</text>`;
+                return svg(W, 240, g);
+            }
+        }
+    ];
+    let ai = 0;
+    function setAp(i) {
+        ai = i;
+        const a = APPS[i];
+        document.getElementById('ap-chips').innerHTML = APPS.map((x, j) =>
+            `<button onclick="setAp(${j})" data-ap="${x.id}" class="${j === i ? 'bg-cyan-700 text-white' : 'bg-white border-2 border-cyan-200 text-slate-600'} font-black px-2.5 py-1.5 rounded-xl text-xs bounce-hover">${x.e} ${plain(x.n)}</button>`).join('');
+        document.getElementById('ap-name').innerHTML = `${a.e} ${a.n}`;
+        document.getElementById('ap-lead').innerHTML = a.lead;
+        document.getElementById('ap-fig').innerHTML = a.fig();
+        const H = 96, bw = 116, gap = 20, x0 = (W - (bw * 4 + gap * 3)) / 2;
+        let g = bg(H, '#f0fdfa');
+        a.chain.forEach(([e, t], k) => {
+            const x = x0 + k * (bw + gap);
+            g += `<rect x="${x}" y="16" width="${bw}" height="62" rx="12" fill="#fff" stroke="#22d3ee" stroke-width="2.5"/>
+                  <text x="${x + bw / 2}" y="44" text-anchor="middle" font-size="20">${e}</text>
+                  <text x="${x + bw / 2}" y="68" text-anchor="middle" font-size="11" font-weight="900" fill="#155e75">${plain(t)}</text>`;
+            if (k < 3) g += `<text x="${x + bw + gap / 2}" y="54" text-anchor="middle" font-size="18" font-weight="900" fill="#0891b2">➡</text>`;
+        });
+        document.getElementById('ap-chain').innerHTML = svg(W, H, g);
+        document.getElementById('ap-steps').innerHTML = a.steps.map(([t, d], k) =>
+            `<div class="bg-cyan-50 border-2 border-cyan-200 rounded-2xl p-3" data-step="${k}">
+                <p class="font-black text-sm text-cyan-900">${k + 1}. ${t}</p>
+                <p class="text-xs font-bold text-slate-600 mt-0.5 leading-relaxed">${d}</p></div>`).join('');
+        document.getElementById('ap-pro').innerHTML = a.pro.map(t => `<li data-pro>😀 ${t}</li>`).join('');
+        document.getElementById('ap-con').innerHTML = a.con.map(t => `<li data-con>😣 ${t}</li>`).join('');
+        document.getElementById('ap-spec').innerHTML = a.spec.map(([k2, v]) =>
+            `<span class="bg-slate-100 rounded-2xl px-3 py-1.5 text-xs font-black" data-spec="${k2}">${k2}：<span class="num text-cyan-800">${v}</span></span>`).join('');
+        document.getElementById('ap-trivia').innerHTML = `💡 ${a.trivia}`;
+    }
+
+    /* =====================================================================
+       ② ヒートポンプ
+       ===================================================================== */
+    let pumpReady = false;
+    // 冷媒が まわる わ。点の ならびが そのまま 絵に なる
+    const HP = [
+        { x: 130, y: 250, c: 'b', st: '室内機{しつないき}（熱を うばう）',
+          d: '冷たい 液体の 冷媒が 部屋の 空気から 熱を もらって <b>気体</b>に なる。熱を とられた 空気が 冷たい 風に なる。' },
+        { x: 130, y: 120, c: 'b' },
+        { x: 250, y: 60, c: 'r', st: '圧縮機{あっしゅくき}（ぎゅっと おす）',
+          d: 'モーターで 気体を ぎゅっと おしちぢめる。ちぢめられた 気体は <b>あつく なる</b>（60〜90℃）。ここで 電気を つかう。' },
+        { x: 430, y: 120, c: 'r', st: '室外機{しつがいき}（熱を すてる）',
+          d: 'あつい 冷媒は 外の 空気より 熱い ので、熱が 外へ にげて いく。冷媒は <b>液体</b>に もどる。' },
+        { x: 430, y: 250, c: 'r' },
+        { x: 300, y: 300, c: 'b', st: '膨張弁{ぼうちょうべん}（ゆるめる）',
+          d: '細い すきまを 通して 圧力を いっきに 下げる。ちぢめると あつく なる のと 反対で、<b>ゆるめると 冷たく なる</b>（−10℃ ほど）。' }
+    ];
+    let hi = 0, hpTimer = null, hpT = 0;
+    function hpStop() { if (hpTimer) { clearInterval(hpTimer); hpTimer = null; } }
+    function hpStations() { return HP.map((p, i) => p.st ? i : -1).filter(i => i >= 0); }
+    function hpStep() {
+        hpStop();
+        const sts = hpStations();
+        hi = sts[(sts.indexOf(hi) + 1) % sts.length];
+        hpT = hi;
+        hpDraw();
+    }
+    function hpPlay() {
+        hpStop(); hpT = 0; hi = 0; hpDraw();
+        hpTimer = setInterval(() => {
+            hpT += 0.06;
+            if (hpT >= HP.length) hpT = 0;
+            const k = Math.round(hpT) % HP.length;
+            if (HP[k].st && k !== hi) hi = k;
+            hpDraw();
+        }, 60);
+    }
+    function hpDraw() {
+        const H = 360;
+        let g = bg(H, '#ecfeff');
+        g += `<line x1="280" y1="10" x2="280" y2="${H - 10}" stroke="#cbd5e1" stroke-width="4" stroke-dasharray="8 6"/>`;
+        g += `<text x="100" y="26" text-anchor="middle" font-size="12" font-weight="900" fill="#0e7490">部屋の 中</text>`;
+        g += `<text x="466" y="26" text-anchor="middle" font-size="12" font-weight="900" fill="#b45309">外</text>`;
+        // 室内機・室外機・部品の わく
+        g += `<rect x="52" y="104" width="156" height="164" rx="12" fill="#e0f2fe" stroke="#0369a1" stroke-width="2.5"/>
+              <text x="130" y="96" text-anchor="middle" font-size="12" font-weight="900" fill="#0369a1">❄️ 室内機</text>`;
+        g += `<rect x="352" y="104" width="156" height="164" rx="12" fill="#ffedd5" stroke="#c2410c" stroke-width="2.5"/>
+              <text x="430" y="96" text-anchor="middle" font-size="12" font-weight="900" fill="#c2410c">♨️ 室外機</text>`;
+        g += `<rect x="212" y="36" width="136" height="44" rx="10" fill="#f1f5f9" stroke="#334155" stroke-width="2.5"/>
+              <text x="298" y="63" text-anchor="middle" font-size="12" font-weight="900" fill="#334155">🌀 圧縮機</text>`;
+        g += `<rect x="238" y="288" width="124" height="46" rx="10" fill="#f1f5f9" stroke="#334155" stroke-width="2.5"/>
+              <text x="300" y="324" text-anchor="middle" font-size="12" font-weight="900" fill="#334155">🔻 膨張弁</text>`;
+        // パイプ
+        for (let i = 0; i < HP.length; i++) {
+            const a = HP[i], b2 = HP[(i + 1) % HP.length];
+            g += `<line x1="${a.x}" y1="${a.y}" x2="${b2.x}" y2="${b2.y}" stroke="${b2.c === 'r' ? '#dc2626' : '#2563eb'}" stroke-width="6" stroke-linecap="round" opacity="0.5"/>`;
+        }
+        // 熱の やりとり
+        const onIn = hi === 0, onOut = hi === 3;
+        [0, 1, 2].forEach(i => g += arrow(72 + i * 28, 170 + i * 0, 72 + i * 28, 210, '#2563eb', onIn ? 3.5 : 2));
+        g += `<text x="66" y="232" font-size="11" font-weight="900" fill="#2563eb" opacity="${onIn ? 1 : 0.5}">部屋の 熱を うばう</text>`;
+        [0, 1, 2].forEach(i => g += arrow(478 + i * 0, 150 + i * 30, 534, 150 + i * 30, '#dc2626', onOut ? 3.5 : 2));
+        g += `<text x="470" y="286" text-anchor="middle" font-size="11" font-weight="900" fill="#dc2626" opacity="${onOut ? 1 : 0.5}">外へ 熱を すてる</text>`;
+        // 駅の 印
+        HP.forEach((p, i) => {
+            if (!p.st) return;
+            const on = i === hi;
+            g += `<circle cx="${p.x}" cy="${p.y}" r="${on ? 10 : 6}" fill="${p.c === 'r' ? '#dc2626' : '#2563eb'}" stroke="#fff" stroke-width="${on ? 3 : 2}"/>`;
+        });
+        // 流れて いる 冷媒
+        const t = hpTimer ? hpT : hi;
+        const i0 = Math.floor(t) % HP.length, f = t - Math.floor(t);
+        const a0 = HP[i0], b0 = HP[(i0 + 1) % HP.length];
+        const px = a0.x + (b0.x - a0.x) * f, py = a0.y + (b0.y - a0.y) * f;
+        const col = (f < 0.5 ? a0.c : b0.c) === 'r' ? '#dc2626' : '#2563eb';
+        g += `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="12" fill="${col}" stroke="#fff" stroke-width="3"/>`;
+        g += `<circle cx="30" cy="300" r="7" fill="#dc2626"/><text x="42" y="305" font-size="11" font-weight="900" fill="#dc2626">あつい 冷媒</text>
+              <circle cx="30" cy="326" r="7" fill="#2563eb"/><text x="42" y="331" font-size="11" font-weight="900" fill="#2563eb">冷たい 冷媒</text>`;
+        document.getElementById('hp-fig').innerHTML = svg(W, H, g);
+        const sts = hpStations();
+        document.getElementById('hp-count').innerText = `${sts.indexOf(hi) + 1} / ${sts.length}`;
+        const s = HP[hi];
+        document.getElementById('hp-info').innerHTML =
+            `<b class="${s.c === 'r' ? 'text-rose-700' : 'text-blue-700'}">${sts.indexOf(hi) + 1}. ${s.st}</b><br>${s.d}`;
+    }
+    const HPTIPS = [
+        ['ちぢめると あつく、ゆるめると 冷たく なる', '自転車の 空気入れを つかうと、下の ほうが あたたかく なる。空気を ちぢめると 温度が 上がる から。ヒートポンプは この 反対（ゆるめると 下がる）も つかって いる。'],
+        ['気化熱{きかねつ}＝じょう発する とき 熱を うばう', 'プールから 出ると さむいのは、体の 水が じょう発する とき 熱を つれて いく から。打ち水も 同じ。冷媒も「気体に なる とき 熱を うばう」を つかって いる。'],
+        ['だから エアコンは 熱を「作らない」', '部屋の 熱を つかんで 外に 出す だけ。運ぶ 仕事に 電気を つかうので、電気1に対して 熱を 3〜6倍 動かせる。'],
+        ['冷蔵庫・除湿機・乾燥機も 仲間', 'どれも ヒートポンプ。冷蔵庫は 庫内の 熱を 部屋へ、ドラム式の ヒートポンプ乾燥は 服の 水分の 熱を つかいまわして いる。'],
+        ['室外機を ふさがない', '外へ 熱を すてる ところを ふさぐと、熱の 行き場が なくなって 効きが 悪く なり 電気も むだに なる。']
+    ];
+    function hpTips() {
+        document.getElementById('hp-tips').innerHTML = HPTIPS.map(([t, d]) =>
+            `<div class="border-2 border-cyan-200 bg-cyan-50 rounded-2xl p-3" data-hptip="${t.slice(0, 5)}">
+                <p class="font-black text-sm text-cyan-900">💡 ${t}</p>
+                <p class="text-xs font-bold text-slate-600 mt-0.5 leading-relaxed">${d}</p></div>`).join('');
+    }
+
+    /* =====================================================================
+       ③ 電気代
+       ===================================================================== */
+    let powerReady = false;
+    const YEN_KWH = 31;           // 1kWh あたり 31円（目安の 単価）
+    const POWER = [
+        ['🔥', 'IHコンロ', 1400], ['📡', '電子レンジ', 1300], ['🫧', '電気ケトル', 1300],
+        ['💨', 'ドライヤー', 1200], ['🥁', '洗濯機（乾燥まで）', 900], ['🍽️', '食洗機', 800],
+        ['🍚', '炊飯器（炊飯中）', 700], ['🧹', '掃除機', 600], ['⚡', 'プリンター（レーザー）', 500],
+        ['❄️', 'エアコン（冷房）', 500], ['🌀', '洗濯機（たて型・洗濯）', 250],
+        ['📺', 'テレビ（液晶）', 80], ['💡', '白熱電球', 54], ['🧊', '冷蔵庫（平均）', 40],
+        ['🌬️', '扇風機', 30], ['🖨️', 'プリンター（インクジェット）', 20],
+        ['📱', 'スマホ充電', 15], ['💡', 'LED電球', 8]
+    ];
+    function pwFig() {
+        const rows = POWER.slice().sort((a, b) => b[2] - a[2]);
+        const L = 200, R = 520, rowH = 24, T = 12;
+        const H = T + rows.length * rowH + 14;
+        const maxV = rows[0][2];
+        let g = bg(H, '#f0fdfa');
+        rows.forEach(([e, n, w], i) => {
+            const y = T + i * rowH;
+            const bw = w / maxV * (R - L);
+            g += `<text x="${L - 8}" y="${y + 16}" text-anchor="end" font-size="11" font-weight="900" fill="#334155">${e} ${n}</text>`;
+            g += `<rect data-pwbar="${n}" x="${L}" y="${y + 5}" width="${Math.max(2, bw).toFixed(1)}" height="14" rx="4" fill="#0891b2" opacity="${(0.4 + 0.6 * w / maxV).toFixed(2)}"/>`;
+            g += `<text x="${(L + Math.max(2, bw) + 6).toFixed(1)}" y="${y + 17}" font-size="11" font-weight="900" fill="#0e7490">${nf(w)}W</text>`;
+        });
+        document.getElementById('pw-fig').innerHTML = svg(W, H, g);
+    }
+    let pi = 0;
+    function setPw(i) { pi = i; pwCalc(); }
+    function pwCalc() {
+        const min = +document.getElementById('pw-t').value;
+        document.getElementById('pw-tv').innerText = min;
+        document.getElementById('pw-chips').innerHTML = POWER.map(([e, n, w], j) =>
+            `<button onclick="setPw(${j})" data-pw="${n}" class="${j === pi ? 'bg-cyan-700 text-white' : 'bg-white border-2 border-cyan-200 text-slate-600'} font-black px-2.5 py-1.5 rounded-xl text-xs bounce-hover">${e} ${n}</button>`).join('');
+        const [e, n, w] = POWER[pi];
+        const kwh = w * (min / 60) / 1000;
+        const yen = kwh * YEN_KWH;
+        const month = yen * 30;
+        const led = POWER.find(x => x[1] === 'LED電球')[2];
+        document.getElementById('pw-res').innerHTML =
+            `${e} <b>${n}（${nf(w)}W）</b>を <b>${min}分</b> つかうと…<br>
+             電気の 量 ＝ ${nf(w)}W × ${(min / 60).toFixed(2)}時間 ÷ 1000 ＝ <b class="num">${kwh.toFixed(3)} kWh</b><br>
+             電気代 ＝ ${kwh.toFixed(3)} × 31円 ＝ <b class="num text-cyan-800">${yen < 1 ? yen.toFixed(2) : yen.toFixed(1)} 円</b><br>
+             <span class="text-xs text-slate-600">毎日 つかうと 1か月で およそ <b>${month < 10 ? month.toFixed(1) : Math.round(month)}円</b>。
+             同じ 時間 LED電球（${led}W）を つけると <b>${(w / led).toFixed(0)}分の1</b>の 電気で すむ。</span>`;
+    }
+
+    /* =====================================================================
+       ④ 上手な つかい方
+       ===================================================================== */
+    let useReady = false;
+    const SAVE = [
+        ['❄️', 'エアコンは 温度より「風」と「フィルター」', '設定温度を 1℃ ゆるめると 約10%の 節電。フィルターを 2週間に 1回 そうじ、室外機の まわりを あけると さらに 効く。扇風機と いっしょに つかうと 体感が 下がる。'],
+        ['🧊', '冷蔵庫は 7割くらいまで', 'つめこむと 冷気が まわらない。開ける 回数と 時間を へらす。あつい ものは さましてから 入れる。かべから 少し はなす。'],
+        ['🥁', '洗濯は まとめて・乾燥は 外で', '少量で 何回も 回すより 1回に まとめる。乾燥は 電気を たくさん つかうので、晴れた 日は 外に 干す。'],
+        ['📡', 'あたためは レンジが 得意', '少量の 下ゆでや あたためは、なべや グリルより レンジの ほうが 電気が 少ない ことが 多い。'],
+        ['💡', '電球は LEDに', '同じ 明るさで 7分の1ほどの 電気。長い 時間 つける ところ（リビング・玄関）から 変えると 効果が 大きい。'],
+        ['🔌', '「待機電力」も ある', '電源を 切って いても コンセントに つないで いる だけで 少し 電気を つかう ものが ある。家ぜんたいで 数%ほど。長く 使わない ものは ぬく。'],
+        ['📱', '充電は 20〜80%が やさしい', '0%まで つかいきったり 100%の まま 熱く して おくと、電池が 早く へたる。']
+    ];
+    const ASAFE = [
+        ['⚡', 'ぬれた 手で コンセントを さわらない', '水は 電気を 通す。手を ふいてから さわる。'],
+        ['🔌', 'コンセントに ものを さしこまない', '感電と 火事の 原因。たこ足配線で つなぎすぎるのも 発熱して 危険。'],
+        ['📡', 'レンジに 金ぞくと 殻つき卵を 入れない', '金ぞくは 火花が 出る。卵は 中で 水じょう気が ふくらんで 破裂する。'],
+        ['🔥', 'IHや なべの 天板は あつい', '火は 見えなくても、なべの 熱で 天板は あつく なって いる。'],
+        ['🔋', '電池を こわしたり 水に つけたり しない', 'リチウムイオン電池は 強く おしたり 穴を あけると 発火する ことが ある。ふくらんだら つかわず 大人に。'],
+        ['🧹', '掃除機で 水や とがった ものを 吸わない', 'こしょうや 感電の もと。ぬれた ところは ふきんで。'],
+        ['🧯', 'こげた におい・変な 音が したら すぐ 止める', 'コードが 熱い、こげた においが する ときは つかうのを やめて 大人に 知らせる。']
+    ];
+    function usDraw() {
+        document.getElementById('us-save').innerHTML = SAVE.map(([e, t, d]) =>
+            `<div class="border-2 border-cyan-200 bg-cyan-50 rounded-2xl p-3" data-save="${t.slice(0, 5)}">
+                <p class="font-black text-sm text-cyan-900">${e} ${t}</p>
+                <p class="text-xs font-bold text-slate-600 mt-0.5 leading-relaxed">${d}</p></div>`).join('');
+        document.getElementById('us-safe').innerHTML = ASAFE.map(([e, t, d]) =>
+            `<div class="border-2 border-rose-200 bg-white rounded-2xl p-3" data-asafe="${t.slice(0, 5)}">
+                <p class="font-black text-sm text-rose-800">${e} ${t}</p>
+                <p class="text-xs font-bold text-slate-600 mt-0.5 leading-relaxed">${d}</p></div>`).join('');
+    }
+
+    /* =====================================================================
+       ⑤ クイズ
+       ===================================================================== */
+    const QS = [
+        { f: 'しくみ', q: 'エアコンが 部屋を 冷やす しくみは？', a: '部屋の 熱を 外へ 運び出して いる', x: ['冷たい 空気を 作って いる', '氷を とかして いる', '風で 温度を 下げて いる'], e: 'これが ヒートポンプ。熱を 作らず 運ぶ だけなので、電気1に対して 熱を 3〜6倍 動かせる。' },
+        { f: 'しくみ', q: '冷蔵庫と 同じ しくみの 家電は？', a: 'エアコン', x: ['電子レンジ', '掃除機', 'プリンター'], e: 'どちらも ヒートポンプ。冷蔵庫は 庫内の 熱を 部屋へ すてて いる。だから 背中や よこが あたたかい。' },
+        { f: 'しくみ', q: '冷蔵庫の よこや 背中が あたたかい りゆうは？', a: '中から 運び出した 熱を すてて いる から', x: ['モーターの こしょう', '外の 熱を 集めて いる', '電気が もれて いる'], e: 'かべに くっつけすぎると 熱が すてられず、効きが 悪く なる。' },
+        { f: 'しくみ', q: '電子レンジは 何を あたためて いる？', a: '食べものの 中の 水の つぶ', x: ['入れものの 表面', '中の 空気', '光で 表面を 焼く'], e: '電波で 水の つぶを 1秒に 24億回 ゆらし、こすれる 熱で あたたまる。水の 少ない ところは あたたまりにくい。' },
+        { f: 'しくみ', q: '電子レンジで 焼き色が つかない りゆうは？', a: '表面が 150℃以上に なりにくい から', x: ['電波が 白い から', '水が 多い から', '時間が 短い から'], e: '水が ある かぎり 100℃前後。メイラード反応が おきる 温度まで 上がらない。' },
+        { f: 'しくみ', q: 'たて型の 洗濯機の 洗い方は？', a: '水の うずで こすりあわせる（もみ洗い）', x: ['持ち上げて 落とす', '高温の 水を ふきつける', '音で よごれを 落とす'], e: 'よごれを 落とす 力は 強いが、水を たくさん つかい 服が からまりやすい。' },
+        { f: 'しくみ', q: 'ドラム式の 洗濯機の 洗い方は？', a: '持ち上げて 落とす（たたき洗い）', x: ['水の うずで こする', '手で もむ', '電波を 当てる'], e: '水に つけきらない ので 少ない 水で 洗える。服も からまりにくい。' },
+        { f: 'しくみ', q: 'ドラム式が 水を 少なく できる りゆうは？', a: '落ちる 力で 洗うので 水に つける 必要が ない', x: ['ドラムが 小さい から', '水を 何度も つかう から', '洗ざいが 強い から'], e: 'たて型の 半分ほどの 水で すむ。そのかわり 乾燥に 電気を たくさん つかう。' },
+        { f: 'しくみ', q: '食洗機が 手洗いより 水を つかわない りゆうは？', a: '同じ 水を 何度も まわして つかう から', x: ['食器が 少ない から', '水を こおらせる から', '洗ざいが 強い から'], e: '手洗いは 流しっぱなしに なりやすい。食洗機は 60〜70℃の 水を 循環させて 使う。' },
+        { f: 'しくみ', q: '食洗機の 水の 温度は およそ？', a: '60〜70℃', x: ['20℃', '100℃', '150℃'], e: '手では さわれない 温度。あぶらが よく とけ、消どくにも なる。' },
+        { f: 'しくみ', q: '充電できる 電池（リチウムイオン）の しくみは？', a: 'リチウムイオンが 2つの 電極を 行き来する', x: ['中の 液が 電気に 変わる', '電気を そのまま ためる', '磁石で 電気を 作る'], e: 'イオンが 出入りする だけ なので、材料が こわれず 何百回も つかえる。' },
+        { f: 'しくみ', q: 'ふつうの 乾電池が 充電できない りゆうは？', a: '中の 化学変化が もとに もどらない から', x: ['電気が 少ない から', '形が ちがう から', 'あぶない から'], e: 'リチウムイオン電池は イオンが 行き来する だけ なので もどせる。' },
+        { f: 'しくみ', q: 'インクジェットプリンターは どうやって 印刷する？', a: '小さな インクの つぶを 紙に 飛ばす', x: ['静電気で 粉を つける', 'はんこを おす', 'レーザーで 焼く'], e: 'あわの 力 か 板の ふるえで つぶを おし出す。写真が きれいに 出る。' },
+        { f: 'しくみ', q: 'レーザープリンターは どうやって 印刷する？', a: '静電気で 粉（トナー）を つけて 熱で とかす', x: ['インクを 飛ばす', 'インクリボンを たたく', '紙を 焼いて 色を 出す'], e: '出てきた 紙が あたたかいのは、180℃ ほどの ローラーで 粉を とかして いる から。' },
+        { f: 'しくみ', q: 'カラー印刷の 基本の 4色は？', a: 'シアン・マゼンタ・イエロー・ブラック', x: ['赤・青・黄・白', '赤・緑・青', '黒・白・赤・青'], e: 'CMYK と いう。光の 三原色（RGB）とは ちがう しくみ（絵の具の 混色）。' },
+        { f: 'しくみ', q: '掃除機が ごみを 吸う しくみは？', a: 'ファンで 中の 空気を 出し、外の 空気が ごみを おしこむ', x: ['磁石で ひきつける', '静電気で くっつける', '中で 風を 作って 吹きつける'], e: 'だから 空気の ない 宇宙では 掃除機は 役に 立たない。' },
+        { f: 'しくみ', q: 'サイクロン式の 掃除機が ごみを 分ける 方法は？', a: '空気を うずに して 遠心力で とばす', x: ['ふくろで こす', '水に とかす', '磁石で とる'], e: '紙パック式は ふくろで こしとる。どちらも 最後は フィルターで 細かい ほこりを とる。' },
+        { f: 'しくみ', q: 'IHコンロで 熱く なって いるのは？', a: 'なべ自身', x: ['天板の ガラス', 'コイル', '中の 空気'], e: '変わる 磁力で なべ底に うず電流が 生まれ、金ぞくの ていこうで 発熱する（電磁誘導）。' },
+        { f: 'しくみ', q: 'IHで つかえない ことが 多い なべは？', a: 'アルミ・銅・土なべ', x: ['鉄なべ', 'ステンレスなべ', 'IH対応と 書いて ある なべ'], e: '鉄や ステンレスは よく 発熱する。専用の ものなら アルミでも つかえる ことが ある。' },
+        { f: 'しくみ', q: 'LED電球が 電気を 少なく できる りゆうは？', a: '電気が 直接 光に なり むだな 熱が 少ない', x: ['明るさが 暗い から', '小さい から', '電気を ためて いる から'], e: '白熱電球は 線を 2500℃近くまで 熱して 光らせる ので、9割以上が 熱に なる。' },
+        { f: 'しくみ', q: '炊飯器が ごはんを おいしく する 4つの 段階は？', a: '吸水 → ふっとう → 蒸らし → 保温', x: ['洗う → 煮る → 冷やす → 温める', 'ふっとう → 吸水 → 保温 → 蒸らし', '加熱 → 冷却 → 加熱 → 保温'], e: '温度を 決められた とおりに 上下させて、でんぷんを のり化（α化）させて いる。' },
+        { f: 'しくみ', q: '圧力式の 炊飯器が ふっくら たける りゆうは？', a: '圧力を 上げると 100℃より 高く できる から', x: ['水が 少なく なる から', 'ふたが 重い だけ', '電気が 強い から'], e: '山の 上では 気圧が 低く 100℃より 低い 温度で ふっとうする。その 反対の 考え方。' },
+
+        { f: 'ヒートポンプ', q: '空気を ぎゅっと ちぢめると 温度は？', a: '上がる', x: ['下がる', '変わらない', 'こおる'], e: '自転車の 空気入れの 下が あたたかく なるのは この ため。エアコンの 圧縮機も 同じ。' },
+        { f: 'ヒートポンプ', q: '圧力を いっきに ゆるめると 温度は？', a: '下がる', x: ['上がる', '変わらない', '2倍に なる'], e: 'ヒートポンプは これで 冷媒を −10℃ ほどまで 冷やして、部屋の 熱を うばえる ように する。' },
+        { f: 'ヒートポンプ', q: 'プールから 出ると さむいのは なぜ？', a: '体の 水が じょう発する とき 熱を うばう から', x: ['水が 冷たい から', '風が 強い から', '体が つかれる から'], e: 'これが 気化熱。打ち水や 汗も 同じ。冷媒も「気体に なる とき 熱を うばう」を つかう。' },
+        { f: 'ヒートポンプ', q: 'エアコンが 電気の 何倍もの 熱を 動かせる りゆうは？', a: '熱を 作らず 運んで いる だけ だから', x: ['電気を ふやして いる から', 'とても 大きい から', '魔法の 材料を つかって いる'], e: 'バケツリレーで 水を 運ぶのに 水を 作る 必要が ない のと 同じ。この 力を COP と いう。' },
+        { f: 'ヒートポンプ', q: '室外機の まわりを ふさぐと どう なる？', a: '熱の すて場が なくなり 効きが 悪く 電気も むだに なる', x: ['よく 冷える', '音が 静かに なる', '何も 変わらない'], e: '外へ 熱を すてる ところが 室外機。ものを おかず 風の 通り道を あける。' },
+        { f: 'ヒートポンプ', q: 'ヒートポンプを つかって いない のは どれ？', a: '電子レンジ', x: ['エアコン', '冷蔵庫', '除湿機'], e: '電子レンジは マイクロ波で 水を ゆらす 別の しくみ。ドラム式の ヒートポンプ乾燥も 仲間。' },
+
+        { f: '電気', q: 'W（ワット）は 何を あらわす？', a: '1秒あたりに つかう 電気の 量', x: ['ためられる 電気の 量', '電気の ねだん', '明るさ'], e: '同じ W でも 長い 時間 つかえば 電気代は 上がる。だから「W × 時間」で 考える。' },
+        { f: '電気', q: '家電の 中で 電気を いちばん たくさん つかう 仲間は？', a: '熱を 作る もの（ドライヤー・レンジ・IH）', x: ['光を 出す もの', '音を 出す もの', '動く もの'], e: '熱を 作るのは いちばん 電気が いる。1000W を こえる ものが 多い。' },
+        { f: '電気', q: '1000W の 家電を 1時間 つかうと 何 kWh？', a: '1 kWh', x: ['0.1 kWh', '10 kWh', '1000 kWh'], e: '1000W × 1時間 ÷ 1000 ＝ 1kWh。31円/kWh なら 約31円。' },
+        { f: '電気', q: '1200W の ドライヤーを 10分 つかうと 電気代は およそ？', a: 'やく 6円', x: ['やく 60円', 'やく 0.6円', 'やく 600円'], e: '1200 × (10/60) ÷ 1000 ＝ 0.2kWh。0.2 × 31円 ＝ 6.2円。' },
+        { f: '電気', q: '1年で いちばん 電気を つかう 家電に なりやすいのは？', a: '冷蔵庫（24時間 動くので）', x: ['ドライヤー', '掃除機', '電子レンジ'], e: '1回の W は 小さくても、止められない ので 合計は 大きい。中身を 7割に すると 節電。' },
+        { f: '電気', q: '電源を 切って いても 少し 電気を つかう ことを 何と いう？', a: '待機電力', x: ['充電', '放電', '節電'], e: '家ぜんたいで 数%ほど。長く つかわない ものは コンセントから ぬく。' },
+        { f: '電気', q: 'エアコンの 設定温度を 1℃ ゆるめると？', a: 'およそ 10%の 節電に なる', x: ['変わらない', '2倍 電気を つかう', '故障する'], e: '夏 28℃・冬 20℃が 目安。扇風機と いっしょに つかうと 体感が 下がる。' },
+
+        { f: '安全', q: '電子レンジに 入れては いけない ものは？', a: '金ぞくと 殻つきの 卵', x: ['ガラスの おさら', '水', '野さい'], e: '金ぞくは 火花が 出る。卵は 中の 水じょう気が ふくらんで 破裂する。' },
+        { f: '安全', q: 'ぬれた 手で コンセントを さわっては いけない りゆうは？', a: '水が 電気を 通して 感電する から', x: ['コンセントが さびる から', '手が 冷える から', '電気が むだに なる から'], e: '手を ふいてから さわる。ぬれた ところで 家電を つかわない。' },
+        { f: '安全', q: 'リチウムイオン電池が ふくらんで いたら？', a: 'つかわず 大人に 知らせる', x: ['おして もどす', '冷凍庫に 入れる', '水に つける'], e: '強く おしたり 穴を あけると 発火する ことが ある。' },
+        { f: '安全', q: 'コードが 熱い・こげた においが する ときは？', a: 'すぐ つかうのを やめて 大人に 知らせる', x: ['そのまま つかう', '水を かける', 'もっと 強く さす'], e: '火事の 前ぶれ。たこ足配線で つなぎすぎるのも 発熱の 原因。' },
+        { f: '安全', q: '掃除機で 吸っては いけない ものは？', a: '水・とがった もの・すみ', x: ['ほこり', 'かみの毛', '紙くず'], e: 'こしょうや 感電の もと。ぬれた ところは ふきんで ふく。' }
+    ];
+    let qz = null, qzField = 'all';
+    function newQuiz() {
+        const pool = qzField === 'all' ? QS : QS.filter(q => q.f === qzField);
+        const q = pool[rnd(pool.length)];
+        qz = { q, choices: shuffle([q.a].concat(q.x)), done: false };
+        const fields = ['all'].concat([...new Set(QS.map(x => x.f))]);
+        document.getElementById('qz-fields').innerHTML = fields.map(f =>
+            `<button onclick="setField('${f}')" data-qf="${f}" class="${qzField === f ? 'bg-cyan-700 text-white' : 'bg-white border-2 border-cyan-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${f === 'all' ? 'ぜんぶ ' + QS.length : f + ' ' + QS.filter(x => x.f === f).length}</button>`).join('');
+        document.getElementById('qz-q').innerHTML = `<span class="text-xs font-black text-cyan-700 bg-cyan-100 px-2 py-1 rounded-lg mr-2">${esc(q.f)}</span>${esc(q.q)}`;
+        document.getElementById('qz-choices').innerHTML = qz.choices.map((c, i) =>
+            `<button onclick="ansQuiz(${i})" data-qzc="${i}" class="bg-white border-2 border-slate-200 hover:border-cyan-500 font-bold text-left px-4 py-3 rounded-2xl bounce-hover">${esc(c)}</button>`).join('');
+        document.getElementById('qz-res').innerHTML = '';
+        scoreBox('qz-score', S.quiz);
+    }
+    function setField(f) { qzField = f; newQuiz(); }
+    function ansQuiz(i) {
+        if (!qz || qz.done) return;
+        qz.done = true;
+        const ok = qz.choices[i] === qz.q.a;
+        S.quiz[1]++; if (ok) S.quiz[0]++;
+        markChoices('[data-qzc]', j => qz.choices[j] === qz.q.a, i, 'font-bold text-left px-4 py-3 rounded-2xl');
+        document.getElementById('qz-res').innerHTML = resultBox(ok, ok ? '⭕ せいかい！' : `❌ こたえは 「${esc(qz.q.a)}」`, qz.q.e);
+        scoreBox('qz-score', S.quiz);
+    }
+
+    /* ===================== 起動 ===================== */
+    renderNav();
+    setAp(0);
+    rubify(document.body);
+</script>
+</body>
+</html>
