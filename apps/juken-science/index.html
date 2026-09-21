@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中学受験 理科ラボ</title>
+    <meta name="description" content="中学受験の理科をシミュレーションで学ぶ。てこ・かっ車・電気回路・中和と溶解度・月の満ち欠けを動かしながら計算問題を練習し、生物と地学は一問一答でおぼえる。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums }
+        .bounce-hover { transition: transform .12s cubic-bezier(.175,.885,.32,1.275) }
+        .bounce-hover:active { transform: scale(.94) }
+        @keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.1) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275) }
+        @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+        .shake { animation: shake .3s ease-in-out }
+        svg text { font-family: inherit }
+        rt { font-size: .55em; font-weight: 700; color: #0f766e }
+        .ans { width: 6.5rem; font-variant-numeric: tabular-nums }
+        .frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: -0.55em; line-height: 1.05 }
+        .frac > span:first-child { border-bottom: 2px solid currentColor; padding: 0 .25em }
+    </style>
+</head>
+<body class="bg-teal-50 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-teal-700 via-cyan-700 to-sky-700 text-white p-3 shadow-lg sticky top-0 z-30">
+        <div class="max-w-4xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">🔬</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">中学受験 理科ラボ</h1>
+                    <p class="text-xs text-cyan-100 font-bold hidden sm:block">てこ・かっ車・電気・水よう液・月　うごかして わかる</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[64px] z-20 bg-teal-50/95 backdrop-blur border-b border-teal-200">
+        <div class="max-w-4xl mx-auto flex gap-2 p-3 overflow-x-auto" id="tab-nav"></div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto w-full p-3 sm:p-5 flex-grow space-y-4">
+
+        <!-- ===== ① てこ ===== -->
+        <section id="tab-lever" class="space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-teal-100">
+                <h2 class="font-black">⚖️ てこの つりあい</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    <b class="text-teal-700">おもさ × 支点{してん}からの きょり</b> が 左右で 同じに なると つりあう。
+                    この かけ算の 答えを <b>モーメント</b>と いうよ。
+                </p>
+                <div id="play-lever"></div>
+                <div class="grid grid-cols-2 gap-3 mt-2">
+                    <div class="bg-rose-50 border-2 border-rose-200 rounded-2xl p-3">
+                        <p class="font-black text-rose-700 text-sm">左の おもり</p>
+                        <div id="play-L" class="space-y-2 mt-2"></div>
+                    </div>
+                    <div class="bg-sky-50 border-2 border-sky-200 rounded-2xl p-3">
+                        <p class="font-black text-sky-700 text-sm">右の おもり</p>
+                        <div id="play-R" class="space-y-2 mt-2"></div>
+                    </div>
+                </div>
+                <p id="play-msg" class="font-black text-center mt-3 min-h-[1.75rem]"></p>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-teal-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">📝 てこの もんだい</h2>
+                    <span id="lv-score" class="num bg-teal-100 text-teal-700 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newLever()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <p id="lv-q" class="font-bold text-slate-600 mt-2 text-sm"></p>
+                <div id="lv-fig" class="mt-2"></div>
+                <div class="flex items-center justify-center gap-2 mt-2">
+                    <input id="lv-in" type="number" inputmode="numeric" placeholder="？"
+                        class="ans border-2 border-teal-300 rounded-xl px-3 py-2 text-xl font-black text-center focus:outline-none focus:border-teal-600">
+                    <span id="lv-unit" class="font-black text-slate-500"></span>
+                    <button onclick="checkLever()" class="bg-gradient-to-r from-teal-600 to-cyan-700 text-white font-black px-4 py-2 rounded-xl border-b-4 border-teal-900 bounce-hover">こたえ合わせ</button>
+                </div>
+                <div id="lv-res" class="mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ② かっ車 ===== -->
+        <section id="tab-pulley" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-teal-100">
+                <h2 class="font-black">⛓️ かっ車と 輪軸（りんじく）</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    <b class="text-teal-700">定{てい}かっ車</b>は 力の むきを かえるだけ。
+                    <b class="text-teal-700">動{どう}かっ車</b>は ささえる ひもの 本数だけ 力が 小さくなり、そのぶん ひもを 長く 引く。
+                </p>
+                <div class="flex flex-wrap gap-2 mt-3" id="pl-mode"></div>
+                <div id="pl-fig" class="mt-2"></div>
+                <div id="pl-info" class="bg-teal-50 border-2 border-teal-200 rounded-2xl p-3 text-sm font-bold leading-relaxed"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-teal-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">📝 かっ車の もんだい</h2>
+                    <span id="pq-score" class="num bg-teal-100 text-teal-700 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newPulley()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <p id="pq-q" class="font-bold text-slate-600 mt-2 text-sm"></p>
+                <div id="pq-fig" class="mt-2"></div>
+                <div class="flex items-center justify-center gap-2 mt-2">
+                    <input id="pq-in" type="number" inputmode="numeric" placeholder="？"
+                        class="ans border-2 border-teal-300 rounded-xl px-3 py-2 text-xl font-black text-center focus:outline-none focus:border-teal-600">
+                    <span id="pq-unit" class="font-black text-slate-500"></span>
+                    <button onclick="checkPulley()" class="bg-gradient-to-r from-teal-600 to-cyan-700 text-white font-black px-4 py-2 rounded-xl border-b-4 border-teal-900 bounce-hover">こたえ合わせ</button>
+                </div>
+                <div id="pq-res" class="mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ③ 電気 ===== -->
+        <section id="tab-circuit" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-teal-100">
+                <h2 class="font-black">💡 かん電池と 豆電球</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    かん電池1こ・豆電球1この 明るさを <b class="text-teal-700">1</b> として くらべよう。
+                </p>
+                <div id="ci-ctrl" class="grid grid-cols-2 gap-3 mt-3"></div>
+                <div id="ci-fig" class="mt-2"></div>
+                <div id="ci-info" class="bg-teal-50 border-2 border-teal-200 rounded-2xl p-3 text-sm font-bold leading-relaxed"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-teal-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">📝 どちらが 明るい？</h2>
+                    <span id="cq-score" class="num bg-teal-100 text-teal-700 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newCircuitQ()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <div class="grid sm:grid-cols-2 gap-3 mt-3">
+                    <div class="border-2 border-slate-200 rounded-2xl p-2">
+                        <p class="font-black text-center text-sm">🅐</p>
+                        <div id="cq-a"></div>
+                        <p id="cq-a-t" class="text-center text-xs font-bold text-slate-500"></p>
+                    </div>
+                    <div class="border-2 border-slate-200 rounded-2xl p-2">
+                        <p class="font-black text-center text-sm">🅑</p>
+                        <div id="cq-b"></div>
+                        <p id="cq-b-t" class="text-center text-xs font-bold text-slate-500"></p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-2 mt-3" id="cq-choices"></div>
+                <div id="cq-res" class="mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ④ 水よう液 ===== -->
+        <section id="tab-water" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-teal-100">
+                <h2 class="font-black">🧪 中和（ちゅうわ）</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    塩酸{えんさん}と 水酸化{すいさんか}ナトリウム水よう液は、<b class="text-teal-700">きまった 体積の 比</b>で ちょうど 中和して 食塩水に なる。
+                </p>
+                <p id="wa-ratio" class="font-black text-teal-700 mt-2 text-sm"></p>
+                <div id="wa-fig" class="mt-2"></div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-rose-50 border-2 border-rose-200 rounded-2xl p-3">
+                        <p class="font-black text-rose-700 text-sm">塩酸（さんせい）</p>
+                        <div id="wa-acid" class="mt-2"></div>
+                    </div>
+                    <div class="bg-sky-50 border-2 border-sky-200 rounded-2xl p-3">
+                        <p class="font-black text-sky-700 text-sm">水酸化ナトリウム水よう液</p>
+                        <div id="wa-alk" class="mt-2"></div>
+                    </div>
+                </div>
+                <p id="wa-msg" class="font-black text-center mt-3 min-h-[1.75rem]"></p>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-teal-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">📝 中和の もんだい</h2>
+                    <span id="wq-score" class="num bg-teal-100 text-teal-700 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newWater()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <p id="wq-q" class="font-bold text-slate-600 mt-2 text-sm leading-relaxed"></p>
+                <div id="wq-pick" class="grid grid-cols-3 gap-2 mt-3"></div>
+                <div id="wq-numin" class="flex items-center justify-center gap-2 mt-2">
+                    <input id="wq-in" type="number" inputmode="decimal" step="any" placeholder="？"
+                        class="ans border-2 border-teal-300 rounded-xl px-3 py-2 text-xl font-black text-center focus:outline-none focus:border-teal-600">
+                    <span id="wq-unit" class="font-black text-slate-500"></span>
+                    <button onclick="checkWater()" class="bg-gradient-to-r from-teal-600 to-cyan-700 text-white font-black px-4 py-2 rounded-xl border-b-4 border-teal-900 bounce-hover">こたえ合わせ</button>
+                </div>
+                <div id="wq-res" class="mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ⑤ 月 ===== -->
+        <section id="tab-moon" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-teal-100">
+                <h2 class="font-black">🌙 月の 満ち欠け</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    月は 太陽の 光を はね返して 光る。地球から 見える 形は <b class="text-teal-700">太陽・地球・月の いち</b>で きまる。
+                    図の 月を タップして みよう。
+                </p>
+                <div id="mo-orbit" class="mt-2"></div>
+                <div id="mo-detail" class="bg-slate-800 text-white rounded-2xl p-4 mt-2"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-teal-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">📝 月の もんだい</h2>
+                    <span id="mq-score" class="num bg-teal-100 text-teal-700 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newMoonQ()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <p id="mq-q" class="font-bold text-slate-600 mt-2 text-sm"></p>
+                <div id="mq-fig" class="flex justify-center my-2"></div>
+                <div id="mq-choices" class="grid grid-cols-2 gap-2"></div>
+                <div id="mq-res" class="mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ⑥ 一問一答 ===== -->
+        <section id="tab-quiz" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-teal-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">❓ 一問一答</h2>
+                    <span id="qz-score" class="num bg-teal-100 text-teal-700 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newQuiz()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <div id="qz-fields" class="flex flex-wrap gap-2 mt-3"></div>
+                <p id="qz-q" class="font-black text-base sm:text-lg mt-3 leading-relaxed"></p>
+                <div id="qz-choices" class="grid gap-2 mt-3"></div>
+                <div id="qz-res" class="mt-3"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center text-xs text-slate-400 font-bold p-4">中学受験 理科ラボ © 2026</footer>
+
+<script>
+    /* ===================== きょうつう ===================== */
+    const rnd = n => Math.floor(Math.random() * n);
+    const pickOne = a => a[rnd(a.length)];
+    function shuffle(a) { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = rnd(i + 1); const t = b[i]; b[i] = b[j]; b[j] = t; } return b; }
+    function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    const gcd = (a, b) => b ? gcd(b, a % b) : a;
+    function fracHTML(n, d) {
+        const g = gcd(Math.abs(n), Math.abs(d)) || 1;
+        n /= g; d /= g;
+        if (d === 1) return `<span class="num">${n}</span>`;
+        return `<span class="frac num"><span>${n}</span><span>${d}</span></span>`;
+    }
+    function svg(w, h, body, extra) {
+        return `<svg viewBox="0 0 ${w} ${h}" class="w-full h-auto block mx-auto" style="max-width:${w}px"
+            ${extra || ''} role="img">${body}</svg>`;
+    }
+    function scoreBox(id, s) { document.getElementById(id).innerText = `${s[0]} / ${s[1]}`; }
+    function resultBox(ok, title, body) {
+        return `<div class="pop ${ok ? 'bg-green-50 border-green-300' : 'bg-amber-50 border-amber-300'} border-2 rounded-2xl p-3">
+            <p class="font-black ${ok ? 'text-green-700' : 'text-amber-700'}">${title}</p>
+            <div class="font-bold text-sm mt-1 leading-relaxed">${body}</div></div>`;
+    }
+    const S = { lever: [0, 0], pulley: [0, 0], circuit: [0, 0], water: [0, 0], moon: [0, 0], quiz: [0, 0] };
+
+    /* 漢字{よみ} を ルビに かえる。あとから 書きかえた ところにも かかるように 見はる */
+    const RUBY_RE = /([\u4E00-\u9FFF\u3005]+)\{([^{}]+)\}/g;
+    function rubySkip(el) {
+        for (let n = el; n; n = n.parentNode) {
+            const tag = n.nodeType === 1 ? n.tagName.toLowerCase() : '';
+            if (tag === 'script' || tag === 'style' || tag === 'svg' || tag === 'ruby') return true;
+        }
+        return false;
+    }
+    function rubifyText(node) {
+        const t = node.nodeValue;
+        if (t.indexOf('{') < 0 || !node.parentNode || rubySkip(node.parentNode)) return;
+        RUBY_RE.lastIndex = 0;
+        if (!RUBY_RE.test(t)) return;
+        RUBY_RE.lastIndex = 0;
+        const frag = document.createDocumentFragment();
+        let last = 0, m;
+        while ((m = RUBY_RE.exec(t))) {
+            if (m.index > last) frag.appendChild(document.createTextNode(t.slice(last, m.index)));
+            const ruby = document.createElement('ruby');
+            ruby.appendChild(document.createTextNode(m[1]));
+            const rt = document.createElement('rt');
+            rt.textContent = m[2];
+            ruby.appendChild(rt);
+            frag.appendChild(ruby);
+            last = m.index + m[0].length;
+        }
+        if (last < t.length) frag.appendChild(document.createTextNode(t.slice(last)));
+        node.parentNode.replaceChild(frag, node);
+    }
+    function rubify(root) {
+        if (root.nodeType === 3) return rubifyText(root);
+        if (root.nodeType !== 1 || rubySkip(root)) return;
+        const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        const list = [];
+        while (w.nextNode()) if (w.currentNode.nodeValue.indexOf('{') >= 0) list.push(w.currentNode);
+        list.forEach(rubifyText);
+    }
+    new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(rubify)))
+        .observe(document.body, { childList: true, subtree: true });
+
+    const TABS = { lever: '⚖️ てこ', pulley: '⛓️ かっ車', circuit: '💡 電気', water: '🧪 水よう液', moon: '🌙 月', quiz: '❓ 一問一答' };
+    let tab = 'lever';
+    function renderNav() {
+        document.getElementById('tab-nav').innerHTML = Object.entries(TABS).map(([k, label]) =>
+            `<button onclick="setTab('${k}')" data-tab="${k}" class="${tab === k ? 'bg-teal-700 text-white' : 'bg-white border-2 border-teal-200 text-slate-600'} font-black px-4 py-2 rounded-full text-sm whitespace-nowrap bounce-hover">${label}</button>`).join('');
+    }
+    function setTab(k) {
+        tab = k;
+        Object.keys(TABS).forEach(t => document.getElementById('tab-' + t).classList.toggle('hidden', t !== k));
+        renderNav();
+        if (k === 'pulley' && !pq) { drawPulleyPlay(); newPulley(); }
+        if (k === 'circuit' && !cq) { drawCircuitPlay(); newCircuitQ(); }
+        if (k === 'water' && !wq) { drawWaterPlay(); newWater(); }
+        if (k === 'moon' && !mq) { drawOrbit(); showMoon(4); newMoonQ(); }
+        if (k === 'quiz' && !qz) newQuiz();
+    }
+
+    /* =====================================================================
+       ① てこ
+       ===================================================================== */
+    const LVX = 300, LVY = 120, LVSTEP = 36;
+
+    // L,R = [{w,d,q}] q:true なら ？ 表示
+    function leverSVG(L, R, tilt) {
+        const t = Math.max(-11, Math.min(11, tilt || 0));
+        const rad = t * Math.PI / 180, BOXY = LVY + 78;
+        // 目もりと 棒（ここだけ かたむける）
+        let bar = '';
+        for (let i = -6; i <= 6; i++) {
+            if (i === 0) continue;
+            bar += `<line x1="${LVX + i * LVSTEP}" y1="${LVY - 8}" x2="${LVX + i * LVSTEP}" y2="${LVY + 8}" stroke="#94a3b8" stroke-width="2"/>
+                <text x="${LVX + i * LVSTEP}" y="${LVY - 14}" text-anchor="middle" font-size="13" font-weight="700" fill="#64748b">${Math.abs(i)}</text>`;
+        }
+        bar += `<rect x="${LVX - 6.5 * LVSTEP}" y="${LVY - 6}" width="${13 * LVSTEP}" height="12" rx="5" fill="#78716c"/>`;
+        let g = `<g transform="rotate(${t} ${LVX} ${LVY})">${bar}</g>`;
+        // 支点（かたむかない）
+        g += `<polygon points="${LVX},${LVY + 5} ${LVX - 19},${LVY + 40} ${LVX + 19},${LVY + 40}" fill="#334155"/>
+              <rect x="${LVX - 40}" y="${LVY + 40}" width="80" height="7" rx="3" fill="#94a3b8"/>
+              <text x="${LVX}" y="${LVY + 62}" text-anchor="middle" font-size="12" font-weight="900" fill="#475569">支点</text>`;
+        // おもり（ひもは いつも まっすぐ 下へ）
+        const hang = (arr, sign) => arr.map(o => {
+            const px = LVX + sign * o.d * LVSTEP * Math.cos(rad);
+            const py = LVY + sign * o.d * LVSTEP * Math.sin(rad);
+            const col = sign < 0 ? '#e11d48' : '#0284c7';
+            return `<line x1="${px.toFixed(1)}" y1="${(py + 5).toFixed(1)}" x2="${px.toFixed(1)}" y2="${BOXY}" stroke="#57534e" stroke-width="3"/>
+                <rect x="${(px - 22).toFixed(1)}" y="${BOXY}" width="44" height="32" rx="6" fill="${col}"/>
+                <text x="${px.toFixed(1)}" y="${BOXY + 22}" text-anchor="middle" font-size="16" font-weight="900" fill="#fff">${o.q ? '？' : o.w}</text>
+                <text x="${px.toFixed(1)}" y="${BOXY + 52}" text-anchor="middle" font-size="14" font-weight="800" fill="${col}">${o.q ? '？ g' : o.w + 'g'}</text>`;
+        }).join('');
+        return svg(600, 260, g + hang(L, -1) + hang(R, 1));
+    }
+
+    /* --- あそぶ --- */
+    const play = { L: { w: 40, d: 3 }, R: { w: 60, d: 2 } };
+    function drawLeverPlay() {
+        const mL = play.L.w * play.L.d, mR = play.R.w * play.R.d;
+        const tilt = Math.max(-11, Math.min(11, (mR - mL) / 20));
+        document.getElementById('play-lever').innerHTML = leverSVG([play.L], [play.R], tilt);
+        const row = (side, key, label, step, shown) => `
+            <p class="text-xs font-black text-slate-500">${label}</p>
+            <div class="flex items-center gap-1">
+                <button onclick="bump('${side}','${key}',${-step})" data-bump="${side}${key}-" class="bg-white border-2 border-slate-300 font-black w-8 h-8 shrink-0 rounded-lg bounce-hover">−</button>
+                <span class="num font-black flex-1 text-center" data-val="${side}${key}">${shown}</span>
+                <button onclick="bump('${side}','${key}',${step})" data-bump="${side}${key}+" class="bg-white border-2 border-slate-300 font-black w-8 h-8 shrink-0 rounded-lg bounce-hover">＋</button>
+            </div>`;
+        const ctrl = (side, o) => row(side, 'w', 'おもさ', 10, o.w + 'g') + row(side, 'd', 'きょり（支点から）', 1, o.d)
+            + `<p class="text-xs font-black text-slate-600 pt-1">モーメント ${o.w} × ${o.d} = <span class="num">${o.w * o.d}</span></p>`;
+        document.getElementById('play-L').innerHTML = ctrl('L', play.L);
+        document.getElementById('play-R').innerHTML = ctrl('R', play.R);
+        document.getElementById('play-msg').innerHTML = mL === mR
+            ? `<span class="text-green-700">⚖️ つりあった！　${mL} ＝ ${mR}</span>`
+            : `<span class="text-slate-500">${mL > mR ? '左' : '右'}が 下がる　（${mL} ${mL > mR ? '>' : '<'} ${mR}）</span>`;
+    }
+    function bump(side, key, n) {
+        const o = play[side];
+        if (key === 'w') o.w = Math.max(10, Math.min(200, o.w + n));
+        else o.d = Math.max(1, Math.min(6, o.d + n));
+        drawLeverPlay();
+    }
+
+    /* --- もんだい --- */
+    let lv = null;
+    function newLever() {
+        for (let guard = 0; guard < 200; guard++) {
+            const kind = rnd(3);
+            let L, R;
+            if (kind === 0) {                         // 1 対 1
+                const d1 = 1 + rnd(6), d2 = 1 + rnd(6), t = 10 * (1 + rnd(5));
+                if (d1 === d2) continue;
+                L = [{ w: t * d2, d: d1 }]; R = [{ w: t * d1, d: d2 }];
+            } else if (kind === 1) {                  // 左2つ 対 右1つ
+                const d1 = 1 + rnd(6), d2 = 1 + rnd(6), d3 = 1 + rnd(6);
+                const w1 = 10 * (1 + rnd(8)), w2 = 10 * (1 + rnd(8));
+                const m = w1 * d1 + w2 * d2;
+                if (d1 === d2 || m % (10 * d3) !== 0) continue;   // おもさは 10の倍数だけ
+                const w3 = m / d3;
+                if (w3 > 400 || w3 < 10) continue;
+                L = [{ w: w1, d: d1 }, { w: w2, d: d2 }]; R = [{ w: w3, d: d3 }];
+            } else {                                   // 右2つ 対 左1つ
+                const d1 = 1 + rnd(6), d2 = 1 + rnd(6), d3 = 1 + rnd(6);
+                const w1 = 10 * (1 + rnd(8)), w2 = 10 * (1 + rnd(8));
+                const m = w1 * d1 + w2 * d2;
+                if (d1 === d2 || m % (10 * d3) !== 0) continue;   // おもさは 10の倍数だけ
+                const w3 = m / d3;
+                if (w3 > 400 || w3 < 10) continue;
+                R = [{ w: w1, d: d1 }, { w: w2, d: d2 }]; L = [{ w: w3, d: d3 }];
+            }
+            // どこを ？ に するか（おもさ だけを きく）
+            const all = L.map((o, i) => ['L', i]).concat(R.map((o, i) => ['R', i]));
+            const [side, idx] = pickOne(all);
+            const ans = (side === 'L' ? L : R)[idx].w;
+            (side === 'L' ? L : R)[idx].q = true;
+            lv = { L, R, ans, side, idx };
+            break;
+        }
+        document.getElementById('lv-q').innerHTML = 'この てこは つりあって います。<b>？</b> の おもりは 何g ですか。';
+        document.getElementById('lv-fig').innerHTML = leverSVG(lv.L, lv.R, 0);
+        document.getElementById('lv-unit').innerText = 'g';
+        document.getElementById('lv-in').value = '';
+        document.getElementById('lv-res').innerHTML = '';
+        scoreBox('lv-score', S.lever);
+    }
+    function checkLever() {
+        if (!lv || lv.done) return;
+        const v = parseFloat(document.getElementById('lv-in').value);
+        if (!isFinite(v)) { document.getElementById('lv-res').innerHTML = resultBox(false, '数を 入れてね', ''); return; }
+        lv.done = true;
+        const ok = v === lv.ans;
+        S.lever[1]++; if (ok) S.lever[0]++;
+        const sum = a => a.map(o => `${o.w}×${o.d}`).join(' ＋ ');
+        const mL = lv.L.reduce((s, o) => s + o.w * o.d, 0);
+        document.getElementById('lv-fig').innerHTML = leverSVG(
+            lv.L.map(o => ({ w: o.w, d: o.d })), lv.R.map(o => ({ w: o.w, d: o.d })), 0);
+        document.getElementById('lv-res').innerHTML = resultBox(ok,
+            ok ? '⭕ せいかい！' : `❌ こたえは ${lv.ans}g`,
+            `左の モーメント　${sum(lv.L)} ＝ <b>${mL}</b><br>
+             右の モーメント　${sum(lv.R)} ＝ <b>${mL}</b><br>
+             左右が 同じに なるように 計算すると <b class="text-teal-700">${lv.ans}g</b>。`);
+        scoreBox('lv-score', S.lever);
+    }
+
+    /* =====================================================================
+       ② かっ車
+       ===================================================================== */
+    // n … 動かっ車を ささえる ひもの 本数（1 = 定かっ車だけ）
+    function pulleySVG(n, W, F, opts) {
+        opts = opts || {};
+        const w = 460, h = 320, top = 26, blockY = 210;
+        let g = `<rect x="40" y="${top - 14}" width="380" height="14" fill="#a8a29e"/>`;
+        for (let x = 46; x < 418; x += 14) g += `<line x1="${x}" y1="${top}" x2="${x - 9}" y2="${top + 11}" stroke="#a8a29e" stroke-width="3"/>`;
+        const x0 = 150, gap = 34;
+        if (n === 1) {
+            g += `<circle cx="300" cy="${top + 30}" r="26" fill="#fff" stroke="#0f766e" stroke-width="6"/>
+                  <circle cx="300" cy="${top + 30}" r="5" fill="#0f766e"/>
+                  <line x1="300" y1="${top}" x2="300" y2="${top + 4}" stroke="#57534e" stroke-width="4"/>
+                  <text x="300" y="${top + 76}" text-anchor="middle" font-size="14" font-weight="800" fill="#0f766e">定かっ車</text>
+                  <path d="M274,${top + 30} L274,${blockY}" stroke="#475569" stroke-width="3" fill="none"/>
+                  <path d="M326,${top + 30} L326,${blockY + 30}" stroke="#475569" stroke-width="3" fill="none"/>
+                  <path d="M274,${top + 30} A26,26 0 0 1 326,${top + 30}" stroke="#475569" stroke-width="3" fill="none"/>`;
+            g += `<rect x="238" y="${blockY}" width="72" height="54" rx="8" fill="#0ea5e9"/>
+                  <text x="274" y="${blockY + 33}" text-anchor="middle" font-size="18" font-weight="900" fill="#fff">${W === null ? '？' : W + 'g'}</text>`;
+            g += `<polygon points="326,${blockY + 30} 318,${blockY + 14} 334,${blockY + 14}" fill="#e11d48"/>
+                  <text x="366" y="${blockY + 34}" text-anchor="middle" font-size="16" font-weight="900" fill="#e11d48">${F === null ? '？' : F + 'g'}</text>`;
+        } else {
+            const bx = 300 - (n - 1) * gap / 2;
+            g += `<rect x="${bx - 44}" y="${top + 6}" width="${(n - 1) * gap + 88}" height="34" rx="10" fill="#e2e8f0" stroke="#94a3b8" stroke-width="3"/>
+                  <text x="300" y="${top + 29}" text-anchor="middle" font-size="13" font-weight="800" fill="#475569">定かっ車</text>`;
+            g += `<rect x="${bx - 44}" y="${blockY - 34}" width="${(n - 1) * gap + 88}" height="34" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="3"/>
+                  <text x="300" y="${blockY - 11}" text-anchor="middle" font-size="13" font-weight="800" fill="#0f766e">動かっ車</text>`;
+            for (let i = 0; i < n; i++) {
+                const x = bx + i * gap;
+                g += `<line x1="${x}" y1="${top + 40}" x2="${x}" y2="${blockY - 34}" stroke="#475569" stroke-width="3"/>`;
+            }
+            const fx = bx + (n - 1) * gap + 62;
+            g += `<line x1="${fx}" y1="${top + 23}" x2="${fx}" y2="${blockY + 4}" stroke="#475569" stroke-width="3"/>
+                  <line x1="${bx + (n - 1) * gap + 44}" y1="${top + 23}" x2="${fx}" y2="${top + 23}" stroke="#475569" stroke-width="3"/>
+                  <polygon points="${fx},${blockY + 4} ${fx - 8},${blockY - 12} ${fx + 8},${blockY - 12}" fill="#e11d48"/>
+                  <text x="${fx}" y="${blockY + 26}" text-anchor="middle" font-size="16" font-weight="900" fill="#e11d48">${F === null ? '？' : F + 'g'}</text>`;
+            g += `<line x1="300" y1="${blockY}" x2="300" y2="${blockY + 22}" stroke="#57534e" stroke-width="4"/>
+                  <rect x="264" y="${blockY + 22}" width="72" height="54" rx="8" fill="#0ea5e9"/>
+                  <text x="300" y="${blockY + 55}" text-anchor="middle" font-size="18" font-weight="900" fill="#fff">${W === null ? '？' : W + 'g'}</text>`;
+            g += `<text x="${bx - 56}" y="${(top + blockY) / 2}" text-anchor="end" font-size="13" font-weight="800" fill="#0f766e">ひも ${n}本</text>`;
+        }
+        if (opts.note) g += `<text x="230" y="${h - 6}" text-anchor="middle" font-size="13" font-weight="800" fill="#64748b">${opts.note}</text>`;
+        return svg(w, h, g);
+    }
+    function rinjikuSVG(R, r, W, F) {
+        const cx = 230, cy = 118, kR = 72, kr = Math.max(18, 72 * r / R), FLOOR = 214;
+        const g = `<circle cx="${cx}" cy="${cy}" r="${kR}" fill="#fff" stroke="#0f766e" stroke-width="6"/>
+            <circle cx="${cx}" cy="${cy}" r="${kr}" fill="#ccfbf1" stroke="#0f766e" stroke-width="5"/>
+            <circle cx="${cx}" cy="${cy}" r="5" fill="#0f766e"/>
+            <line x1="${cx - kR}" y1="${cy}" x2="${cx}" y2="${cy}" stroke="#0f766e" stroke-width="2" stroke-dasharray="4 3"/>
+            <line x1="${cx}" y1="${cy}" x2="${cx + kr}" y2="${cy}" stroke="#0f766e" stroke-width="2" stroke-dasharray="4 3"/>
+            <text x="${cx - kR / 2}" y="${cy - 12}" text-anchor="middle" font-size="15" font-weight="900" fill="#0f766e">${R}cm</text>
+            <text x="${cx - kR / 2}" y="${cy + 22}" text-anchor="middle" font-size="12" font-weight="800" fill="#5eead4">大きい輪</text>
+            <text x="${cx + kr + 16}" y="${cy + 28}" text-anchor="start" font-size="15" font-weight="900" fill="#0f766e">${r}cm（小さい輪）</text>
+            <line x1="${cx - kR}" y1="${cy}" x2="${cx - kR}" y2="${FLOOR + 26}" stroke="#475569" stroke-width="3"/>
+            <polygon points="${cx - kR},${FLOOR + 32} ${cx - kR - 9},${FLOOR + 14} ${cx - kR + 9},${FLOOR + 14}" fill="#e11d48"/>
+            <text x="${cx - kR}" y="${FLOOR + 56}" text-anchor="middle" font-size="16" font-weight="900" fill="#e11d48">力 ${F === null ? '？' : F + 'g'}</text>
+            <line x1="${cx + kr}" y1="${cy}" x2="${cx + kr}" y2="${FLOOR}" stroke="#57534e" stroke-width="3"/>
+            <rect x="${cx + kr - 36}" y="${FLOOR}" width="72" height="50" rx="8" fill="#0ea5e9"/>
+            <text x="${cx + kr}" y="${FLOOR + 32}" text-anchor="middle" font-size="18" font-weight="900" fill="#fff">${W === null ? '？' : W + 'g'}</text>`;
+        return svg(460, 290, g);
+    }
+
+    /* --- あそぶ --- */
+    let plMode = 2;
+    function drawPulleyPlay() {
+        document.getElementById('pl-mode').innerHTML = [1, 2, 3, 4, 'rin'].map(k => {
+            const label = k === 'rin' ? '輪軸' : (k === 1 ? '定かっ車だけ' : 'ひも ' + k + '本');
+            return `<button onclick="setPl('${k}')" data-pl="${k}" class="${String(plMode) === String(k) ? 'bg-teal-700 text-white' : 'bg-white border-2 border-teal-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${label}</button>`;
+        }).join('');
+        if (plMode === 'rin') {
+            const R = 12, r = 4, W = 120;
+            document.getElementById('pl-fig').innerHTML = rinjikuSVG(R, r, W, W * r / R);
+            document.getElementById('pl-info').innerHTML =
+                `大きい輪 ${R}cm・小さい輪 ${r}cm の 輪軸。<br>
+                 力 ＝ 荷物 × <span class="num">${r}</span> ÷ <span class="num">${R}</span> ＝ <b class="text-teal-700">${W * r / R}g</b>（荷物 ${W}g）。<br>
+                 半径の 比が そのまま 力の 比に なる（てこと 同じ 考え）。`;
+        } else {
+            const n = plMode, W = 120;
+            document.getElementById('pl-fig').innerHTML = pulleySVG(n, W, W / n);
+            document.getElementById('pl-info').innerHTML = n === 1
+                ? `定かっ車は 力の <b>むき</b>を かえるだけ。力は 荷物と 同じ <b class="text-teal-700">${W}g</b>、引く 長さも 上がる 高さと 同じ。`
+                : `動かっ車を ささえる ひもが <b>${n}本</b> → 力は <span class="num">1/${n}</span> の <b class="text-teal-700">${W / n}g</b>。<br>
+                   そのかわり ひもは <b>${n}倍</b> 引く（荷物が 10cm 上がる＝ひもを ${n * 10}cm 引く）。<br>
+                   「力 × 動かす きょり」は どちらも 同じ＝<b>仕事の 原理</b>。`;
+        }
+    }
+    function setPl(k) { plMode = (k === 'rin') ? 'rin' : +k; drawPulleyPlay(); }
+
+    /* --- もんだい --- */
+    let pq = null;
+    function newPulley() {
+        const kind = rnd(4);
+        if (kind === 3) {                                   // 輪軸
+            const R = pickOne([10, 12, 15, 20, 24]), r = pickOne([2, 3, 4, 5]);
+            if (R % r !== 0) return newPulley();
+            const F = 10 * (1 + rnd(9)), W = F * R / r;
+            if (W > 900) return newPulley();
+            pq = {
+                fig: rinjikuSVG(R, r, W, null), ans: F, unit: 'g',
+                q: `輪軸の 大きい輪の 半径は ${R}cm、小さい輪の 半径は ${r}cm です。小さい輪に ${W}g の 荷物を つるしました。大きい輪を 何g の 力で 引くと つりあいますか。`,
+                exp: `力 ＝ 荷物 × 小さい輪 ÷ 大きい輪 ＝ ${W} × ${r} ÷ ${R} ＝ <b class="text-teal-700">${F}g</b>`
+            };
+        } else {
+            const n = pickOne([1, 2, 2, 3, 4]);
+            const F = 10 * (1 + rnd(9)), W = F * n;
+            const ask = rnd(3);
+            if (ask === 0) {
+                pq = {
+                    fig: pulleySVG(n, W, null), ans: F, unit: 'g',
+                    q: n === 1 ? `定かっ車で ${W}g の 荷物を 持ち上げます。何g の 力が いりますか。`
+                        : `動かっ車を ささえる ひもが ${n}本の しかけです。${W}g の 荷物を 持ち上げるには 何g の 力が いりますか。`,
+                    exp: n === 1 ? `定かっ車は むきを かえるだけ。力 ＝ <b class="text-teal-700">${W}g</b>`
+                        : `力 ＝ 荷物 ÷ ひもの 本数 ＝ ${W} ÷ ${n} ＝ <b class="text-teal-700">${F}g</b>`
+                };
+            } else if (ask === 1) {
+                pq = {
+                    fig: pulleySVG(n, null, F), ans: W, unit: 'g',
+                    q: n === 1 ? `定かっ車を ${F}g の 力で 引いて つりあいました。荷物は 何g ですか。`
+                        : `動かっ車を ささえる ひもが ${n}本の しかけを、${F}g の 力で 引いて つりあいました。荷物は 何g ですか。`,
+                    exp: `荷物 ＝ 力 × ひもの 本数 ＝ ${F} × ${n} ＝ <b class="text-teal-700">${W}g</b>`
+                };
+            } else {
+                const h = pickOne([10, 20, 30, 50]);
+                pq = {
+                    fig: pulleySVG(n, W, F), ans: h * n, unit: 'cm',
+                    q: n === 1 ? `定かっ車で 荷物を ${h}cm 持ち上げます。ひもを 何cm 引きますか。`
+                        : `動かっ車を ささえる ひもが ${n}本の しかけで、荷物を ${h}cm 持ち上げます。ひもを 何cm 引きますか。`,
+                    exp: `ひもの 長さ ＝ 高さ × ひもの 本数 ＝ ${h} × ${n} ＝ <b class="text-teal-700">${h * n}cm</b><br>
+                          力は <span class="num">1/${n}</span> でも、引く 長さは ${n}倍。かけると 同じ（仕事の 原理）。`
+                };
+            }
+        }
+        document.getElementById('pq-q').innerHTML = pq.q;
+        document.getElementById('pq-fig').innerHTML = pq.fig;
+        document.getElementById('pq-unit').innerText = pq.unit;
+        document.getElementById('pq-in').value = '';
+        document.getElementById('pq-res').innerHTML = '';
+        scoreBox('pq-score', S.pulley);
+    }
+    function checkPulley() {
+        if (!pq || pq.done) return;
+        const v = parseFloat(document.getElementById('pq-in').value);
+        if (!isFinite(v)) { document.getElementById('pq-res').innerHTML = resultBox(false, '数を 入れてね', ''); return; }
+        pq.done = true;
+        const ok = v === pq.ans;
+        S.pulley[1]++; if (ok) S.pulley[0]++;
+        document.getElementById('pq-res').innerHTML = resultBox(ok,
+            ok ? '⭕ せいかい！' : `❌ こたえは ${pq.ans}${pq.unit}`, pq.exp);
+        scoreBox('pq-score', S.pulley);
+    }
+
+    /* =====================================================================
+       ③ 電気
+       ===================================================================== */
+    // 明るさ（豆電球1こ あたり）… 直列電池 nb こ → 電圧 nb、並列電池 → 1
+    //   豆電球 直列 nl こ → 1こ あたり 電圧/nl、並列 → それぞれに 電圧 まるごと
+    function bright(c) {
+        const v = c.bs === 'series' ? c.nb : 1;
+        return c.ls === 'series' ? [v, c.nl] : [v, 1];   // [分子, 分母]
+    }
+    function brightVal(c) { const [a, b] = bright(c); return a / b; }
+    function totalCurrent(c) {
+        const [a, b] = bright(c);
+        return c.ls === 'series' ? [a, b] : [a * c.nl, b];
+    }
+    function circuitSVG(c, id) {
+        const w = 420, h = 258;
+        const L = 50, R = 370, T = 70, B = 210, CX = (L + R) / 2;
+        const wire = (x1, y1, x2, y2) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#475569" stroke-width="4"/>`;
+        // 左右の たて線（ここは いつも 1本道）
+        let g = wire(L, T, L, B) + wire(R, T, R, B);
+
+        /* --- かん電池（下の 辺） --- */
+        const bw = 34, bg = 14;
+        if (c.bs === 'series') {
+            g += wire(L, B, R, B);
+            const total = c.nb * bw + (c.nb - 1) * bg, sx = CX - total / 2;
+            for (let i = 0; i < c.nb; i++) {
+                const x = sx + i * (bw + bg);
+                g += `<line x1="${x}" y1="${B - 15}" x2="${x}" y2="${B + 15}" stroke="#0f766e" stroke-width="5"/>
+                      <line x1="${x + bw}" y1="${B - 8}" x2="${x + bw}" y2="${B + 8}" stroke="#0f766e" stroke-width="9"/>`;
+            }
+        } else {
+            // 2本の たてバスの あいだに、電池を よこに ならべて つなぐ
+            const bx0 = CX - 64, bx1 = CX + 64, step = 32;
+            const sy = B - (c.nb - 1) * step / 2, ey = sy + (c.nb - 1) * step;
+            g += wire(L, B, bx0, B) + wire(bx1, B, R, B) + wire(bx0, sy, bx0, ey) + wire(bx1, sy, bx1, ey);
+            for (let i = 0; i < c.nb; i++) {
+                const y = sy + i * step;
+                g += wire(bx0, y, bx1, y) +
+                    `<line x1="${CX - 17}" y1="${y - 13}" x2="${CX - 17}" y2="${y + 13}" stroke="#0f766e" stroke-width="5"/>
+                     <line x1="${CX + 17}" y1="${y - 7}" x2="${CX + 17}" y2="${y + 7}" stroke="#0f766e" stroke-width="9"/>`;
+            }
+        }
+
+        /* --- 豆電球（上の 辺） --- */
+        const glow = Math.min(1, brightVal(c) / 3);
+        const bulb = (x, y) => `<circle cx="${x}" cy="${y}" r="18" fill="#fde68a" fill-opacity="${(0.12 + 0.88 * glow).toFixed(3)}" stroke="#a16207" stroke-width="3"/>
+            <path d="M${x - 9},${y + 6} L${x},${y - 6} L${x + 9},${y + 6}" fill="none" stroke="#a16207" stroke-width="2.5"/>`;
+        if (c.ls === 'series') {
+            g += wire(L, T, R, T);
+            const step = 76, sx = CX - (c.nl - 1) * step / 2;
+            for (let i = 0; i < c.nl; i++) g += bulb(sx + i * step, T);
+        } else {
+            // 左右 2本の たてバスの あいだに、豆電球を よこに ならべて かける
+            const bx0 = CX - 62, bx1 = CX + 62, step = 44;
+            const sy = T - (c.nl - 1) * step / 2, ey = sy + (c.nl - 1) * step;
+            g += wire(L, T, bx0, T) + wire(bx1, T, R, T) + wire(bx0, sy, bx0, ey) + wire(bx1, sy, bx1, ey);
+            for (let i = 0; i < c.nl; i++) {
+                const y = sy + i * step;
+                g += wire(bx0, y, bx1, y) + bulb(CX, y);
+            }
+        }
+        g += `<text x="${L}" y="${h - 10}" font-size="14" font-weight="800" fill="#0f766e">かん電池 ${c.nb}こ ${c.nb > 1 ? (c.bs === 'series' ? '直列' : '並列') : ''}</text>
+              <text x="${R}" y="${h - 10}" text-anchor="end" font-size="14" font-weight="800" fill="#a16207">豆電球 ${c.nl}こ ${c.nl > 1 ? (c.ls === 'series' ? '直列' : '並列') : ''}</text>`;
+        return svg(w, h, g, id ? `id="${id}"` : '');
+    }
+    function circuitName(c) {
+        return `かん電池 ${c.nb}こ${c.nb > 1 ? (c.bs === 'series' ? ' 直列' : ' 並列') : ''}・豆電球 ${c.nl}こ${c.nl > 1 ? (c.ls === 'series' ? ' 直列' : ' 並列') : ''}`;
+    }
+
+    /* --- あそぶ --- */
+    const ci = { nb: 1, bs: 'series', nl: 1, ls: 'series' };
+    function drawCircuitPlay() {
+        const grp = (title, nKey, sKey, color) => `
+            <div class="border-2 ${color} rounded-2xl p-3">
+                <p class="font-black text-sm">${title}</p>
+                <div class="flex items-center gap-1 mt-2">
+                    <button onclick="ciBump('${nKey}',-1)" data-ci="${nKey}-" class="bg-white border-2 border-slate-300 font-black w-8 h-8 rounded-lg bounce-hover">−</button>
+                    <span class="num font-black w-10 text-center" data-civ="${nKey}">${ci[nKey]}</span>
+                    <button onclick="ciBump('${nKey}',1)" data-ci="${nKey}+" class="bg-white border-2 border-slate-300 font-black w-8 h-8 rounded-lg bounce-hover">＋</button>
+                    <span class="text-xs font-black text-slate-500">こ</span>
+                </div>
+                <div class="flex gap-1 mt-2">
+                    ${['series', 'parallel'].map(s => `<button onclick="ciSet('${sKey}','${s}')" data-cis="${sKey}${s}"
+                        class="${ci[sKey] === s ? 'bg-teal-700 text-white' : 'bg-white border-2 border-slate-200 text-slate-500'} font-black px-2 py-1 rounded-lg text-xs bounce-hover">${s === 'series' ? '直列' : '並列'}</button>`).join('')}
+                </div>
+            </div>`;
+        document.getElementById('ci-ctrl').innerHTML =
+            grp('🔋 かん電池', 'nb', 'bs', 'border-teal-200') + grp('💡 豆電球', 'nl', 'ls', 'border-amber-200');
+        document.getElementById('ci-fig').innerHTML = circuitSVG(ci);
+        const [a, b] = bright(ci), [ta, tb] = totalCurrent(ci);
+        const v = ci.bs === 'series' ? ci.nb : 1;
+        document.getElementById('ci-info').innerHTML =
+            `電池の はたらき（電圧）… ${ci.bs === 'series' ? `直列 ${ci.nb}こ なので <b>${ci.nb}倍</b>` : `並列 なので <b>1倍</b>（長もちする）`}<br>
+             豆電球 1この 明るさ … ${ci.ls === 'series' ? `直列 ${ci.nl}こ で 電圧を 分けあう → ${fracHTML(a, b)}` : `並列 なので それぞれに まるごと → ${fracHTML(a, b)}`} 倍<br>
+             回路全体に ながれる 電流 … ${fracHTML(ta, tb)} 倍
+             <span class="block text-xs text-slate-500 mt-1">※ 電圧 ${v}／豆電球の 数だけ 抵抗{ていこう}が ふえる、で 考えるよ</span>`;
+    }
+    function ciBump(k, n) { ci[k] = Math.max(1, Math.min(3, ci[k] + n)); drawCircuitPlay(); }
+    function ciSet(k, v) { ci[k] = v; drawCircuitPlay(); }
+
+    /* --- もんだい --- */
+    let cq = null;
+    function randCircuit() {
+        const nb = 1 + rnd(3), nl = 1 + rnd(3);
+        return { nb, nl, bs: nb === 1 ? 'series' : pickOne(['series', 'parallel']), ls: nl === 1 ? 'series' : pickOne(['series', 'parallel']) };
+    }
+    function newCircuitQ() {
+        let A, B, guard = 0;
+        do { A = randCircuit(); B = randCircuit(); guard++; }
+        while (guard < 100 && circuitName(A) === circuitName(B));
+        cq = { A, B, done: false };
+        document.getElementById('cq-a').innerHTML = circuitSVG(A);
+        document.getElementById('cq-b').innerHTML = circuitSVG(B);
+        document.getElementById('cq-a-t').innerText = circuitName(A);
+        document.getElementById('cq-b-t').innerText = circuitName(B);
+        document.getElementById('cq-choices').innerHTML =
+            [['a', '🅐 が 明るい'], ['same', '同じ'], ['b', '🅑 が 明るい']].map(([k, label]) =>
+                `<button onclick="ansCircuit('${k}')" data-cqc="${k}" class="bg-white border-2 border-slate-200 hover:border-teal-500 font-black py-3 rounded-2xl bounce-hover text-sm">${label}</button>`).join('');
+        document.getElementById('cq-res').innerHTML = '';
+        scoreBox('cq-score', S.circuit);
+    }
+    function ansCircuit(k) {
+        if (!cq || cq.done) return;
+        cq.done = true;
+        const va = brightVal(cq.A), vb = brightVal(cq.B);
+        const right = Math.abs(va - vb) < 1e-9 ? 'same' : (va > vb ? 'a' : 'b');
+        const ok = k === right;
+        S.circuit[1]++; if (ok) S.circuit[0]++;
+        document.querySelectorAll('[data-cqc]').forEach(el => {
+            const isR = el.dataset.cqc === right;
+            el.className = `${isR ? 'bg-green-50 border-green-500' : (el.dataset.cqc === k ? 'bg-red-50 border-red-400 shake' : 'bg-white border-slate-200 opacity-60')} border-2 font-black py-3 rounded-2xl text-sm`;
+        });
+        const [aa, ab] = bright(cq.A), [ba, bb] = bright(cq.B);
+        document.getElementById('cq-res').innerHTML = resultBox(ok,
+            ok ? '⭕ せいかい！' : '❌ ざんねん…',
+            `🅐 ${circuitName(cq.A)} → 豆電球1こ ${fracHTML(aa, ab)} 倍<br>
+             🅑 ${circuitName(cq.B)} → 豆電球1こ ${fracHTML(ba, bb)} 倍<br>
+             <b class="text-teal-700">${right === 'same' ? '同じ 明るさ' : (right === 'a' ? '🅐 の ほうが 明るい' : '🅑 の ほうが 明るい')}</b>`);
+        scoreBox('cq-score', S.circuit);
+    }
+
+    /* =====================================================================
+       ④ 水よう液（中和）
+       ===================================================================== */
+    const wa = { ratioA: 10, ratioB: 15, acid: 20, alk: 20 };
+    function beakerSVG(color, label, sub, frac) {
+        const ty = 156 - 108 * Math.max(0.08, Math.min(1, frac === undefined ? 0.7 : frac));
+        const g = `<path d="M40,30 L40,150 Q40,168 58,168 L122,168 Q140,168 140,150 L140,30" fill="#f8fafc" stroke="#94a3b8" stroke-width="4"/>
+            <path d="M42,${ty} L42,150 Q42,166 58,166 L122,166 Q138,166 138,150 L138,${ty} Z" fill="${color}" fill-opacity="0.85"/>
+            <line x1="40" y1="60" x2="58" y2="60" stroke="#94a3b8" stroke-width="3"/>
+            <line x1="40" y1="90" x2="58" y2="90" stroke="#94a3b8" stroke-width="3"/>
+            <line x1="40" y1="120" x2="58" y2="120" stroke="#94a3b8" stroke-width="3"/>
+            <text x="90" y="16" text-anchor="middle" font-size="16" font-weight="900" fill="#0f172a">${label}</text>
+            <text x="90" y="192" text-anchor="middle" font-size="14" font-weight="800" fill="#475569">${sub}</text>`;
+        return svg(180, 200, g);
+    }
+    function waState() {
+        // 塩酸 ratioA : 水よう液 ratioB で ちょうど中和
+        const need = wa.acid * wa.ratioB / wa.ratioA;      // 塩酸を すべて 中和するのに 必要な アルカリ
+        if (Math.abs(wa.alk - need) < 1e-9) return 'neutral';
+        return wa.alk < need ? 'acid' : 'alkali';
+    }
+    const BTB = { acid: ['#fbbf24', 'さんせい', '黄色'], neutral: ['#22c55e', '中せい', 'みどり'], alkali: ['#3b82f6', 'アルカリせい', '青色'] };
+    function drawWaterPlay() {
+        document.getElementById('wa-ratio').innerHTML =
+            `この 実験では <b>塩酸 ${wa.ratioA}mL</b> と <b>水酸化ナトリウム水よう液 ${wa.ratioB}mL</b> が ちょうど 中和する。`;
+        const st = waState(), [col, name, cname] = BTB[st];
+        document.getElementById('wa-fig').innerHTML =
+            `<div class="flex justify-center">${beakerSVG(col, 'BTB液を 入れた 液',
+                `${cname}　ぜんぶで ${wa.acid + wa.alk}mL`, (wa.acid + wa.alk) / 140)}</div>`;
+        const ctrl = (key, label) => `
+            <div class="flex items-center gap-1">
+                <button onclick="waBump('${key}',-5)" data-wa="${key}-" class="bg-white border-2 border-slate-300 font-black w-8 h-8 rounded-lg bounce-hover">−</button>
+                <span class="num font-black w-16 text-center" data-wav="${key}">${wa[key]}mL</span>
+                <button onclick="waBump('${key}',5)" data-wa="${key}+" class="bg-white border-2 border-slate-300 font-black w-8 h-8 rounded-lg bounce-hover">＋</button>
+            </div>`;
+        document.getElementById('wa-acid').innerHTML = ctrl('acid');
+        document.getElementById('wa-alk').innerHTML = ctrl('alk');
+        const need = wa.acid * wa.ratioB / wa.ratioA;
+        document.getElementById('wa-msg').innerHTML = st === 'neutral'
+            ? `<span class="text-green-700">⚖️ ちょうど 中和！ 蒸発{じょうはつ}させると 食塩だけ のこる</span>`
+            : st === 'acid'
+                ? `<span class="text-amber-600">まだ さんせい（あと ${+(need - wa.alk).toFixed(1)}mL 入れると 中和）</span>`
+                : `<span class="text-blue-600">アルカリせい（${+(wa.alk - need).toFixed(1)}mL 入れすぎ）</span>`;
+    }
+    function waBump(k, n) { wa[k] = Math.max(0, Math.min(120, wa[k] + n)); drawWaterPlay(); }
+
+    let wq = null;
+    function newWater() {
+        const a = pickOne([10, 15, 20, 25]), b = pickOne([10, 15, 20, 30]);
+        const kind = rnd(3);
+        const numin = document.getElementById('wq-numin'), pickBox = document.getElementById('wq-pick');
+        if (kind === 0) {                                    // ちょうど 中和する 体積
+            const k = 1 + rnd(5), x = a * k, y = b * k;
+            wq = {
+                kind: 'num', ans: y, unit: 'mL',
+                q: `塩酸 ${a}mL と 水酸化ナトリウム水よう液 ${b}mL が ちょうど 中和します。塩酸 ${x}mL を ちょうど 中和させるには、水酸化ナトリウム水よう液が 何mL いりますか。`,
+                exp: `塩酸が ${x} ÷ ${a} ＝ <b>${k}倍</b>に なったので、水よう液も ${k}倍。<br>${b} × ${k} ＝ <b class="text-teal-700">${y}mL</b>`
+            };
+        } else if (kind === 1) {                             // 液性を あてる
+            const k = 1 + rnd(4), x = a * k;
+            const just = b * k;
+            const diff = pickOne([-2, -1, 0, 1, 2]);
+            const y = just + diff * 5;
+            if (y <= 0) return newWater();
+            const st = y === just ? 'neutral' : (y < just ? 'acid' : 'alkali');
+            wq = {
+                kind: 'pick', ans: st,
+                q: `塩酸 ${a}mL と 水酸化ナトリウム水よう液 ${b}mL が ちょうど 中和します。塩酸 ${x}mL に 水酸化ナトリウム水よう液 ${y}mL を 混ぜました。この 液は 何せいですか。`,
+                exp: `塩酸 ${x}mL を 中和するには 水よう液 ${just}mL が 必要。<br>
+                      じっさいに 入れたのは ${y}mL なので <b class="text-teal-700">${BTB[st][1]}</b>（BTB液は ${BTB[st][2]}）。`
+            };
+        } else {                                             // 蒸発させた あとの 食塩
+            const k = 1 + rnd(4), x = a * k, y = b * k;
+            const perUnit = pickOne([0.2, 0.3, 0.5]);
+            const g = +(perUnit * k).toFixed(2);
+            wq = {
+                kind: 'num', ans: g, unit: 'g',
+                q: `塩酸 ${a}mL と 水酸化ナトリウム水よう液 ${b}mL が ちょうど 中和し、蒸発させると 食塩が ${perUnit}g できます。塩酸 ${x}mL と 水よう液 ${y}mL を 混ぜて 蒸発させると、食塩は 何g できますか。`,
+                exp: `どちらも ${k}倍 なので ちょうど 中和。できる 食塩も ${k}倍。<br>${perUnit} × ${k} ＝ <b class="text-teal-700">${g}g</b>`
+            };
+        }
+        document.getElementById('wq-q').innerHTML = wq.q;
+        document.getElementById('wq-res').innerHTML = '';
+        if (wq.kind === 'pick') {
+            numin.classList.add('hidden'); pickBox.classList.remove('hidden');
+            pickBox.innerHTML = ['acid', 'neutral', 'alkali'].map(k =>
+                `<button onclick="ansWaterPick('${k}')" data-wqc="${k}" class="bg-white border-2 border-slate-200 hover:border-teal-500 font-black py-3 rounded-2xl bounce-hover text-sm">${BTB[k][1]}</button>`).join('');
+        } else {
+            numin.classList.remove('hidden'); pickBox.classList.add('hidden');
+            pickBox.innerHTML = '';
+            document.getElementById('wq-unit').innerText = wq.unit;
+            document.getElementById('wq-in').value = '';
+        }
+        scoreBox('wq-score', S.water);
+    }
+    function ansWaterPick(k) {
+        if (!wq || wq.done) return;
+        wq.done = true;
+        const ok = k === wq.ans;
+        S.water[1]++; if (ok) S.water[0]++;
+        document.querySelectorAll('[data-wqc]').forEach(el => {
+            const isR = el.dataset.wqc === wq.ans;
+            el.className = `${isR ? 'bg-green-50 border-green-500' : (el.dataset.wqc === k ? 'bg-red-50 border-red-400 shake' : 'bg-white border-slate-200 opacity-60')} border-2 font-black py-3 rounded-2xl text-sm`;
+        });
+        document.getElementById('wq-res').innerHTML = resultBox(ok, ok ? '⭕ せいかい！' : '❌ ざんねん…', wq.exp);
+        scoreBox('wq-score', S.water);
+    }
+    function checkWater() {
+        if (!wq || wq.done || wq.kind !== 'num') return;
+        const v = parseFloat(document.getElementById('wq-in').value);
+        if (!isFinite(v)) { document.getElementById('wq-res').innerHTML = resultBox(false, '数を 入れてね', ''); return; }
+        wq.done = true;
+        const ok = Math.abs(v - wq.ans) < 1e-6;
+        S.water[1]++; if (ok) S.water[0]++;
+        document.getElementById('wq-res').innerHTML = resultBox(ok,
+            ok ? '⭕ せいかい！' : `❌ こたえは ${wq.ans}${wq.unit}`, wq.exp);
+        scoreBox('wq-score', S.water);
+    }
+
+    /* =====================================================================
+       ⑤ 月の 満ち欠け
+       ===================================================================== */
+    const MOON = [
+        { n: '新月（しんげつ）', s: '見えない', nan: '12時ごろ', when: '昼に 空に あるので 見えない' },
+        { n: '三日月（みかづき）', s: '細い 右の 弓', nan: '15時ごろ', when: '夕方 西の 空に 低く 見える' },
+        { n: '上弦（じょうげん）の月', s: '右半分', nan: '18時ごろ', when: '夕方 南の 空。真夜中に 西へ しずむ' },
+        { n: '十三夜（じゅうさんや）の月', s: '右が ふくらむ', nan: '21時ごろ', when: '夜の はじめ 東より、夜中に 南' },
+        { n: '満月（まんげつ）', s: 'まんまる', nan: '24時（真夜中）', when: '夕方 東から 出て、明け方 西にしずむ' },
+        { n: '十八夜（ねまち）の月', s: '左が ふくらむ', nan: '3時ごろ', when: '夜おそく 東から 出る' },
+        { n: '下弦（かげん）の月', s: '左半分', nan: '6時ごろ', when: '真夜中に 東から 出て、明け方 南の 空' },
+        { n: '二十六夜の月', s: '細い 左の 弓', nan: '9時ごろ', when: '明け方 東の 空に 低く 見える' }
+    ];
+    // i: 0=新月 … 4=満月。右が 明るい のは i<4
+    function moonSVG(i, R, id) {
+        const th = i * Math.PI / 4, k = Math.cos(th), a = Math.abs(k) * R;
+        const dark = '#1e293b', light = '#fef3c7';
+        const cid = 'mc' + (id || i) + '-' + Math.floor(R);
+        const litRight = i < 4;
+        const halfX = litRight ? 0 : -R;
+        return svg(R * 2 + 8, R * 2 + 8, `
+            <defs><clipPath id="${cid}"><circle cx="${R + 4}" cy="${R + 4}" r="${R}"/></clipPath></defs>
+            <circle cx="${R + 4}" cy="${R + 4}" r="${R}" fill="${dark}"/>
+            <g clip-path="url(#${cid})">
+                <rect x="${R + 4 + halfX}" y="0" width="${R}" height="${R * 2 + 8}" fill="${light}"/>
+                <ellipse cx="${R + 4}" cy="${R + 4}" rx="${a}" ry="${R}" fill="${k > 0 ? dark : light}"/>
+            </g>
+            <circle cx="${R + 4}" cy="${R + 4}" r="${R}" fill="none" stroke="#475569" stroke-width="2"/>`);
+    }
+    let moonSel = 4;
+    function drawOrbit() {
+        const cx = 250, cy = 175, rx = 150, ry = 118;
+        let g = `<rect x="0" y="0" width="560" height="350" fill="#0f172a" rx="18"/>`;
+        // 太陽は 右。光は 左むき
+        g += `<circle cx="524" cy="${cy}" r="46" fill="#fbbf24"/>
+              <text x="524" y="${cy + 6}" text-anchor="middle" font-size="16" font-weight="900" fill="#78350f">太陽</text>`;
+        for (let i = 0; i < 5; i++) {
+            const y = cy - 90 + i * 45;
+            g += `<line x1="470" y1="${y}" x2="418" y2="${y}" stroke="#fbbf24" stroke-width="3" opacity="0.6"/>
+                  <polygon points="418,${y} 428,${y - 5} 428,${y + 5}" fill="#fbbf24" opacity="0.6"/>`;
+        }
+        g += `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="none" stroke="#475569" stroke-width="2" stroke-dasharray="6 6"/>`;
+        // 地球（右半分が 昼）
+        g += `<circle cx="${cx}" cy="${cy}" r="30" fill="#1e3a8a"/>
+              <path d="M${cx},${cy - 30} A30,30 0 0 1 ${cx},${cy + 30} Z" fill="#60a5fa"/>
+              <text x="${cx}" y="${cy + 50}" text-anchor="middle" font-size="14" font-weight="900" fill="#93c5fd">地球</text>`;
+        for (let i = 0; i < 8; i++) {
+            const phi = i * Math.PI / 4;
+            const x = cx + rx * Math.cos(phi), y = cy - ry * Math.sin(phi);
+            const on = moonSel === i;
+            g += `<circle cx="${x}" cy="${y}" r="${on ? 19 : 15}" fill="#1e293b" stroke="${on ? '#fbbf24' : '#64748b'}" stroke-width="${on ? 4 : 2}"/>
+                  <path d="M${x},${y - (on ? 19 : 15)} A${on ? 19 : 15},${on ? 19 : 15} 0 0 1 ${x},${y + (on ? 19 : 15)} Z" fill="#fef3c7"/>
+                  <circle cx="${x}" cy="${y}" r="26" fill="transparent" style="cursor:pointer" data-moon="${i}"/>
+                  <text x="${x}" y="${y - 26}" text-anchor="middle" font-size="12" font-weight="900" fill="${on ? '#fbbf24' : '#94a3b8'}">${i + 1}</text>`;
+        }
+        g += `<text x="16" y="26" font-size="13" font-weight="800" fill="#94a3b8">北極の 上から 見た 図（月は 反時計まわりに まわる）</text>`;
+        document.getElementById('mo-orbit').innerHTML = svg(560, 350, g);
+        document.getElementById('mo-orbit').querySelectorAll('[data-moon]').forEach(el =>
+            el.addEventListener('click', () => showMoon(+el.dataset.moon)));
+    }
+    function showMoon(i) {
+        moonSel = i;
+        drawOrbit();
+        const m = MOON[i];
+        document.getElementById('mo-detail').innerHTML = `
+            <div class="flex items-center gap-4">
+                <div class="w-24 shrink-0">${moonSVG(i, 44, 'sel')}</div>
+                <div>
+                    <p class="font-black text-lg text-amber-200">${m.n}</p>
+                    <p class="text-sm font-bold mt-1">形 … ${m.s}</p>
+                    <p class="text-sm font-bold">南中（真南に くる）… <span class="text-amber-200">${m.nan}</span></p>
+                    <p class="text-sm font-bold">見え方 … ${m.when}</p>
+                </div>
+            </div>
+            <p class="text-xs font-bold text-slate-400 mt-3">
+                新月から つぎの 新月まで やく 29.5日。1日で やく 12度ずつ 東へ ずれるので、月の出は 毎日 50分ほど おそくなる。
+            </p>`;
+    }
+    let mq = null;
+    function newMoonQ() {
+        const i = rnd(8);
+        const kind = rnd(3);
+        const key = kind === 0 ? 'n' : (kind === 1 ? 'nan' : 'when');
+        const q = kind === 0 ? 'この 形の 月の 名前は？' : (kind === 1 ? 'この 月が 南中する（真南に くる）のは 何時ごろ？' : 'この 月は いつ どこに 見える？');
+        const others = shuffle(MOON.filter((m, j) => j !== i && m[key] !== MOON[i][key])).slice(0, 3);
+        mq = { i, key, choices: shuffle([MOON[i]].concat(others)), done: false };
+        document.getElementById('mq-q').innerText = q;
+        document.getElementById('mq-fig').innerHTML = `<div class="w-28">${moonSVG(i, 52, 'q')}</div>`;
+        document.getElementById('mq-choices').innerHTML = mq.choices.map((m, j) =>
+            `<button onclick="ansMoon(${j})" data-mqc="${j}" class="bg-white border-2 border-slate-200 hover:border-teal-500 font-bold text-sm px-3 py-3 rounded-2xl bounce-hover">${esc(m[mq.key])}</button>`).join('');
+        document.getElementById('mq-res').innerHTML = '';
+        scoreBox('mq-score', S.moon);
+    }
+    function ansMoon(j) {
+        if (!mq || mq.done) return;
+        mq.done = true;
+        const right = MOON[mq.i];
+        const ok = mq.choices[j][mq.key] === right[mq.key];
+        S.moon[1]++; if (ok) S.moon[0]++;
+        document.querySelectorAll('[data-mqc]').forEach((el, k) => {
+            const isR = mq.choices[k][mq.key] === right[mq.key];
+            el.className = `${isR ? 'bg-green-50 border-green-500' : (k === j ? 'bg-red-50 border-red-400 shake' : 'bg-white border-slate-200 opacity-60')} border-2 font-bold text-sm px-3 py-3 rounded-2xl`;
+        });
+        document.getElementById('mq-res').innerHTML = resultBox(ok, ok ? '⭕ せいかい！' : '❌ ざんねん…',
+            `<b class="text-teal-700">${right.n}</b><br>南中 … ${right.nan}<br>${right.when}`);
+        scoreBox('mq-score', S.moon);
+    }
+
+    /* =====================================================================
+       ⑥ 一問一答
+       ===================================================================== */
+    const QS = [
+        // --- 植物 ---
+        { f: '植物', q: '植物が 日光を 受けて でんぷんを つくる はたらきを 何と いう？', a: '光合成', x: ['呼吸', '蒸散', '発芽'], e: '葉の 葉緑体で、水と 二酸化炭素から でんぷんと 酸素を つくる。' },
+        { f: '植物', q: '光合成に 必要な 気体は？', a: '二酸化炭素', x: ['酸素', 'ちっ素', '水素'], e: '出ていく 気体は 酸素。呼吸は その 逆。' },
+        { f: '植物', q: '葉から 水が 水蒸気に なって 出て いく はたらきは？', a: '蒸散', x: ['光合成', '呼吸', '結露'], e: 'おもに 葉の うらの 気孔{きこう}から。根が 水を すい上げる 力に なる。' },
+        { f: '植物', q: '根から すい上げた 水が 通る 管は？', a: '道管', x: ['師管', '気孔', '維管束'], e: '道管は 水、師管は 養分の 通り道。合わせて 維管束{いかんそく}。' },
+        { f: '植物', q: '子葉が 2枚の 植物（双子葉類）の 根の つくりは？', a: '主根と側根', x: ['ひげ根', '球根', '気根'], e: '単子葉類（イネ・トウモロコシ）は ひげ根で、葉脈は 平行。' },
+        { f: '植物', q: 'ヘチマや カボチャのように、おばなと めばなが 分かれて いる 花を 何と いう？', a: '単性花', x: ['両性花', '合弁花', '離弁花'], e: 'アサガオ・アブラナのように 1つの 花に おしべも めしべも あるのが 両性花。' },
+        { f: '植物', q: '発芽に 必要な 3つの 条件は？', a: '水・空気・適当な温度', x: ['水・日光・肥料', '日光・肥料・温度', '水・日光・空気'], e: '発芽だけなら 日光と 肥料は いらない（種子の 中の 養分を つかう）。' },
+        { f: '植物', q: '種子の 中の 養分が でんぷんか どうかを 調べる 薬品は？', a: 'ヨウ素液', x: ['ベネジクト液', '石灰水', 'BTB液'], e: 'でんぷんが あると 青むらさき色に なる。' },
+        // --- 動物・こん虫 ---
+        { f: '動物', q: 'こん虫の からだは いくつに 分かれて いる？', a: '3つ（頭・胸・腹）', x: ['2つ（頭胸部・腹部）', '4つ', '分かれていない'], e: 'あしは 6本で すべて 胸に つく。クモは 頭胸部と腹部の 2つ、あし8本。' },
+        { f: '動物', q: 'さなぎに ならずに 育つ こん虫の そだち方は？', a: '不完全変態', x: ['完全変態', '脱皮変態', '幼生変態'], e: 'トンボ・バッタ・セミは 不完全変態。チョウ・カブトムシ・ハチは 完全変態。' },
+        { f: '動物', q: 'メダカの おすの 特ちょうは？', a: 'せびれに切れこみがある', x: ['しりびれが小さい', 'からだが丸い', 'はらがふくれる'], e: 'おすは せびれに 切れこみ、しりびれが 大きくて 平行四辺形。' },
+        { f: '動物', q: 'こん虫が 呼吸の ために 使う、腹の 横に ある あなは？', a: '気門', x: ['えら', '気孔', '肺胞'], e: '気門から 気管を 通って からだの 中に 空気を 送る。' },
+        { f: '動物', q: 'ほ乳類・鳥類のように 体温が ほぼ 一定の 動物を 何と いう？', a: '恒温動物', x: ['変温動物', '無脊椎動物', '両生類'], e: '魚類・両生類・は虫類は 変温動物。' },
+        // --- 人体 ---
+        { f: '人体', q: 'でんぷんを 分解する だ液の 消化こう素は？', a: 'アミラーゼ', x: ['ペプシン', 'リパーゼ', 'トリプシン'], e: 'ペプシンは たんぱく質（胃）、リパーゼは しぼう（すい液）。' },
+        { f: '人体', q: '養分が いちばん 多く 吸収される のは どこ？', a: '小腸', x: ['胃', '大腸', '食道'], e: '小腸の かべの 柔毛{じゅうもう}から 吸収する。大腸は おもに 水を 吸収。' },
+        { f: '人体', q: '心臓から 肺へ 血液を 送る 血管は？', a: '肺動脈', x: ['肺静脈', '大動脈', '大静脈'], e: '肺動脈には 二酸化炭素の 多い 静脈血が ながれる（名前と 中身が 逆なので 注意）。' },
+        { f: '人体', q: '酸素を いちばん 多く ふくむ 血液が ながれる 血管は？', a: '肺静脈', x: ['肺動脈', '大静脈', '門脈'], e: '肺で 酸素を 受けとった 血液が 心臓に もどる 血管。' },
+        { f: '人体', q: 'アンモニアを 害の 少ない 尿素に かえる 臓器は？', a: 'かん臓', x: ['じん臓', 'ひ臓', 'すい臓'], e: 'じん臓は その 尿素を 血液から こしとって 尿に する。' },
+        { f: '人体', q: '肺の 中で 空気と 血液が 気体を やりとりする 小さな ふくろは？', a: '肺ほう', x: ['柔毛', '気管支', '横かくまく'], e: '肺ほうが たくさん あることで 表面積が とても 大きくなる。' },
+        { f: '人体', q: '血液の 成分の うち、酸素を はこぶのは？', a: '赤血球', x: ['白血球', '血小板', '血しょう'], e: '赤血球の ヘモグロビンが 酸素と むすびつく。白血球は 細きんを たおす。' },
+        // --- 地学 ---
+        { f: '地学', q: '流れる 水が 土や 石を けずる はたらきを 何と いう？', a: 'しん食', x: ['運ぱん', 'たい積', 'ふう化'], e: 'けずる＝しん食、はこぶ＝運ぱん、つもる＝たい積。' },
+        { f: '地学', q: '川の カーブの 外側は どうなって いる？', a: '深くて がけに なる', x: ['浅くて 川原に なる', '水がとまる', '土がつもる'], e: '外側は 流れが 速く しん食され、内側は おそく たい積して 川原に なる。' },
+        { f: '地学', q: 'つぶの 大きさが 2mm 以上の たい積物は？', a: 'れき', x: ['砂', 'どろ', '火山灰'], e: 'れき（2mm以上）＞砂（2〜1/16mm）＞どろ。海岸から 遠いほど 細かい つぶが つもる。' },
+        { f: '地学', q: '地層に 化石が あると 当時の 環境が わかる。この ような 化石を 何と いう？', a: '示相化石', x: ['示準化石', '生痕化石', '標準化石'], e: '時代が わかるのは 示準化石（アンモナイト・三葉虫など）。' },
+        { f: '地学', q: 'マグマが 地下深くで ゆっくり 固まって できた 岩石は？', a: '深成岩', x: ['火山岩', 'たい積岩', '変成岩'], e: '深成岩（花こう岩など）は 大きな 結しょうが そろう 等粒状組織。' },
+        { f: '地学', q: '日本の 上空を いつも ふいて いる 西風は？', a: '偏西風', x: ['季節風', '貿易風', '台風'], e: 'この 風の せいで 天気は 西から 東へ 変わって いく。' },
+        { f: '地学', q: '寒気が 暖気の 下に もぐりこむ 前線は？', a: '寒冷前線', x: ['温暖前線', 'ていたい前線', 'へいそく前線'], e: '積乱雲が でき、せまい はんいで 強い 雨。通過後は 気温が 下がる。' },
+        { f: '地学', q: '6月ごろ 日本に 雨を もたらす、動きの おそい 前線は？', a: 'ていたい前線', x: ['寒冷前線', '温暖前線', 'へいそく前線'], e: '梅雨前線・秋雨前線が これ。暖気と 寒気の 力が つりあって 動かない。' },
+        { f: '地学', q: '冬の 日本の 天気図で 見られる 気圧配置は？', a: '西高東低', x: ['南高北低', '東高西低', '帯状高気圧'], e: 'シベリア高気圧から 北西の 季節風。日本海側は 雪、太平洋側は 晴れ。' },
+        { f: '地学', q: '夏の 昼に 海から 陸へ ふく 風を 何と いう？', a: '海風', x: ['陸風', '季節風', 'からっ風'], e: '陸は あたたまりやすく 上しょう気流が できるため。夜は 逆の 陸風。' },
+        { f: '地学', q: '北の 空の 星が 中心に して まわって 見える 星は？', a: '北極星', x: ['シリウス', 'ベガ', '北斗七星'], e: '地球の 地じくの 延長に あるので ほとんど 動かない。1時間に 15度 反時計まわり。' },
+        { f: '地学', q: '夏の 大三角を つくる 星では ない ものは？', a: 'プロキオン', x: ['ベガ', 'アルタイル', 'デネブ'], e: 'プロキオンは 冬の 大三角（シリウス・ベテルギウス・プロキオン）。' },
+        { f: '地学', q: '太陽が 真東から 出て 真西に しずむ 日は？', a: '春分・秋分', x: ['夏至', '冬至', '立春'], e: '夏至は 北寄り、冬至は 南寄りから 出る。南中高度も 変わる。' },
+        // --- 水よう液・気体 ---
+        { f: '水よう液', q: '石灰水に 二酸化炭素を 通すと どうなる？', a: '白くにごる', x: ['青くなる', '赤くなる', '変わらない'], e: '二酸化炭素を 見つける 方法。炭酸カルシウムが できて にごる。' },
+        { f: '水よう液', q: '赤色リトマス紙を 青に かえるのは？', a: 'アルカリ性', x: ['酸性', '中性', 'どれでもない'], e: '青→赤が 酸性。「せきあお アルカリ」で おぼえる。' },
+        { f: '水よう液', q: '塩酸に アルミニウムを 入れると 出る 気体は？', a: '水素', x: ['酸素', '二酸化炭素', 'アンモニア'], e: '水素は いちばん 軽く、火を 近づけると ポンと 音を 立てて 燃える。' },
+        { f: '水よう液', q: '二酸化マンガンに オキシドールを 加えると 出る 気体は？', a: '酸素', x: ['水素', '二酸化炭素', 'ちっ素'], e: '酸素は ものを 燃やす はたらきが ある（線こうが ほのおを 上げる）。' },
+        { f: '水よう液', q: '水に とけると アルカリ性を 示し、鼻を さす におい、水に とても とけやすい 気体は？', a: 'アンモニア', x: ['塩化水素', '二酸化炭素', '酸素'], e: '空気より 軽く 水に とけやすいので 上方置換{じょうほうちかん}で 集める。' },
+        { f: '水よう液', q: '水よう液を 蒸発させても 何も のこらない ものは？', a: '塩酸', x: ['食塩水', '石灰水', '砂糖水'], e: '気体が とけた 水よう液（塩酸・炭酸水・アンモニア水）は 何も のこらない。' },
+        { f: '水よう液', q: '食塩水を 冷やしても あまり 結しょうが 出てこない のは なぜ？', a: '温度で溶解度がほぼ変わらないから', x: ['水にとけないから', '温度で溶解度が大きく変わるから', '食塩が気体だから'], e: 'ミョウバンや ホウ酸は 温度で 大きく 変わるので 冷やすと 結しょうが 出る。' },
+        { f: '水よう液', q: 'ろ過を する とき、ろうとの あしは どう する？', a: 'ビーカーのかべにつける', x: ['ビーカーから離す', '液の中に入れる', '上に向ける'], e: 'ガラス棒を 伝わらせて 静かに 注ぎ、ろうとの あしの とがった 方を かべに つける。' },
+        // --- 力・熱 ---
+        { f: '力', q: 'ふりこが 1往復する 時間を 決めるのは？', a: 'ふりこの長さ', x: ['おもりの重さ', 'ふれはば', '糸の太さ'], e: 'おもりの 重さや ふれはばを 変えても 周期は 変わらない（ふりこの 等時性）。' },
+        { f: '力', q: 'ふりこの 長さを 4倍に すると 1往復の 時間は？', a: '2倍', x: ['4倍', '半分', '変わらない'], e: '長さが 9倍なら 3倍。長さの 平方根に 比例する。' },
+        { f: '力', q: '水に うかぶ ものに はたらく 上むきの 力を 何と いう？', a: '浮力', x: ['重力', '弾性力', 'まさつ力'], e: '浮力 ＝ おしのけた 水の 重さ。1cm³ の 水は 1g。' },
+        { f: '力', q: '100cm³ の 木が 水に うかび、60cm³ 沈んで います。木の 重さは？', a: '60g', x: ['100g', '40g', '160g'], e: 'うかんで いるとき 浮力＝重さ。おしのけた 水 60cm³ ＝ 60g。' },
+        { f: '力', q: '金ぞくを あたためると 体積は どうなる？', a: 'ふえる', x: ['へる', '変わらない', '重さがふえる'], e: '体積は ふえるが 重さは 変わらない。ぼうちょうの しかたは 金ぞくの しゅるいで ちがう。' },
+        { f: '力', q: '水が こおって 氷に なると 体積は どうなる？', a: 'ふえる', x: ['へる', '変わらない', '半分になる'], e: '水は とくべつで、こおると 体積が やく1.1倍に ふえる（だから 氷は うく）。' },
+        { f: '力', q: '熱が 液体や 気体の 流れで 伝わる 伝わり方は？', a: '対流', x: ['伝導', '放射', '蒸発'], e: 'あたたまった 部分が 上へ 動く。金ぞくを 伝わるのは 伝導、太陽の 熱は 放射。' },
+        { f: '力', q: '電流計は 回路に どう つなぐ？', a: '直列', x: ['並列', 'どちらでもよい', '電池と並列'], e: '電流計は 直列、電圧計は 並列。電流計を 並列に つなぐと こわれる。' }
+    ];
+    let qz = null, qzField = 'all';
+    function newQuiz() {
+        const pool = qzField === 'all' ? QS : QS.filter(q => q.f === qzField);
+        const q = pool[rnd(pool.length)];
+        qz = { q, choices: shuffle([q.a].concat(q.x)), done: false };
+        const fields = ['all'].concat([...new Set(QS.map(x => x.f))]);
+        document.getElementById('qz-fields').innerHTML = fields.map(f =>
+            `<button onclick="setField('${f}')" data-qf="${f}" class="${qzField === f ? 'bg-teal-700 text-white' : 'bg-white border-2 border-teal-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${f === 'all' ? 'ぜんぶ ' + QS.length : f + ' ' + QS.filter(x => x.f === f).length}</button>`).join('');
+        document.getElementById('qz-q').innerHTML = `<span class="text-xs font-black text-teal-700 bg-teal-100 px-2 py-1 rounded-lg mr-2">${esc(q.f)}</span>${esc(q.q)}`;
+        document.getElementById('qz-choices').innerHTML = qz.choices.map((c, i) =>
+            `<button onclick="ansQuiz(${i})" data-qzc="${i}" class="bg-white border-2 border-slate-200 hover:border-teal-500 font-bold text-left px-4 py-3 rounded-2xl bounce-hover">${esc(c)}</button>`).join('');
+        document.getElementById('qz-res').innerHTML = '';
+        scoreBox('qz-score', S.quiz);
+    }
+    function setField(f) { qzField = f; newQuiz(); }
+    function ansQuiz(i) {
+        if (!qz || qz.done) return;
+        qz.done = true;
+        const ok = qz.choices[i] === qz.q.a;
+        S.quiz[1]++; if (ok) S.quiz[0]++;
+        document.querySelectorAll('[data-qzc]').forEach((el, j) => {
+            const isR = qz.choices[j] === qz.q.a;
+            el.className = `${isR ? 'bg-green-50 border-green-500' : (j === i ? 'bg-red-50 border-red-400 shake' : 'bg-white border-slate-200 opacity-60')} border-2 font-bold text-left px-4 py-3 rounded-2xl`;
+        });
+        document.getElementById('qz-res').innerHTML = resultBox(ok, ok ? '⭕ せいかい！' : `❌ こたえは 「${esc(qz.q.a)}」`, esc(qz.q.e));
+        scoreBox('qz-score', S.quiz);
+    }
+
+    /* ===================== 起動 ===================== */
+    renderNav();
+    drawLeverPlay();
+    newLever();
+    rubify(document.body);
+</script>
+</body>
+</html>
