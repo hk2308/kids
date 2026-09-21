@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ローマ字ゲットだぜ モンスターずかん</title>
+    <meta name="description" content="モンスターの名前をローマ字で打つとゲットできる、151匹コンプリートをめざすローマ字入力れんしゅうゲーム。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums; }
+        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .04em; }
+        .bounce-hover { transition: transform .12s cubic-bezier(.175,.885,.32,1.275); }
+        .bounce-hover:active { transform: scale(.94); }
+        @keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.12) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275) }
+        @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-7px) } 75% { transform: translateX(7px) } }
+        .shake { animation: shake .3s ease-in-out }
+        @keyframes wobble { 0%,100% { transform: rotate(0) } 20% { transform: rotate(-22deg) } 60% { transform: rotate(22deg) } }
+        .wobble { animation: wobble .5s ease-in-out 2 }
+        @keyframes throwball {
+            0% { transform: translate(-120px, 60px) scale(.5) rotate(0) }
+            70% { transform: translate(0,-6px) scale(1.1) rotate(420deg) }
+            100% { transform: translate(0,0) scale(1) rotate(450deg) }
+        }
+        .throwball { animation: throwball .5s ease-out }
+        @keyframes sparkle { 0% { transform: scale(.3); opacity: 1 } 100% { transform: scale(2.4); opacity: 0 } }
+        .sparkle { animation: sparkle .7s ease-out forwards }
+        .key { user-select: none }
+        rt { font-size: .55em; font-weight: 700; color: #b45309 }
+    </style>
+</head>
+<body class="bg-amber-50 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-rose-500 via-red-500 to-amber-500 text-white p-3 sm:p-4 shadow-lg sticky top-0 z-30">
+        <div class="max-w-5xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">⚪</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">ローマ字ゲットだぜ</h1>
+                    <p class="text-xs text-amber-50 font-bold hidden sm:block">名前を ローマ字で 打つと ゲットできる！</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <span id="hdr-count" class="num bg-white/20 backdrop-blur border border-white/30 font-black px-3 py-1.5 rounded-full text-sm">0 / 151</span>
+                <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+            </div>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[72px] z-20 bg-amber-50/95 backdrop-blur border-b border-amber-200">
+        <div class="max-w-5xl mx-auto flex gap-2 p-3 overflow-x-auto" id="tab-nav"></div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto w-full p-3 sm:p-6 flex-grow space-y-4">
+
+        <!-- ===== ゲット ===== -->
+        <section id="tab-catch" class="space-y-4">
+            <div class="bg-white rounded-3xl p-3 shadow-md border-2 border-amber-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="font-black text-sm text-slate-500">モード</span>
+                    <div id="mode-buttons" class="flex flex-wrap gap-2"></div>
+                    <label class="ml-auto flex items-center gap-1.5 text-sm font-black text-slate-600 cursor-pointer">
+                        <input type="checkbox" id="hint-toggle" class="w-4 h-4 accent-rose-500" checked>
+                        ローマ字を 見る
+                    </label>
+                </div>
+            </div>
+
+            <div id="wild-card" class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-amber-100 text-center relative overflow-hidden">
+                <div class="flex justify-between items-center text-xs font-black">
+                    <span id="wild-no" class="num bg-slate-100 text-slate-500 px-3 py-1 rounded-full">No.001</span>
+                    <span id="wild-status" class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full">はじめて！</span>
+                </div>
+
+                <div id="wild-stage" class="relative h-32 sm:h-36 flex items-center justify-center">
+                    <span id="wild-emoji" class="text-7xl sm:text-8xl">❓</span>
+                    <span id="ball" class="hidden absolute text-6xl">⚪</span>
+                    <span id="sparkles" class="absolute text-6xl opacity-0">✨</span>
+                </div>
+
+                <p id="wild-name" class="text-3xl sm:text-4xl font-black tracking-wider"></p>
+                <span id="wild-type" class="inline-block text-white text-xs font-black px-3 py-1 rounded-full mt-2"></span>
+
+                <!-- 1音ずつの ローマ字 -->
+                <div id="wild-units" class="flex flex-wrap justify-center gap-1 mt-4"></div>
+
+                <!-- 打った もじ -->
+                <div id="typed-box" class="mono mt-4 bg-slate-50 border-2 border-slate-200 rounded-2xl py-3 px-3 text-2xl sm:text-3xl font-black min-h-[3.75rem] break-all">
+                    <span id="typed-ok" class="text-rose-600"></span><span class="animate-pulse text-slate-300">|</span><span id="typed-rest" class="text-slate-300"></span>
+                </div>
+
+                <p id="catch-msg" class="font-black mt-3 min-h-[1.75rem]"></p>
+            </div>
+
+            <!-- キーボード -->
+            <div class="bg-white rounded-3xl p-3 shadow-md border-2 border-amber-100">
+                <div id="keyboard" class="space-y-1.5"></div>
+                <p class="text-center text-xs font-bold text-slate-400 mt-2">
+                    パソコンの キーボードでも 打てるよ（ローマ字入力・<ruby>半角英数<rt>はんかくえいすう</rt></ruby>）
+                </p>
+                <p id="ime-warn" class="hidden text-center text-xs font-black text-rose-600 mt-1">
+                    ⚠️ にほんご入力（IME）が オンに なっているみたい。<ruby>半角英数<rt>はんかくえいすう</rt></ruby>に きりかえるか、上の キーボードを タップしてね。
+                </p>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2">
+                <div class="bg-white rounded-2xl p-3 shadow border-2 border-amber-100 text-center">
+                    <p class="text-xs font-black text-slate-400">れんぞく せいかい</p>
+                    <p id="stat-streak" class="num text-2xl font-black text-rose-600">0</p>
+                </div>
+                <div class="bg-white rounded-2xl p-3 shadow border-2 border-amber-100 text-center">
+                    <p class="text-xs font-black text-slate-400">うちまちがい</p>
+                    <p id="stat-miss" class="num text-2xl font-black text-slate-500">0</p>
+                </div>
+                <div id="timer-box" class="bg-white rounded-2xl p-3 shadow border-2 border-amber-100 text-center">
+                    <p class="text-xs font-black text-slate-400">ゲットした かず</p>
+                    <p id="stat-got" class="num text-2xl font-black text-emerald-600">0</p>
+                </div>
+            </div>
+
+            <button onclick="skipWild()" class="w-full bg-white border-2 border-slate-200 text-slate-500 font-black py-3 rounded-2xl bounce-hover">
+                この こは にがす（べつの こに する）→
+            </button>
+        </section>
+
+        <!-- ===== ずかん ===== -->
+        <section id="tab-dex" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <div class="flex justify-between items-end">
+                    <h2 class="text-xl font-black">📕 モンスターずかん</h2>
+                    <p class="num font-black text-rose-600"><span id="dex-count">0</span> / 151</p>
+                </div>
+                <div class="h-4 bg-slate-100 rounded-full mt-2 overflow-hidden border border-slate-200">
+                    <div id="dex-bar" class="h-full bg-gradient-to-r from-rose-400 to-amber-400 transition-all" style="width:0%"></div>
+                </div>
+                <p id="dex-msg" class="text-sm font-bold text-slate-500 mt-2"></p>
+            </div>
+            <div id="dex-grid" class="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 gap-2"></div>
+            <button onclick="resetDex()" class="w-full bg-white border-2 border-rose-200 text-rose-500 font-black py-3 rounded-2xl bounce-hover text-sm">
+                ずかんを ぜんぶ けす
+            </button>
+        </section>
+
+        <!-- ===== ローマ字ひょう ===== -->
+        <section id="tab-table" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <h2 class="text-xl font-black">🔤 ローマ字ひょう</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    このゲームでは <span class="text-rose-600">どちらの 書きかたでも せいかい</span>（し＝shi / si など）。
+                </p>
+                <ul class="text-sm font-bold text-slate-600 mt-2 space-y-1 leading-relaxed">
+                    <li>・のばす音「ー」は <span class="mono text-rose-600">-</span> か、まえの 母音（ぼいん）を もう一度（リザード＝riza-do / rizaado）</li>
+                    <li>・小さい「ッ」は つぎの 子音（しいん）を 2回（ポッポ＝poppo）</li>
+                    <li>・「ン」は <span class="mono text-rose-600">n</span> でも <span class="mono text-rose-600">nn</span> でも OK</li>
+                </ul>
+            </div>
+            <div id="romaji-table" class="space-y-3"></div>
+        </section>
+    </main>
+
+    <footer class="text-center py-3 text-xs text-slate-400 font-bold px-4 leading-relaxed">
+        ローマ字ゲットだぜ © 2026<br>
+        ※ このアプリは ローマ字入力の れんしゅう用に 名前だけを つかった 非公式（ひこうしき）の ファンアプリです。
+    </footer>
+
+    <script>
+        /* ===================== モンスターの データ ===================== */
+        // [カタカナ名, タイプ, えもじ]  ※ 絵は 公式の ものでは なく 絵文字で あらわしています
+        const MONS = [
+            ['フシギダネ', 'くさ', '🌱'], ['フシギソウ', 'くさ', '🌿'], ['フシギバナ', 'くさ', '🌺'],
+            ['ヒトカゲ', 'ほのお', '🦎'], ['リザード', 'ほのお', '🔥'], ['リザードン', 'ほのお', '🐉'],
+            ['ゼニガメ', 'みず', '🐢'], ['カメール', 'みず', '💦'], ['カメックス', 'みず', '🛡️'],
+            ['キャタピー', 'むし', '🐛'], ['トランセル', 'むし', '🟢'], ['バタフリー', 'むし', '🦋'],
+            ['ビードル', 'むし', '🪱'], ['コクーン', 'むし', '🟡'], ['スピアー', 'むし', '🐝'],
+            ['ポッポ', 'ノーマル', '🐦'], ['ピジョン', 'ノーマル', '🕊️'], ['ピジョット', 'ノーマル', '🦅'],
+            ['コラッタ', 'ノーマル', '🐭'], ['ラッタ', 'ノーマル', '🐀'],
+            ['オニスズメ', 'ノーマル', '🐤'], ['オニドリル', 'ノーマル', '🦆'],
+            ['アーボ', 'どく', '🐍'], ['アーボック', 'どく', '🎯'],
+            ['ピカチュウ', 'でんき', '⚡'], ['ライチュウ', 'でんき', '🔶'],
+            ['サンド', 'じめん', '🦔'], ['サンドパン', 'じめん', '🌵'],
+            ['ニドラン♀', 'どく', '🐰'], ['ニドリーナ', 'どく', '🐇'], ['ニドクイン', 'どく', '👑'],
+            ['ニドラン♂', 'どく', '🐰'], ['ニドリーノ', 'どく', '🐇'], ['ニドキング', 'どく', '👑'],
+            ['ピッピ', 'ノーマル', '🧚'], ['ピクシー', 'ノーマル', '🌙'],
+            ['ロコン', 'ほのお', '🦊'], ['キュウコン', 'ほのお', '🔥'],
+            ['プリン', 'ノーマル', '🎈'], ['プクリン', 'ノーマル', '🎀'],
+            ['ズバット', 'どく', '🦇'], ['ゴルバット', 'どく', '🧛'],
+            ['ナゾノクサ', 'くさ', '🌿'], ['クサイハナ', 'くさ', '🌷'], ['ラフレシア', 'くさ', '🌺'],
+            ['パラス', 'むし', '🍄'], ['パラセクト', 'むし', '🍄'],
+            ['コンパン', 'むし', '🪰'], ['モルフォン', 'むし', '🦟'],
+            ['ディグダ', 'じめん', '🕳️'], ['ダグトリオ', 'じめん', '⛏️'],
+            ['ニャース', 'ノーマル', '🐱'], ['ペルシアン', 'ノーマル', '🐈'],
+            ['コダック', 'みず', '🦆'], ['ゴルダック', 'みず', '🌀'],
+            ['マンキー', 'かくとう', '🐒'], ['オコリザル', 'かくとう', '🙊'],
+            ['ガーディ', 'ほのお', '🐕'], ['ウインディ', 'ほのお', '🦁'],
+            ['ニョロモ', 'みず', '🐸'], ['ニョロゾ', 'みず', '🌊'], ['ニョロボン', 'みず', '💪'],
+            ['ケーシィ', 'エスパー', '🥄'], ['ユンゲラー', 'エスパー', '🔦'], ['フーディン', 'エスパー', '🔮'],
+            ['ワンリキー', 'かくとう', '💪'], ['ゴーリキー', 'かくとう', '🏋️'], ['カイリキー', 'かくとう', '🦾'],
+            ['マダツボミ', 'くさ', '🌱'], ['ウツドン', 'くさ', '🪴'], ['ウツボット', 'くさ', '🪤'],
+            ['メノクラゲ', 'みず', '🪼'], ['ドククラゲ', 'みず', '☠️'],
+            ['イシツブテ', 'いわ', '🪨'], ['ゴローン', 'いわ', '🗿'], ['ゴローニャ', 'いわ', '⛰️'],
+            ['ポニータ', 'ほのお', '🐎'], ['ギャロップ', 'ほのお', '🏇'],
+            ['ヤドン', 'みず', '🦥'], ['ヤドラン', 'みず', '🐚'],
+            ['コイル', 'でんき', '🧲'], ['レアコイル', 'でんき', '🔩'],
+            ['カモネギ', 'ノーマル', '🦆'], ['ドードー', 'ノーマル', '🐦'], ['ドードリオ', 'ノーマル', '🪶'],
+            ['パウワウ', 'みず', '🦭'], ['ジュゴン', 'みず', '🧊'],
+            ['ベトベター', 'どく', '🟣'], ['ベトベトン', 'どく', '🟪'],
+            ['シェルダー', 'みず', '🐚'], ['パルシェン', 'みず', '🦪'],
+            ['ゴース', 'ゴースト', '👻'], ['ゴースト', 'ゴースト', '💀'], ['ゲンガー', 'ゴースト', '😈'],
+            ['イワーク', 'いわ', '🪨'], ['スリープ', 'エスパー', '😴'], ['スリーパー', 'エスパー', '🕰️'],
+            ['クラブ', 'みず', '🦀'], ['キングラー', 'みず', '🦞'],
+            ['ビリリダマ', 'でんき', '🔴'], ['マルマイン', 'でんき', '💣'],
+            ['タマタマ', 'くさ', '🥚'], ['ナッシー', 'くさ', '🌴'],
+            ['カラカラ', 'じめん', '🦴'], ['ガラガラ', 'じめん', '🪃'],
+            ['サワムラー', 'かくとう', '🦵'], ['エビワラー', 'かくとう', '🥊'],
+            ['ベロリンガ', 'ノーマル', '👅'], ['ドガース', 'どく', '💨'], ['マタドガス', 'どく', '☁️'],
+            ['サイホーン', 'じめん', '🦏'], ['サイドン', 'じめん', '🦏'],
+            ['ラッキー', 'ノーマル', '🥚'], ['モンジャラ', 'くさ', '🌿'], ['ガルーラ', 'ノーマル', '🦘'],
+            ['タッツー', 'みず', '🌊'], ['シードラ', 'みず', '🐉'],
+            ['トサキント', 'みず', '🐠'], ['アズマオウ', 'みず', '🐡'],
+            ['ヒトデマン', 'みず', '⭐'], ['スターミー', 'みず', '🌟'],
+            ['バリヤード', 'エスパー', '🤡'], ['ストライク', 'むし', '🗡️'],
+            ['ルージュラ', 'こおり', '💋'], ['エレブー', 'でんき', '🔌'], ['ブーバー', 'ほのお', '🌋'],
+            ['カイロス', 'むし', '🪲'], ['ケンタロス', 'ノーマル', '🐂'],
+            ['コイキング', 'みず', '🐟'], ['ギャラドス', 'みず', '🐉'], ['ラプラス', 'みず', '🦕'],
+            ['メタモン', 'ノーマル', '🫠'], ['イーブイ', 'ノーマル', '🐶'],
+            ['シャワーズ', 'みず', '💧'], ['サンダース', 'でんき', '⚡'], ['ブースター', 'ほのお', '🔥'],
+            ['ポリゴン', 'ノーマル', '🔺'],
+            ['オムナイト', 'いわ', '🐚'], ['オムスター', 'いわ', '🌀'],
+            ['カブト', 'いわ', '🦂'], ['カブトプス', 'いわ', '⚔️'], ['プテラ', 'いわ', '🦅'],
+            ['カビゴン', 'ノーマル', '😪'],
+            ['フリーザー', 'こおり', '❄️'], ['サンダー', 'でんき', '🌩️'], ['ファイヤー', 'ほのお', '🔥'],
+            ['ミニリュウ', 'ドラゴン', '🐍'], ['ハクリュー', 'ドラゴン', '🐲'], ['カイリュー', 'ドラゴン', '🐉'],
+            ['ミュウツー', 'エスパー', '🧬'], ['ミュウ', 'エスパー', '💫']
+        ];
+
+        const TYPE_COLOR = {
+            'ノーマル': '#9ca3af', 'ほのお': '#f97316', 'みず': '#3b82f6', 'でんき': '#eab308',
+            'くさ': '#22c55e', 'こおり': '#38bdf8', 'かくとう': '#dc2626', 'どく': '#a855f7',
+            'じめん': '#ca8a04', 'エスパー': '#ec4899', 'むし': '#84cc16', 'いわ': '#a16207',
+            'ゴースト': '#7c3aed', 'ドラゴン': '#4f46e5'
+        };
+
+        /* ===================== ローマ字の しくみ ===================== */
+        // 1つの かなに たいして、ゆるして あげる 打ちかたを ぜんぶ ならべる
+        const KANA = {
+            ア: ['a'], イ: ['i'], ウ: ['u'], エ: ['e'], オ: ['o'],
+            カ: ['ka', 'ca'], キ: ['ki'], ク: ['ku', 'cu'], ケ: ['ke'], コ: ['ko', 'co'],
+            サ: ['sa'], シ: ['shi', 'si', 'ci'], ス: ['su'], セ: ['se'], ソ: ['so'],
+            タ: ['ta'], チ: ['chi', 'ti'], ツ: ['tsu', 'tu'], テ: ['te'], ト: ['to'],
+            ナ: ['na'], ニ: ['ni'], ヌ: ['nu'], ネ: ['ne'], ノ: ['no'],
+            ハ: ['ha'], ヒ: ['hi'], フ: ['fu', 'hu'], ヘ: ['he'], ホ: ['ho'],
+            マ: ['ma'], ミ: ['mi'], ム: ['mu'], メ: ['me'], モ: ['mo'],
+            ヤ: ['ya'], ユ: ['yu'], ヨ: ['yo'],
+            ラ: ['ra'], リ: ['ri'], ル: ['ru'], レ: ['re'], ロ: ['ro'],
+            ワ: ['wa'], ヲ: ['wo'], ン: ['n', 'nn', "n'"],
+            ガ: ['ga'], ギ: ['gi'], グ: ['gu'], ゲ: ['ge'], ゴ: ['go'],
+            ザ: ['za'], ジ: ['ji', 'zi'], ズ: ['zu'], ゼ: ['ze'], ゾ: ['zo'],
+            ダ: ['da'], ヂ: ['di', 'ji'], ヅ: ['du', 'zu'], デ: ['de'], ド: ['do'],
+            バ: ['ba'], ビ: ['bi'], ブ: ['bu'], ベ: ['be'], ボ: ['bo'],
+            パ: ['pa'], ピ: ['pi'], プ: ['pu'], ペ: ['pe'], ポ: ['po'],
+            ヴ: ['vu', 'bu']
+        };
+        const YOUON = {
+            キャ: ['kya'], キュ: ['kyu'], キョ: ['kyo'],
+            シャ: ['sha', 'sya'], シュ: ['shu', 'syu'], ショ: ['sho', 'syo'], シェ: ['she', 'sye'],
+            チャ: ['cha', 'tya', 'cya'], チュ: ['chu', 'tyu', 'cyu'], チョ: ['cho', 'tyo', 'cyo'], チェ: ['che', 'tye'],
+            ニャ: ['nya'], ニュ: ['nyu'], ニョ: ['nyo'],
+            ヒャ: ['hya'], ヒュ: ['hyu'], ヒョ: ['hyo'],
+            ミャ: ['mya'], ミュ: ['myu'], ミョ: ['myo'],
+            リャ: ['rya'], リュ: ['ryu'], リョ: ['ryo'],
+            ギャ: ['gya'], ギュ: ['gyu'], ギョ: ['gyo'],
+            ジャ: ['ja', 'zya', 'jya'], ジュ: ['ju', 'zyu', 'jyu'], ジョ: ['jo', 'zyo', 'jyo'], ジェ: ['je', 'zye'],
+            ビャ: ['bya'], ビュ: ['byu'], ビョ: ['byo'],
+            ピャ: ['pya'], ピュ: ['pyu'], ピョ: ['pyo'],
+            ファ: ['fa', 'fuxa'], フィ: ['fi', 'fuxi'], フェ: ['fe', 'fuxe'], フォ: ['fo', 'fuxo'], フュ: ['fyu'],
+            ティ: ['thi', 'ti'], トゥ: ['twu', 'tu'], ディ: ['dhi', 'di'], ドゥ: ['dwu', 'du'],
+            デュ: ['dyu'], テュ: ['tyu'],
+            ウィ: ['wi'], ウェ: ['we'], ウォ: ['wo'],
+            ヴァ: ['va'], ヴィ: ['vi'], ヴェ: ['ve'], ヴォ: ['vo'],
+            クァ: ['qa'], クィ: ['qi'], クェ: ['qe'], クォ: ['qo']
+            // ※ シィ・チィ などは 下の SMALL_V（小さい ァィゥェォ）で 自動で あつかう
+        };
+        const SMALL_V = { ァ: 'a', ィ: 'i', ゥ: 'u', ェ: 'e', ォ: 'o' };
+        const VOWELS = 'aiueo';
+
+        // カタカナ名 → 「1音ずつの かたまり」に わける
+        function buildUnits(name) {
+            const chars = [...name].filter(c => !'♀♂・'.includes(c));
+            const raw = [];
+            for (let i = 0; i < chars.length; i++) {
+                const c = chars[i], n = chars[i + 1] || '';
+                const pair = c + n;
+                if (YOUON[pair]) { raw.push({ k: pair, r: YOUON[pair] }); i++; continue; }
+                if (SMALL_V[n] && KANA[c]) {          // 小さい ァィゥェォ は 母音を たすだけでも OK
+                    const v = SMALL_V[n], base = KANA[c];
+                    raw.push({ k: pair, r: [...base.map(b => b + v), ...base.map(b => b + 'x' + v)] });
+                    i++; continue;
+                }
+                if (c === 'ッ') { raw.push({ k: 'ッ', sokuon: true }); continue; }
+                if (c === 'ー') { raw.push({ k: 'ー', choon: true }); continue; }
+                raw.push({ k: c, r: KANA[c] ? [...KANA[c]] : [c] });
+            }
+            const units = [];
+            for (let i = 0; i < raw.length; i++) {
+                const u = raw[i];
+                if (u.sokuon) {                        // 「ッ」は つぎの 子音を 2回
+                    const nx = raw[i + 1];
+                    if (nx && nx.r) {
+                        const dbl = nx.r.filter(r => !VOWELS.includes(r[0])).map(r => r[0] + r);
+                        units.push({ k: 'ッ' + nx.k, r: dbl.length ? dbl : ['xtu' + nx.r[0], 'ltu' + nx.r[0]] });
+                        i++;
+                    } else units.push({ k: 'ッ', r: ['xtu', 'ltu'] });
+                    continue;
+                }
+                if (u.choon) {                         // 「ー」は - でも、まえの 母音の くりかえしでも
+                    const prev = units[units.length - 1];
+                    const pv = prev ? prev.r[0].slice(-1) : '';
+                    units.push({ k: 'ー', r: VOWELS.includes(pv) ? ['-', pv] : ['-'] });
+                    continue;
+                }
+                units.push(u);
+            }
+            return units;
+        }
+
+        // 打った もじが 正しい とちゅうか／打ち終わったかを しらべる
+        function checkTyped(units, typed) {
+            let valid = false, complete = false, done = 0;
+            const seen = new Set(), stack = [[0, 0]];
+            while (stack.length) {
+                const [ui, tp] = stack.pop();
+                const key = ui + ',' + tp;
+                if (seen.has(key)) continue;
+                seen.add(key);
+                if (tp === typed.length) {
+                    valid = true;
+                    if (ui > done) done = ui;
+                    if (ui === units.length) complete = true;
+                    continue;
+                }
+                if (ui >= units.length) continue;      // よぶんに 打った
+                for (const r of units[ui].r) {
+                    if (typed.startsWith(r, tp)) stack.push([ui + 1, tp + r.length]);
+                    else if (r.startsWith(typed.slice(tp))) { valid = true; if (ui > done) done = ui; }
+                }
+            }
+            return { valid, complete, done };
+        }
+
+        const canonical = units => units.map(u => u.r[0]).join('');
+
+        // データを 1回だけ 作っておく
+        const DEX = MONS.map(([name, type, emoji], i) => {
+            const units = buildUnits(name);
+            return { no: i + 1, name, type, emoji, units, romaji: canonical(units) };
+        });
+
+        /* ===================== ほぞん ===================== */
+        const SAVE_KEY = 'kids-romaji-get-v1';
+        const save = { caught: [], miss: 0, best: 0 };
+        function load() {
+            try {
+                const raw = localStorage.getItem(SAVE_KEY);
+                if (!raw) return;
+                const o = JSON.parse(raw);
+                if (Array.isArray(o.caught)) save.caught = o.caught.filter(n => n >= 1 && n <= DEX.length);
+                if (typeof o.best === 'number') save.best = o.best;
+            } catch (e) { /* つかえない ときは からの ままで つづける */ }
+        }
+        function store() {
+            try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) { }
+        }
+        const isCaught = no => save.caught.includes(no);
+
+        /* ===================== じょうたい ===================== */
+        const state = { tab: 'catch', mode: 'order', wild: null, typed: '', streak: 0, miss: 0, got: 0, hint: true, busy: false };
+
+        const MODES = {
+            order: { name: '① じゅんばん', desc: 'No.1 から じゅんに' },
+            random: { name: '🎲 ランダム', desc: 'ぜんぶから てきとうに' },
+            newonly: { name: '🆕 まだのこ', desc: 'まだ ゲットしてない こだけ' }
+        };
+
+        /* ===================== がめん ===================== */
+        const TABS = { catch: '⚪ ゲット', dex: '📕 ずかん', table: '🔤 ローマ字ひょう' };
+
+        function renderNav() {
+            document.getElementById('tab-nav').innerHTML = Object.entries(TABS).map(([k, label]) => {
+                const on = state.tab === k;
+                return `<button onclick="setTab('${k}')" data-tab="${k}" class="${on ? 'bg-rose-500 text-white' : 'bg-white border-2 border-rose-200 text-slate-600'} font-black px-4 py-2 rounded-full text-sm whitespace-nowrap bounce-hover">${label}</button>`;
+            }).join('');
+        }
+
+        function setTab(k) {
+            state.tab = k;
+            ['catch', 'dex', 'table'].forEach(t =>
+                document.getElementById('tab-' + t).classList.toggle('hidden', t !== k));
+            renderNav();
+            if (k === 'dex') renderDex();
+            if (k === 'table') renderTable();
+        }
+
+        function renderModes() {
+            document.getElementById('mode-buttons').innerHTML = Object.entries(MODES).map(([k, m]) => {
+                const on = state.mode === k;
+                return `<button onclick="setMode('${k}')" data-mode="${k}" title="${m.desc}" class="${on ? 'bg-amber-500 text-white' : 'bg-white border-2 border-amber-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs whitespace-nowrap bounce-hover">${m.name}</button>`;
+            }).join('');
+        }
+
+        function setMode(k) {
+            state.mode = k;
+            renderModes();
+            nextWild();
+        }
+
+        const KEY_ROWS = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm-'];
+        function renderKeyboard() {
+            document.getElementById('keyboard').innerHTML = KEY_ROWS.map((row, i) => `
+                <div class="flex justify-center gap-1 ${i === 1 ? 'px-3' : ''}">
+                    ${[...row].map(c => `<button class="key bg-slate-100 hover:bg-rose-100 border-b-4 border-slate-300 rounded-lg font-black text-base sm:text-lg flex-1 max-w-[2.75rem] h-11 sm:h-12 bounce-hover"
+                        data-key="${c}" onclick="press('${c}')">${c}</button>`).join('')}
+                    ${i === 2 ? `<button class="key bg-slate-200 border-b-4 border-slate-400 rounded-lg font-black text-sm flex-1 max-w-[3.5rem] h-11 sm:h-12 bounce-hover" onclick="backspace()">⌫</button>` : ''}
+                </div>`).join('');
+        }
+
+        function pickWild() {
+            const notYet = DEX.filter(m => !isCaught(m.no));
+            if (state.mode === 'order') return notYet[0] || DEX[Math.floor(Math.random() * DEX.length)];
+            if (state.mode === 'newonly' && notYet.length) return notYet[Math.floor(Math.random() * notYet.length)];
+            return DEX[Math.floor(Math.random() * DEX.length)];
+        }
+
+        function nextWild() {
+            state.wild = pickWild();
+            state.typed = '';
+            state.busy = false;
+            document.getElementById('catch-msg').innerText = '';
+            document.getElementById('ball').classList.add('hidden');
+            document.getElementById('wild-emoji').classList.remove('hidden');
+            drawWild();
+        }
+
+        function drawWild() {
+            const m = state.wild;
+            document.getElementById('wild-no').innerText = 'No.' + String(m.no).padStart(3, '0');
+            const got = isCaught(m.no);
+            const st = document.getElementById('wild-status');
+            st.innerText = got ? 'ゲットずみ' : 'はじめて！';
+            st.className = got
+                ? 'bg-slate-100 text-slate-500 px-3 py-1 rounded-full'
+                : 'bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full';
+            const em = document.getElementById('wild-emoji');
+            em.innerText = m.emoji;
+            em.classList.add('pop');
+            setTimeout(() => em.classList.remove('pop'), 300);
+            document.getElementById('wild-name').innerText = m.name;
+            const tp = document.getElementById('wild-type');
+            tp.innerText = m.type;
+            tp.style.background = TYPE_COLOR[m.type] || '#9ca3af';
+            drawUnits();
+            drawTyped();
+        }
+
+        // 1音ずつの ローマ字（ヒント）
+        function drawUnits() {
+            const m = state.wild;
+            const { done } = checkTyped(m.units, state.typed);
+            document.getElementById('wild-units').innerHTML = m.units.map((u, i) => {
+                const cleared = i < done;
+                return `<span data-unit="${i}" class="${cleared ? 'bg-rose-500 text-white border-rose-600' : 'bg-white text-slate-600 border-slate-200'} border-2 rounded-xl px-2 py-1 leading-tight">
+                    <span class="block text-lg font-black">${u.k}</span>
+                    <span class="block mono text-xs font-black ${state.hint ? '' : 'invisible'}">${u.r[0]}</span>
+                </span>`;
+            }).join('');
+        }
+
+        function drawTyped() {
+            document.getElementById('typed-ok').innerText = state.typed;
+            const m = state.wild;
+            const rest = state.hint ? m.romaji.slice(0, 200) : '';
+            // のこりの ヒントは 打った ぶんを けずって 出す
+            let show = '';
+            if (state.hint) {
+                const { done } = checkTyped(m.units, state.typed);
+                show = m.units.slice(done).map(u => u.r[0]).join('');
+                const cur = state.typed.slice(canonicalPrefixLen(m.units, done));
+                if (cur && show.startsWith(cur)) show = show.slice(cur.length);
+            }
+            document.getElementById('typed-rest').innerText = show;
+        }
+        const canonicalPrefixLen = (units, n) => units.slice(0, n).reduce((a, u) => a + u.r[0].length, 0);
+
+        /* ===================== 入力 ===================== */
+        function press(ch) {
+            if (state.busy || state.tab !== 'catch' || !state.wild) return;
+            const next = state.typed + ch;
+            const r = checkTyped(state.wild.units, next);
+            if (!r.valid) {
+                state.miss++; state.streak = 0;
+                document.getElementById('stat-miss').innerText = state.miss;
+                document.getElementById('stat-streak').innerText = 0;
+                const box = document.getElementById('typed-box');
+                box.classList.add('shake', 'border-rose-400');
+                setTimeout(() => box.classList.remove('shake', 'border-rose-400'), 320);
+                flashKey(ch, false);
+                return;
+            }
+            state.typed = next;
+            flashKey(ch, true);
+            drawUnits();
+            drawTyped();
+            if (r.complete) doCatch();
+        }
+
+        function backspace() {
+            if (state.busy || !state.typed) return;
+            state.typed = state.typed.slice(0, -1);
+            drawUnits();
+            drawTyped();
+        }
+
+        function flashKey(ch, ok) {
+            const btn = document.querySelector(`#keyboard button[data-key="${ch}"]`);
+            if (!btn) return;
+            const cls = ok ? 'bg-emerald-200' : 'bg-rose-300';
+            btn.classList.add(cls);
+            setTimeout(() => btn.classList.remove(cls), 140);
+        }
+
+        function doCatch() {
+            const m = state.wild;
+            state.busy = true;
+            state.streak++;
+            state.got++;
+            const isNew = !isCaught(m.no);
+            if (isNew) { save.caught.push(m.no); store(); }
+            if (state.streak > save.best) { save.best = state.streak; store(); }
+            document.getElementById('stat-streak').innerText = state.streak;
+            document.getElementById('stat-got').innerText = state.got;
+            updateCount();
+
+            // ボールを なげる → ゆれる → ゲット
+            const ball = document.getElementById('ball'), em = document.getElementById('wild-emoji'), sp = document.getElementById('sparkles');
+            ball.classList.remove('hidden', 'wobble');
+            ball.classList.add('throwball');
+            document.getElementById('catch-msg').innerHTML = '<span class="text-slate-500">ボールを なげた！</span>';
+            setTimeout(() => {
+                em.classList.add('hidden');
+                ball.classList.remove('throwball');
+                ball.classList.add('wobble');
+            }, 500);
+            setTimeout(() => {
+                ball.classList.remove('wobble');
+                sp.classList.add('sparkle');
+                document.getElementById('catch-msg').innerHTML =
+                    `<span class="text-emerald-600 text-lg">🎉 ${m.name} を ゲットだぜ！</span>` +
+                    (isNew ? '<span class="text-rose-500 text-sm block">ずかんに とうろく されたよ</span>'
+                        : '<span class="text-slate-400 text-sm block">（ずかんには もう いるよ）</span>');
+            }, 1500);
+            setTimeout(() => { sp.classList.remove('sparkle'); nextWild(); }, 2400);
+        }
+
+        function skipWild() {
+            if (state.busy) return;
+            nextWild();
+        }
+
+        function updateCount() {
+            const n = save.caught.length;
+            document.getElementById('hdr-count').innerText = `${n} / ${DEX.length}`;
+            document.getElementById('dex-count').innerText = n;
+            document.getElementById('dex-bar').style.width = (n / DEX.length * 100) + '%';
+        }
+
+        /* ===================== ずかん ===================== */
+        function renderDex() {
+            updateCount();
+            const n = save.caught.length;
+            document.getElementById('dex-msg').innerText =
+                n === 0 ? 'まだ 1ぴきも いないよ。ゲットしに いこう！'
+                    : n === DEX.length ? '🏆 ぜんぶ そろった！ すごい！'
+                        : `あと ${DEX.length - n} ひき！ さいこう れんぞく ${save.best} かい`;
+            document.getElementById('dex-grid').innerHTML = DEX.map(m => {
+                if (!isCaught(m.no)) {
+                    return `<div data-no="${m.no}" class="bg-slate-100 border-2 border-slate-200 rounded-2xl p-2 text-center opacity-70">
+                        <p class="num text-[10px] font-black text-slate-400">No.${String(m.no).padStart(3, '0')}</p>
+                        <p class="text-3xl grayscale opacity-30">❓</p>
+                        <p class="text-xs font-black text-slate-400">？？？</p></div>`;
+                }
+                return `<div data-no="${m.no}" data-caught="1" class="bg-white border-2 rounded-2xl p-2 text-center shadow-sm" style="border-color:${TYPE_COLOR[m.type]}44">
+                    <p class="num text-[10px] font-black text-slate-400">No.${String(m.no).padStart(3, '0')}</p>
+                    <p class="text-3xl">${m.emoji}</p>
+                    <p class="text-xs font-black leading-tight">${m.name}</p>
+                    <p class="mono text-[10px] font-bold text-slate-400 break-all">${m.romaji}</p>
+                    <span class="inline-block text-white text-[9px] font-black px-1.5 rounded-full mt-0.5" style="background:${TYPE_COLOR[m.type]}">${m.type}</span></div>`;
+            }).join('');
+        }
+
+        function resetDex() {
+            if (!confirm('ずかんの きろくを ぜんぶ けします。いいですか？')) return;
+            save.caught = []; save.best = 0;
+            store();
+            renderDex();
+            updateCount();
+            nextWild();
+        }
+
+        /* ===================== ローマ字ひょう ===================== */
+        const TABLE_ROWS = [
+            ['あ', 'ア,カ,サ,タ,ナ,ハ,マ,ヤ,ラ,ワ'],
+            ['い', 'イ,キ,シ,チ,ニ,ヒ,ミ,,リ,'],
+            ['う', 'ウ,ク,ス,ツ,ヌ,フ,ム,ユ,ル,ン'],
+            ['え', 'エ,ケ,セ,テ,ネ,ヘ,メ,,レ,'],
+            ['お', 'オ,コ,ソ,ト,ノ,ホ,モ,ヨ,ロ,ヲ']
+        ];
+        function renderTable() {
+            const cell = k => {
+                if (!k) return '<td class="p-1"></td>';
+                const r = KANA[k] || [];
+                return `<td class="p-1 text-center border border-amber-100">
+                    <span class="block text-lg font-black">${k}</span>
+                    <span class="mono block text-xs font-black text-rose-600">${r[0]}</span>
+                    ${r.length > 1 ? `<span class="mono block text-[10px] text-slate-400">${r.slice(1).filter(x => x !== "n'").join(' / ')}</span>` : ''}
+                </td>`;
+            };
+            let html = `<div class="bg-white rounded-3xl p-3 shadow-md border-2 border-amber-100 overflow-x-auto">
+                <table class="w-full"><tbody>` +
+                TABLE_ROWS.map(([, line]) => `<tr>${line.split(',').map(cell).join('')}</tr>`).join('') +
+                `</tbody></table></div>`;
+            // にごる音・ようおん
+            const extra = [['が行・ざ行など', ['ガ', 'ギ', 'グ', 'ゲ', 'ゴ', 'ザ', 'ジ', 'ズ', 'ゼ', 'ゾ', 'ダ', 'デ', 'ド', 'バ', 'ビ', 'ブ', 'ベ', 'ボ', 'パ', 'ピ', 'プ', 'ペ', 'ポ']]];
+            html += extra.map(([title, list]) => `
+                <div class="bg-white rounded-3xl p-3 shadow-md border-2 border-amber-100 mt-3">
+                    <p class="font-black text-sm mb-2">${title}</p>
+                    <div class="flex flex-wrap gap-1.5">${list.map(k => `
+                        <span class="border-2 border-amber-100 rounded-xl px-2 py-1 text-center">
+                            <span class="block font-black">${k}</span>
+                            <span class="mono block text-xs font-black text-rose-600">${KANA[k][0]}</span>
+                        </span>`).join('')}</div>
+                </div>`).join('');
+            const chip = ([k, r]) => `
+                <span class="border-2 border-amber-100 rounded-xl px-2 py-1 text-center">
+                    <span class="block font-black">${k}</span>
+                    <span class="mono block text-xs font-black text-rose-600">${r[0]}</span>
+                    ${r.length > 1 && !r[1].includes('x') ? `<span class="mono block text-[10px] text-slate-400">${r[1]}</span>` : ''}
+                </span>`;
+            const isYouon = k => 'ャュョ'.includes(k[1]);
+            const groups = [
+                ['ねじれる音（ようおん）', Object.entries(YOUON).filter(([k]) => isYouon(k))],
+                ['そのほかの 音', Object.entries(YOUON).filter(([k]) => !isYouon(k))]
+            ];
+            html += groups.map(([title, list]) => `
+                <div class="bg-white rounded-3xl p-3 shadow-md border-2 border-amber-100 mt-3">
+                    <p class="font-black text-sm mb-2">${title}</p>
+                    <div class="flex flex-wrap gap-1.5">${list.map(chip).join('')}</div>
+                </div>`).join('');
+            document.getElementById('romaji-table').innerHTML = html;
+        }
+
+        /* ===================== キーボード ===================== */
+        document.addEventListener('keydown', e => {
+            if (state.tab !== 'catch') return;
+            if (e.isComposing || e.keyCode === 229) {          // にほんご入力が オンの とき
+                document.getElementById('ime-warn').classList.remove('hidden');
+                return;
+            }
+            if (e.key === 'Backspace') { e.preventDefault(); backspace(); return; }
+            if (e.key === 'Enter') { e.preventDefault(); skipWild(); return; }
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
+            if (!/^[a-zA-Z\-']$/.test(e.key)) return;
+            e.preventDefault();
+            press(e.key.toLowerCase());
+        });
+
+        document.getElementById('hint-toggle').addEventListener('change', e => {
+            state.hint = e.target.checked;
+            drawUnits();
+            drawTyped();
+        });
+
+        window.addEventListener('load', () => {
+            load();
+            renderNav();
+            renderModes();
+            renderKeyboard();
+            updateCount();
+            nextWild();
+        });
+    </script>
+</body>
+</html>
