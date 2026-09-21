@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>プログラミング道場</title>
+    <meta name="description" content="小学生からのプログラミング入門。タートルにめいれいして絵をかく、バブルソートと二分探索のうごく図、順次・分岐・繰り返し・変数・関数のミニ実験、バグさがし、ことばクイズ。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums }
+        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace }
+        .bounce-hover { transition: transform .12s cubic-bezier(.175,.885,.32,1.275) }
+        .bounce-hover:active { transform: scale(.94) }
+        @keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.1) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275) }
+        @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+        .shake { animation: shake .3s ease-in-out }
+        svg text { font-family: inherit }
+        rt { font-size: .55em; font-weight: 700; color: #4f46e5 }
+        input[type=range] { accent-color: #6366f1; width: 100% }
+        .run { outline: 3px solid #f59e0b; outline-offset: 1px }
+    </style>
+</head>
+<body class="bg-indigo-50 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-indigo-700 via-violet-600 to-fuchsia-600 text-white p-3 shadow-lg sticky top-0 z-30">
+        <div class="max-w-4xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">💻</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">プログラミング道場</h1>
+                    <p class="text-xs text-indigo-50 font-bold hidden sm:block">じゅんばんに めいれいすると、コンピューターは 動く</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[64px] z-20 bg-indigo-50/95 backdrop-blur border-b border-indigo-200">
+        <div class="max-w-4xl mx-auto flex gap-2 p-3 overflow-x-auto" id="tab-nav"></div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto w-full p-3 sm:p-5 flex-grow space-y-4">
+
+        <!-- ===== ① タートル ===== -->
+        <section id="tab-turtle" class="space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">🐢 カメに めいれいして 絵を かこう</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    プログラムは <b class="text-indigo-700">上から じゅんばんに</b> 実行{じっこう}される。
+                    ボタンで めいれいを ならべて ▶さいしょから を おして みよう。
+                </p>
+                <div id="tt-fig" class="mt-3"></div>
+                <div class="flex flex-wrap items-center gap-2 mt-2">
+                    <button onclick="ttRun()" class="bg-indigo-700 text-white font-black px-4 py-2 rounded-full text-sm bounce-hover">▶ さいしょから</button>
+                    <button onclick="ttStep()" class="bg-white border-2 border-indigo-300 text-indigo-700 font-black px-4 py-2 rounded-full text-sm bounce-hover">⏭ 1歩ずつ</button>
+                    <button onclick="ttStop()" class="bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-2 rounded-full text-sm bounce-hover">⏸ とめる</button>
+                    <span id="tt-count" class="num ml-auto bg-indigo-100 text-indigo-700 font-black px-3 py-1 rounded-full text-xs">0 / 0 手</span>
+                </div>
+                <div class="flex items-center gap-2 mt-2">
+                    <span class="text-xs font-black text-slate-500 whitespace-nowrap">はやさ</span>
+                    <input type="range" min="1" max="10" step="1" value="5" id="tt-speed" oninput="ttSpeed(this.value)">
+                </div>
+                <div id="tt-msg" class="text-sm font-bold text-slate-500 mt-1"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">📜 プログラム</h2>
+                    <span id="tt-where" class="bg-amber-100 text-amber-800 font-black px-3 py-1 rounded-full text-xs">いま いちばん そとに 追加</span>
+                    <button onclick="ttOut()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">⬅ そとに 出る</button>
+                    <button onclick="ttClear()" class="bg-white border-2 border-rose-200 text-rose-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">🗑 ぜんぶ 消す</button>
+                </div>
+                <div id="tt-prog" class="mt-3 space-y-1"></div>
+                <p class="font-black text-sm mt-4">➕ めいれいを 追加</p>
+                <div id="tt-pal" class="flex flex-wrap gap-2 mt-2"></div>
+                <p class="font-black text-sm mt-4">✨ おてほん（タップで 入れかえ）</p>
+                <div id="tt-preset" class="flex flex-wrap gap-2 mt-2"></div>
+            </div>
+        </section>
+
+        <!-- ===== ② アルゴリズム ===== -->
+        <section id="tab-algo" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">🧩 アルゴリズムって なに？</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    <b class="text-indigo-700">アルゴリズム</b>＝ 答えに たどりつく ための <b>手順{てじゅん}</b>の こと。
+                    同じ 答えでも、手順を くふうすると おどろくほど 速く なる。
+                </p>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">📊 ならべかえ（バブルソート）</h2>
+                    <button onclick="bsNew()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">🎲 シャッフル</button>
+                </div>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    やり方は たった 1つの ルール…<b class="text-indigo-700">となりと くらべて、左が 大きければ 入れかえる</b>。
+                    それを くりかえすと、大きい 数が あわの ように 右へ 上がって いく。
+                </p>
+                <div id="bs-fig" class="mt-3"></div>
+                <div class="flex flex-wrap items-center gap-2 mt-2">
+                    <button onclick="bsPlay()" class="bg-indigo-700 text-white font-black px-4 py-2 rounded-full text-sm bounce-hover">▶ じどうで</button>
+                    <button onclick="bsStep()" class="bg-white border-2 border-indigo-300 text-indigo-700 font-black px-4 py-2 rounded-full text-sm bounce-hover">⏭ 1回 くらべる</button>
+                    <button onclick="bsStop()" class="bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-2 rounded-full text-sm bounce-hover">⏸ とめる</button>
+                </div>
+                <div id="bs-info" class="bg-indigo-50 border-2 border-indigo-200 rounded-2xl p-3 text-sm font-bold leading-relaxed mt-2"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">🔍 さがし方で こんなに ちがう</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    小さい 順に ならんだ 15この 数から 1つを さがす。
+                    <b class="text-indigo-700">数を タップ</b>すると、2つの さがし方を くらべられる。
+                </p>
+                <div id="sr-pick" class="flex flex-wrap gap-1.5 mt-3"></div>
+                <div id="sr-res" class="mt-3 space-y-2"></div>
+                <p class="font-black text-sm mt-4">📈 数が ふえると どう なる？</p>
+                <div id="sr-table" class="mt-2 overflow-x-auto"></div>
+            </div>
+        </section>
+
+        <!-- ===== ③ プログラムの きほん ===== -->
+        <section id="tab-basic" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">🔤 どんな プログラムも この 5つで できて いる</h2>
+                <div id="bk-chips" class="flex flex-wrap gap-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100" data-bk="seq">
+                <h2 class="font-black">① 順次{じゅんじ}（じゅんばんに）</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    コンピューターは 書いた 順に 実行する。順番が ちがうと ぜんぜん ちがう ことが おきる。
+                    カップめんの 作り方を 正しい 順に ならべよう。
+                </p>
+                <div id="sq-list" class="space-y-2 mt-3"></div>
+                <div class="flex gap-2 mt-2">
+                    <button onclick="sqCheck()" class="bg-indigo-700 text-white font-black px-4 py-2 rounded-full text-sm bounce-hover">✅ 実行して みる</button>
+                    <button onclick="sqShuffle()" class="bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-2 rounded-full text-sm bounce-hover">🎲 まぜる</button>
+                </div>
+                <div id="sq-res" class="mt-2"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100" data-bk="if">
+                <h2 class="font-black">② 分岐{ぶんき}（もし 〜 なら）</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    じょうけんに よって やる ことを 変える。天気と 気温を 変えると、どの 行が 実行されるか 見える。
+                </p>
+                <div id="if-ctrl" class="flex flex-wrap gap-2 mt-3"></div>
+                <div class="mt-3"><input type="range" min="-5" max="35" step="1" value="20" id="if-temp" oninput="ifDraw()">
+                    <p class="text-xs font-black text-slate-600 text-center"><span id="if-tv" class="num">20</span> ℃</p></div>
+                <div id="if-code" class="mono text-xs sm:text-sm mt-3 space-y-1"></div>
+                <div id="if-res" class="bg-indigo-50 border-2 border-indigo-200 rounded-2xl p-3 text-sm font-bold mt-2"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100" data-bk="loop">
+                <h2 class="font-black">③ 繰り返し{くりかえし}（ループ）</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    同じ ことを 何回も やるとき、人は つかれるけれど コンピューターは 平気。
+                    ループを つかうと プログラムは 短いままで 何回でも できる。
+                </p>
+                <div class="mt-3"><input type="range" min="1" max="100" step="1" value="5" id="lp-n" oninput="lpDraw()">
+                    <p class="text-xs font-black text-slate-600 text-center">あいさつを <span id="lp-nv" class="num">5</span> 回</p></div>
+                <div class="grid sm:grid-cols-2 gap-3 mt-2">
+                    <div class="bg-rose-50 border-2 border-rose-200 rounded-2xl p-3">
+                        <p class="font-black text-rose-800 text-sm">😵 ループを つかわないと</p>
+                        <div id="lp-bad" class="mono text-xs mt-2 whitespace-pre-wrap leading-relaxed"></div>
+                    </div>
+                    <div class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-3">
+                        <p class="font-black text-emerald-800 text-sm">😀 ループを つかうと</p>
+                        <div id="lp-good" class="mono text-xs mt-2 whitespace-pre-wrap leading-relaxed"></div>
+                    </div>
+                </div>
+                <div id="lp-info" class="bg-indigo-50 border-2 border-indigo-200 rounded-2xl p-3 text-sm font-bold mt-2"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100" data-bk="var">
+                <h2 class="font-black">④ 変数{へんすう}（数を おぼえて おく 箱）</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    名前を つけた 箱に 数や 言葉を しまって おける。ゲームの とくてんは これで できて いる。
+                    <b class="text-indigo-700">てん ＝ てん ＋ 1</b> は「いまの てんに 1を 足して、また てんに しまう」という いみ。
+                </p>
+                <div id="vr-fig" class="mt-3"></div>
+                <div id="vr-btns" class="flex flex-wrap gap-2 mt-2"></div>
+                <div id="vr-log" class="mono text-xs bg-slate-50 border-2 border-slate-200 rounded-2xl p-3 mt-2 space-y-0.5"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100" data-bk="func">
+                <h2 class="font-black">⑤ 関数{かんすう}（じぶんで 作る めいれい）</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    よく つかう ひとまとまりに 名前を つけると、あとは その 名前を 呼ぶ だけ。
+                    わたす 数や 言葉を <b class="text-indigo-700">引数{ひきすう}</b>と いう。
+                </p>
+                <div class="mono text-xs sm:text-sm bg-slate-50 border-2 border-slate-200 rounded-2xl p-3 mt-3 leading-relaxed">
+                    <div>かんすう あいさつ(なまえ, かいすう) {</div>
+                    <div class="pl-4">くりかえし かいすう 回 {</div>
+                    <div class="pl-8">「こんにちは、」＋ なまえ ＋「さん！」と 言う</div>
+                    <div class="pl-4">}</div>
+                    <div>}</div>
+                </div>
+                <div class="flex flex-wrap gap-2 mt-3 items-center">
+                    <input id="fn-name" type="text" value="たろう" maxlength="8" class="border-2 border-indigo-200 rounded-xl px-3 py-2 font-bold text-sm w-28">
+                    <select id="fn-times" class="border-2 border-indigo-200 rounded-xl px-3 py-2 font-bold text-sm">
+                        <option value="1">1回</option><option value="2">2回</option><option value="3" selected>3回</option>
+                    </select>
+                    <button onclick="fnCall()" class="bg-indigo-700 text-white font-black px-4 py-2 rounded-full text-sm bounce-hover">▶ あいさつ を 呼ぶ</button>
+                    <button onclick="fnClear()" class="bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-2 rounded-full text-sm bounce-hover">消す</button>
+                </div>
+                <div id="fn-out" class="mono text-xs bg-slate-50 border-2 border-slate-200 rounded-2xl p-3 mt-2 space-y-0.5"></div>
+            </div>
+        </section>
+
+        <!-- ===== ④ バグさがし ===== -->
+        <section id="tab-bug" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">🐛 まちがい（バグ）を 見つけよう</h2>
+                    <span id="bg-score" class="num bg-indigo-100 text-indigo-700 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newBug()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    プログラムの まちがいを <b class="text-indigo-700">バグ</b>、直す ことを <b class="text-indigo-700">デバッグ</b>と いう。
+                    <b>おかしい 行を タップ</b>して みよう。
+                </p>
+                <div id="bug-goal" class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-3 font-black text-sm mt-3"></div>
+                <div id="bug-lines" class="mono text-xs sm:text-sm mt-3 space-y-1"></div>
+                <div id="bug-res" class="mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ⑤ クイズ ===== -->
+        <section id="tab-quiz" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">❓ ことばクイズ</h2>
+                    <span id="qz-score" class="num bg-indigo-100 text-indigo-700 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newQuiz()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <div id="qz-fields" class="flex flex-wrap gap-2 mt-3"></div>
+                <p id="qz-q" class="font-black text-base sm:text-lg mt-3 leading-relaxed"></p>
+                <div id="qz-choices" class="grid gap-2 mt-3"></div>
+                <div id="qz-res" class="mt-3"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center text-xs text-slate-400 font-bold p-4">プログラミング道場 © 2026</footer>
+
+<script>
+    /* ===================== きょうつう ===================== */
+    const rnd = n => Math.floor(Math.random() * n);
+    const pickOne = a => a[rnd(a.length)];
+    function shuffle(a) { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = rnd(i + 1); const t = b[i]; b[i] = b[j]; b[j] = t; } return b; }
+    function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    function svg(w, h, body) {
+        return `<svg viewBox="0 0 ${w} ${h}" class="w-full h-auto block mx-auto" style="max-width:${w}px" role="img">${body}</svg>`;
+    }
+    function resultBox(ok, title, body) {
+        return `<div class="pop ${ok ? 'bg-green-50 border-green-300' : 'bg-amber-50 border-amber-300'} border-2 rounded-2xl p-3">
+            <p class="font-black ${ok ? 'text-green-700' : 'text-amber-700'}">${title}</p>
+            <div class="font-bold text-sm mt-1 leading-relaxed">${body}</div></div>`;
+    }
+    const S = { bug: [0, 0], quiz: [0, 0] };
+    function scoreBox(id, s) { document.getElementById(id).innerText = `${s[0]} / ${s[1]}`; }
+    function markChoices(sel, isRight, picked, cls) {
+        document.querySelectorAll(sel).forEach((el, j) => {
+            el.className = `${isRight(j) ? 'bg-green-50 border-green-500' : (j === picked ? 'bg-red-50 border-red-400 shake' : 'bg-white border-slate-200 opacity-60')} border-2 ${cls}`;
+        });
+    }
+
+    /* 漢字{よみ} を ルビに（あとから 出す 文にも かかる） */
+    const RUBY_RE = /([一-鿿々]+)\{([^{}]+)\}/g;
+    function rubySkip(el) {
+        for (let n = el; n; n = n.parentNode) {
+            const tag = n.nodeType === 1 ? n.tagName.toLowerCase() : '';
+            if (tag === 'script' || tag === 'style' || tag === 'svg' || tag === 'ruby') return true;
+        }
+        return false;
+    }
+    function rubifyText(node) {
+        const t = node.nodeValue;
+        if (t.indexOf('{') < 0 || !node.parentNode || rubySkip(node.parentNode)) return;
+        RUBY_RE.lastIndex = 0;
+        if (!RUBY_RE.test(t)) return;
+        RUBY_RE.lastIndex = 0;
+        const frag = document.createDocumentFragment();
+        let last = 0, m;
+        while ((m = RUBY_RE.exec(t))) {
+            if (m.index > last) frag.appendChild(document.createTextNode(t.slice(last, m.index)));
+            const ruby = document.createElement('ruby');
+            ruby.appendChild(document.createTextNode(m[1]));
+            const rt = document.createElement('rt');
+            rt.textContent = m[2];
+            ruby.appendChild(rt);
+            frag.appendChild(ruby);
+            last = m.index + m[0].length;
+        }
+        if (last < t.length) frag.appendChild(document.createTextNode(t.slice(last)));
+        node.parentNode.replaceChild(frag, node);
+    }
+    function rubify(root) {
+        if (root.nodeType === 3) return rubifyText(root);
+        if (root.nodeType !== 1 || rubySkip(root)) return;
+        const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        const list = [];
+        while (w.nextNode()) if (w.currentNode.nodeValue.indexOf('{') >= 0) list.push(w.currentNode);
+        list.forEach(rubifyText);
+    }
+    new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(rubify)))
+        .observe(document.body, { childList: true, subtree: true });
+
+    const TABS = { turtle: '🐢 タートル', algo: '🧩 アルゴリズム', basic: '🔤 きほんの5つ', bug: '🐛 バグさがし', quiz: '❓ クイズ' };
+    let tab = 'turtle';
+    function renderNav() {
+        document.getElementById('tab-nav').innerHTML = Object.entries(TABS).map(([k, label]) =>
+            `<button onclick="setTab('${k}')" data-tab="${k}" class="${tab === k ? 'bg-indigo-700 text-white' : 'bg-white border-2 border-indigo-200 text-slate-600'} font-black px-4 py-2 rounded-full text-sm whitespace-nowrap bounce-hover">${label}</button>`).join('');
+    }
+    function setTab(k) {
+        tab = k;
+        ttStop(); bsStop();
+        Object.keys(TABS).forEach(t => document.getElementById('tab-' + t).classList.toggle('hidden', t !== k));
+        renderNav();
+        if (k === 'algo' && !algoReady) { bsNew(); srDraw(); algoReady = true; }
+        if (k === 'basic' && !basicReady) { drawChips(); sqShuffle(); ifDraw(); lpDraw(); vrDraw(); fnClear(); basicReady = true; }
+        if (k === 'bug' && !bug) newBug();
+        if (k === 'quiz' && !qz) newQuiz();
+    }
+
+    /* =====================================================================
+       ① タートルグラフィックス
+       ===================================================================== */
+    // めいれい: {c:'fd',n} 前に すすむ / {c:'rt'|'lt',n} まわる
+    //           {c:'pen',v} ペン / {c:'col',v} 色 / {c:'rep',n,body:[]} くりかえし
+    let prog = [];
+    let target = [];                         // めいれいを 入れる ばしょ（[]＝いちばん そと）
+    const COLS = [['#4f46e5', 'あお'], ['#dc2626', 'あか'], ['#16a34a', 'みどり'], ['#f59e0b', 'きいろ'], ['#db2777', 'ピンク']];
+    const MAXACT = 5000;                     // 手数の 上限（無限ループで 固まらない ように）
+
+    const Ps = p => p.join('-');
+    const Pp = s => (s === '' ? [] : s.split('-').map(Number));
+    function listAt(p) { let l = prog; for (const i of p) l = l[i].body; return l; }
+    function stepAt(p) { return listAt(p.slice(0, -1))[p[p.length - 1]]; }
+    function validPath(p) {
+        let l = prog;
+        for (const i of p) { if (!l[i] || l[i].c !== 'rep') return false; l = l[i].body; }
+        return true;
+    }
+
+    const PAL = [
+        { label: '🐢 まえに すすむ', mk: () => ({ c: 'fd', n: 50 }) },
+        { label: '↩ 右に まわる', mk: () => ({ c: 'rt', n: 90 }) },
+        { label: '↪ 左に まわる', mk: () => ({ c: 'lt', n: 90 }) },
+        { label: '🔁 くりかえし', mk: () => ({ c: 'rep', n: 4, body: [] }) },
+        { label: '✏️ ペンを 上げる', mk: () => ({ c: 'pen', v: 0 }) },
+        { label: '✒️ ペンを 下げる', mk: () => ({ c: 'pen', v: 1 }) }
+    ];
+    function drawPal() {
+        const deep = target.length >= 2;      // くりかえしは 2じゅうまで
+        document.getElementById('tt-pal').innerHTML = PAL.map((c, i) =>
+            `<button onclick="ttAdd(${i})" data-pal="${i}" ${c.mk().c === 'rep' && deep ? 'disabled' : ''}
+                class="${c.mk().c === 'rep' && deep ? 'bg-slate-100 text-slate-400' : 'bg-white border-2 border-indigo-300 text-indigo-700'} font-black px-3 py-2 rounded-2xl text-xs bounce-hover">${c.label}</button>`).join('') +
+            COLS.map(([hex, n], i) =>
+                `<button onclick="ttAddCol(${i})" data-col="${n}" class="font-black px-3 py-2 rounded-2xl text-xs text-white bounce-hover" style="background:${hex}">🎨 ${n}</button>`).join('');
+    }
+    function ttAdd(i) {
+        const s = PAL[i].mk();
+        if (s.c === 'rep' && target.length >= 2) return;
+        listAt(target).push(s);
+        if (s.c === 'rep') target = target.concat(listAt(target).length - 1);  // くりかえしの 中に 入る
+        afterEdit();
+    }
+    function ttAddCol(i) { listAt(target).push({ c: 'col', v: COLS[i][0] }); afterEdit(); }
+    function ttOut() { target = target.slice(0, -1); afterEdit(); }
+    function ttClear() { prog = []; target = []; afterEdit(); }
+    function ttDel(ps) {
+        const p = Pp(ps);
+        listAt(p.slice(0, -1)).splice(p[p.length - 1], 1);
+        target = [];                          // 番号が ずれる ので 追加先は そとに もどす
+        afterEdit();
+    }
+    function ttN(ps, d) {
+        const s = stepAt(Pp(ps));
+        if (s.c === 'fd') s.n = Math.max(10, Math.min(200, s.n + d * 10));
+        else if (s.c === 'rep') s.n = Math.max(1, Math.min(10, s.n + d));
+        else s.n = Math.max(15, Math.min(180, s.n + d * 15));
+        afterEdit();
+    }
+    function ttTarget(ps) { const p = Pp(ps); if (validPath(p)) target = p; afterEdit(); }
+
+    function label(s) {
+        if (s.c === 'fd') return `🐢 まえに <b class="num">${s.n}</b> すすむ`;
+        if (s.c === 'rt') return `↩ 右に <b class="num">${s.n}</b>° まわる`;
+        if (s.c === 'lt') return `↪ 左に <b class="num">${s.n}</b>° まわる`;
+        if (s.c === 'pen') return s.v ? '✒️ ペンを 下げる（かく）' : '✏️ ペンを 上げる（かかない）';
+        if (s.c === 'col') return `🎨 色を かえる <span style="color:${s.v}">■</span>`;
+        return `🔁 <b class="num">${s.n}</b> 回 くりかえす`;
+    }
+    function rowBtns(ps, withN) {
+        return (withN ? `<button onclick="ttN('${ps}',-1)" class="w-7 h-7 rounded-full bg-slate-100 font-black text-slate-600 bounce-hover">−</button>
+                <button onclick="ttN('${ps}',1)" class="w-7 h-7 rounded-full bg-slate-100 font-black text-slate-600 bounce-hover">＋</button>` : '') +
+            `<button onclick="ttDel('${ps}')" class="w-7 h-7 rounded-full bg-rose-100 font-black text-rose-600 bounce-hover">🗑</button>`;
+    }
+    function rows(list, path) {
+        return list.map((s, i) => {
+            const p = path.concat(i), ps = Ps(p);
+            const head = `<div class="flex items-center gap-1.5 text-sm font-bold" data-line="${ps}" data-cmd="${s.c}">
+                    <span class="num text-[10px] text-slate-400 w-4 text-right">${i + 1}</span>
+                    <span class="flex-grow">${label(s)}</span>${rowBtns(ps, s.c !== 'pen' && s.c !== 'col')}</div>`;
+            if (s.c !== 'rep') return `<div class="bg-slate-50 border-2 border-slate-200 rounded-xl px-2 py-1.5">${head}</div>`;
+            const isT = Ps(target) === ps;
+            return `<div class="bg-violet-50 border-2 ${isT ? 'border-amber-400' : 'border-violet-200'} rounded-xl px-2 py-1.5">
+                    ${head}
+                    <div class="pl-3 ml-1 border-l-4 border-violet-300 space-y-1 mt-1" data-body="${ps}">
+                        ${s.body.length ? rows(s.body, p) : '<p class="text-xs font-bold text-slate-400 py-1">（この 中は まだ からっぽ）</p>'}
+                    </div>
+                    ${isT ? '<p class="text-[11px] font-black text-amber-700 pl-3 mt-1">⬆ いま ここに 追加される</p>'
+                          : `<button onclick="ttTarget('${ps}')" class="text-[11px] font-black text-violet-700 bg-white border-2 border-violet-200 rounded-full px-2 py-0.5 mt-1 ml-3 bounce-hover">この 中に 入れる</button>`}
+                </div>`;
+        }).join('');
+    }
+    function renderProg() {
+        const host = document.getElementById('tt-prog');
+        host.innerHTML = prog.length ? rows(prog, [])
+            : '<p class="text-sm font-bold text-slate-400">下の ボタンを おして めいれいを ならべよう。</p>';
+        document.getElementById('tt-where').innerText = target.length === 0
+            ? 'いま いちばん そとに 追加' : `いま ${target.length}じゅうめの くりかえしの 中に 追加`;
+        drawPal();
+    }
+
+    /* めいれいを「実際に 動く 1手ずつ」に ひらく */
+    function flatten(list, path, out) {
+        for (let i = 0; i < list.length; i++) {
+            const s = list[i], p = path.concat(i);
+            if (out.length > MAXACT) return;
+            if (s.c === 'rep') { for (let k = 0; k < s.n; k++) flatten(s.body, p, out); }
+            else out.push({ s, p });
+        }
+    }
+    let acts = [], ai = 0, ttTimer = null, ttSp = 5, fit = null;
+    function compile() {
+        acts = [];
+        flatten(prog, [], acts);
+        const over = acts.length > MAXACT;
+        if (over) acts = acts.slice(0, MAXACT);
+        const all = simulate(acts.length);
+        let x0 = -20, y0 = -20, x1 = 20, y1 = 20;   // スタート地点は いつも 見える ように
+        all.segs.forEach(g => {
+            x0 = Math.min(x0, g.x1, g.x2); x1 = Math.max(x1, g.x1, g.x2);
+            y0 = Math.min(y0, g.y1, g.y2); y1 = Math.max(y1, g.y1, g.y2);
+        });
+        x0 = Math.min(x0, all.x); x1 = Math.max(x1, all.x);
+        y0 = Math.min(y0, all.y); y1 = Math.max(y1, all.y);
+        const W = 560, H = 340, pad = 26;
+        const k = Math.min(1.6, (W - pad * 2) / Math.max(1, x1 - x0), (H - pad * 2) / Math.max(1, y1 - y0));
+        fit = { k, ox: W / 2 - k * (x0 + x1) / 2, oy: H / 2 - k * (y0 + y1) / 2, W, H };
+        document.getElementById('tt-msg').innerHTML = over
+            ? `⚠️ 手数が 多すぎるので ${MAXACT}手までに して います。くりかえしの 回数を へらして みよう。`
+            : (acts.length === 0 ? 'めいれいが まだ ないよ。' : '');
+        return acts.length;
+    }
+    function simulate(k) {
+        let x = 0, y = 0, a = 0, pen = 1, col = '#4f46e5';
+        const segs = [];
+        for (let i = 0; i < k; i++) {
+            const s = acts[i].s;
+            if (s.c === 'fd') {
+                const r = a * Math.PI / 180;
+                const nx = x + Math.sin(r) * s.n, ny = y - Math.cos(r) * s.n;
+                if (pen) segs.push({ x1: x, y1: y, x2: nx, y2: ny, col });
+                x = nx; y = ny;
+            } else if (s.c === 'rt') a += s.n;
+            else if (s.c === 'lt') a -= s.n;
+            else if (s.c === 'pen') pen = s.v;
+            else if (s.c === 'col') col = s.v;
+        }
+        return { segs, x, y, a, pen, col };
+    }
+    function drawTurtle() {
+        const st = simulate(ai);
+        const { k, ox, oy, W, H } = fit;
+        const tx = v => (ox + k * v).toFixed(1);
+        const ty = v => (oy + k * v).toFixed(1);
+        let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="#eef2ff"/>`;
+        for (let x = 40; x < W; x += 40) g += `<line x1="${x}" y1="0" x2="${x}" y2="${H}" stroke="#e0e7ff" stroke-width="1"/>`;
+        for (let y = 40; y < H; y += 40) g += `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="#e0e7ff" stroke-width="1"/>`;
+        g += `<circle cx="${tx(0)}" cy="${ty(0)}" r="4" fill="#a5b4fc"/>`;
+        st.segs.forEach(s => {
+            g += `<line x1="${tx(s.x1)}" y1="${ty(s.y1)}" x2="${tx(s.x2)}" y2="${ty(s.y2)}" stroke="${s.col}" stroke-width="3.5" stroke-linecap="round"/>`;
+        });
+        // カメ（むいて いる 方向に とがった 三角）
+        const r = st.a * Math.PI / 180, cx = +tx(st.x), cy = +ty(st.y);
+        const pt = (len, ang) => `${(cx + Math.sin(r + ang) * len).toFixed(1)},${(cy - Math.cos(r + ang) * len).toFixed(1)}`;
+        g += `<polygon points="${pt(15, 0)} ${pt(11, 2.4)} ${pt(11, -2.4)}" fill="#065f46" stroke="#fff" stroke-width="2"/>`;
+        if (!st.pen) g += `<text x="${cx + 14}" y="${cy - 10}" font-size="13">✏️</text>`;
+        document.getElementById('tt-fig').innerHTML = svg(W, H, g);
+        document.getElementById('tt-count').innerText = `${ai} / ${acts.length} 手`;
+        const now = ai > 0 ? acts[ai - 1].p : null;
+        document.querySelectorAll('[data-line]').forEach(el => {
+            const p = Pp(el.dataset.line);
+            const on = !!now && p.every((v, i) => now[i] === v);   // いま 動いて いる 行（くりかえしも 光る）
+            el.parentElement.classList.toggle('run', on && ttTimer !== null || on && stepping);
+        });
+    }
+    let stepping = false;
+    function ttStop() { if (ttTimer) { clearInterval(ttTimer); ttTimer = null; } stepping = false; if (fit) drawTurtle(); }
+    function ttSpeed(v) { ttSp = +v; if (ttTimer) { clearInterval(ttTimer); ttTimer = setInterval(tick, 700 / ttSp); } }
+    function tick() { if (ai >= acts.length) { ttStop(); return; } ai++; drawTurtle(); }
+    function ttRun() {
+        ttStop(); compile(); ai = 0; drawTurtle();
+        if (!acts.length) return;
+        ttTimer = setInterval(tick, 700 / ttSp);
+    }
+    function ttStep() {
+        if (!ttTimer && (ai >= acts.length || !acts.length)) { compile(); ai = 0; }
+        ttStop(); stepping = true;
+        if (ai < acts.length) ai++;
+        drawTurtle();
+    }
+    function afterEdit() { ttStop(); renderProg(); compile(); ai = acts.length; drawTurtle(); }
+
+    const PRESETS = [
+        ['⬛ 四角', [{ c: 'rep', n: 4, body: [{ c: 'fd', n: 80 }, { c: 'rt', n: 90 }] }]],
+        ['🔺 三角', [{ c: 'rep', n: 3, body: [{ c: 'fd', n: 90 }, { c: 'rt', n: 120 }] }]],
+        ['⭐ ほし', [{ c: 'col', v: '#f59e0b' }, { c: 'rep', n: 5, body: [{ c: 'fd', n: 120 }, { c: 'rt', n: 144 }] }]],
+        ['🪜 かいだん', [{ c: 'rep', n: 5, body: [{ c: 'fd', n: 40 }, { c: 'rt', n: 90 }, { c: 'fd', n: 40 }, { c: 'lt', n: 90 }] }]],
+        // 三角（120°の 対称）を 45°ずつ まわすと 8まいが ぜんぶ ちがう むきに なる
+        ['🌸 花（2じゅう ループ）', [{ c: 'col', v: '#db2777' }, { c: 'rep', n: 8, body: [{ c: 'rep', n: 3, body: [{ c: 'fd', n: 70 }, { c: 'rt', n: 120 }] }, { c: 'rt', n: 45 }] }]],
+        ['〰️ なみ', [{ c: 'col', v: '#16a34a' }, { c: 'rep', n: 6, body: [{ c: 'rep', n: 3, body: [{ c: 'fd', n: 20 }, { c: 'lt', n: 30 }] }, { c: 'rep', n: 3, body: [{ c: 'fd', n: 20 }, { c: 'rt', n: 30 }] }] }]]
+    ];
+    function drawPreset() {
+        document.getElementById('tt-preset').innerHTML = PRESETS.map((p, i) =>
+            `<button onclick="ttPreset(${i})" data-preset="${i}" class="bg-white border-2 border-violet-300 text-violet-700 font-black px-3 py-2 rounded-2xl text-xs bounce-hover">${p[0]}</button>`).join('');
+    }
+    function ttPreset(i) {
+        prog = JSON.parse(JSON.stringify(PRESETS[i][1]));
+        target = [];
+        renderProg(); compile(); ai = 0; ttRun();
+    }
+
+    /* =====================================================================
+       ② アルゴリズム
+       ===================================================================== */
+    let algoReady = false;
+
+    /* --- バブルソート --- */
+    let bsSteps = [], bsi = 0, bsTimer = null;
+    function bsNew() {
+        bsStop();
+        const arr = shuffle([3, 5, 8, 11, 14, 17, 19, 20]).slice(0, 8);
+        bsSteps = [{ arr: arr.slice(), a: -1, b: -1, swap: false, fixed: 0, cmp: 0, swp: 0 }];
+        const a = arr.slice();
+        let cmp = 0, swp = 0;
+        for (let i = 0; i < a.length - 1; i++) {
+            for (let j = 0; j < a.length - 1 - i; j++) {
+                cmp++;
+                const sw = a[j] > a[j + 1];
+                if (sw) { const t = a[j]; a[j] = a[j + 1]; a[j + 1] = t; swp++; }
+                bsSteps.push({ arr: a.slice(), a: j, b: j + 1, swap: sw, fixed: i, cmp, swp });
+            }
+        }
+        bsSteps.push({ arr: a.slice(), a: -1, b: -1, swap: false, fixed: a.length, cmp, swp, done: true });
+        bsi = 0;
+        bsDraw();
+    }
+    function bsDraw() {
+        const st = bsSteps[bsi], n = st.arr.length;
+        const W = 560, H = 210, bw = 54, gap = 8, x0 = (W - (bw * n + gap * (n - 1))) / 2, B = 176;
+        let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="#eef2ff"/>`;
+        st.arr.forEach((v, i) => {
+            const h = 16 + v * 6.4, x = x0 + i * (bw + gap);
+            const sorted = i >= n - st.fixed;
+            const on = i === st.a || i === st.b;
+            const col = on ? (st.swap ? '#dc2626' : '#f59e0b') : sorted ? '#16a34a' : '#6366f1';
+            g += `<rect x="${x}" y="${B - h}" width="${bw}" height="${h}" rx="6" fill="${col}"/>
+                  <text x="${x + bw / 2}" y="${B - h - 6}" text-anchor="middle" font-size="13" font-weight="900" fill="${col}">${v}</text>`;
+            if (on) g += `<text x="${x + bw / 2}" y="${B + 22}" text-anchor="middle" font-size="16">👀</text>`;
+        });
+        g += `<line x1="20" y1="${B}" x2="${W - 20}" y2="${B}" stroke="#c7d2fe" stroke-width="2.5"/>`;
+        document.getElementById('bs-fig').innerHTML = svg(W, H, g);
+        const done = !!st.done;
+        document.getElementById('bs-info').innerHTML = done
+            ? `🎉 ならびかえ 完了！　くらべた 回数 <b class="num">${st.cmp}</b>、入れかえた 回数 <b class="num">${st.swp}</b>。<br>
+               8この 数を ならべるのに くらべるのは <b>7＋6＋5＋4＋3＋2＋1＝28回</b>。
+               <span class="text-slate-600">数が 2倍に なると 回数は だいたい 4倍。だから たくさんの データには もっと 速い ならべ方が つかわれる。</span>`
+            : (st.a < 0
+                ? `スタート！ となりどうし（左から）を くらべて いくよ。`
+                : `${st.a + 1}番めと ${st.b + 1}番めを くらべた → <b class="${st.swap ? 'text-rose-700' : 'text-slate-600'}">${st.swap ? '左が 大きいので 入れかえた' : 'そのまま でよい'}</b><br>
+                   くらべた 回数 <b class="num">${st.cmp}</b>／入れかえ <b class="num">${st.swp}</b>
+                   <span class="text-green-700 font-black">緑は もう ばしょが 決まった 数</span>`);
+    }
+    function bsStep() { bsStop(); if (bsi < bsSteps.length - 1) bsi++; bsDraw(); }
+    function bsPlay() { bsStop(); bsTimer = setInterval(() => { if (bsi >= bsSteps.length - 1) { bsStop(); return; } bsi++; bsDraw(); }, 420); }
+    function bsStop() { if (bsTimer) { clearInterval(bsTimer); bsTimer = null; } }
+
+    /* --- さがし方（順番に／半分に わけて） --- */
+    const SARR = [2, 4, 7, 9, 13, 16, 21, 25, 30, 34, 38, 42, 47, 51, 60];
+    let srTarget = 47;
+    function linearSteps(t) { const v = []; for (let i = 0; i < SARR.length; i++) { v.push(i); if (SARR[i] === t) break; } return v; }
+    function binarySteps(t) {
+        const v = []; let lo = 0, hi = SARR.length - 1;
+        while (lo <= hi) {
+            const m = Math.floor((lo + hi) / 2);
+            v.push(m);
+            if (SARR[m] === t) break;
+            if (SARR[m] < t) lo = m + 1; else hi = m - 1;
+        }
+        return v;
+    }
+    function srPick(t) { srTarget = t; srDraw(); }
+    function srDraw() {
+        document.getElementById('sr-pick').innerHTML = SARR.map(v =>
+            `<button onclick="srPick(${v})" data-sr="${v}" class="${v === srTarget ? 'bg-indigo-700 text-white' : 'bg-white border-2 border-indigo-200 text-slate-600'} num font-black w-10 h-10 rounded-xl text-sm bounce-hover">${v}</button>`).join('');
+        const li = linearSteps(srTarget), bi = binarySteps(srTarget);
+        const row = (visited, col) => SARR.map((v, i) => {
+            const k = visited.indexOf(i);
+            return `<span class="num inline-flex flex-col items-center justify-center w-9 h-11 rounded-lg text-xs font-black
+                ${k < 0 ? 'bg-slate-100 text-slate-400' : (v === srTarget ? 'bg-green-500 text-white' : col)}">
+                <span>${v}</span><span class="text-[9px]">${k < 0 ? '' : k + 1 + '回め'}</span></span>`;
+        }).join('');
+        document.getElementById('sr-res').innerHTML = `
+            <div class="bg-rose-50 border-2 border-rose-200 rounded-2xl p-3">
+                <p class="font-black text-sm text-rose-800">🐌 順番に さがす（線形探索{せんけいたんさく}）… <span class="num">${li.length}</span>回 見た</p>
+                <div class="flex flex-wrap gap-1 mt-2">${row(li, 'bg-rose-300 text-rose-900')}</div>
+                <p class="text-xs font-bold text-slate-600 mt-2">左から 1つずつ たしかめる。かんたんだけど、うしろに ある 数だと 回数が 多く なる。</p>
+            </div>
+            <div class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-3">
+                <p class="font-black text-sm text-emerald-800">🐇 半分に わけて さがす（二分探索{にぶんたんさく}）… <span class="num">${bi.length}</span>回 見た</p>
+                <div class="flex flex-wrap gap-1 mt-2">${row(bi, 'bg-emerald-300 text-emerald-900')}</div>
+                <p class="text-xs font-bold text-slate-600 mt-2">まん中を 見て、さがす 数より 大きければ 左半分、小さければ 右半分だけ を さがす。
+                <b>1回 見る ごとに のこりが 半分</b>に なるので、とても 速い。ならんで いる ことが 使える じょうけん。</p>
+            </div>`;
+        const ROWS = [8, 16, 1000, 1000000];
+        document.getElementById('sr-table').innerHTML = `
+            <table class="w-full text-sm font-bold border-collapse">
+                <thead><tr class="bg-indigo-100 text-indigo-800">
+                    <th class="p-2 rounded-l-xl text-left">データの 数</th><th class="p-2">🐌 順番に（最大）</th><th class="p-2 rounded-r-xl">🐇 半分に（最大）</th></tr></thead>
+                <tbody>${ROWS.map(n => `<tr class="border-b border-indigo-100" data-row="${n}">
+                    <td class="p-2 num">${n.toLocaleString('ja-JP')}こ</td>
+                    <td class="p-2 num text-center text-rose-700">${n.toLocaleString('ja-JP')}回</td>
+                    <td class="p-2 num text-center text-emerald-700">${Math.ceil(Math.log2(n + 1))}回</td></tr>`).join('')}</tbody>
+            </table>
+            <p class="text-xs font-bold text-slate-500 mt-2">100万この データでも たった 20回！ これが アルゴリズムの 力。</p>`;
+    }
+
+    /* =====================================================================
+       ③ プログラムの きほん
+       ===================================================================== */
+    let basicReady = false;
+    const BK = [
+        ['seq', '① 順次', 'じゅんばんに 実行する'],
+        ['if', '② 分岐', 'もし〜なら で 道を 分ける'],
+        ['loop', '③ 繰り返し', '同じ ことを 何回も'],
+        ['var', '④ 変数', '数を おぼえて おく 箱'],
+        ['func', '⑤ 関数', 'じぶんで めいれいを 作る']
+    ];
+    function drawChips() {
+        document.getElementById('bk-chips').innerHTML = BK.map(([k, n, d]) =>
+            `<button onclick="document.querySelector('[data-bk=&quot;${k}&quot;]').scrollIntoView({behavior:'smooth',block:'center'})"
+                data-bkchip="${k}" class="bg-white border-2 border-indigo-300 text-left px-3 py-2 rounded-2xl text-xs bounce-hover">
+                <span class="font-black text-indigo-700 block">${n}</span>
+                <span class="font-bold text-slate-500">${d}</span></button>`).join('');
+    }
+
+    /* --- ① 順次 --- */
+    const SQ = ['ふたを 半分 あける', 'おゆを 線まで 入れる', 'ふたを 閉めて 3分 まつ', 'よく まぜて 食べる'];
+    let sqOrder = [0, 1, 2, 3];
+    function sqShuffle() {
+        do { sqOrder = shuffle([0, 1, 2, 3]); } while (sqOrder.join() === '0,1,2,3');
+        document.getElementById('sq-res').innerHTML = '';
+        sqDraw();
+    }
+    function sqDraw() {
+        document.getElementById('sq-list').innerHTML = sqOrder.map((v, i) =>
+            `<div class="flex items-center gap-2 bg-slate-50 border-2 border-slate-200 rounded-xl px-2 py-2" data-sq="${v}">
+                <span class="num font-black text-indigo-700 w-6 text-center">${i + 1}</span>
+                <span class="font-bold text-sm flex-grow">${SQ[v]}</span>
+                <button onclick="sqMove(${i},-1)" ${i === 0 ? 'disabled' : ''} class="w-8 h-8 rounded-full ${i === 0 ? 'bg-slate-100 text-slate-300' : 'bg-indigo-100 text-indigo-700'} font-black bounce-hover">⬆</button>
+                <button onclick="sqMove(${i},1)" ${i === 3 ? 'disabled' : ''} class="w-8 h-8 rounded-full ${i === 3 ? 'bg-slate-100 text-slate-300' : 'bg-indigo-100 text-indigo-700'} font-black bounce-hover">⬇</button>
+            </div>`).join('');
+    }
+    function sqMove(i, d) {
+        const j = i + d;
+        if (j < 0 || j >= sqOrder.length) return;
+        const t = sqOrder[i]; sqOrder[i] = sqOrder[j]; sqOrder[j] = t;
+        document.getElementById('sq-res').innerHTML = '';
+        sqDraw();
+    }
+    const SQ_BAD = {
+        '1,0': 'ふたを あける 前に おゆを 入れたので、ふたの 上に おゆが こぼれた！',
+        '0,2': 'おゆを 入れる 前に 3分 まったので、かたい まま。',
+        '3': '食べるのが 先に なって しまった…！'
+    };
+    function sqCheck() {
+        const ok = sqOrder.join() === '0,1,2,3';
+        let why = '';
+        if (!ok) {
+            const pos = {}; sqOrder.forEach((v, i) => pos[v] = i);
+            if (pos[3] < 3) why = SQ_BAD['3'];
+            else if (pos[1] < pos[0]) why = SQ_BAD['1,0'];
+            else if (pos[2] < pos[1]) why = SQ_BAD['0,2'];
+            else why = '順番が ちがうので うまく できなかった。';
+        }
+        document.getElementById('sq-res').innerHTML = resultBox(ok,
+            ok ? '🍜 おいしく できた！' : '💦 しっぱい…',
+            ok ? '正しい 順次（じゅんじ）。コンピューターは 書いた 順に しか 動かないので、順番は とても 大事。'
+               : why + '<br>⬆⬇で 順番を 直して もう一度 やって みよう。');
+    }
+
+    /* --- ② 分岐 --- */
+    let ifWeather = 'あめ';
+    function ifSet(w) { ifWeather = w; ifDraw(); }
+    function ifDraw() {
+        const t = +document.getElementById('if-temp').value;
+        document.getElementById('if-tv').innerText = t;
+        const WS = [['あめ', '🌧️'], ['はれ', '☀️'], ['ゆき', '❄️']];
+        document.getElementById('if-ctrl').innerHTML = WS.map(([w, e]) =>
+            `<button onclick="ifSet('${w}')" data-if="${w}" class="${w === ifWeather ? 'bg-indigo-700 text-white' : 'bg-white border-2 border-indigo-200 text-slate-600'} font-black px-3 py-2 rounded-2xl text-sm bounce-hover">${e} ${w}</button>`).join('');
+        // どの 行が 実行されるか
+        let hit = ifWeather === 'あめ' ? 0 : (t <= 5 ? 1 : (t >= 28 ? 2 : 3));
+        const LINES = [
+            'もし 天気が あめ なら → かさを もつ',
+            'そうでなくて もし 気温 ≦ 5 なら → コートを きる',
+            'そうでなくて もし 気温 ≧ 28 なら → ぼうしと 水とう',
+            'そうでなければ → うわぎだけ もつ'
+        ];
+        document.getElementById('if-code').innerHTML = LINES.map((l, i) =>
+            `<div data-ifline="${i}" class="${i === hit ? 'bg-amber-100 border-amber-400 font-black' : 'bg-slate-50 border-slate-200 text-slate-500'} border-2 rounded-xl px-3 py-1.5">${i === hit ? '▶ ' : '　'}${l}</div>`).join('');
+        const OUT = ['☔ かさを もって いこう！', '🧥 コートを きて いこう！', '🧢 ぼうしと 水とうを わすれずに！', '🧥 うわぎだけ もって いこう。'];
+        document.getElementById('if-res').innerHTML =
+            `天気 <b>${ifWeather}</b>／気温 <b class="num">${t}℃</b> なら… <b class="text-indigo-700">${OUT[hit]}</b><br>
+             <span class="text-xs text-slate-600">上から 順に じょうけんを たしかめて、<b>さいしょに あてはまった 行だけ</b>が 実行される。</span>`;
+    }
+
+    /* --- ③ 繰り返し --- */
+    function lpDraw() {
+        const n = +document.getElementById('lp-n').value;
+        document.getElementById('lp-nv').innerText = n;
+        const line = '「こんにちは」と 言う';
+        const shown = Math.min(n, 4);
+        let bad = '';
+        for (let i = 0; i < shown; i++) bad += line + '\n';
+        if (n > shown) bad += `…（あと ${n - shown} 行）\n`;
+        document.getElementById('lp-bad').innerText = bad.trimEnd() || '（なし）';
+        document.getElementById('lp-good').innerText = `くりかえし ${n} 回 {\n    ${line}\n}`;
+        document.getElementById('lp-info').innerHTML =
+            `${n}回 あいさつする のに… ループなし <b class="num text-rose-700">${n}行</b>／ループあり <b class="num text-emerald-700">3行</b>。<br>
+             <span class="text-xs text-slate-600">回数を 変えたい ときも、ループなら <b>数字を 1か所 直す だけ</b>。
+             直す ところが 少ない プログラムは バグも 少ない。</span>`;
+    }
+
+    /* --- ④ 変数 --- */
+    let vr = 0, vrLog = [];
+    function vrDo(kind) {
+        if (kind === 'p1') { vrLog.push(`てん = てん + 1   → ${vr} + 1 = ${vr + 1}`); vr += 1; }
+        if (kind === 'p10') { vrLog.push(`てん = てん + 10  → ${vr} + 10 = ${vr + 10}`); vr += 10; }
+        if (kind === 'x2') { vrLog.push(`てん = てん × 2   → ${vr} × 2 = ${vr * 2}`); vr *= 2; }
+        if (kind === 'z') { vrLog.push(`てん = 0          → 中みを すてて 0を しまう`); vr = 0; }
+        if (vrLog.length > 6) vrLog = vrLog.slice(-6);
+        vrDraw();
+    }
+    function vrDraw() {
+        const W = 560, H = 120;
+        let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="#eef2ff"/>
+            <rect x="${W / 2 - 110}" y="24" width="220" height="72" rx="14" fill="#fff" stroke="#6366f1" stroke-width="3"/>
+            <text x="${W / 2 - 100}" y="18" font-size="12" font-weight="900" fill="#4f46e5">へんすうの 名前：てん</text>
+            <text x="${W / 2}" y="76" text-anchor="middle" font-size="40" font-weight="900" fill="#4f46e5">${vr}</text>`;
+        document.getElementById('vr-fig').innerHTML = svg(W, H, g);
+        document.getElementById('vr-btns').innerHTML = [['p1', '＋1'], ['p10', '＋10'], ['x2', '×2'], ['z', '0に する']].map(([k, n]) =>
+            `<button onclick="vrDo('${k}')" data-vr="${k}" class="bg-white border-2 border-indigo-300 text-indigo-700 font-black px-4 py-2 rounded-2xl text-sm bounce-hover">${n}</button>`).join('');
+        document.getElementById('vr-log').innerHTML = vrLog.length
+            ? vrLog.map(l => `<div>${esc(l)}</div>`).join('')
+            : '<div class="text-slate-400">ボタンを おすと、中で 何が おきたか ここに 出るよ。</div>';
+    }
+
+    /* --- ⑤ 関数 --- */
+    let fnOut = [];
+    function fnCall() {
+        const name = (document.getElementById('fn-name').value || 'だれか').slice(0, 8);
+        const k = +document.getElementById('fn-times').value;
+        fnOut.push(`&gt; あいさつ(&quot;${esc(name)}&quot;, ${k})`);
+        for (let i = 0; i < k; i++) fnOut.push(`　こんにちは、${esc(name)}さん！`);
+        if (fnOut.length > 14) fnOut = fnOut.slice(-14);
+        fnDraw();
+    }
+    function fnClear() { fnOut = []; fnDraw(); }
+    function fnDraw() {
+        document.getElementById('fn-out').innerHTML = fnOut.length
+            ? fnOut.map(l => `<div>${l}</div>`).join('')
+            : '<div class="text-slate-400">名前を 入れて「呼ぶ」を おすと、関数が はたらくよ。</div>';
+    }
+
+    /* =====================================================================
+       ④ バグさがし
+       ===================================================================== */
+    const BUGS = [
+        { g: '⬛ 四角（4つの かど）を かきたい', l: ['くりかえし 3 回 {', '　まえに 80 すすむ', '　右に 90° まわる', '}'], bad: 0,
+          fix: 'くりかえし 4 回 {', e: '四角の かどは 4つ。3回では 3辺しか かけない。「回数」は ずれやすい バグの 代表。' },
+        { g: '🔺 正三角形を かきたい', l: ['くりかえし 3 回 {', '　まえに 90 すすむ', '　右に 90° まわる', '}'], bad: 2,
+          fix: '　右に 120° まわる', e: 'まわる 角の 合計は ぐるっと 360°。360 ÷ 3 ＝ 120°。三角形の 内角 60°と まちがえやすい。' },
+        { g: '🙋 あいさつを 3回 したい', l: ['くりかえし 3 回 {', '　「こんにちは」と 言う', '}', '「こんにちは」と 言う'], bad: 3,
+          fix: '（この 行を 消す）', e: 'ループの そとに 1行 のこって いるので 合計 4回に なる。{ } の 中と そとを 見わける。' },
+        { g: '🔢 1から 5までを ぜんぶ 足したい（答え 15）', l: ['ごうけい = 0', 'くりかえし i = 1 から 5 {', '　ごうけい = ごうけい + 1', '}'], bad: 2,
+          fix: '　ごうけい = ごうけい + i', e: 'いまの ままだと 1を 5回 足して 5に なる。足すのは「いまの 番号 i」。' },
+        { g: '🥤 100円の ジュースを 買えるか 調べたい（100円でも 買える）', l: ['もし おかね > 100 なら {', '　「買える」と 言う', '} そうでなければ {', '　「買えない」と 言う', '}'], bad: 0,
+          fix: 'もし おかね ≧ 100 なら {', e: '「>」だと ちょうど 100円の とき 買えない ことに なる。≧（以上）と ＞（より 大きい）の ちがいに 注意。' },
+        { g: '📊 3人の テストの 平均を 出したい', l: ['ごうけい = 70 + 80 + 90', 'へいきん = ごうけい × 3', '「へいきん」を 表示'], bad: 1,
+          fix: 'へいきん = ごうけい ÷ 3', e: '平均は「合計 ÷ 人数」。× と ÷ の 打ちまちがいは とても 多い バグ。' },
+        { g: '🍜 カップめんを 作る 手順', l: ['おゆを 入れる', 'ふたを あける', '3分 まつ', '食べる'], bad: 0,
+          fix: 'ふたを あける（を 先に する）', e: '順番の バグ。ふたを あける 前に おゆを 入れたら こぼれて しまう。' },
+        { g: '🔁 5回 まわって とまりたい', l: ['かいすう = 0', 'くりかえし かいすう < 5 の あいだ {', '　まわる', '}'], bad: 2,
+          fix: '　まわる／かいすう = かいすう + 1', e: 'かいすうが ふえないので 5より 小さいまま＝<b>無限{むげん}ループ</b>。じょうけんを 変える 行を わすれて いる。' },
+        { g: '🎨 赤い 線を かきたい', l: ['ペンを 上げる', '色を 赤に する', 'まえに 100 すすむ'], bad: 0,
+          fix: 'ペンを 下げる', e: 'ペンが 上がって いると 線は かかれない。「動くけれど 何も 出ない」ときは この 手の バグを うたがう。' },
+        { g: '🚪 名前が「あき」の 人だけ 通したい', l: ['もし なまえ = "あきら" なら {', '　「どうぞ」と 言う', '}'], bad: 0,
+          fix: 'もし なまえ = "あき" なら {', e: '文字は 1字 ちがえば まったく べつ もの。"あき" と "あきら" は コンピューターには 別の 言葉。' },
+        { g: '⭐ 10このリストの さいごまで 見たい', l: ['i = 1', 'くりかえし i < 10 の あいだ {', '　i 番めを 見る', '　i = i + 1', '}'], bad: 1,
+          fix: 'くりかえし i ≦ 10 の あいだ {', e: '「< 10」だと 9番めで 止まり、10番めを 見ない。1つ 足りない この バグは とても よく おきる。' },
+        { g: '💰 おこづかいを 毎月 500円 足して 1年分を 出したい', l: ['ごうけい = 0', 'くりかえし 12 回 {', '　ごうけい = 500', '}'], bad: 2,
+          fix: '　ごうけい = ごうけい + 500', e: '「＝」は「しまう」という いみ。いまの 中みを 足さないと、毎回 500に 上書きされて しまう。' }
+    ];
+    let bug = null;
+    function newBug() {
+        const b = pickOne(BUGS);
+        bug = { b, done: false };
+        document.getElementById('bug-goal').innerHTML = `🎯 やりたい こと：${b.g}`;
+        document.getElementById('bug-lines').innerHTML = b.l.map((l, i) =>
+            `<button onclick="ansBug(${i})" data-bugline="${i}" class="w-full bg-white border-2 border-slate-200 hover:border-indigo-500 font-bold text-left px-3 py-2 rounded-xl bounce-hover flex gap-2">
+                <span class="num text-slate-400">${i + 1}</span><span class="whitespace-pre">${esc(l)}</span></button>`).join('');
+        document.getElementById('bug-res').innerHTML = '';
+        scoreBox('bg-score', S.bug);
+    }
+    function ansBug(i) {
+        if (!bug || bug.done) return;
+        bug.done = true;
+        const ok = i === bug.b.bad;
+        S.bug[1]++; if (ok) S.bug[0]++;
+        document.querySelectorAll('[data-bugline]').forEach((el, j) => {
+            el.className = `w-full ${j === bug.b.bad ? 'bg-green-50 border-green-500' : (j === i ? 'bg-red-50 border-red-400 shake' : 'bg-white border-slate-200 opacity-60')} border-2 font-bold text-left px-3 py-2 rounded-xl flex gap-2`;
+        });
+        document.getElementById('bug-res').innerHTML = resultBox(ok,
+            ok ? `⭕ せいかい！ ${bug.b.bad + 1}行めが バグ` : `❌ バグは ${bug.b.bad + 1}行め`,
+            `<span class="mono text-xs bg-green-100 rounded px-2 py-1 inline-block">直すと → ${esc(bug.b.fix)}</span><br>${bug.b.e}`);
+        scoreBox('bg-score', S.bug);
+    }
+
+    /* =====================================================================
+       ⑤ クイズ
+       ===================================================================== */
+    const QS = [
+        { f: 'ことば', q: 'コンピューターに やって ほしい ことを 書いた ものを 何と いう？', a: 'プログラム', x: ['アルゴリズム', 'メモリ', 'マウス'], e: 'プログラムを 作る ことが プログラミング。書く ための ことばを プログラミング言語と いう。' },
+        { f: 'ことば', q: '答えに たどりつく ための 手順の ことを 何と いう？', a: 'アルゴリズム', x: ['プログラム', 'バグ', 'データ'], e: '同じ 答えでも 手順を くふうすると ずっと 速く なる。料理の レシピに 近い 考え方。' },
+        { f: 'ことば', q: 'プログラムの まちがいを 何と いう？', a: 'バグ', x: ['ループ', 'コード', 'ファイル'], e: 'もともとは「虫」という いみ。むかし 機械に 本物の 虫が 入って 動かなく なった 話から きて いる。' },
+        { f: 'ことば', q: 'バグを さがして 直す 作業を 何と いう？', a: 'デバッグ', x: ['インストール', 'セーブ', 'コピー'], e: 'プログラマーの 仕事の 半分以上は デバッグと 言われる ほど 大事な 作業。' },
+        { f: 'ことば', q: '同じ ことを 何回も くりかえす しくみを 何と いう？', a: 'ループ（繰り返し）', x: ['ぶんき', 'かんすう', 'へんすう'], e: 'コンピューターが 人間より ずっと 得意な こと。100万回でも 文句を 言わない。' },
+        { f: 'ことば', q: '数や 言葉を おぼえて おく「名前つきの 箱」を 何と いう？', a: '変数', x: ['関数', '条件', 'エラー'], e: 'ゲームの とくてんや のこりライフは 変数で できて いる。' },
+        { f: 'ことば', q: 'よく つかう ひとまとまりに 名前を つけた ものを 何と いう？', a: '関数', x: ['変数', 'ループ', 'バグ'], e: '1回 作れば 何度でも 呼べる。プログラムが 短く、直す ところも 1か所で すむ。' },
+        { f: 'ことば', q: '関数に わたす 数や 言葉を 何と いう？', a: '引数（ひきすう）', x: ['戻り値だけ', '変数名', 'コメント'], e: '「あいさつ(たろう)」の たろう が 引数。わたす ものを 変えると けっかも 変わる。' },
+        { f: 'ことば', q: 'ずっと 終わらない くりかえしを 何と いう？', a: '無限ループ', x: ['二分探索', 'デバッグ', '配列'], e: 'じょうけんを 変える 行を わすれると おきる。プログラムが 止まらなく なる こわい バグ。' },
+        { f: 'ことば', q: 'たくさんの データを 番号を つけて まとめて 入れる ものを 何と いう？', a: '配列（リスト）', x: ['関数', '分岐', 'ループ'], e: '1番め、2番め… と 番号で 取り出せる。ループと いっしょに つかうと とても 便利。' },
+        { f: 'ことば', q: 'プログラムの 中に 書く「人が 読む ための メモ」を 何と いう？', a: 'コメント', x: ['エラー', 'バグ', 'データ'], e: 'コンピューターは 読みとばす。あとで 自分や 仲間が 読んで わかる ように 書く。' },
+
+        { f: 'しくみ', q: 'コンピューターは プログラムを どう 実行する？', a: '書いた 順に 上から 1つずつ', x: ['だいじな ところから', 'まぜて てきとうに', '下から 上へ'], e: 'これが 順次。だから 順番を まちがえると まったく ちがう けっかに なる。' },
+        { f: 'しくみ', q: '「もし 〜 なら」で 道を 分ける しくみは？', a: '分岐（じょうけん）', x: ['繰り返し', '関数', '変数'], e: '天気が 雨なら かさ、そうでなければ ぼうし。じょうけんで やる ことを 変える。' },
+        { f: 'しくみ', q: '「てん = てん + 1」の いみは？', a: 'いまの てんに 1を 足して、また てんに しまう', x: ['てんと てん+1 が 等しい', 'てんを 1に する', 'てんを けす'], e: 'プログラムの「＝」は 算数の「等しい」では なく「しまう」。ここが 最初の つまずきポイント。' },
+        { f: 'しくみ', q: '四角を かくには「まえに すすむ・右に まわる」を 何回 くりかえす？', a: '4回', x: ['3回', '2回', '90回'], e: 'かどの 数だけ くりかえす。まわる 角は 360 ÷ 4 ＝ 90°。' },
+        { f: 'しくみ', q: '正三角形を かく とき、1回に まわる 角度は？', a: '120°', x: ['60°', '90°', '180°'], e: 'ぐるっと 1周 360°を 3回で 分ける。三角形の 角 60°と まちがえやすい。' },
+        { f: 'しくみ', q: '正五角形を かく とき、1回に まわる 角度は？', a: '72°', x: ['60°', '108°', '144°'], e: '360 ÷ 5 ＝ 72°。同じ 考えで どんな 正多角形も かける。' },
+        { f: 'しくみ', q: 'ペンを 上げた まま すすむと どう なる？', a: '線は かかれず、場所だけ 動く', x: ['太い 線に なる', 'エラーに なる', '色が 変わる'], e: 'はなれた ところに 絵を かく ときに つかう。「動くのに 何も 出ない」バグの 原因にも なる。' },
+        { f: 'しくみ', q: '「くりかえし 5回」の 中に「くりかえし 4回」を 入れると、中の めいれいは 何回 実行される？', a: '20回', x: ['9回', '5回', '4回'], e: '5 × 4 ＝ 20回。これを 二重ループと いう。回数が かけ算で ふえる ので 気を つける。' },
+
+        { f: 'アルゴリズム', q: 'バブルソートの ルールは？', a: 'となりと くらべて 大きい ほうを 右へ 動かす', x: ['まん中と くらべる', '小さい 数を さがして 消す', 'まぜて 運を ためす'], e: '大きい 数が あわ（バブル）の ように 右へ 上がって いく から この 名前。' },
+        { f: 'アルゴリズム', q: '小さい 順に ならんだ データを さがす とき、いちばん 速いのは？', a: 'まん中を 見て 半分に しぼる（二分探索）', x: ['左から 1つずつ 見る', '右から 1つずつ 見る', '好きな ところを 見る'], e: '1回 見る ごとに のこりが 半分。100万こでも 20回で 見つかる。' },
+        { f: 'アルゴリズム', q: '二分探索を つかう ための じょうけんは？', a: 'データが ならんで いる こと', x: ['データが 10こ 以下', '数字だけである こと', 'ループを つかわない こと'], e: 'ばらばらの ままでは「半分に しぼる」判断が できない。だから 先に ならべかえる ことも ある。' },
+        { f: 'アルゴリズム', q: '15こから 1つを さがす とき、順番に 見ると 最大 何回？', a: '15回', x: ['4回', '8回', '1回'], e: 'さいごに ある 場合が いちばん 大変。二分探索なら 最大 4回で すむ。' },
+        { f: 'アルゴリズム', q: 'プログラムが 速いか どうかを 考える とき 大事なのは？', a: 'データが ふえた ときの ふえ方', x: ['行の 数', '色の 数', '名前の 長さ'], e: '10こで 速くても 100万こで 止まる ことが ある。ふえ方の くせを 知るのが アルゴリズムの 学問。' },
+
+        { f: 'コンピューター', q: 'コンピューターが 数を あらわす とき つかう、0と1だけの 書き方は？', a: '2進数', x: ['10進数', 'ローマ数字', '分数'], e: '電気が「流れる／流れない」の 2つで あらわせる から。0と1の 1つぶんを 1ビットと いう。' },
+        { f: 'コンピューター', q: '1バイトは 何ビット？', a: '8ビット', x: ['2ビット', '10ビット', '100ビット'], e: '8ビットで 256通り あらわせる。文字 1つを おぼえる ための 昔からの まとまり。' },
+        { f: 'コンピューター', q: '2進数の 101 は 10進数で いくつ？', a: '5', x: ['3', '101', '11'], e: '右から 1・2・4 の 位。4 + 0 + 1 ＝ 5。指を つかって かぞえられる。' },
+        { f: 'コンピューター', q: '計算を する 部品を 何と いう？', a: 'CPU', x: ['ディスプレイ', 'キーボード', 'スピーカー'], e: '「コンピューターの 頭のう」。1秒に 何十億回も 計算して いる。' },
+        { f: 'コンピューター', q: '作業中の ことを 一時的に おぼえて おく 部品は？', a: 'メモリ', x: ['CPU', 'マウス', 'プリンター'], e: '机の 広さに にて いる。電気を 切ると 消えるので、のこしたい ものは 保存する。' },
+        { f: 'コンピューター', q: 'ウェブページの 見た目の ほねぐみを 作る ことばは？', a: 'HTML', x: ['Python', 'Excel', 'JPEG'], e: '見出し・文章・画像などの「くみたて」を 書く。かざりは CSS、動きは JavaScript。' },
+        { f: 'コンピューター', q: 'ブロックを つないで プログラムを 作れる、子ども むけの 定番は？', a: 'Scratch', x: ['HTML', 'CPU', 'USB'], e: 'タイピングが 少なくても 作れる。日本の 小学校でも よく つかわれて いる。' },
+        { f: 'コンピューター', q: 'AIの プログラムづくりで いちばん よく つかわれる 言語は？', a: 'Python', x: ['HTML', 'Scratch', 'CSS'], e: '読みやすく、AIや 計算の ための 道具（ライブラリ）が たくさん ある。' },
+        { f: 'コンピューター', q: 'プログラムを 作る とき、いちばん 大事な すすめ方は？', a: '小さく 作って ためして、少しずつ ふやす', x: ['ぜんぶ 書いてから 1回だけ ためす', 'できるまで 見ないで 書く', '長い ほど えらい'], e: '小さく ためすと バグの 場所が すぐ わかる。プロも この やり方で 作って いる。' }
+    ];
+    let qz = null, qzField = 'all';
+    function newQuiz() {
+        const pool = qzField === 'all' ? QS : QS.filter(q => q.f === qzField);
+        const q = pool[rnd(pool.length)];
+        qz = { q, choices: shuffle([q.a].concat(q.x)), done: false };
+        const fields = ['all'].concat([...new Set(QS.map(x => x.f))]);
+        document.getElementById('qz-fields').innerHTML = fields.map(f =>
+            `<button onclick="setField('${f}')" data-qf="${f}" class="${qzField === f ? 'bg-indigo-700 text-white' : 'bg-white border-2 border-indigo-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${f === 'all' ? 'ぜんぶ ' + QS.length : f + ' ' + QS.filter(x => x.f === f).length}</button>`).join('');
+        document.getElementById('qz-q').innerHTML = `<span class="text-xs font-black text-indigo-700 bg-indigo-100 px-2 py-1 rounded-lg mr-2">${esc(q.f)}</span>${esc(q.q)}`;
+        document.getElementById('qz-choices').innerHTML = qz.choices.map((c, i) =>
+            `<button onclick="ansQuiz(${i})" data-qzc="${i}" class="bg-white border-2 border-slate-200 hover:border-indigo-500 font-bold text-left px-4 py-3 rounded-2xl bounce-hover">${esc(c)}</button>`).join('');
+        document.getElementById('qz-res').innerHTML = '';
+        scoreBox('qz-score', S.quiz);
+    }
+    function setField(f) { qzField = f; newQuiz(); }
+    function ansQuiz(i) {
+        if (!qz || qz.done) return;
+        qz.done = true;
+        const ok = qz.choices[i] === qz.q.a;
+        S.quiz[1]++; if (ok) S.quiz[0]++;
+        markChoices('[data-qzc]', j => qz.choices[j] === qz.q.a, i, 'font-bold text-left px-4 py-3 rounded-2xl');
+        document.getElementById('qz-res').innerHTML = resultBox(ok, ok ? '⭕ せいかい！' : `❌ こたえは 「${esc(qz.q.a)}」`, qz.q.e);
+        scoreBox('qz-score', S.quiz);
+    }
+
+    /* ===================== 起動 ===================== */
+    renderNav();
+    drawPreset();
+    ttPreset(0);
+    ttStop();
+    rubify(document.body);
+</script>
+</body>
+</html>
