@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中学受験 社会ラボ</title>
+    <meta name="description" content="中学受験の社会を図で学ぶ。6都市の雨温図で気候を見分け、日本史58のできごとを年表と並べかえゲームでおぼえ、三権分立の図をタップして公民をつかむ。一問一答つき。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums }
+        .bounce-hover { transition: transform .12s cubic-bezier(.175,.885,.32,1.275) }
+        .bounce-hover:active { transform: scale(.94) }
+        @keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.1) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275) }
+        @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+        .shake { animation: shake .3s ease-in-out }
+        svg text { font-family: inherit }
+        rt { font-size: .55em; font-weight: 700; color: #b45309 }
+    </style>
+</head>
+<body class="bg-amber-50 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-amber-800 via-orange-700 to-red-700 text-white p-3 shadow-lg sticky top-0 z-30">
+        <div class="max-w-4xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">🗾</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">中学受験 社会ラボ</h1>
+                    <p class="text-xs text-amber-100 font-bold hidden sm:block">気候・歴史年表・三権分立を 図で つかむ</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[64px] z-20 bg-amber-50/95 backdrop-blur border-b border-amber-200">
+        <div class="max-w-4xl mx-auto flex gap-2 p-3 overflow-x-auto" id="tab-nav"></div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto w-full p-3 sm:p-5 flex-grow space-y-4">
+
+        <!-- ===== ① 雨温図 ===== -->
+        <section id="tab-climate" class="space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <h2 class="font-black">🌦️ 雨温図（うおんず）で 気候を 見分ける</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    棒グラフが <b class="text-sky-700">降水量{こうすいりょう}</b>、折れ線が <b class="text-red-600">気温</b>。
+                    「冬が さむいか」「雨が いつ 多いか」「1年の 合計」の 3つを 見るのが コツ。
+                </p>
+                <div id="cl-chips" class="flex flex-wrap gap-2 mt-3"></div>
+                <div id="cl-fig" class="mt-2"></div>
+                <div id="cl-info" class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-3 text-sm font-bold leading-relaxed"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">📝 この 雨温図は どこ？</h2>
+                    <span id="cq-score" class="num bg-orange-100 text-orange-700 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newClimateQ()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <p id="cq-q" class="font-bold text-slate-600 mt-2 text-sm"></p>
+                <div id="cq-fig" class="mt-2"></div>
+                <div id="cq-choices" class="grid grid-cols-2 gap-2"></div>
+                <div id="cq-res" class="mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ② 年表 ===== -->
+        <section id="tab-history" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">🏯 日本の 歴史年表</h2>
+                    <span id="hi-count" class="num bg-orange-100 text-orange-700 font-black px-3 py-1 rounded-full text-xs"></span>
+                </div>
+                <div id="hi-chips" class="flex flex-wrap gap-2 mt-3"></div>
+                <div id="hi-list" class="mt-3 space-y-1"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">🔢 ならべかえ</h2>
+                    <span id="oq-score" class="num bg-orange-100 text-orange-700 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newOrder()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <p class="text-sm font-bold text-slate-500 mt-2">古い ほうから じゅんに タップしよう（年号は かくれて いるよ）。</p>
+                <div id="oq-cards" class="space-y-2 mt-3"></div>
+                <div class="flex gap-2 mt-3">
+                    <button onclick="resetOrder()" class="bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-2 rounded-xl text-sm bounce-hover">やりなおす</button>
+                </div>
+                <div id="oq-res" class="mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ③ 三権分立 ===== -->
+        <section id="tab-civics" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <h2 class="font-black">⚖️ 三権分立（さんけんぶんりつ）</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    国の 力を <b>立法{りっぽう}（国会）</b>・<b>行政{ぎょうせい}（内閣）</b>・<b>司法{しほう}（裁判所）</b>の
+                    3つに 分けて、たがいに 見はりあう しくみ。矢印を タップして みよう。
+                </p>
+                <div id="cv-fig" class="mt-2"></div>
+                <div id="cv-detail" class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 text-sm font-bold leading-relaxed"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">📝 三権分立の もんだい</h2>
+                    <span id="vq-score" class="num bg-orange-100 text-orange-700 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newCivicsQ()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <p id="vq-q" class="font-black mt-3 leading-relaxed"></p>
+                <div id="vq-choices" class="grid gap-2 mt-3"></div>
+                <div id="vq-res" class="mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ④ 一問一答 ===== -->
+        <section id="tab-quiz" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">❓ 一問一答</h2>
+                    <span id="qz-score" class="num bg-orange-100 text-orange-700 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newQuiz()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <div id="qz-fields" class="flex flex-wrap gap-2 mt-3"></div>
+                <p id="qz-q" class="font-black text-base sm:text-lg mt-3 leading-relaxed"></p>
+                <div id="qz-choices" class="grid gap-2 mt-3"></div>
+                <div id="qz-res" class="mt-3"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center text-xs text-slate-400 font-bold p-4">中学受験 社会ラボ © 2026</footer>
+
+<script>
+    /* ===================== きょうつう ===================== */
+    const rnd = n => Math.floor(Math.random() * n);
+    const pickOne = a => a[rnd(a.length)];
+    function shuffle(a) { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = rnd(i + 1); const t = b[i]; b[i] = b[j]; b[j] = t; } return b; }
+    function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    function svg(w, h, body, extra) {
+        return `<svg viewBox="0 0 ${w} ${h}" class="w-full h-auto block mx-auto" style="max-width:${w}px" ${extra || ''} role="img">${body}</svg>`;
+    }
+    function resultBox(ok, title, body) {
+        return `<div class="pop ${ok ? 'bg-green-50 border-green-300' : 'bg-amber-50 border-amber-300'} border-2 rounded-2xl p-3">
+            <p class="font-black ${ok ? 'text-green-700' : 'text-amber-700'}">${title}</p>
+            <div class="font-bold text-sm mt-1 leading-relaxed">${body}</div></div>`;
+    }
+    const S = { climate: [0, 0], order: [0, 0], civics: [0, 0], quiz: [0, 0] };
+    function scoreBox(id, s) { document.getElementById(id).innerText = `${s[0]} / ${s[1]}`; }
+
+    /* 漢字{よみ} を ルビに（あとから 出す 文にも かかる） */
+    const RUBY_RE = /([一-鿿々]+)\{([^{}]+)\}/g;
+    function rubySkip(el) {
+        for (let n = el; n; n = n.parentNode) {
+            const tag = n.nodeType === 1 ? n.tagName.toLowerCase() : '';
+            if (tag === 'script' || tag === 'style' || tag === 'svg' || tag === 'ruby') return true;
+        }
+        return false;
+    }
+    function rubifyText(node) {
+        const t = node.nodeValue;
+        if (t.indexOf('{') < 0 || !node.parentNode || rubySkip(node.parentNode)) return;
+        RUBY_RE.lastIndex = 0;
+        if (!RUBY_RE.test(t)) return;
+        RUBY_RE.lastIndex = 0;
+        const frag = document.createDocumentFragment();
+        let last = 0, m;
+        while ((m = RUBY_RE.exec(t))) {
+            if (m.index > last) frag.appendChild(document.createTextNode(t.slice(last, m.index)));
+            const ruby = document.createElement('ruby');
+            ruby.appendChild(document.createTextNode(m[1]));
+            const rt = document.createElement('rt');
+            rt.textContent = m[2];
+            ruby.appendChild(rt);
+            frag.appendChild(ruby);
+            last = m.index + m[0].length;
+        }
+        if (last < t.length) frag.appendChild(document.createTextNode(t.slice(last)));
+        node.parentNode.replaceChild(frag, node);
+    }
+    function rubify(root) {
+        if (root.nodeType === 3) return rubifyText(root);
+        if (root.nodeType !== 1 || rubySkip(root)) return;
+        const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        const list = [];
+        while (w.nextNode()) if (w.currentNode.nodeValue.indexOf('{') >= 0) list.push(w.currentNode);
+        list.forEach(rubifyText);
+    }
+    new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(rubify)))
+        .observe(document.body, { childList: true, subtree: true });
+
+    const TABS = { climate: '🌦️ 気候', history: '🏯 年表', civics: '⚖️ 三権分立', quiz: '❓ 一問一答' };
+    let tab = 'climate';
+    function renderNav() {
+        document.getElementById('tab-nav').innerHTML = Object.entries(TABS).map(([k, label]) =>
+            `<button onclick="setTab('${k}')" data-tab="${k}" class="${tab === k ? 'bg-orange-700 text-white' : 'bg-white border-2 border-amber-200 text-slate-600'} font-black px-4 py-2 rounded-full text-sm whitespace-nowrap bounce-hover">${label}</button>`).join('');
+    }
+    function setTab(k) {
+        tab = k;
+        Object.keys(TABS).forEach(t => document.getElementById('tab-' + t).classList.toggle('hidden', t !== k));
+        renderNav();
+        if (k === 'history' && !oq) { drawTimeline(); newOrder(); }
+        if (k === 'civics' && !vq) { drawCivics(); newCivicsQ(); }
+        if (k === 'quiz' && !qz) newQuiz();
+    }
+
+    /* =====================================================================
+       ① 雨温図
+       ===================================================================== */
+    const CITIES = [
+        { n: '札幌', k: '北海道の気候', t: [-3.2, -2.7, 1.1, 7.3, 13.0, 17.0, 21.1, 22.3, 18.6, 12.1, 5.2, -0.9],
+          p: [108, 92, 78, 55, 56, 60, 91, 127, 142, 110, 114, 115],
+          f: '冬の 平均気温が 0℃より 低い。梅雨{つゆ}が なく、1年を 通して 降水量は 多くない。' },
+        { n: '金沢', k: '日本海側の気候', t: [4.0, 4.2, 7.3, 12.6, 17.7, 21.6, 25.8, 27.3, 23.2, 17.6, 11.9, 6.8],
+          p: [256, 162, 158, 144, 138, 170, 233, 179, 232, 177, 251, 301],
+          f: '<b>冬の 降水量が いちばん 多い</b>。北西の 季節風が 日本海の 水分を すって 雪を ふらせる。' },
+        { n: '東京', k: '太平洋側の気候', t: [5.4, 6.1, 9.4, 14.3, 18.8, 21.9, 25.7, 26.9, 23.3, 18.0, 12.5, 7.7],
+          p: [52, 56, 118, 125, 138, 168, 154, 168, 210, 198, 93, 51],
+          f: '<b>夏から 秋に 雨が 多く、冬は 少ない</b>。梅雨と 台風の えいきょうを 受ける。' },
+        { n: '松本', k: '中央高地の気候', t: [-0.4, 0.4, 4.2, 10.6, 16.0, 19.9, 23.6, 24.7, 20.0, 13.2, 7.4, 2.3],
+          p: [36, 43, 79, 75, 100, 125, 138, 92, 156, 101, 50, 29],
+          f: '<b>1年の 降水量が 少なく、夏と 冬の 気温差が 大きい</b>（内陸性の 気候）。海から 遠い 高地だから。' },
+        { n: '高松', k: '瀬戸内の気候', t: [5.9, 6.3, 9.4, 14.7, 19.8, 23.3, 27.5, 28.6, 24.7, 19.0, 13.2, 8.1],
+          p: [39, 46, 82, 76, 108, 151, 144, 86, 148, 104, 60, 37],
+          f: '<b>1年を 通して 雨が 少なく、冬も わりと あたたかい</b>。中国山地と 四国山地に 季節風を さえぎられる。ため池が 多い。' },
+        { n: '那覇', k: '南西諸島の気候', t: [17.3, 17.5, 19.4, 21.9, 24.8, 27.5, 29.1, 29.0, 27.6, 25.3, 22.4, 19.0],
+          p: [107, 120, 161, 166, 232, 247, 141, 241, 261, 153, 110, 103],
+          f: '<b>冬でも 17℃より あたたかい</b>（亜熱帯{あねったい}）。1年の 降水量が 多く、台風も よく 通る。' }
+    ];
+    const sum = a => a.reduce((x, y) => x + y, 0);
+    const avg = a => Math.round(sum(a) / a.length * 10) / 10;
+
+    function uonzuSVG(c, hideName) {
+        const W = 540, H = 348, X0 = 62, X1 = 484, Y0 = 34, Y1 = 246;
+        const bw = (X1 - X0) / 12;
+        const py = v => Y1 - (v / 400) * (Y1 - Y0);        // 降水量 0〜400mm
+        const ty = v => Y1 - ((v + 10) / 40) * (Y1 - Y0);  // 気温 -10〜30℃
+        let g = `<rect x="${X0}" y="${Y0}" width="${X1 - X0}" height="${Y1 - Y0}" fill="#fffbeb"/>`;
+        for (let v = 0; v <= 400; v += 100) {
+            g += `<line x1="${X0}" y1="${py(v)}" x2="${X1}" y2="${py(v)}" stroke="#e7e5e4" stroke-width="1.5"/>
+                  <text x="${X1 + 6}" y="${py(v) + 4}" font-size="12" font-weight="800" fill="#0284c7">${v}</text>`;
+        }
+        for (let v = -10; v <= 30; v += 10) {
+            g += `<text x="${X0 - 8}" y="${ty(v) + 4}" text-anchor="end" font-size="12" font-weight="800" fill="#dc2626">${v}</text>`;
+        }
+        g += `<line x1="${X0}" y1="${ty(0)}" x2="${X1}" y2="${ty(0)}" stroke="#fca5a5" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+        c.p.forEach((v, i) => {
+            const x = X0 + i * bw + bw * 0.2, h = Y1 - py(Math.min(v, 400));
+            g += `<rect x="${x.toFixed(1)}" y="${py(Math.min(v, 400)).toFixed(1)}" width="${(bw * 0.6).toFixed(1)}" height="${h.toFixed(1)}" fill="#38bdf8" rx="2"/>`;
+        });
+        const pts = c.t.map((v, i) => `${(X0 + i * bw + bw / 2).toFixed(1)},${ty(v).toFixed(1)}`).join(' ');
+        g += `<polyline points="${pts}" fill="none" stroke="#dc2626" stroke-width="3.5" stroke-linejoin="round"/>`;
+        c.t.forEach((v, i) => {
+            g += `<circle cx="${(X0 + i * bw + bw / 2).toFixed(1)}" cy="${ty(v).toFixed(1)}" r="4" fill="#fff" stroke="#dc2626" stroke-width="2.5"/>`;
+        });
+        for (let i = 0; i < 12; i++) {
+            if (i % 2) continue;
+            g += `<text x="${(X0 + i * bw + bw / 2).toFixed(1)}" y="${Y1 + 18}" text-anchor="middle" font-size="12" font-weight="800" fill="#78716c">${i + 1}</text>`;
+        }
+        g += `<rect x="${X0}" y="${Y0}" width="${X1 - X0}" height="${Y1 - Y0}" fill="none" stroke="#a8a29e" stroke-width="2"/>
+              <text x="${X0 - 8}" y="${Y0 - 10}" text-anchor="end" font-size="12" font-weight="900" fill="#dc2626">℃</text>
+              <text x="${X1 + 6}" y="${Y0 - 10}" font-size="12" font-weight="900" fill="#0284c7">mm</text>
+              <text x="${(X0 + X1) / 2}" y="${Y1 + 38}" text-anchor="middle" font-size="12" font-weight="800" fill="#78716c">月</text>
+              <text x="${X0}" y="${H - 34}" font-size="13" font-weight="800" fill="#57534e">年平均 ${avg(c.t)}℃</text>
+              <text x="${X1}" y="${H - 34}" text-anchor="end" font-size="13" font-weight="800" fill="#57534e">年降水量 ${sum(c.p)}mm</text>
+              <text x="${(X0 + X1) / 2}" y="${H - 8}" text-anchor="middle" font-size="17" font-weight="900" fill="#78350f">${hideName ? '？の 雨温図' : c.n + '（' + c.k + '）'}</text>`;
+        return svg(W, H, g);
+    }
+
+    let clSel = 0;
+    function drawClimate() {
+        document.getElementById('cl-chips').innerHTML = CITIES.map((c, i) =>
+            `<button onclick="setCl(${i})" data-cl="${i}" class="${clSel === i ? 'bg-orange-700 text-white' : 'bg-white border-2 border-amber-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${c.n}</button>`).join('');
+        const c = CITIES[clSel];
+        document.getElementById('cl-fig').innerHTML = uonzuSVG(c);
+        const wi = c.p.slice(11).concat(c.p.slice(0, 2));            // 12・1・2月
+        const su = c.p.slice(5, 8);                                   // 6・7・8月
+        document.getElementById('cl-info').innerHTML =
+            `<p class="font-black text-orange-800">${c.n} … ${c.k}</p>
+             <p class="mt-1">${c.f}</p>
+             <p class="mt-1 text-slate-600">
+                冬（12〜2月）の 降水量 ${sum(wi)}mm　／　夏（6〜8月）の 降水量 ${sum(su)}mm<br>
+                いちばん さむい 月 ${Math.min(...c.t)}℃　／　いちばん あつい 月 ${Math.max(...c.t)}℃
+                （気温の 年較差{ねんかくさ} ${Math.round((Math.max(...c.t) - Math.min(...c.t)) * 10) / 10}℃）</p>`;
+    }
+    function setCl(i) { clSel = i; drawClimate(); }
+
+    let cq = null;
+    function newClimateQ() {
+        const i = rnd(CITIES.length);
+        const ask = rnd(2);   // 0: 都市名 1: 気候の名前
+        cq = { i, ask, choices: shuffle(CITIES.map((c, j) => j)).slice(0, 4), done: false };
+        if (cq.choices.indexOf(i) < 0) cq.choices[rnd(4)] = i;
+        document.getElementById('cq-q').innerText = ask === 0 ? 'この 雨温図は どの 都市？' : 'この 雨温図は どの 気候？';
+        document.getElementById('cq-fig').innerHTML = uonzuSVG(CITIES[i], true);
+        document.getElementById('cq-choices').innerHTML = cq.choices.map(j =>
+            `<button onclick="ansClimate(${j})" data-cqc="${j}" class="bg-white border-2 border-slate-200 hover:border-orange-500 font-black text-sm px-3 py-3 rounded-2xl bounce-hover">${esc(ask === 0 ? CITIES[j].n : CITIES[j].k)}</button>`).join('');
+        document.getElementById('cq-res').innerHTML = '';
+        scoreBox('cq-score', S.climate);
+    }
+    function ansClimate(j) {
+        if (!cq || cq.done) return;
+        cq.done = true;
+        const ok = j === cq.i;
+        S.climate[1]++; if (ok) S.climate[0]++;
+        document.querySelectorAll('[data-cqc]').forEach(el => {
+            const k = +el.dataset.cqc;
+            el.className = `${k === cq.i ? 'bg-green-50 border-green-500' : (k === j ? 'bg-red-50 border-red-400 shake' : 'bg-white border-slate-200 opacity-60')} border-2 font-black text-sm px-3 py-3 rounded-2xl`;
+        });
+        const c = CITIES[cq.i];
+        document.getElementById('cq-fig').innerHTML = uonzuSVG(c);
+        document.getElementById('cq-res').innerHTML = resultBox(ok, ok ? '⭕ せいかい！' : `❌ こたえは ${c.n}（${c.k}）`, c.f);
+        scoreBox('cq-score', S.climate);
+    }
+
+    /* =====================================================================
+       ② 年表
+       ===================================================================== */
+    const ERAS = [
+        ['原始', -100, 300, '#78716c'], ['古墳・飛鳥', 300, 710, '#0f766e'], ['奈良', 710, 794, '#b45309'],
+        ['平安', 794, 1185, '#be123c'], ['鎌倉', 1185, 1333, '#7c3aed'], ['室町', 1333, 1573, '#0369a1'],
+        ['安土桃山', 1573, 1603, '#c2410c'], ['江戸', 1603, 1868, '#166534'], ['明治・大正', 1868, 1926, '#9d174d'],
+        ['昭和・平成', 1926, 2030, '#1e40af']
+    ];
+    const eraOf = y => (ERAS.find(e => y >= e[1] && y < e[2]) || ERAS[0])[0];
+    const eraColor = n => (ERAS.find(e => e[0] === n) || ERAS[0])[3];
+
+    const EVENTS = [
+        [57, '倭の奴国{わのなのこく}の王が 漢に 使いを おくる', '「漢委奴国王」の 金印を さずかる'],
+        [239, '卑弥呼{ひみこ}が 魏に 使いを おくる', '邪馬台国の 女王。「親魏倭王」の 称号を もらう'],
+        [593, '聖徳太子{しょうとくたいし}が 摂政に なる', '推古天皇を たすけて 政治を おこなう'],
+        [604, '十七条の憲法', '役人の 心がまえを しめす。「和を もって とうとしと なす」'],
+        [607, '遣隋使{けんずいし}を おくる', '小野妹子{おののいもこ}を 隋に 派遣。対等な 立場を めざす'],
+        [645, '大化の改新', '中大兄皇子{なかのおおえのおうじ}と 中臣鎌足{なかとみのかまたり}が 蘇我氏を たおす'],
+        [701, '大宝律令{たいほうりつりょう}', '中国に ならった 国の 決まりが 完成'],
+        [710, '平城京{へいじょうきょう}に 都を うつす', '奈良時代の 始まり。唐の 長安を まねた 都'],
+        [743, '墾田永年私財法{こんでんえいねんしざいほう}', '開いた 土地を ずっと 自分の ものに できる → 荘園の 始まり'],
+        [752, '東大寺の 大仏が 完成', '聖武天皇{しょうむてんのう}が 仏教の 力で 国を まもろうとした'],
+        [794, '平安京{へいあんきょう}に 都を うつす', '桓武天皇{かんむてんのう}。平安時代の 始まり'],
+        [894, '遣唐使{けんとうし}を やめる', '菅原道真{すがわらのみちざね}の 意見。国風文化が そだつ'],
+        [1016, '藤原道長{ふじわらのみちなが}が 摂政に なる', '摂関政治の 全盛。「この世をば わが世とぞ思ふ」'],
+        [1167, '平清盛{たいらのきよもり}が 太政大臣に なる', '武士で はじめて。日宋貿易で 富を きずく'],
+        [1185, '壇ノ浦の戦い・守護地頭を おく', '平氏が ほろびる。源頼朝が 全国に 守護と 地頭を おく'],
+        [1192, '源頼朝{みなもとのよりとも}が 征夷大将軍に なる', '鎌倉幕府。将軍と 御家人の「御恩と 奉公」'],
+        [1221, '承久の乱{じょうきゅうのらん}', '後鳥羽上皇が やぶれ、幕府の 力が 西国にも およぶ'],
+        [1232, '御成敗式目{ごせいばいしきもく}', '北条泰時。武士の ための はじめての 法律'],
+        [1274, '元寇（文永の役）', '元（モンゴル）が せめて くる。1281年に 弘安の役'],
+        [1333, '鎌倉幕府が ほろびる', '後醍醐天皇の 建武の新政が 始まる'],
+        [1338, '足利尊氏{あしかがたかうじ}が 室町幕府を ひらく', '京都に 幕府。のちに 南北朝が 合体'],
+        [1404, '勘合貿易{かんごうぼうえき}が 始まる', '足利義満が 明と 貿易。倭寇と 区別する 合い札を つかう'],
+        [1467, '応仁の乱{おうにんのらん}', '11年 つづく 戦い。京都が 焼け、戦国時代へ'],
+        [1543, '鉄砲の 伝来', 'ポルトガル人が 種子島{たねがしま}に ひょうちゃく'],
+        [1549, 'キリスト教の 伝来', 'ザビエルが 鹿児島に 上陸'],
+        [1573, '室町幕府が ほろびる', '織田信長が 足利義昭を 京都から 追放'],
+        [1582, '本能寺の変', '明智光秀が 織田信長を たおす'],
+        [1590, '豊臣秀吉{とよとみひでよし}が 全国を 統一', '太閤検地と 刀狩で 兵農分離を すすめた'],
+        [1600, '関ヶ原の戦い', '徳川家康が 石田三成らに 勝ち、天下の 実権を にぎる'],
+        [1603, '徳川家康{とくがわいえやす}が 江戸幕府を ひらく', '265年 つづく 江戸時代の 始まり'],
+        [1615, '武家諸法度{ぶけしょはっと}', '大名を 取りしまる 決まり。1635年に 参勤交代を 制度化'],
+        [1637, '島原・天草一揆', '天草四郎が ひきいる キリスト教徒と 農民の 一揆'],
+        [1641, '鎖国{さこく}の 完成', 'オランダ商館を 出島へ。中国・オランダとだけ 長崎で 貿易'],
+        [1716, '享保の改革{きょうほうのかいかく}', '徳川吉宗。目安箱・公事方御定書・上げ米'],
+        [1787, '寛政の改革', '松平定信。ききんに そなえて 米を たくわえさせる'],
+        [1841, '天保の改革', '水野忠邦。株仲間の 解散などを おこなうが 失敗'],
+        [1853, 'ペリーが 浦賀に 来る', '翌年 日米和親条約。下田と 函館を ひらく'],
+        [1858, '日米修好通商条約', '関税自主権が なく 領事裁判権を みとめる 不平等条約'],
+        [1867, '大政奉還{たいせいほうかん}', '徳川慶喜が 政権を 朝廷に かえす'],
+        [1868, '明治維新・五箇条の御誓文', '明治時代の 始まり。江戸を 東京に あらためる'],
+        [1871, '廃藩置県{はいはんちけん}', '藩を なくして 県を おき、中央集権を つくる'],
+        [1873, '地租改正・徴兵令', '土地の 価格の 3%を 現金で 納めさせる。富国強兵の 柱'],
+        [1877, '西南戦争', '西郷隆盛を かついだ 士族の 最後の 反乱'],
+        [1889, '大日本帝国憲法の 発布', '天皇が 定めて 国民に あたえる 欽定憲法'],
+        [1894, '日清戦争', '翌年 下関条約。同じ年に 領事裁判権の てっぱいに 成功'],
+        [1904, '日露戦争', '翌年 ポーツマス条約。賠償金が とれず 日比谷焼き打ち事件'],
+        [1911, '関税自主権の 回復', '小村寿太郎。不平等条約の 改正が 完成'],
+        [1914, '第一次世界大戦が 始まる', '日本は 連合国側で 参戦。大戦景気に わく'],
+        [1923, '関東大震災', '東京・横浜が 大きな 被害を 受ける'],
+        [1925, '普通選挙法・治安維持法', '25歳以上の すべての 男子に 選挙権。同時に 取りしまりも 強める'],
+        [1931, '満州事変', '翌々年 日本は 国際連盟を 脱退する'],
+        [1937, '日中戦争が 始まる', '長い 戦争に 入り、国家総動員法が つくられる'],
+        [1941, '太平洋戦争が 始まる', '真珠湾攻撃。1945年の 敗戦まで つづく'],
+        [1945, 'ポツダム宣言を 受け入れ 終戦', '広島・長崎に 原子爆弾。8月15日に 玉音放送'],
+        [1946, '日本国憲法の 公布', '11月3日 公布、翌年 5月3日 施行'],
+        [1951, 'サンフランシスコ平和条約', '同時に 日米安全保障条約を 結ぶ。翌年 独立を 回復'],
+        [1956, '国際連合に 加盟', '日ソ共同宣言で ソ連と 国交を 回復したため'],
+        [1964, '東京オリンピック', '東海道新幹線と 高速道路が 開通。高度経済成長の 象徴'],
+        [1972, '沖縄が 日本に 復帰', '同じ年に 日中共同声明で 中国と 国交を 正常化'],
+        [1995, '阪神・淡路大震災', 'ボランティア元年と いわれる'],
+        [2011, '東日本大震災', '地震と 津波。原子力発電の あり方が 問われる']
+    ];
+
+    let hiEra = 'all';
+    function drawTimeline() {
+        const eras = ['all'].concat(ERAS.map(e => e[0]));
+        document.getElementById('hi-chips').innerHTML = eras.map(e => {
+            const n = e === 'all' ? EVENTS.length : EVENTS.filter(v => eraOf(v[0]) === e).length;
+            return `<button onclick="setEra('${e}')" data-era="${e}" class="${hiEra === e ? 'bg-orange-700 text-white' : 'bg-white border-2 border-amber-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${e === 'all' ? 'ぜんぶ' : e} <span class="num opacity-80">${n}</span></button>`;
+        }).join('');
+        const list = EVENTS.filter(v => hiEra === 'all' || eraOf(v[0]) === hiEra);
+        document.getElementById('hi-count').innerText = `${list.length} けん`;
+        document.getElementById('hi-list').innerHTML = list.map(([y, name, note]) => {
+            const era = eraOf(y), col = eraColor(era);
+            return `<div class="flex gap-2 items-start border-l-4 pl-3 py-1.5" style="border-color:${col}" data-ev="${y}">
+                <span class="num font-black text-sm w-12 shrink-0" style="color:${col}">${y}</span>
+                <div class="min-w-0">
+                    <p class="font-black text-sm leading-snug">${name}</p>
+                    <p class="text-xs font-bold text-slate-500 leading-snug">${note}</p>
+                </div>
+                <span class="ml-auto text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 text-white" style="background:${col}">${era}</span>
+            </div>`;
+        }).join('');
+    }
+    function setEra(e) { hiEra = e; drawTimeline(); }
+
+    /* --- ならべかえ --- */
+    let oq = null;
+    function newOrder() {
+        let pick, guard = 0;
+        do {
+            pick = shuffle(EVENTS).slice(0, 4);
+            guard++;
+        } while (guard < 100 && new Set(pick.map(e => e[0])).size !== 4);
+        const sorted = pick.slice().sort((a, b) => a[0] - b[0]);
+        oq = { cards: shuffle(pick), order: sorted, chosen: [], done: false };
+        drawOrder();
+        document.getElementById('oq-res').innerHTML = '';
+        scoreBox('oq-score', S.order);
+    }
+    function resetOrder() { if (oq && !oq.done) { oq.chosen = []; drawOrder(); } }
+    function drawOrder() {
+        document.getElementById('oq-cards').innerHTML = oq.cards.map((e, i) => {
+            const at = oq.chosen.indexOf(i);
+            const on = at >= 0;
+            return `<button onclick="tapOrder(${i})" data-oq="${i}" ${oq.done ? 'disabled' : ''}
+                class="${on ? 'bg-orange-600 text-white border-orange-700' : 'bg-white border-slate-200'} border-2 w-full text-left px-3 py-3 rounded-2xl bounce-hover flex gap-3 items-center">
+                <span class="num font-black w-7 h-7 shrink-0 rounded-full grid place-items-center ${on ? 'bg-white text-orange-700' : 'bg-slate-100 text-slate-400'}">${on ? at + 1 : '?'}</span>
+                <span class="font-black text-sm leading-snug">${oq.done ? '<span class="num mr-2">' + e[0] + '</span>' : ''}${e[1]}</span>
+            </button>`;
+        }).join('');
+    }
+    function tapOrder(i) {
+        if (!oq || oq.done) return;
+        const at = oq.chosen.indexOf(i);
+        if (at >= 0) oq.chosen.splice(at, 1); else oq.chosen.push(i);
+        drawOrder();
+        if (oq.chosen.length === 4) judgeOrder();
+    }
+    function judgeOrder() {
+        oq.done = true;
+        const got = oq.chosen.map(i => oq.cards[i]);
+        const ok = got.every((e, i) => e[0] === oq.order[i][0]);
+        S.order[1]++; if (ok) S.order[0]++;
+        drawOrder();
+        document.querySelectorAll('[data-oq]').forEach(el => {
+            const e = oq.cards[+el.dataset.oq];
+            const right = oq.order.indexOf(e) === oq.chosen.indexOf(+el.dataset.oq);
+            el.className = `${right ? 'bg-green-50 border-green-500' : 'bg-red-50 border-red-400'} border-2 w-full text-left px-3 py-3 rounded-2xl flex gap-3 items-center`;
+        });
+        document.getElementById('oq-res').innerHTML = resultBox(ok, ok ? '⭕ ぜんぶ 正しい じゅんばん！' : '❌ じゅんばんが ちがいます',
+            '正しい じゅん：<br>' + oq.order.map(e => `<span class="num font-black">${e[0]}</span>　${e[1]}（${eraOf(e[0])}）`).join('<br>'));
+        scoreBox('oq-score', S.order);
+    }
+
+    /* =====================================================================
+       ③ 三権分立
+       ===================================================================== */
+    const POWERS = {
+        diet: { n: '国会', s: '立法', d: '法律を つくる。国の 最高機関で、ただ 一つの 立法機関。' },
+        cab: { n: '内閣', s: '行政', d: '法律に もとづいて 実際の 仕事を する。内閣総理大臣と 国務大臣。' },
+        court: { n: '裁判所', s: '司法', d: '法律に てらして 争いを さばく。三審制で 慎重に 判断する。' }
+    };
+    const LINKS = [
+        { id: 'd2c', from: 'diet', to: 'cab', n: '内閣総理大臣の 指名／内閣不信任の 決議', d: '国会は 総理大臣を 国会議員の 中から 指名する。衆議院で 不信任が 可決されると、内閣は 総辞職するか 10日以内に 衆議院を 解散する。' },
+        { id: 'c2d', from: 'cab', to: 'diet', n: '衆議院の 解散／国会の 召集', d: '内閣は 衆議院を 解散できる。解散から 40日以内に 総選挙、その後 30日以内に 特別国会を ひらく。' },
+        { id: 'c2j', from: 'cab', to: 'court', n: '最高裁判所長官の 指名・裁判官の 任命', d: '内閣が 最高裁判所長官を 指名し（任命は 天皇）、ほかの 裁判官を 任命する。' },
+        { id: 'j2c', from: 'court', to: 'cab', n: '命令・規則・処分の 違憲審査', d: '内閣の した ことが 憲法に 合って いるかを 裁判所が 審査する。' },
+        { id: 'd2j', from: 'diet', to: 'court', n: '弾劾裁判所{だんがいさいばんしょ}の 設置', d: 'ふさわしくない 裁判官を やめさせるか どうかを、国会議員が 裁判する。' },
+        { id: 'j2d', from: 'court', to: 'diet', n: '法律の 違憲審査', d: '国会が つくった 法律が 憲法に 合って いるかを 審査する。最高裁判所は「憲法の 番人」と よばれる。' },
+        { id: 'p2d', from: 'people', to: 'diet', n: '選挙', d: '18歳以上の 国民が 国会議員を えらぶ。' },
+        { id: 'p2c', from: 'people', to: 'cab', n: '世論{よろん}', d: '国民の 意見が 内閣の 支持率などを 通じて 政治を 動かす。' },
+        { id: 'p2j', from: 'people', to: 'court', n: '国民審査', d: '最高裁判所の 裁判官が ふさわしいかを、衆議院議員総選挙の ときに 国民が 判断する。' }
+    ];
+    let cvSel = null;
+    function drawCivics() {
+        const W = 560, H = 420;
+        const P = { diet: [280, 60], cab: [86, 250], court: [474, 250], people: [280, 358] };
+        const box = (k, x, y, col) => {
+            const p = POWERS[k];
+            return `<g><rect x="${x - 78}" y="${y - 34}" width="156" height="68" rx="14" fill="${col}"/>
+                <text x="${x}" y="${y - 6}" text-anchor="middle" font-size="22" font-weight="900" fill="#fff">${p.n}</text>
+                <text x="${x}" y="${y + 20}" text-anchor="middle" font-size="14" font-weight="800" fill="#fff" opacity="0.9">${p.s}</text></g>`;
+        };
+        let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="18" fill="#fffbeb"/>`;
+        g += `<defs>
+            <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="#78716c"/></marker>
+            <marker id="arOn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="#c2410c"/></marker></defs>`;
+        // 矢印（少し ずらして 往復が 重ならないように）
+        const arrow = (l) => {
+            const a = P[l.from], b = P[l.to];
+            const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy);
+            const ux = dx / len, uy = dy / len, nx = -uy, ny = ux;
+            const off = l.from === 'people' ? 0 : 13;
+            const pad = 74;
+            const x1 = a[0] + ux * pad + nx * off, y1 = a[1] + uy * pad * 0.62 + ny * off;
+            const x2 = b[0] - ux * pad + nx * off, y2 = b[1] - uy * pad * 0.62 + ny * off;
+            const on = cvSel === l.id;
+            return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"
+                    stroke="${on ? '#c2410c' : '#a8a29e'}" stroke-width="${on ? 6 : 3.5}" marker-end="url(#${on ? 'arOn' : 'ar'})"/>
+                <line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"
+                    stroke="transparent" stroke-width="26" style="cursor:pointer" data-link="${l.id}"/>`;
+        };
+        g += LINKS.map(arrow).join('');
+        g += box('diet', P.diet[0], P.diet[1], '#b45309') + box('cab', P.cab[0], P.cab[1], '#0f766e') + box('court', P.court[0], P.court[1], '#7c3aed');
+        g += `<ellipse cx="${P.people[0]}" cy="${P.people[1]}" rx="78" ry="34" fill="#be123c"/>
+              <text x="${P.people[0]}" y="${P.people[1] + 7}" text-anchor="middle" font-size="21" font-weight="900" fill="#fff">国民</text>`;
+        document.getElementById('cv-fig').innerHTML = svg(W, H, g);
+        document.getElementById('cv-fig').querySelectorAll('[data-link]').forEach(el =>
+            el.addEventListener('click', () => showLink(el.dataset.link)));
+        const l = LINKS.find(x => x.id === cvSel);
+        document.getElementById('cv-detail').innerHTML = l
+            ? `<p class="font-black text-orange-800">${POWERS[l.from] ? POWERS[l.from].n : '国民'} ➡ ${POWERS[l.to].n}</p>
+               <p class="font-black mt-1">${l.n}</p><p class="mt-1 text-slate-600">${l.d}</p>`
+            : `<p class="text-slate-500">矢印を タップすると、その はたらきが 出るよ。
+               <span class="block mt-1">国会＝法律を つくる／内閣＝仕事を する／裁判所＝さばく。
+               国民は 選挙・世論・国民審査で 3つとも 見はって いる。</span></p>`;
+    }
+    function showLink(id) { cvSel = id; drawCivics(); }
+
+    let vq = null;
+    function newCivicsQ() {
+        const l = pickOne(LINKS);
+        const ask = rnd(2);
+        let q, ans, choices;
+        if (ask === 0) {
+            const fromN = l.from === 'people' ? '国民' : POWERS[l.from].n;
+            q = `${fromN} が ${POWERS[l.to].n} に 対して おこなう ことは どれ？`;
+            ans = l.n;
+            // まぎらわしく するため、まず「同じ 相手に 向かう／同じ 2つの あいだ」の はたらきから えらぶ
+            const rest = LINKS.filter(x => x.id !== l.id && x.n !== l.n);
+            const near = shuffle(rest.filter(x => x.to === l.to || x.to === l.from || x.from === l.to));
+            const far = shuffle(rest.filter(x => near.indexOf(x) < 0));
+            choices = shuffle([l].concat(near.concat(far).slice(0, 3))).map(x => x.n);
+        } else {
+            q = `「${l.n}」は どこから どこへ の はたらき？`;
+            const label = x => `${x.from === 'people' ? '国民' : POWERS[x.from].n} ➡ ${POWERS[x.to].n}`;
+            ans = label(l);
+            const others = shuffle(LINKS.filter(x => label(x) !== ans)).slice(0, 3);
+            choices = shuffle([ans].concat(others.map(label)));
+        }
+        vq = { l, ans, choices, done: false };
+        document.getElementById('vq-q').innerHTML = q;
+        document.getElementById('vq-choices').innerHTML = choices.map((c, i) =>
+            `<button onclick="ansCivics(${i})" data-vqc="${i}" class="bg-white border-2 border-slate-200 hover:border-orange-500 font-bold text-left px-4 py-3 rounded-2xl bounce-hover text-sm">${c}</button>`).join('');
+        document.getElementById('vq-res').innerHTML = '';
+        scoreBox('vq-score', S.civics);
+    }
+    function ansCivics(i) {
+        if (!vq || vq.done) return;
+        vq.done = true;
+        const ok = vq.choices[i] === vq.ans;
+        S.civics[1]++; if (ok) S.civics[0]++;
+        document.querySelectorAll('[data-vqc]').forEach((el, j) => {
+            const isR = vq.choices[j] === vq.ans;
+            el.className = `${isR ? 'bg-green-50 border-green-500' : (j === i ? 'bg-red-50 border-red-400 shake' : 'bg-white border-slate-200 opacity-60')} border-2 font-bold text-left px-4 py-3 rounded-2xl text-sm`;
+        });
+        showLink(vq.l.id);
+        document.getElementById('vq-res').innerHTML = resultBox(ok, ok ? '⭕ せいかい！' : `❌ こたえは 「${vq.ans}」`, vq.l.d);
+        scoreBox('vq-score', S.civics);
+    }
+
+    /* =====================================================================
+       ④ 一問一答
+       ===================================================================== */
+    const QS = [
+        // --- 地理 ---
+        { f: '地理', q: '日本で いちばん 長い 川は？', a: '信濃川', x: ['利根川', '石狩川', '木曽川'], e: '長さ 367km。流域面積が いちばん 広いのは 利根川。' },
+        { f: '地理', q: '流域面積が 日本一 広い 川は？', a: '利根川', x: ['信濃川', '石狩川', '北上川'], e: '関東平野を 流れる。「坂東太郎」の よび名も ある。' },
+        { f: '地理', q: '日本で いちばん 広い 平野は？', a: '関東平野', x: ['石狩平野', '越後平野', '濃尾平野'], e: '関東ローム層と よばれる 火山灰の 赤土が つもって いる。' },
+        { f: '地理', q: '日本で いちばん 大きい 湖は？', a: '琵琶湖', x: ['霞ヶ浦', 'サロマ湖', '猪苗代湖'], e: '滋賀県に あり、京阪神の 水がめ。面積は 滋賀県の やく6分の1。' },
+        { f: '地理', q: '日本の 南の はしの 島は？', a: '沖ノ鳥島', x: ['南鳥島', '与那国島', '択捉島'], e: '東＝南鳥島、西＝与那国島、北＝択捉島。沖ノ鳥島は 広い 排他的経済水域を まもる ため 護岸された。' },
+        { f: '地理', q: '海岸から 何海里までが 排他的経済水域？', a: '200海里', x: ['12海里', '50海里', '500海里'], e: '領海は 12海里。排他的経済水域では 水産物や 鉱物を 自国の ものに できる。' },
+        { f: '地理', q: '工業出荷額が 日本一の 工業地帯は？', a: '中京工業地帯', x: ['京浜工業地帯', '阪神工業地帯', '北九州工業地域'], e: '愛知県 豊田市の 自動車工業が 中心。機械工業の わりあいが とても 高い。' },
+        { f: '地理', q: '関東から 九州北部まで 工業地域が 帯のように つらなる ところを 何と いう？', a: '太平洋ベルト', x: ['シラス台地', '中央高地', 'フォッサマグナ'], e: '原料の 輸入と 製品の 輸出に べんりな 臨海部に あつまった。' },
+        { f: '地理', q: 'ビニールハウスで 野菜を ふつうより 早く 出荷する 方法は？', a: '促成栽培', x: ['抑制栽培', '二期作', '輪作'], e: '高知平野・宮崎平野が 有名。おそく 出荷するのは 抑制栽培（長野・群馬の 高原野菜）。' },
+        { f: '地理', q: '同じ 土地で 1年に ちがう 作物を 2回 作る ことを 何と いう？', a: '二毛作', x: ['二期作', '促成栽培', '混合農業'], e: '同じ 作物を 2回 作るのが 二期作。' },
+        { f: '地理', q: '東北地方の 太平洋側に 夏 ふく、冷害を おこす 北東の 風は？', a: 'やませ', x: ['からっ風', '季節風', 'フェーン'], e: 'つめたく しめった 風で、日照不足と 低温を まねく。' },
+        { f: '地理', q: '暖流と 寒流が ぶつかり、よい 漁場に なる ところを 何と いう？', a: '潮目', x: ['大陸だな', 'リアス海岸', 'トラフ'], e: '三陸沖が 有名。暖流は 黒潮（日本海流）、寒流は 親潮（千島海流）。' },
+        { f: '地理', q: '谷が 海に しずんで できた、出入りの 多い 海岸は？', a: 'リアス海岸', x: ['砂丘海岸', '三角州', '扇状地'], e: '三陸海岸・志摩半島・若狭湾。波が おだやかで 養殖に むくが、津波が 高くなりやすい。' },
+        { f: '地理', q: '川が 山から 平地に 出る ところに できる、水はけの よい 地形は？', a: '扇状地', x: ['三角州', '台地', 'カルデラ'], e: '果樹園に むく（甲府盆地の ぶどう・もも）。河口の 三角州は 水田に むく。' },
+        { f: '地理', q: '鹿児島県に 広がる 火山灰の 台地を 何と いう？', a: 'シラス台地', x: ['関東ローム', '黒ぼく土', 'カルスト'], e: '水もちが わるく 稲作に むかないので、さつまいもや 畜産が さかん。' },
+        { f: '地理', q: '阿蘇山に みられる、噴火で できた 大きな くぼ地は？', a: 'カルデラ', x: ['扇状地', 'リアス', '砂丘'], e: '阿蘇の カルデラは 世界最大級。中に 町や 田畑が ある。' },
+        { f: '地理', q: '日本の 食料自給率（カロリーベース）は およそ？', a: 'やく38%', x: ['やく60%', 'やく80%', 'やく15%'], e: '米は ほぼ 100%だが、小麦・大豆・肉の えさは 輸入に たよる。' },
+        { f: '地理', q: '原料を 輸入し、加工して 製品を 輸出する 貿易を 何と いう？', a: '加工貿易', x: ['中継貿易', '自由貿易', '三角貿易'], e: '今の 日本の 輸出入は どちらも 機械類が 中心に なって いる。' },
+        { f: '地理', q: '2つ以上の 都道府県に またがる 工業地域では ない ものは？', a: '瀬戸内工業地域は 1県だけ', x: ['京浜工業地帯', '阪神工業地帯', '東海工業地域'], e: '瀬戸内工業地域も 岡山・広島・山口・愛媛・香川などに またがる。' },
+        { f: '地理', q: '東京・大阪・名古屋のように、人口が 集まりすぎる ことを 何と いう？', a: '過密', x: ['過疎', 'ドーナツ化', 'Uターン'], e: '反対に 人口が へりすぎるのが 過疎。地方では 高齢化も すすむ。' },
+        // --- 歴史 ---
+        { f: '歴史', q: '十七条の憲法を 定めたのは？', a: '聖徳太子', x: ['中大兄皇子', '聖武天皇', '藤原道長'], e: '604年。役人の 心がまえを しめした。遣隋使も 送った。' },
+        { f: '歴史', q: '東大寺の 大仏を つくらせた 天皇は？', a: '聖武天皇', x: ['天武天皇', '桓武天皇', '推古天皇'], e: '仏教の 力で 国を まもろうと した（鎮護国家）。752年 完成。' },
+        { f: '歴史', q: '遣唐使を やめる ことを 提案したのは？', a: '菅原道真', x: ['小野妹子', '藤原道長', '鑑真'], e: '894年。これ以後、日本ふうの 国風文化が そだった。' },
+        { f: '歴史', q: '鎌倉幕府の 将軍と 御家人の 関係を 何と いう？', a: '御恩と奉公', x: ['封建と検地', '和と礼', '座と楽市'], e: '将軍が 領地を 保証し（御恩）、御家人が いくさで はたらく（奉公）。' },
+        { f: '歴史', q: '武士の ための はじめての 法律は？', a: '御成敗式目', x: ['大宝律令', '武家諸法度', '十七条の憲法'], e: '1232年、北条泰時が 定めた。' },
+        { f: '歴史', q: '1543年に 種子島に つたわった ものは？', a: '鉄砲', x: ['キリスト教', '活版印刷', '時計'], e: 'キリスト教の 伝来は 1549年、ザビエル。' },
+        { f: '歴史', q: '刀狩と 太閤検地を おこなったのは？', a: '豊臣秀吉', x: ['織田信長', '徳川家康', '足利義満'], e: '武士と 農民を はっきり 分ける 兵農分離が すすんだ。' },
+        { f: '歴史', q: '参勤交代を 制度として 定めたのは？', a: '徳川家光', x: ['徳川家康', '徳川吉宗', '徳川慶喜'], e: '1635年、武家諸法度の 中で 定めた。大名の 力を そぐ ねらい。' },
+        { f: '歴史', q: '江戸時代に 外国との まどぐちだった 場所は？', a: '長崎の出島', x: ['横浜', '神戸', '博多'], e: 'オランダと 中国のみ。ほかに 対馬（朝鮮）・薩摩（琉球）・松前（アイヌ）の 4つの 口が あった。' },
+        { f: '歴史', q: '享保の改革を おこなった 将軍は？', a: '徳川吉宗', x: ['松平定信', '水野忠邦', '田沼意次'], e: '目安箱・公事方御定書・上げ米の 制。「米将軍」と よばれた。' },
+        { f: '歴史', q: '1853年に 浦賀に 来た アメリカの 人物は？', a: 'ペリー', x: ['ハリス', 'ラクスマン', 'ザビエル'], e: '翌年 日米和親条約。1858年 日米修好通商条約は ハリスと 結んだ。' },
+        { f: '歴史', q: '日米修好通商条約が 不平等だった 点は？', a: '関税自主権がなく領事裁判権をみとめた', x: ['領土をうばわれた', '賠償金をはらった', '軍をおかれた'], e: '関税自主権の 回復は 1911年（小村寿太郎）。' },
+        { f: '歴史', q: '1871年、藩を やめて 県を おいた 改革は？', a: '廃藩置県', x: ['地租改正', '版籍奉還', '徴兵令'], e: '中央集権国家を つくる ための 改革。' },
+        { f: '歴史', q: '大日本帝国憲法は だれが 定める 形で つくられた？', a: '天皇が国民にあたえる', x: ['国民が話し合ってつくる', '外国がつくる', '将軍が定める'], e: '欽定憲法。日本国憲法は 国民が 定める 民定憲法。' },
+        { f: '歴史', q: '日露戦争の 講和条約は？', a: 'ポーツマス条約', x: ['下関条約', 'サンフランシスコ平和条約', 'ベルサイユ条約'], e: '賠償金が とれず 国民が 不満を もち、日比谷焼き打ち事件が おきた。' },
+        { f: '歴史', q: '1925年、選挙権が あたえられたのは？', a: '25歳以上のすべての男子', x: ['20歳以上の男女', '25歳以上の男女', '20歳以上の男子'], e: '同じ年に 治安維持法も つくられた。女性の 選挙権は 1945年から。' },
+        { f: '歴史', q: '日本国憲法が 公布された 日は？', a: '1946年11月3日', x: ['1947年5月3日', '1945年8月15日', '1951年9月8日'], e: '施行は 1947年5月3日（憲法記念日）。公布は 文化の日。' },
+        { f: '歴史', q: '日本が 国際連合に 加盟した 年は？', a: '1956年', x: ['1951年', '1945年', '1964年'], e: '日ソ共同宣言で ソ連と 国交を 回復し、反対が なくなった ため。' },
+        { f: '歴史', q: '沖縄が 日本に 復帰した 年は？', a: '1972年', x: ['1964年', '1956年', '1985年'], e: '同じ年に 日中共同声明で 中国と 国交を 正常化した。' },
+        { f: '歴史', q: '1964年に 東京オリンピックに あわせて 開通した ものは？', a: '東海道新幹線', x: ['青函トンネル', '瀬戸大橋', '東京スカイツリー'], e: '高度経済成長の 象徴。' },
+        // --- 公民 ---
+        { f: '公民', q: '日本国憲法の 三原則に 入らない ものは？', a: '富国強兵', x: ['国民主権', '基本的人権の尊重', '平和主義'], e: '三原則は 国民主権・基本的人権の尊重・平和主義。' },
+        { f: '公民', q: '戦争の 放棄を 定めた 憲法の 条文は？', a: '第9条', x: ['第1条', '第25条', '第14条'], e: '第25条は 生存権（健康で文化的な最低限度の生活）。' },
+        { f: '公民', q: '憲法を 改正する ために 必要な ことは？', a: '各議院の総議員の3分の2以上の賛成と国民投票の過半数', x: ['国会の過半数だけ', '内閣の決定', '国民投票だけ'], e: 'とても きびしい 手つづき（硬性憲法）。' },
+        { f: '公民', q: '国会は 国の 何と 位置づけられて いる？', a: '国権の最高機関で唯一の立法機関', x: ['行政の最高機関', '司法の最高機関', '天皇の助言機関'], e: '法律を つくれるのは 国会だけ。' },
+        { f: '公民', q: '衆議院議員の 任期は？', a: '4年（解散あり）', x: ['6年（解散なし）', '3年', '5年'], e: '参議院は 6年・3年ごとに 半数を 改選・解散なし。' },
+        { f: '公民', q: '内閣総理大臣は どうやって 決まる？', a: '国会が国会議員の中から指名する', x: ['国民が直接えらぶ', '天皇が任命する', '各党の党首が話し合う'], e: '任命は 天皇が おこなう（国事行為）。' },
+        { f: '公民', q: '同じ 事件で 3回まで 裁判を 受けられる しくみは？', a: '三審制', x: ['三権分立', '陪審制', '再審'], e: '第一審→控訴→上告。まちがいを ふせぐ ため。' },
+        { f: '公民', q: '裁判員が 参加するのは どんな 裁判？', a: '重大な刑事事件の第一審', x: ['すべての民事裁判', '最高裁判所', '家庭裁判所のすべて'], e: '18歳以上の 国民から くじで えらばれる。' },
+        { f: '公民', q: '最高裁判所が「憲法の 番人」と よばれる 理由は？', a: '法律が憲法に合うか最終的に判断するから', x: ['憲法をつくるから', '天皇をまもるから', '国会を解散できるから'], e: '違憲審査権は すべての 裁判所に あるが、最終決定は 最高裁判所。' },
+        { f: '公民', q: '選挙権は 何歳から？', a: '18歳以上', x: ['20歳以上', '16歳以上', '25歳以上'], e: '被選挙権は 衆議院 25歳以上、参議院・知事 30歳以上。' },
+        { f: '公民', q: '地方自治が「民主主義の 学校」と よばれるのは なぜ？', a: '住民が身近な政治に直接参加できるから', x: ['学校を運営するから', '子どもが投票できるから', '税金が安いから'], e: '条例の 制定請求や 首長の 解職請求（リコール）などの 直接請求権が ある。' },
+        { f: '公民', q: '消費税は どの 種類の 税？', a: '間接税', x: ['直接税', '関税', '目的税'], e: '負担する 人と 納める 人が ちがうのが 間接税。所得税・法人税は 直接税。' },
+        { f: '公民', q: '社会保障の 4つの 柱に 入らない ものは？', a: '公共事業', x: ['社会保険', '公的扶助', '公衆衛生'], e: '4つは 社会保険・公的扶助・社会福祉・公衆衛生。' },
+        { f: '公民', q: '国際連合で、常任理事国が もつ 特別な 権利は？', a: '拒否権', x: ['議長権', '査察権', '独立権'], e: 'アメリカ・イギリス・フランス・ロシア・中国の 5カ国。1国でも 反対すると 決議できない。' },
+        { f: '公民', q: '世界遺産を 登録して いる 国連の 機関は？', a: 'ユネスコ（UNESCO）', x: ['ユニセフ（UNICEF）', 'WHO', 'WTO'], e: 'ユニセフは 子ども、WHOは 保健、WTOは 貿易。' },
+        { f: '公民', q: '国会の 議決で、衆議院の 議決が 優先される ことを 何と いう？', a: '衆議院の優越', x: ['両院協議会', '一事不再議', '過半数の原則'], e: '任期が 短く 解散も あり、国民の 意見を より 反映しやすい ため。' }
+    ];
+    let qz = null, qzField = 'all';
+    function newQuiz() {
+        const pool = qzField === 'all' ? QS : QS.filter(q => q.f === qzField);
+        const q = pool[rnd(pool.length)];
+        qz = { q, choices: shuffle([q.a].concat(q.x)), done: false };
+        const fields = ['all'].concat([...new Set(QS.map(x => x.f))]);
+        document.getElementById('qz-fields').innerHTML = fields.map(f =>
+            `<button onclick="setField('${f}')" data-qf="${f}" class="${qzField === f ? 'bg-orange-700 text-white' : 'bg-white border-2 border-amber-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${f === 'all' ? 'ぜんぶ ' + QS.length : f + ' ' + QS.filter(x => x.f === f).length}</button>`).join('');
+        document.getElementById('qz-q').innerHTML = `<span class="text-xs font-black text-orange-700 bg-orange-100 px-2 py-1 rounded-lg mr-2">${esc(q.f)}</span>${esc(q.q)}`;
+        document.getElementById('qz-choices').innerHTML = qz.choices.map((c, i) =>
+            `<button onclick="ansQuiz(${i})" data-qzc="${i}" class="bg-white border-2 border-slate-200 hover:border-orange-500 font-bold text-left px-4 py-3 rounded-2xl bounce-hover">${esc(c)}</button>`).join('');
+        document.getElementById('qz-res').innerHTML = '';
+        scoreBox('qz-score', S.quiz);
+    }
+    function setField(f) { qzField = f; newQuiz(); }
+    function ansQuiz(i) {
+        if (!qz || qz.done) return;
+        qz.done = true;
+        const ok = qz.choices[i] === qz.q.a;
+        S.quiz[1]++; if (ok) S.quiz[0]++;
+        document.querySelectorAll('[data-qzc]').forEach((el, j) => {
+            const isR = qz.choices[j] === qz.q.a;
+            el.className = `${isR ? 'bg-green-50 border-green-500' : (j === i ? 'bg-red-50 border-red-400 shake' : 'bg-white border-slate-200 opacity-60')} border-2 font-bold text-left px-4 py-3 rounded-2xl`;
+        });
+        document.getElementById('qz-res').innerHTML = resultBox(ok, ok ? '⭕ せいかい！' : `❌ こたえは 「${esc(qz.q.a)}」`, esc(qz.q.e));
+        scoreBox('qz-score', S.quiz);
+    }
+
+    /* ===================== 起動 ===================== */
+    renderNav();
+    drawClimate();
+    newClimateQ();
+    rubify(document.body);
+</script>
+</body>
+</html>
