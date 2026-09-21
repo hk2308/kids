@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中学受験 国語ラボ</title>
+    <meta name="description" content="中学受験の国語を図とクイズで。二字熟語の組み立て6種、対義語・類義語、敬語の使い分け、からだの慣用句、つなぎことば（接続語）を練習できる。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums }
+        .bounce-hover { transition: transform .12s cubic-bezier(.175,.885,.32,1.275) }
+        .bounce-hover:active { transform: scale(.94) }
+        @keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.1) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275) }
+        @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+        .shake { animation: shake .3s ease-in-out }
+        svg text { font-family: inherit }
+        rt { font-size: .55em; font-weight: 700; color: #4338ca }
+        .blank { display: inline-block; min-width: 3.2em; border-bottom: 4px solid #6366f1; color: #4338ca; text-align: center }
+    </style>
+</head>
+<body class="bg-indigo-50 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-indigo-800 via-violet-700 to-purple-700 text-white p-3 shadow-lg sticky top-0 z-30">
+        <div class="max-w-4xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">✍️</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">中学受験 国語ラボ</h1>
+                    <p class="text-xs text-indigo-100 font-bold hidden sm:block">熟語・対義語・敬語・慣用句・つなぎことば</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[64px] z-20 bg-indigo-50/95 backdrop-blur border-b border-indigo-200">
+        <div class="max-w-4xl mx-auto flex gap-2 p-3 overflow-x-auto" id="tab-nav"></div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto w-full p-3 sm:p-5 flex-grow space-y-4">
+
+        <!-- ===== ① 熟語の組み立て ===== -->
+        <section id="tab-jukugo" class="space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">🧩 二字熟語の 組み立て</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    2つの 漢字が どんな 関係に なって いるかで 6つに 分けられる。
+                    <b class="text-indigo-700">訓読み（くんよみ）に して みる</b>と 見分けやすいよ。
+                </p>
+                <div id="ju-chips" class="flex flex-wrap gap-2 mt-3"></div>
+                <div id="ju-head" class="mt-3"></div>
+                <div id="ju-list" class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">📝 組み立ては どれ？</h2>
+                    <span id="jq-score" class="num bg-indigo-100 text-indigo-700 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newJukugoQ()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <div id="jq-word" class="text-center my-4"></div>
+                <div id="jq-choices" class="grid grid-cols-2 gap-2"></div>
+                <div id="jq-res" class="mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ② 対義語・類義語 ===== -->
+        <section id="tab-pairs" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">↔️ 対義語（たいぎご）・類義語（るいぎご）</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    反対の 意味の ことばが <b class="text-rose-700">対義語</b>、にた 意味の ことばが <b class="text-teal-700">類義語</b>。
+                </p>
+                <div id="pr-chips" class="flex flex-wrap gap-2 mt-3"></div>
+                <input id="pr-search" type="search" placeholder="🔍 ことばで さがす"
+                    class="w-full border-2 border-indigo-200 rounded-xl px-3 py-2 font-bold text-sm mt-3 focus:outline-none focus:border-indigo-600">
+                <div id="pr-list" class="grid sm:grid-cols-2 gap-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">📝 ことばの ペアクイズ</h2>
+                    <span id="pq-score" class="num bg-indigo-100 text-indigo-700 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newPairQ()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <p id="pq-q" class="font-black text-center text-lg sm:text-2xl my-4 leading-relaxed"></p>
+                <div id="pq-choices" class="grid grid-cols-2 gap-2"></div>
+                <div id="pq-res" class="mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ③ 敬語 ===== -->
+        <section id="tab-keigo" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">🙇 敬語（けいご）の 使い分け</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    <b class="text-rose-700">尊敬語</b>＝<b>相手</b>の 動作を 高める。
+                    <b class="text-teal-700">謙譲語</b>＝<b>自分</b>の 動作を 低めて 相手を 立てる。
+                    <b class="text-slate-700">丁寧語</b>＝「です・ます」で ていねいに 言う。
+                </p>
+                <div class="overflow-x-auto mt-3">
+                    <table class="w-full text-sm min-w-[460px]">
+                        <thead><tr class="text-left">
+                            <th class="p-2 font-black">ふつう</th>
+                            <th class="p-2 font-black text-rose-700">尊敬語（相手）</th>
+                            <th class="p-2 font-black text-teal-700">謙譲語（自分）</th>
+                        </tr></thead>
+                        <tbody id="ke-table"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">📝 敬語の もんだい</h2>
+                    <span id="kq-score" class="num bg-indigo-100 text-indigo-700 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newKeigoQ()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <p id="kq-hint" class="text-sm font-bold text-slate-500 mt-3"></p>
+                <p id="kq-q" class="font-black text-base sm:text-xl mt-2 leading-loose"></p>
+                <div id="kq-choices" class="grid grid-cols-2 gap-2 mt-3"></div>
+                <div id="kq-res" class="mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ④ からだの慣用句 ===== -->
+        <section id="tab-body" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">🫱 からだの 慣用句（かんようく）</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    からだの 部分を つかった 言いまわし。図の ●を タップすると その 部分の 慣用句が 出るよ。
+                </p>
+                <div class="grid sm:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] gap-3 mt-3 items-start">
+                    <div id="bd-fig"></div>
+                    <div id="bd-list" class="space-y-2"></div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">📝 慣用句の もんだい</h2>
+                    <span id="bq-score" class="num bg-indigo-100 text-indigo-700 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newBodyQ()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <p id="bq-q" class="font-black text-base sm:text-lg mt-3 leading-relaxed"></p>
+                <div id="bq-choices" class="grid gap-2 mt-3"></div>
+                <div id="bq-res" class="mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ⑤ つなぎことば ===== -->
+        <section id="tab-conj" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">🔗 つなぎことば（接続語）</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    文と 文の <b class="text-indigo-700">つながり方</b>を しめす ことば。読解では ここに 線を 引くと 話の 向きが わかる。
+                </p>
+                <div id="cn-kinds" class="space-y-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">📝 □に 入る つなぎことばは？</h2>
+                    <span id="nq-score" class="num bg-indigo-100 text-indigo-700 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newConjQ()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <p id="nq-q" class="font-black text-base sm:text-lg mt-3 leading-loose"></p>
+                <div id="nq-choices" class="grid grid-cols-2 gap-2 mt-3"></div>
+                <div id="nq-res" class="mt-3"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center text-xs text-slate-400 font-bold p-4">中学受験 国語ラボ © 2026</footer>
+
+<script>
+    /* ===================== きょうつう ===================== */
+    const rnd = n => Math.floor(Math.random() * n);
+    const pickOne = a => a[rnd(a.length)];
+    function shuffle(a) { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = rnd(i + 1); const t = b[i]; b[i] = b[j]; b[j] = t; } return b; }
+    function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    function resultBox(ok, title, body) {
+        return `<div class="pop ${ok ? 'bg-green-50 border-green-300' : 'bg-amber-50 border-amber-300'} border-2 rounded-2xl p-3">
+            <p class="font-black ${ok ? 'text-green-700' : 'text-amber-700'}">${title}</p>
+            <div class="font-bold text-sm mt-1 leading-relaxed">${body}</div></div>`;
+    }
+    const S = { jukugo: [0, 0], pair: [0, 0], keigo: [0, 0], body: [0, 0], conj: [0, 0] };
+    function scoreBox(id, s) { document.getElementById(id).innerText = `${s[0]} / ${s[1]}`; }
+    function markChoices(sel, isRight, picked, cls) {
+        document.querySelectorAll(sel).forEach((el, j) => {
+            el.className = `${isRight(j) ? 'bg-green-50 border-green-500' : (j === picked ? 'bg-red-50 border-red-400 shake' : 'bg-white border-slate-200 opacity-60')} border-2 ${cls}`;
+        });
+    }
+
+    const TABS = { jukugo: '🧩 熟語の組み立て', pairs: '↔️ 対義語・類義語', keigo: '🙇 敬語', body: '🫱 からだの慣用句', conj: '🔗 つなぎことば' };
+    let tab = 'jukugo';
+    function renderNav() {
+        document.getElementById('tab-nav').innerHTML = Object.entries(TABS).map(([k, label]) =>
+            `<button onclick="setTab('${k}')" data-tab="${k}" class="${tab === k ? 'bg-indigo-700 text-white' : 'bg-white border-2 border-indigo-200 text-slate-600'} font-black px-4 py-2 rounded-full text-sm whitespace-nowrap bounce-hover">${label}</button>`).join('');
+    }
+    function setTab(k) {
+        tab = k;
+        Object.keys(TABS).forEach(t => document.getElementById('tab-' + t).classList.toggle('hidden', t !== k));
+        renderNav();
+        if (k === 'pairs' && !pq) { drawPairs(); newPairQ(); }
+        if (k === 'keigo' && !kq) { drawKeigo(); newKeigoQ(); }
+        if (k === 'body' && !bq) { drawBody(); newBodyQ(); }
+        if (k === 'conj' && !nq) { drawConj(); newConjQ(); }
+    }
+
+    /* =====================================================================
+       ① 二字熟語の 組み立て
+       ===================================================================== */
+    const JTYPES = [
+        { k: 'same', n: '似た意味', sym: '＝', col: 'teal', d: '2つとも 同じような 意味の 漢字' },
+        { k: 'opp', n: '反対の意味', sym: '⇔', col: 'rose', d: '2つが 反対の 意味の 漢字' },
+        { k: 'mod', n: '上が下をくわしく', sym: '→', col: 'sky', d: '上の 漢字が 下の 漢字を 説明する（「〜い○」「〜な○」）' },
+        { k: 'obj', n: '下が上の目的・対象', sym: '←', col: 'amber', d: '下から 上へ 読むと「〜を（に）〜する」に なる' },
+        { k: 'sv', n: '主語・述語', sym: 'が', col: 'violet', d: '上が 主語、下が 述語（「〜が〜する」）' },
+        { k: 'neg', n: '打ち消し', sym: '×', col: 'slate', d: '「不・未・無・非」が 下の 意味を 打ち消す' }
+    ];
+    const JCOL = { teal: ['bg-teal-600', 'bg-teal-50 border-teal-200 text-teal-800'], rose: ['bg-rose-600', 'bg-rose-50 border-rose-200 text-rose-800'],
+        sky: ['bg-sky-600', 'bg-sky-50 border-sky-200 text-sky-800'], amber: ['bg-amber-600', 'bg-amber-50 border-amber-200 text-amber-800'],
+        violet: ['bg-violet-600', 'bg-violet-50 border-violet-200 text-violet-800'], slate: ['bg-slate-600', 'bg-slate-100 border-slate-300 text-slate-700'] };
+    const JUKUGO = [
+        ['same', '河川', 'かせん', '「河」も「川」も かわ'], ['same', '岩石', 'がんせき', '「岩」も「石」も いし'],
+        ['same', '永久', 'えいきゅう', '「永」も「久」も ながい'], ['same', '増加', 'ぞうか', '「増」も「加」も ふえる'],
+        ['same', '道路', 'どうろ', '「道」も「路」も みち'], ['same', '寒冷', 'かんれい', '「寒」も「冷」も つめたい'],
+        ['same', '思考', 'しこう', '「思」も「考」も かんがえる'], ['same', '豊富', 'ほうふ', '「豊」も「富」も ゆたか'],
+        ['same', '温暖', 'おんだん', '「温」も「暖」も あたたかい'], ['same', '絵画', 'かいが', '「絵」も「画」も え'],
+        ['same', '身体', 'しんたい', '「身」も「体」も からだ'], ['same', '森林', 'しんりん', '「森」も「林」も もり'],
+        ['same', '巨大', 'きょだい', '「巨」も「大」も おおきい'], ['same', '救助', 'きゅうじょ', '「救」も「助」も たすける'],
+
+        ['opp', '左右', 'さゆう', '左 ⇔ 右'], ['opp', '大小', 'だいしょう', '大きい ⇔ 小さい'],
+        ['opp', '売買', 'ばいばい', '売る ⇔ 買う'], ['opp', '往復', 'おうふく', '行く ⇔ 帰る'],
+        ['opp', '増減', 'ぞうげん', 'ふえる ⇔ へる'], ['opp', '明暗', 'めいあん', '明るい ⇔ 暗い'],
+        ['opp', '強弱', 'きょうじゃく', '強い ⇔ 弱い'], ['opp', '開閉', 'かいへい', '開く ⇔ 閉じる'],
+        ['opp', '出欠', 'しゅっけつ', '出席 ⇔ 欠席'], ['opp', '利害', 'りがい', '利益 ⇔ 損害'],
+        ['opp', '天地', 'てんち', '天 ⇔ 地'], ['opp', '長短', 'ちょうたん', '長い ⇔ 短い'],
+        ['opp', '勝敗', 'しょうはい', '勝つ ⇔ 負ける'], ['opp', '収支', 'しゅうし', '収入 ⇔ 支出'],
+        ['opp', '前後', 'ぜんご', '前 ⇔ 後ろ'],
+
+        ['mod', '青空', 'あおぞら', '青い → 空'], ['mod', '急流', 'きゅうりゅう', '急な → 流れ'],
+        ['mod', '親友', 'しんゆう', '親しい → 友'], ['mod', '白線', 'はくせん', '白い → 線'],
+        ['mod', '強風', 'きょうふう', '強い → 風'], ['mod', '美人', 'びじん', '美しい → 人'],
+        ['mod', '冷水', 'れいすい', '冷たい → 水'], ['mod', '高山', 'こうざん', '高い → 山'],
+        ['mod', '新年', 'しんねん', '新しい → 年'], ['mod', '温泉', 'おんせん', '温かい → 泉'],
+        ['mod', '小川', 'おがわ', '小さい → 川'], ['mod', '曲線', 'きょくせん', '曲がった → 線'],
+        ['mod', '深海', 'しんかい', '深い → 海'], ['mod', '猛暑', 'もうしょ', 'はげしい → 暑さ'],
+
+        ['obj', '読書', 'どくしょ', '書を 読む'], ['obj', '登山', 'とざん', '山に 登る'],
+        ['obj', '作文', 'さくぶん', '文を 作る'], ['obj', '洗顔', 'せんがん', '顔を 洗う'],
+        ['obj', '帰国', 'きこく', '国に 帰る'], ['obj', '着席', 'ちゃくせき', '席に 着く'],
+        ['obj', '乗車', 'じょうしゃ', '車に 乗る'], ['obj', '消火', 'しょうか', '火を 消す'],
+        ['obj', '開会', 'かいかい', '会を 開く'], ['obj', '投票', 'とうひょう', '票を 投じる'],
+        ['obj', '求人', 'きゅうじん', '人を 求める'], ['obj', '握手', 'あくしゅ', '手を 握る'],
+        ['obj', '点火', 'てんか', '火を 点ける'], ['obj', '就職', 'しゅうしょく', '職に 就く'],
+
+        ['sv', '国立', 'こくりつ', '国が 立てる'], ['sv', '地震', 'じしん', '地が 震える'],
+        ['sv', '年長', 'ねんちょう', '年が 長い（上）'], ['sv', '日没', 'にちぼつ', '日が 没する（しずむ）'],
+        ['sv', '人造', 'じんぞう', '人が 造る'], ['sv', '雷鳴', 'らいめい', '雷が 鳴る'],
+        ['sv', '市営', 'しえい', '市が 営む'], ['sv', '県立', 'けんりつ', '県が 立てる'],
+        ['sv', '頭痛', 'ずつう', '頭が 痛む'], ['sv', '骨折', 'こっせつ', '骨が 折れる'],
+        ['sv', '腹痛', 'ふくつう', '腹が 痛む'], ['sv', '日照', 'にっしょう', '日が 照る'],
+
+        ['neg', '不安', 'ふあん', '「安」を うち消す'], ['neg', '未定', 'みてい', 'まだ 定まって いない'],
+        ['neg', '無料', 'むりょう', '料金が ない'], ['neg', '非常', 'ひじょう', 'ふつう（常）で ない'],
+        ['neg', '不便', 'ふべん', '便利で ない'], ['neg', '未満', 'みまん', 'まだ 満たない'],
+        ['neg', '無限', 'むげん', '限りが ない'], ['neg', '非情', 'ひじょう', '情けが ない'],
+        ['neg', '未熟', 'みじゅく', 'まだ 熟して いない'], ['neg', '無害', 'むがい', '害が ない'],
+        ['neg', '不足', 'ふそく', '足りない'], ['neg', '非力', 'ひりき', '力が 強くない']
+    ];
+    const jtype = k => JTYPES.find(t => t.k === k);
+
+    let juSel = 'same';
+    function drawJukugo() {
+        document.getElementById('ju-chips').innerHTML = JTYPES.map(t =>
+            `<button onclick="setJu('${t.k}')" data-ju="${t.k}" class="${juSel === t.k ? JCOL[t.col][0] + ' text-white' : 'bg-white border-2 border-slate-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${t.sym} ${t.n}</button>`).join('');
+        const t = jtype(juSel);
+        const list = JUKUGO.filter(j => j[0] === juSel);
+        document.getElementById('ju-head').innerHTML =
+            `<div class="${JCOL[t.col][1]} border-2 rounded-2xl p-3">
+                <p class="font-black">${t.sym}　${t.n}　<span class="num text-xs opacity-70">${list.length}語</span></p>
+                <p class="text-sm font-bold mt-1">${t.d}</p>
+             </div>`;
+        document.getElementById('ju-list').innerHTML = list.map(([, w, y, d]) =>
+            `<div class="border-2 border-slate-200 rounded-2xl p-2.5" data-jw="${w}">
+                <p class="font-black text-lg leading-none">${w}</p>
+                <p class="text-[11px] font-bold text-slate-400">${y}</p>
+                <p class="text-xs font-bold text-slate-600 mt-1">${d}</p>
+            </div>`).join('');
+    }
+    function setJu(k) { juSel = k; drawJukugo(); }
+
+    let jq = null;
+    function newJukugoQ() {
+        const [k, w, y, d] = pickOne(JUKUGO);
+        const others = shuffle(JTYPES.filter(t => t.k !== k)).slice(0, 3);
+        jq = { k, w, y, d, choices: shuffle([jtype(k)].concat(others)), done: false };
+        document.getElementById('jq-word').innerHTML =
+            `<p class="text-4xl sm:text-5xl font-black tracking-widest">${w}</p>
+             <p class="text-sm font-bold text-slate-400 mt-1">${y}</p>`;
+        document.getElementById('jq-choices').innerHTML = jq.choices.map((t, i) =>
+            `<button onclick="ansJukugo(${i})" data-jqc="${i}" class="bg-white border-2 border-slate-200 hover:border-indigo-500 font-black text-sm px-3 py-3 rounded-2xl bounce-hover">${t.sym} ${t.n}</button>`).join('');
+        document.getElementById('jq-res').innerHTML = '';
+        scoreBox('jq-score', S.jukugo);
+    }
+    function ansJukugo(i) {
+        if (!jq || jq.done) return;
+        jq.done = true;
+        const ok = jq.choices[i].k === jq.k;
+        S.jukugo[1]++; if (ok) S.jukugo[0]++;
+        markChoices('[data-jqc]', j => jq.choices[j].k === jq.k, i, 'font-black text-sm px-3 py-3 rounded-2xl');
+        const t = jtype(jq.k);
+        document.getElementById('jq-res').innerHTML = resultBox(ok, ok ? '⭕ せいかい！' : `❌ こたえは 「${t.n}」`,
+            `<b class="text-indigo-700">${jq.w}（${jq.y}）</b> … ${jq.d}<br>${t.d}`);
+        scoreBox('jq-score', S.jukugo);
+    }
+
+    /* =====================================================================
+       ② 対義語・類義語
+       ===================================================================== */
+    const OPP = [
+        ['原因', 'げんいん', '結果', 'けっか'], ['客観', 'きゃっかん', '主観', 'しゅかん'],
+        ['具体', 'ぐたい', '抽象', 'ちゅうしょう'], ['拡大', 'かくだい', '縮小', 'しゅくしょう'],
+        ['需要', 'じゅよう', '供給', 'きょうきゅう'], ['権利', 'けんり', '義務', 'ぎむ'],
+        ['積極', 'せっきょく', '消極', 'しょうきょく'], ['楽観', 'らっかん', '悲観', 'ひかん'],
+        ['単純', 'たんじゅん', '複雑', 'ふくざつ'], ['形式', 'けいしき', '内容', 'ないよう'],
+        ['理想', 'りそう', '現実', 'げんじつ'], ['生産', 'せいさん', '消費', 'しょうひ'],
+        ['自然', 'しぜん', '人工', 'じんこう'], ['収入', 'しゅうにゅう', '支出', 'ししゅつ'],
+        ['前進', 'ぜんしん', '後退', 'こうたい'], ['増加', 'ぞうか', '減少', 'げんしょう'],
+        ['開始', 'かいし', '終了', 'しゅうりょう'], ['保守', 'ほしゅ', '革新', 'かくしん'],
+        ['原則', 'げんそく', '例外', 'れいがい'], ['直接', 'ちょくせつ', '間接', 'かんせつ'],
+        ['絶対', 'ぜったい', '相対', 'そうたい'], ['統一', 'とういつ', '分裂', 'ぶんれつ'],
+        ['過去', 'かこ', '未来', 'みらい'], ['全体', 'ぜんたい', '部分', 'ぶぶん'],
+        ['安全', 'あんぜん', '危険', 'きけん'], ['質問', 'しつもん', '回答', 'かいとう'],
+        ['出席', 'しゅっせき', '欠席', 'けっせき'], ['成功', 'せいこう', '失敗', 'しっぱい'],
+        ['上昇', 'じょうしょう', '下降', 'かこう'], ['温暖', 'おんだん', '寒冷', 'かんれい'],
+        ['短縮', 'たんしゅく', '延長', 'えんちょう'], ['特殊', 'とくしゅ', '一般', 'いっぱん'],
+        ['建設', 'けんせつ', '破壊', 'はかい'], ['集合', 'しゅうごう', '解散', 'かいさん'],
+        ['許可', 'きょか', '禁止', 'きんし'],
+        ['原料', 'げんりょう', '製品', 'せいひん'], ['得意', 'とくい', '苦手', 'にがて']
+    ];
+    const SIM = [
+        ['永遠', 'えいえん', '永久', 'えいきゅう'], ['進歩', 'しんぽ', '向上', 'こうじょう'],
+        ['改良', 'かいりょう', '改善', 'かいぜん'], ['手段', 'しゅだん', '方法', 'ほうほう'],
+        ['長所', 'ちょうしょ', '美点', 'びてん'], ['短所', 'たんしょ', '欠点', 'けってん'],
+        ['賛成', 'さんせい', '同意', 'どうい'], ['不平', 'ふへい', '不満', 'ふまん'],
+        ['有名', 'ゆうめい', '著名', 'ちょめい'], ['準備', 'じゅんび', '用意', 'ようい'],
+        ['関心', 'かんしん', '興味', 'きょうみ'], ['我慢', 'がまん', '忍耐', 'にんたい'],
+        ['未来', 'みらい', '将来', 'しょうらい'], ['中止', 'ちゅうし', '停止', 'ていし'],
+        ['本気', 'ほんき', '真剣', 'しんけん'], ['使命', 'しめい', '任務', 'にんむ'],
+        ['決心', 'けっしん', '決意', 'けつい'], ['原料', 'げんりょう', '材料', 'ざいりょう'],
+        ['屋外', 'おくがい', '戸外', 'こがい'], ['心配', 'しんぱい', '不安', 'ふあん'],
+        ['感心', 'かんしん', '敬服', 'けいふく'], ['自然', 'しぜん', '天然', 'てんねん'],
+        ['著者', 'ちょしゃ', '筆者', 'ひっしゃ'], ['丁寧', 'ていねい', '入念', 'にゅうねん']
+    ];
+    const PAIRS = OPP.map(p => ({ kind: 'opp', a: p[0], ay: p[1], b: p[2], by: p[3] }))
+        .concat(SIM.map(p => ({ kind: 'sim', a: p[0], ay: p[1], b: p[2], by: p[3] })));
+
+    let prKind = 'opp', prQ = '';
+    function drawPairs() {
+        const kinds = [['opp', '⇔ 対義語', 'bg-rose-600'], ['sim', '≒ 類義語', 'bg-teal-600'], ['all', 'ぜんぶ', 'bg-slate-700']];
+        document.getElementById('pr-chips').innerHTML = kinds.map(([k, label, col]) => {
+            const n = k === 'all' ? PAIRS.length : PAIRS.filter(p => p.kind === k).length;
+            return `<button onclick="setPr('${k}')" data-pr="${k}" class="${prKind === k ? col + ' text-white' : 'bg-white border-2 border-slate-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${label} <span class="num opacity-80">${n}</span></button>`;
+        }).join('');
+        const list = PAIRS.filter(p => (prKind === 'all' || p.kind === prKind) &&
+            (!prQ || (p.a + p.ay + p.b + p.by).indexOf(prQ) >= 0));
+        document.getElementById('pr-list').innerHTML = list.map(p =>
+            `<div class="flex items-center gap-2 border-2 ${p.kind === 'opp' ? 'border-rose-200 bg-rose-50' : 'border-teal-200 bg-teal-50'} rounded-2xl p-2.5" data-pair="${p.a}${p.b}">
+                <div class="flex-1 min-w-0 text-center">
+                    <p class="font-black leading-none">${p.a}</p><p class="text-[11px] font-bold text-slate-400">${p.ay}</p></div>
+                <span class="font-black ${p.kind === 'opp' ? 'text-rose-600' : 'text-teal-600'}">${p.kind === 'opp' ? '⇔' : '≒'}</span>
+                <div class="flex-1 min-w-0 text-center">
+                    <p class="font-black leading-none">${p.b}</p><p class="text-[11px] font-bold text-slate-400">${p.by}</p></div>
+            </div>`).join('') || `<p class="text-center font-black text-slate-400 py-6">見つかりませんでした</p>`;
+    }
+    function setPr(k) { prKind = k; drawPairs(); }
+
+    let pq = null;
+    function newPairQ() {
+        const p = pickOne(PAIRS);
+        const flip = Math.random() < 0.5;
+        const ask = flip ? p.b : p.a, askY = flip ? p.by : p.ay;
+        const ans = flip ? p.a : p.b, ansY = flip ? p.ay : p.by;
+        // まちがいは ほかの ペアの ことば（同じ 答えに ならない ものだけ）
+        const pool = [...new Set(PAIRS.flatMap(q => [q.a, q.b]))].filter(w => w !== ans && w !== ask);
+        pq = { p, ask, askY, ans, ansY, choices: shuffle([ans].concat(shuffle(pool).slice(0, 3))), done: false };
+        document.getElementById('pq-q').innerHTML =
+            `<span class="text-slate-400 text-sm block font-bold">${askY}</span>${ask}
+             <span class="${p.kind === 'opp' ? 'text-rose-600' : 'text-teal-600'}">${p.kind === 'opp' ? '⇔' : '≒'}</span> ？
+             <span class="block text-sm font-black ${p.kind === 'opp' ? 'text-rose-600' : 'text-teal-600'} mt-1">${p.kind === 'opp' ? '反対の 意味（対義語）' : 'にた 意味（類義語）'}</span>`;
+        document.getElementById('pq-choices').innerHTML = pq.choices.map((c, i) =>
+            `<button onclick="ansPair(${i})" data-pqc="${i}" class="bg-white border-2 border-slate-200 hover:border-indigo-500 font-black text-lg py-3 rounded-2xl bounce-hover">${c}</button>`).join('');
+        document.getElementById('pq-res').innerHTML = '';
+        scoreBox('pq-score', S.pair);
+    }
+    function ansPair(i) {
+        if (!pq || pq.done) return;
+        pq.done = true;
+        const ok = pq.choices[i] === pq.ans;
+        S.pair[1]++; if (ok) S.pair[0]++;
+        markChoices('[data-pqc]', j => pq.choices[j] === pq.ans, i, 'font-black text-lg py-3 rounded-2xl');
+        document.getElementById('pq-res').innerHTML = resultBox(ok, ok ? '⭕ せいかい！' : `❌ こたえは 「${pq.ans}」`,
+            `${pq.ask}（${pq.askY}） ${pq.p.kind === 'opp' ? '⇔' : '≒'} <b class="text-indigo-700">${pq.ans}（${pq.ansY}）</b>`);
+        scoreBox('pq-score', S.pair);
+    }
+
+    /* =====================================================================
+       ③ 敬語
+       ===================================================================== */
+    const KEIGO = [
+        { p: '言う', s: 'おっしゃる', h: '申す・申し上げる' },
+        { p: '行く', s: 'いらっしゃる', h: '伺う・参る' },
+        { p: '来る', s: 'いらっしゃる・お見えになる', h: '参る' },
+        { p: 'いる', s: 'いらっしゃる', h: 'おる' },
+        { p: '食べる', s: '召し上がる', h: 'いただく' },
+        { p: '見る', s: 'ご覧になる', h: '拝見する' },
+        { p: '聞く', s: 'お聞きになる', h: '伺う・拝聴する' },
+        { p: 'する', s: 'なさる', h: 'いたす' },
+        { p: '知る', s: 'ご存じだ', h: '存じる・存じ上げる' },
+        { p: 'もらう', s: '-', h: 'いただく・頂戴する' },
+        { p: 'あげる', s: '-', h: '差し上げる' },
+        { p: '会う', s: '-', h: 'お目にかかる' },
+        { p: '借りる', s: '-', h: '拝借する' }
+    ];
+    function drawKeigo() {
+        document.getElementById('ke-table').innerHTML = KEIGO.map((k, i) =>
+            `<tr class="${i % 2 ? 'bg-indigo-50' : ''}" data-ke="${k.p}">
+                <td class="p-2 font-black">${k.p}</td>
+                <td class="p-2 font-bold text-rose-700">${k.s === '-' ? '<span class="text-slate-300">—</span>' : k.s}</td>
+                <td class="p-2 font-bold text-teal-700">${k.h}</td>
+            </tr>`).join('');
+    }
+    const KSENT = [
+        { p: '言う', sub: 'r', t: '先生が みんなの 前で ＿＿。' },
+        { p: '言う', sub: 'm', t: 'はじめに わたしの 名前を ＿＿。' },
+        { p: '行く', sub: 'r', t: '校長先生が 体育館へ ＿＿。' },
+        { p: '行く', sub: 'm', t: 'あとで 先生の お宅へ ＿＿。' },
+        { p: '来る', sub: 'r', t: 'お客さまが もうすぐ ＿＿。' },
+        { p: '食べる', sub: 'r', t: 'お客さまが ケーキを ＿＿。' },
+        { p: '食べる', sub: 'm', t: 'ごちそうを ありがたく ＿＿。' },
+        { p: '見る', sub: 'r', t: '先生は もう この 絵を ＿＿。' },
+        { p: '見る', sub: 'm', t: 'お手紙を さっそく ＿＿。' },
+        { p: 'する', sub: 'r', t: '先生は 毎朝 散歩を ＿＿。' },
+        { p: 'する', sub: 'm', t: '会場の ご案内は わたしが ＿＿。' },
+        { p: 'いる', sub: 'r', t: '先生は 今 職員室に ＿＿。' },
+        { p: 'いる', sub: 'm', t: 'わたしは 一日中 家に ＿＿。' },
+        { p: '知る', sub: 'r', t: 'その ことを 先生は ＿＿。' },
+        { p: '知る', sub: 'm', t: 'そのことは わたしも ＿＿。' },
+        { p: '聞く', sub: 'r', t: '先生が わたしの 話を ＿＿。' },
+        { p: '聞く', sub: 'm', t: 'わからない ところを 先生に ＿＿。' },
+        { p: '会う', sub: 'm', t: 'ぜひ 一度 ＿＿。' },
+        { p: 'もらう', sub: 'm', t: '先生から 本を ＿＿。' },
+        { p: 'あげる', sub: 'm', t: '先生に お礼の 品を ＿＿。' },
+        { p: '借りる', sub: 'm', t: '図書室の 本を ＿＿。' }
+    ];
+
+    let kq = null;
+    function newKeigoQ() {
+        const s = pickOne(KSENT);
+        const row = KEIGO.find(k => k.p === s.p);
+        const cell = s.sub === 'r' ? row.s : row.h;
+        const ok = cell.split('・');            // 「伺う・参る」は どちらも 正解
+        const ans = ok[0];
+        // まちがい … 同じ 動詞の もう かた方＋ほかの 動詞の 敬語（正解の 言いかえは 入れない）
+        const wrongs = [];
+        const other = (s.sub === 'r' ? row.h : row.s).split('・')[0];
+        if (other && other !== '-' && ok.indexOf(other) < 0) wrongs.push(other);
+        shuffle(KEIGO).forEach(k => {
+            if (wrongs.length >= 3) return;
+            [k.s, k.h].forEach(v => {
+                if (wrongs.length >= 3 || !v || v === '-') return;
+                v.split('・').forEach(f => {
+                    if (wrongs.length >= 3 || ok.indexOf(f) >= 0 || wrongs.indexOf(f) >= 0) return;
+                    wrongs.push(f);
+                });
+            });
+        });
+        kq = { s, row, ans, ok, kind: s.sub, choices: shuffle([ans].concat(wrongs.slice(0, 3))), done: false };
+        document.getElementById('kq-hint').innerHTML =
+            `もとの ことば <b class="text-indigo-700">「${s.p}」</b>　／　
+             <b class="${s.sub === 'r' ? 'text-rose-700' : 'text-teal-700'}">${s.sub === 'r' ? '相手の 動作 → 尊敬語' : '自分の 動作 → 謙譲語'}</b>
+             <span class="block text-xs text-slate-400">言い切りの 形（もとの 形）で えらぼう</span>`;
+        document.getElementById('kq-q').innerHTML = s.t.replace('＿＿', '<span class="blank">？</span>');
+        document.getElementById('kq-choices').innerHTML = kq.choices.map((c, i) =>
+            `<button onclick="ansKeigo(${i})" data-kqc="${i}" class="bg-white border-2 border-slate-200 hover:border-indigo-500 font-black text-sm px-3 py-3 rounded-2xl bounce-hover">${c}</button>`).join('');
+        document.getElementById('kq-res').innerHTML = '';
+        scoreBox('kq-score', S.keigo);
+    }
+    function ansKeigo(i) {
+        if (!kq || kq.done) return;
+        kq.done = true;
+        const ok = kq.ok.indexOf(kq.choices[i]) >= 0;
+        S.keigo[1]++; if (ok) S.keigo[0]++;
+        markChoices('[data-kqc]', j => kq.ok.indexOf(kq.choices[j]) >= 0, i, 'font-black text-sm px-3 py-3 rounded-2xl');
+        const r = kq.row;
+        document.getElementById('kq-q').innerHTML = kq.s.t.replace('＿＿', `<span class="text-indigo-700">${kq.choices[i] && ok ? kq.choices[i] : kq.ans}</span>`);
+        document.getElementById('kq-res').innerHTML = resultBox(ok, ok ? '⭕ せいかい！' : `❌ こたえは 「${kq.ans}」`,
+            `「${r.p}」の　<b class="text-rose-700">尊敬語</b>＝${r.s === '-' ? 'なし（お〜になる を つかう）' : r.s}　／
+             <b class="text-teal-700">謙譲語</b>＝${r.h}<br>
+             ${kq.kind === 'r' ? '<b>相手</b>の 動作だから 尊敬語。' : '<b>自分</b>や 身内の 動作だから 謙譲語。'}`);
+        scoreBox('kq-score', S.keigo);
+    }
+
+    /* =====================================================================
+       ④ からだの 慣用句
+       ===================================================================== */
+    const BODY = [
+        { k: '頭', x: 150, y: 18, lx: 150, ly: 32, list: [
+            ['頭が上がらない', 'あたまがあがらない', '相手に 引け目を 感じて かなわない'],
+            ['頭を冷やす', 'あたまをひやす', '興奮を しずめて 落ち着く'],
+            ['頭角を現す', 'とうかくをあらわす', '才能が 人より 目立って くる'],
+            ['頭が切れる', 'あたまがきれる', '考えや 判断が すばやい']] },
+        { k: '目', x: 42, y: 48, lx: 132, ly: 68, list: [
+            ['目を皿にする', 'めをさらにする', 'よく 見ようと 目を 大きく 見ひらく'],
+            ['目が高い', 'めがたかい', 'よい ものを 見分ける 力が ある'],
+            ['目に余る', 'めにあまる', 'ひどすぎて 見すごせない'],
+            ['目からうろこが落ちる', 'めからうろこがおちる', '急に ものごとが よく わかる'],
+            ['目がない', 'めがない', 'たまらなく 好きだ']] },
+        { k: '耳', x: 258, y: 48, lx: 196, ly: 74, list: [
+            ['耳が痛い', 'みみがいたい', '弱点を つかれて 聞くのが つらい'],
+            ['耳を疑う', 'みみをうたがう', '聞いた ことが 信じられない'],
+            ['耳にたこができる', 'みみにたこができる', '同じ 話を 何度も 聞かされて うんざり'],
+            ['耳をそろえる', 'みみをそろえる', 'お金を 不足なく きちんと 用意する']] },
+        { k: '鼻', x: 30, y: 86, lx: 148, ly: 82, list: [
+            ['鼻が高い', 'はながたかい', 'ほこらしくて 自慢に 思う'],
+            ['鼻にかける', 'はなにかける', '自慢して いばる'],
+            ['鼻であしらう', 'はなであしらう', '相手に せず 冷たく あつかう'],
+            ['木で鼻をくくる', 'きではなをくくる', 'とても そっけない 態度を とる']] },
+        { k: '口', x: 270, y: 86, lx: 152, ly: 100, list: [
+            ['口が軽い', 'くちがかるい', '秘密を すぐ しゃべって しまう'],
+            ['口が堅い', 'くちがかたい', '秘密を きちんと まもる'],
+            ['口をそろえる', 'くちをそろえる', 'みんなが 同じ ことを 言う'],
+            ['口車に乗る', 'くちぐるまにのる', 'うまい 話に だまされる'],
+            ['口を割る', 'くちをわる', 'かくして いた ことを 白状する']] },
+        { k: '歯', x: 32, y: 122, lx: 144, ly: 102, list: [
+            ['歯が立たない', 'はがたたない', '相手が 強すぎて かなわない'],
+            ['歯に衣着せぬ', 'はにきぬきせぬ', '遠りょせず はっきり 言う'],
+            ['歯を食いしばる', 'はをくいしばる', 'つらさを じっと こらえる']] },
+        { k: '舌', x: 268, y: 122, lx: 156, ly: 102, list: [
+            ['舌を巻く', 'したをまく', 'とても おどろいて 感心する'],
+            ['舌が回る', 'したがまわる', 'すらすらと よく しゃべる']] },
+        { k: '首', x: 150, y: 120, list: [
+            ['首を長くする', 'くびをながくする', '今か 今かと 待ちこがれる'],
+            ['首をひねる', 'くびをひねる', '不思議に 思って 考えこむ'],
+            ['首が回らない', 'くびがまわらない', '借金などで やりくりが できない'],
+            ['首を突っ込む', 'くびをつっこむ', '関係の ある ことに 深く かかわる']] },
+        { k: '肩', x: 104, y: 146, list: [
+            ['肩を持つ', 'かたをもつ', 'どちらかの 味方を する'],
+            ['肩の荷が下りる', 'かたのにがおりる', '責任から はなれて 気が 楽に なる'],
+            ['肩を落とす', 'かたをおとす', 'がっかりして しょげる'],
+            ['肩を並べる', 'かたをならべる', '同じくらいの 力に なる']] },
+        { k: '胸', x: 150, y: 168, list: [
+            ['胸を打つ', 'むねをうつ', '強く 感動させる'],
+            ['胸をなで下ろす', 'むねをなでおろす', 'ほっと 安心する'],
+            ['胸を借りる', 'むねをかりる', '強い 相手に けいこを つけて もらう'],
+            ['胸が躍る', 'むねがおどる', 'うれしくて わくわくする']] },
+        { k: '腹', x: 150, y: 214, list: [
+            ['腹を割る', 'はらをわる', '本当の 気もちを 打ち明ける'],
+            ['腹を探る', 'はらをさぐる', '相手の 本心を それとなく 知ろうと する'],
+            ['腹をくくる', 'はらをくくる', 'かくごを 決める'],
+            ['背に腹はかえられぬ', 'せにはらはかえられぬ', '大事の ためには 小さな 犠牲は しかたない']] },
+        { k: '手', x: 84, y: 232, list: [
+            ['手に余る', 'てにあまる', '自分の 力では どうにも ならない'],
+            ['手を焼く', 'てをやく', 'あつかいに こまって もてあます'],
+            ['手をこまねく', 'てをこまねく', '何も せずに ただ 見て いる'],
+            ['手が空く', 'てがあく', 'やる ことが 終わって ひまに なる'],
+            ['手を打つ', 'てをうつ', '必要な 対策を とる']] },
+        { k: '腰', x: 150, y: 252, list: [
+            ['腰が低い', 'こしがひくい', 'いばらず ていねいな 態度'],
+            ['腰を据える', 'こしをすえる', '落ち着いて じっくり 取り組む'],
+            ['腰が引ける', 'こしがひける', '自信が なく しりごみする']] },
+        { k: '足', x: 124, y: 336, list: [
+            ['足が出る', 'あしがでる', '予算を こえて お金が 足りなく なる'],
+            ['足を洗う', 'あしをあらう', 'よくない 仕事や 生活を やめる'],
+            ['足が棒になる', 'あしがぼうになる', '歩きすぎて 足が つかれきる'],
+            ['足を引っ張る', 'あしをひっぱる', '人の 成功を じゃまする'],
+            ['二の足を踏む', 'にのあしをふむ', 'ためらって ぐずぐずする']] },
+        { k: '骨', x: 200, y: 200, list: [
+            ['骨が折れる', 'ほねがおれる', 'とても 苦労する'],
+            ['骨を折る', 'ほねをおる', '人の ために 力を つくす'],
+            ['骨身にしみる', 'ほねみにしみる', '深く 心に 感じる']] }
+    ];
+    const ALLKAN = BODY.flatMap(b => b.list.map(l => ({ part: b.k, w: l[0], y: l[1], m: l[2] })));
+
+    let bdSel = '目';
+    function drawBody() {
+        const W = 300, H = 400;
+        let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="16" fill="#eef2ff"/>`;
+        // ひとの かたち
+        g += `<circle cx="150" cy="74" r="46" fill="#fde9d9" stroke="#c4b5a5" stroke-width="3"/>
+              <rect x="140" y="116" width="20" height="18" fill="#fde9d9" stroke="#c4b5a5" stroke-width="3"/>
+              <path d="M104,140 Q150,128 196,140 L206,252 Q150,264 94,252 Z" fill="#a5b4fc" stroke="#6366f1" stroke-width="3"/>
+              <path d="M104,142 L74,240 L88,244 L114,160" fill="#a5b4fc" stroke="#6366f1" stroke-width="3"/>
+              <path d="M196,142 L226,240 L212,244 L186,160" fill="#a5b4fc" stroke="#6366f1" stroke-width="3"/>
+              <circle cx="80" cy="250" r="13" fill="#fde9d9" stroke="#c4b5a5" stroke-width="3"/>
+              <circle cx="220" cy="250" r="13" fill="#fde9d9" stroke="#c4b5a5" stroke-width="3"/>
+              <path d="M104,250 L112,352 L136,352 L144,258 Z" fill="#6366f1" stroke="#4338ca" stroke-width="3"/>
+              <path d="M196,250 L188,352 L164,352 L156,258 Z" fill="#6366f1" stroke="#4338ca" stroke-width="3"/>
+              <ellipse cx="124" cy="362" rx="20" ry="10" fill="#fde9d9" stroke="#c4b5a5" stroke-width="3"/>
+              <ellipse cx="176" cy="362" rx="20" ry="10" fill="#fde9d9" stroke="#c4b5a5" stroke-width="3"/>
+              <circle cx="134" cy="68" r="4.5" fill="#44403c"/><circle cx="166" cy="68" r="4.5" fill="#44403c"/>
+              <path d="M150,74 L150,86" stroke="#c4b5a5" stroke-width="3" fill="none"/>
+              <path d="M138,98 Q150,106 162,98" stroke="#c4b5a5" stroke-width="3" fill="none"/>
+              <path d="M104,62 Q96,74 104,86" stroke="#c4b5a5" stroke-width="3" fill="none"/>
+              <path d="M196,62 Q204,74 196,86" stroke="#c4b5a5" stroke-width="3" fill="none"/>`;
+        BODY.forEach(b => {
+            const on = bdSel === b.k;
+            if (b.lx !== undefined) g += `<line x1="${b.x}" y1="${b.y}" x2="${b.lx}" y2="${b.ly}" stroke="${on ? '#dc2626' : '#94a3b8'}" stroke-width="${on ? 2.5 : 1.5}"/>
+                <circle cx="${b.lx}" cy="${b.ly}" r="3" fill="${on ? '#dc2626' : '#94a3b8'}"/>`;
+            g += `<circle cx="${b.x}" cy="${b.y}" r="${on ? 14 : 11}" fill="${on ? '#dc2626' : '#fff'}" stroke="${on ? '#7f1d1d' : '#475569'}" stroke-width="2.5"/>
+                  <text x="${b.x}" y="${b.y + 5}" text-anchor="middle" font-size="13" font-weight="900" fill="${on ? '#fff' : '#334155'}">${b.k}</text>
+                  <circle cx="${b.x}" cy="${b.y}" r="20" fill="transparent" style="cursor:pointer" data-body="${b.k}"/>`;
+        });
+        document.getElementById('bd-fig').innerHTML =
+            `<div class="flex flex-wrap gap-1.5 mb-2">` + BODY.map(x =>
+                `<button onclick="showBody('${x.k}')" data-bdc="${x.k}" class="${bdSel === x.k ? 'bg-red-600 text-white' : 'bg-white border-2 border-indigo-200 text-slate-600'} font-black w-9 h-9 rounded-full text-sm bounce-hover">${x.k}</button>`).join('') + `</div>
+             <svg viewBox="0 0 ${W} ${H}" class="w-full h-auto block mx-auto" style="max-width:300px" role="img">${g}</svg>`;
+        document.getElementById('bd-fig').querySelectorAll('[data-body]').forEach(el =>
+            el.addEventListener('click', () => showBody(el.dataset.body)));
+        const b = BODY.find(x => x.k === bdSel);
+        document.getElementById('bd-list').innerHTML =
+            `<p class="font-black text-indigo-800 text-lg">「${b.k}」の 慣用句　<span class="num text-xs text-slate-400">${b.list.length}こ</span></p>` +
+            b.list.map(([w, y, m]) =>
+                `<div class="border-2 border-indigo-200 bg-indigo-50 rounded-2xl p-2.5" data-kan="${w}">
+                    <p class="font-black text-sm leading-tight">${w}</p>
+                    <p class="text-[11px] font-bold text-slate-400">${y}</p>
+                    <p class="text-xs font-bold text-slate-600 mt-0.5">${m}</p>
+                </div>`).join('');
+    }
+    function showBody(k) { bdSel = k; drawBody(); }
+
+    let bq = null;
+    function newBodyQ() {
+        const it = pickOne(ALLKAN);
+        const ask = rnd(2);
+        let q, ans, choices;
+        if (ask === 0) {
+            q = `「${it.w}」の 意味は？`;
+            ans = it.m;
+            choices = shuffle([it.m].concat(shuffle(ALLKAN.filter(x => x.m !== it.m)).slice(0, 3).map(x => x.m)));
+        } else {
+            q = `「${it.m}」を あらわす 慣用句は？`;
+            ans = it.w;
+            // 同じ からだの 部分から えらぶと むずかしくなる
+            const same = shuffle(ALLKAN.filter(x => x.part === it.part && x.w !== it.w));
+            const rest = shuffle(ALLKAN.filter(x => x.part !== it.part && x.w !== it.w));
+            choices = shuffle([it.w].concat(same.concat(rest).slice(0, 3).map(x => x.w)));
+        }
+        bq = { it, ask, ans, choices, done: false };
+        document.getElementById('bq-q').innerText = q;
+        document.getElementById('bq-choices').innerHTML = choices.map((c, i) =>
+            `<button onclick="ansBody(${i})" data-bqc="${i}" class="bg-white border-2 border-slate-200 hover:border-indigo-500 font-bold text-left px-4 py-3 rounded-2xl bounce-hover text-sm">${c}</button>`).join('');
+        document.getElementById('bq-res').innerHTML = '';
+        scoreBox('bq-score', S.body);
+    }
+    function ansBody(i) {
+        if (!bq || bq.done) return;
+        bq.done = true;
+        const ok = bq.choices[i] === bq.ans;
+        S.body[1]++; if (ok) S.body[0]++;
+        markChoices('[data-bqc]', j => bq.choices[j] === bq.ans, i, 'font-bold text-left px-4 py-3 rounded-2xl text-sm');
+        document.getElementById('bq-res').innerHTML = resultBox(ok, ok ? '⭕ せいかい！' : `❌ こたえは 「${bq.ans}」`,
+            `<b class="text-indigo-700">${bq.it.w}（${bq.it.y}）</b><br>${bq.it.m}　<span class="text-xs text-slate-400">［${bq.it.part}］</span>`);
+        scoreBox('bq-score', S.body);
+    }
+
+    /* =====================================================================
+       ⑤ つなぎことば
+       ===================================================================== */
+    const CKINDS = [
+        { k: '順接', w: ['だから', 'そこで', 'すると', 'したがって'], d: '前が 原因・理由で、後ろが 結果', col: 'bg-rose-100 border-rose-300 text-rose-800' },
+        { k: '逆接', w: ['しかし', 'ところが', 'けれども', 'だが'], d: '前から よそうされる ことと 反対の ことが 後ろに くる', col: 'bg-sky-100 border-sky-300 text-sky-800' },
+        { k: '並立・添加', w: ['そして', 'また', 'さらに', 'そのうえ'], d: 'ならべたり、つけ加えたり する', col: 'bg-teal-100 border-teal-300 text-teal-800' },
+        { k: '対比・選択', w: ['または', 'それとも', 'あるいは', '一方'], d: 'くらべたり、どちらかを えらんだり する', col: 'bg-amber-100 border-amber-300 text-amber-800' },
+        { k: '説明・補足', w: ['つまり', 'なぜなら', 'たとえば', 'ただし'], d: '言いかえたり、理由や 例を そえたり する', col: 'bg-violet-100 border-violet-300 text-violet-800' },
+        { k: '転換', w: ['ところで', 'さて', 'では'], d: '話を べつの ことに 切りかえる', col: 'bg-slate-100 border-slate-300 text-slate-700' }
+    ];
+    const CSENT = [
+        ['順接', 'だから', '朝から 雨が ふって いた。', '運動会は 中止に なった。'],
+        ['順接', 'そこで', '道が こんで いた。', '電車で 行く ことに した。'],
+        ['順接', 'すると', 'スイッチを 押した。', '部屋の 電気が ついた。'],
+        ['順接', 'したがって', 'この 品は 数が とても 少ない。', 'ねだんも 高く なる。'],
+        ['逆接', 'しかし', '毎日 練習を かさねた。', '本番では うまく いかなかった。'],
+        ['逆接', 'ところが', '楽に 勝てると 思って いた。', '相手は 予想より 強かった。'],
+        ['逆接', 'けれども', '彼は まだ 小学生だ。', '大人より しっかりして いる。'],
+        ['逆接', 'だが', '空は よく 晴れて いた。', '風は とても 冷たかった。'],
+        ['並立・添加', 'そして', '朝ごはんを 食べた。', '歯を みがいて 出かけた。'],
+        ['並立・添加', 'また', '兄は サッカーが 得意だ。', '水泳も 上手だ。'],
+        ['並立・添加', 'さらに', 'この 本は おもしろい。', '絵も とても きれいだ。'],
+        ['並立・添加', 'そのうえ', '雨が はげしく なって きた。', '風まで 強く なった。'],
+        ['対比・選択', 'または', '会場へは 電車で 行けます。', 'バスを 利用して ください。'],
+        ['対比・選択', 'それとも', '今 出かけますか。', 'もう 少し 待ちますか。'],
+        ['対比・選択', 'あるいは', '鉛筆で 書いて ください。', 'ボールペンでも かまいません。'],
+        ['対比・選択', '一方', '兄は 外で 遊ぶのが 好きだ。', '弟は 家で 本を 読むのが 好きだ。'],
+        ['説明・補足', 'つまり', '彼は 父の 姉の 子だ。', 'わたしから 見ると いとこに あたる。'],
+        ['説明・補足', 'なぜなら', '今日は 早く ねる ことに した。', '明日は 5時に 起きるからだ。'],
+        ['説明・補足', 'たとえば', 'この 町には 古い たてものが 多い。', '駅前の 蔵は 百年前の ものだ。'],
+        ['説明・補足', 'ただし', '本は 三さつまで 借りられます。', '辞典は 貸し出しできません。'],
+        ['転換', 'ところで', '運動会の 話は これで おわり。', '来週の 遠足は どう する？'],
+        ['転換', 'さて', '準備は これで ぜんぶ ととのった。', 'そろそろ 始めよう。'],
+        ['転換', 'では', '説明は ここまでだ。', '何か 質問は あるだろうか。']
+    ];
+
+    function drawConj() {
+        document.getElementById('cn-kinds').innerHTML = CKINDS.map(c =>
+            `<div class="border-2 ${c.col} rounded-2xl p-3" data-ck="${c.k}">
+                <p class="font-black">${c.k}</p>
+                <p class="text-sm font-bold mt-0.5">${c.d}</p>
+                <p class="text-sm font-black mt-1">${c.w.join('・')}</p>
+            </div>`).join('');
+    }
+    // にた はたらきで どちらも 通って しまう くみあわせは、まちがい候補に しない
+    const CONFLICT = {
+        '順接': ['並立・添加', '説明・補足'],
+        '並立・添加': ['順接', '説明・補足'],
+        '説明・補足': ['順接', '並立・添加'],
+        '逆接': ['対比・選択'],
+        '対比・選択': ['逆接'],
+        '転換': []
+    };
+    let nq = null;
+    function newConjQ() {
+        const [kind, word, a, b] = pickOne(CSENT);
+        const ng = CONFLICT[kind] || [];
+        const others = shuffle(CKINDS.filter(c => c.k !== kind && ng.indexOf(c.k) < 0)).slice(0, 3).map(c => pickOne(c.w));
+        nq = { kind, word, a, b, choices: shuffle([word].concat(others)), done: false };
+        document.getElementById('nq-q').innerHTML =
+            `${a}<span class="blank">？</span>${b}`;
+        document.getElementById('nq-choices').innerHTML = nq.choices.map((c, i) =>
+            `<button onclick="ansConj(${i})" data-nqc="${i}" class="bg-white border-2 border-slate-200 hover:border-indigo-500 font-black py-3 rounded-2xl bounce-hover">${c}</button>`).join('');
+        document.getElementById('nq-res').innerHTML = '';
+        scoreBox('nq-score', S.conj);
+    }
+    function ansConj(i) {
+        if (!nq || nq.done) return;
+        nq.done = true;
+        const ok = nq.choices[i] === nq.word;
+        S.conj[1]++; if (ok) S.conj[0]++;
+        markChoices('[data-nqc]', j => nq.choices[j] === nq.word, i, 'font-black py-3 rounded-2xl');
+        const c = CKINDS.find(x => x.k === nq.kind);
+        document.getElementById('nq-q').innerHTML = `${nq.a}<span class="text-indigo-700">${nq.word}</span>${nq.b}`;
+        document.getElementById('nq-res').innerHTML = resultBox(ok, ok ? '⭕ せいかい！' : `❌ こたえは 「${nq.word}」`,
+            `<b class="text-indigo-700">${nq.kind}</b> … ${c.d}<br>なかま： ${c.w.join('・')}`);
+        scoreBox('nq-score', S.conj);
+    }
+
+    /* ===================== 起動 ===================== */
+    renderNav();
+    drawJukugo();
+    newJukugoQ();
+    document.getElementById('pr-search').addEventListener('input', e => { prQ = e.target.value.trim(); drawPairs(); });
+</script>
+</body>
+</html>
