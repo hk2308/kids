@@ -102,6 +102,26 @@
   }
   .empty { font-weight: 900; color: #64748b; text-align: center; padding: 40px 0; }
   footer { text-align: center; padding: 20px; font-size: .75rem; font-weight: 700; color: #94a3b8; }
+  /* 広告枠。ウィジェットは 幅が 固定（468px など）なので、
+     はみ出す ぶんは この 枠の 中だけで 横スクロールさせる。 */
+  /* body が flex なので min-width: 0 が ないと、中の 468px の ウィジェットに
+     引きのばされて ページ全体が 横スクロールして しまう。 */
+  .ad { max-width: 1100px; width: 100%; min-width: 0; margin: 8px auto 0; padding: 0 16px 8px; box-sizing: border-box; }
+  .ad-label {
+    margin: 0 0 6px; font-size: .72rem; font-weight: 900; color: #94a3b8;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .ad-tag {
+    background: #e2e8f0; color: #475569; border-radius: 6px;
+    padding: 2px 8px; font-size: .68rem; letter-spacing: .04em;
+  }
+  .ad-box {
+    max-width: 100%; min-width: 0; overflow-x: auto; overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 10px;
+  }
+  .ad-box > * { max-width: none; }
+  .ad-note { margin: 8px 0 0; font-size: .7rem; font-weight: 700; color: #94a3b8; line-height: 1.7; }
   @media (prefers-color-scheme: dark) {
     body { background: #0f172a; color: #e2e8f0; }
     .bar { background: rgba(15,23,42,.95); border-bottom-color: #1e293b; }
@@ -111,6 +131,8 @@
     .card { border-color: rgba(255,255,255,.18); }
     .card .go { background: rgba(15,23,42,.85); color: #f1f5f9; }
     .empty { color: #94a3b8; }
+    .ad-box { background: #1e293b; border-color: #334155; }
+    .ad-tag { background: #334155; color: #cbd5e1; }
   }
 </style>
 </head>
@@ -404,6 +426,14 @@
   </section>
   <p class="empty" id="nohit" hidden>🔍 見つかりませんでした</p>
 </main>
+  <section class="ad" aria-label="広告">
+    <p class="ad-label"><span class="ad-tag">広告</span>楽天アフィリエイト</p>
+    <div class="ad-box">
+<script type="text/javascript">rakuten_design="slide";rakuten_affiliateId="18c6c03a.18d18d59.18c6c03b.ce6fa706";rakuten_items="ctsmatch";rakuten_genreId="0";rakuten_size="468x160";rakuten_target="_blank";rakuten_theme="gray";rakuten_border="off";rakuten_auto_mode="on";rakuten_genre_title="off";rakuten_recommend="on";rakuten_ts="1790004882774";</script><script type="text/javascript" src="https://xml.affiliate.rakuten.co.jp/widget/js/rakuten_widget.js?20230106"></script>
+    </div>
+    <p class="ad-note">※ ここは 広告です。学習アプリとは かんけいが ありません。
+      買いものは かならず おうちの人と いっしょに して ください。</p>
+  </section>
 <footer>© 2026 kids apps</footer>
 
 <script>

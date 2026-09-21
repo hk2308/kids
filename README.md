@@ -54,6 +54,7 @@ apps/
   <アプリ名>/
     index.html   ← アプリ本体（1ファイル完結）
     app.json     ← トップページのカード設定（任意）
+ads/rakuten-widget.html ← 楽天アフィリエイトのウィジェットを貼る場所
 scripts/build.py ← index.html を生成し、_site/ を組み立てる
 scripts/make_prefecture_paths.py ← 日本地図のSVGパスを作りなおすとき用
 .github/workflows/pages.yml ← main への push で自動デプロイ
@@ -89,6 +90,18 @@ scripts/make_prefecture_paths.py ← 日本地図のSVGパスを作りなおす�
    トップページは group ごとに見出しが付き、チップと検索でしぼりこめる（選んだ group はブラウザに記憶される）。
 4. `main` に push する → GitHub Actions が自動で公開する
    （push 前に build.py を忘れても、デプロイ時に作りなおされる）
+
+## 広告（楽天アフィリエイト）
+
+トップページの一番下だけに広告枠を出す。アプリの学習画面には出さない。
+
+- `ads/rakuten-widget.html` に楽天アフィリエイトで発行したコードを貼る
+  （コメントだけのときは枠ごと出ない）
+- `python3 scripts/build.py` で `index.html` に埋め込まれる
+- 「広告」ラベルと保護者向けの注記は build.py が自動で付ける
+  （**ステマ規制（景品表示法）への対応なので外さない**）
+- ウィジェットは幅が固定（468pxなど）なので、枠の中だけ横スクロールさせている
+  （`.ad` の `min-width: 0` を消すと、body が flex のためページ全体が横に伸びる）
 
 ## ローカルで確認する
 

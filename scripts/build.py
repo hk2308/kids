@@ -28,6 +28,9 @@ ROOT = Path(__file__).resolve().parent.parent
 APPS_DIR = ROOT / "apps"
 OUT_DIR = ROOT / "_site"
 INDEX_FILE = ROOT / "index.html"
+# 楽天アフィリエイトの ウィジェットを 貼る ファイル。
+# コメントだけの ときは 広告枠を 出さない。
+ADS_FILE = ROOT / "ads" / "rakuten-widget.html"
 
 SITE_TITLE = "キッズ がくしゅうアプリ"
 SITE_SUBTITLE = "あそびながら まなべる ミニアプリ あつめ"
@@ -99,6 +102,32 @@ def collect_apps() -> list[dict]:
     return apps
 
 
+COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
+
+
+def read_ad_slot() -> str:
+    """広告ファイルから、HTMLコメントを のぞいた 中身を かえす（なければ 空文字）。"""
+    if not ADS_FILE.exists():
+        return ""
+    raw = ADS_FILE.read_text(encoding="utf-8")
+    return COMMENT_RE.sub("", raw).strip()
+
+
+def render_ad(ad_code: str) -> str:
+    """広告枠。ステマ規制に あわせて「広告」ラベルと 保護者向けの 注記を 必ず つける。"""
+    if not ad_code:
+        return ""
+    return f"""  <section class="ad" aria-label="広告">
+    <p class="ad-label"><span class="ad-tag">広告</span>楽天アフィリエイト</p>
+    <div class="ad-box">
+{ad_code}
+    </div>
+    <p class="ad-note">※ ここは 広告です。学習アプリとは かんけいが ありません。
+      買いものは かならず おうちの人と いっしょに して ください。</p>
+  </section>
+"""
+
+
 def group_defs(apps: list[dict]) -> list[tuple[str, str, tuple[str, str], str]]:
     """じっさいに アプリが ある グループだけ、きめた じゅんばんで かえす。"""
     used = {a["group"] for a in apps}
@@ -140,6 +169,7 @@ def render_index(apps: list[dict]) -> str:
             f'    <div class="grid">\n{cards}\n    </div>\n'
             f"  </section>"
         )
+    ad_section = render_ad(read_ad_slot())
     body = "\n".join(sections) if sections else (
         '  <p class="empty">まだアプリがありません。apps/ に HTML を追加してね。</p>'
     )
@@ -248,6 +278,26 @@ def render_index(apps: list[dict]) -> str:
   }}
   .empty {{ font-weight: 900; color: #64748b; text-align: center; padding: 40px 0; }}
   footer {{ text-align: center; padding: 20px; font-size: .75rem; font-weight: 700; color: #94a3b8; }}
+  /* 広告枠。ウィジェットは 幅が 固定（468px など）なので、
+     はみ出す ぶんは この 枠の 中だけで 横スクロールさせる。 */
+  /* body が flex なので min-width: 0 が ないと、中の 468px の ウィジェットに
+     引きのばされて ページ全体が 横スクロールして しまう。 */
+  .ad {{ max-width: 1100px; width: 100%; min-width: 0; margin: 8px auto 0; padding: 0 16px 8px; box-sizing: border-box; }}
+  .ad-label {{
+    margin: 0 0 6px; font-size: .72rem; font-weight: 900; color: #94a3b8;
+    display: flex; align-items: center; gap: 6px;
+  }}
+  .ad-tag {{
+    background: #e2e8f0; color: #475569; border-radius: 6px;
+    padding: 2px 8px; font-size: .68rem; letter-spacing: .04em;
+  }}
+  .ad-box {{
+    max-width: 100%; min-width: 0; overflow-x: auto; overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 10px;
+  }}
+  .ad-box > * {{ max-width: none; }}
+  .ad-note {{ margin: 8px 0 0; font-size: .7rem; font-weight: 700; color: #94a3b8; line-height: 1.7; }}
   @media (prefers-color-scheme: dark) {{
     body {{ background: #0f172a; color: #e2e8f0; }}
     .bar {{ background: rgba(15,23,42,.95); border-bottom-color: #1e293b; }}
@@ -257,6 +307,8 @@ def render_index(apps: list[dict]) -> str:
     .card {{ border-color: rgba(255,255,255,.18); }}
     .card .go {{ background: rgba(15,23,42,.85); color: #f1f5f9; }}
     .empty {{ color: #94a3b8; }}
+    .ad-box {{ background: #1e293b; border-color: #334155; }}
+    .ad-tag {{ background: #334155; color: #cbd5e1; }}
   }}
 </style>
 </head>
@@ -281,7 +333,7 @@ def render_index(apps: list[dict]) -> str:
 {body}
   <p class="empty" id="nohit" hidden>🔍 見つかりませんでした</p>
 </main>
-<footer>© 2026 kids apps</footer>
+{ad_section}<footer>© 2026 kids apps</footer>
 
 <script>
 (function () {{
