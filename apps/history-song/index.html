@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>歴史ドキリ ソング</title>
+    <meta name="description" content="日本史の年号ゴロ合わせ54個をメロディにのせて歌でおぼえる。音を消しても文字が光って拍が見えるカラオケ表示、ゴロ合わせ図鑑、年号クイズ、人物カードつき。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums }
+        .bounce-hover { transition: transform .12s cubic-bezier(.175,.885,.32,1.275) }
+        .bounce-hover:active { transform: scale(.94) }
+        @keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.15) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .35s cubic-bezier(.175,.885,.32,1.275) }
+        @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+        .shake { animation: shake .3s ease-in-out }
+        rt { font-size: .55em; font-weight: 700; color: #b45309 }
+        .mora { display: inline-block; padding: 1px 3px; transition: transform .08s, color .08s; }
+        .mora.on { color: #dc2626; transform: scale(1.5) translateY(-4px); font-weight: 900 }
+        .mora.done { color: #a8a29e }
+        .ball { transition: left .1s linear }
+        svg text { font-family: inherit }
+    </style>
+</head>
+<body class="bg-amber-50 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-red-700 via-orange-600 to-amber-500 text-white p-3 shadow-lg sticky top-0 z-30">
+        <div class="max-w-4xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">🎤</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">歴史ドキリ ソング</h1>
+                    <p class="text-xs text-amber-50 font-bold hidden sm:block">年号ゴロ合わせ <span id="hd-n" class="num">0</span>こを 歌で おぼえる</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[64px] z-20 bg-amber-50/95 backdrop-blur border-b border-amber-200">
+        <div class="max-w-4xl mx-auto flex gap-2 p-3 overflow-x-auto" id="tab-nav"></div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto w-full p-3 sm:p-5 flex-grow space-y-4">
+
+        <!-- ===== ① うたう ===== -->
+        <section id="tab-sing" class="space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <h2 class="font-black">🎤 年号ソング</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    メロディに のせて ゴロ合わせを 歌おう。文字が 赤く 光る ところを 声に 出すと リズムに 乗れる。
+                    <b class="text-orange-700">音を 消しても</b> 光で 拍が 見えるよ。
+                </p>
+                <div id="so-list" class="flex flex-wrap gap-2 mt-3"></div>
+                <div class="flex flex-wrap gap-2 mt-3 items-center">
+                    <button onclick="togglePlay()" id="so-play" class="bg-gradient-to-r from-red-600 to-orange-600 text-white font-black px-5 py-2.5 rounded-xl border-b-4 border-red-900 bounce-hover">▶ うたう</button>
+                    <button onclick="stopSong()" class="bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-2 rounded-xl text-sm bounce-hover">■ とめる</button>
+                    <button onclick="toggleSound()" id="so-snd" class="font-black px-3 py-2 rounded-xl text-sm bounce-hover"></button>
+                    <div class="flex gap-1" id="so-tempo"></div>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-amber-100 to-orange-100 rounded-3xl p-4 shadow-md border-4 border-orange-200">
+                <div class="flex items-center gap-2">
+                    <span id="ka-emoji" class="text-5xl sm:text-6xl">🎵</span>
+                    <div class="flex-1 min-w-0">
+                        <p id="ka-era" class="text-xs font-black text-orange-700"></p>
+                        <p id="ka-event" class="text-sm font-bold text-slate-600 leading-snug"></p>
+                    </div>
+                    <span id="ka-year" class="num text-3xl sm:text-5xl font-black text-red-700 shrink-0"></span>
+                </div>
+                <div class="relative mt-4">
+                    <div id="ka-ball" class="ball absolute -top-5 text-xl" style="left:0">🔴</div>
+                    <p id="ka-lyric" class="font-black text-xl sm:text-3xl leading-loose tracking-wide break-words"></p>
+                </div>
+                <p id="ka-disp" class="font-black text-base sm:text-xl mt-3 text-orange-900"></p>
+                <div class="h-3 bg-white/70 rounded-full mt-3 overflow-hidden border-2 border-orange-200">
+                    <div id="ka-bar" class="h-full bg-gradient-to-r from-red-500 to-orange-500" style="width:0%"></div>
+                </div>
+                <p id="ka-pos" class="num text-xs font-black text-orange-700 text-right mt-1"></p>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <p class="font-black text-sm">📝 この うたの ゴロ合わせ</p>
+                <div id="so-items" class="mt-2 space-y-1"></div>
+            </div>
+        </section>
+
+        <!-- ===== ② 図鑑 ===== -->
+        <section id="tab-book" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">🖼️ ゴロ合わせ図鑑</h2>
+                    <span id="bo-count" class="num bg-orange-100 text-orange-700 font-black px-3 py-1 rounded-full text-xs"></span>
+                </div>
+                <div id="bo-chips" class="flex flex-wrap gap-2 mt-3"></div>
+                <input id="bo-search" type="search" placeholder="🔍 年号・ことば・できごと で さがす"
+                    class="w-full border-2 border-amber-200 rounded-xl px-3 py-2 font-bold text-sm mt-3 focus:outline-none focus:border-orange-500">
+                <div id="bo-list" class="grid sm:grid-cols-2 gap-2 mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ③ クイズ ===== -->
+        <section id="tab-quiz" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">🎯 年号クイズ</h2>
+                    <span id="qz-score" class="num bg-orange-100 text-orange-700 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newQuiz()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <p id="qz-ask" class="text-sm font-bold text-slate-500 mt-3"></p>
+                <div id="qz-head" class="text-center my-3"></div>
+                <div id="qz-choices" class="grid gap-2"></div>
+                <div id="qz-res" class="mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ④ 人物 ===== -->
+        <section id="tab-who" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <h2 class="font-black">👑 人物ドキリ カード</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    その人が <b class="text-orange-700">何を した か</b>を ひとことで おぼえる。カードを タップすると くわしく 出るよ。
+                </p>
+                <div id="wh-list" class="grid sm:grid-cols-2 gap-2 mt-3"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center text-xs text-slate-400 font-bold p-4">歴史ドキリ ソング © 2026</footer>
+
+<script>
+    /* ===================== きょうつう ===================== */
+    const rnd = n => Math.floor(Math.random() * n);
+    const pickOne = a => a[rnd(a.length)];
+    function shuffle(a) { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = rnd(i + 1); const t = b[i]; b[i] = b[j]; b[j] = t; } return b; }
+    function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    function resultBox(ok, title, body) {
+        return `<div class="pop ${ok ? 'bg-green-50 border-green-300' : 'bg-amber-50 border-amber-300'} border-2 rounded-2xl p-3">
+            <p class="font-black ${ok ? 'text-green-700' : 'text-amber-700'}">${title}</p>
+            <div class="font-bold text-sm mt-1 leading-relaxed">${body}</div></div>`;
+    }
+    const S = { quiz: [0, 0] };
+
+    /* 漢字{よみ} を ルビに */
+    const RUBY_RE = /([一-鿿々]+)\{([^{}]+)\}/g;
+    function rubySkip(el) {
+        for (let n = el; n; n = n.parentNode) {
+            const tag = n.nodeType === 1 ? n.tagName.toLowerCase() : '';
+            if (tag === 'script' || tag === 'style' || tag === 'svg' || tag === 'ruby' || tag === 'input') return true;
+        }
+        return false;
+    }
+    function rubifyText(node) {
+        const t = node.nodeValue;
+        if (t.indexOf('{') < 0 || !node.parentNode || rubySkip(node.parentNode)) return;
+        RUBY_RE.lastIndex = 0;
+        if (!RUBY_RE.test(t)) return;
+        RUBY_RE.lastIndex = 0;
+        const frag = document.createDocumentFragment();
+        let last = 0, m;
+        while ((m = RUBY_RE.exec(t))) {
+            if (m.index > last) frag.appendChild(document.createTextNode(t.slice(last, m.index)));
+            const ruby = document.createElement('ruby');
+            ruby.appendChild(document.createTextNode(m[1]));
+            const rt = document.createElement('rt');
+            rt.textContent = m[2];
+            ruby.appendChild(rt);
+            frag.appendChild(ruby);
+            last = m.index + m[0].length;
+        }
+        if (last < t.length) frag.appendChild(document.createTextNode(t.slice(last)));
+        node.parentNode.replaceChild(frag, node);
+    }
+    function rubify(root) {
+        if (root.nodeType === 3) return rubifyText(root);
+        if (root.nodeType !== 1 || rubySkip(root)) return;
+        const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        const list = [];
+        while (w.nextNode()) if (w.currentNode.nodeValue.indexOf('{') >= 0) list.push(w.currentNode);
+        list.forEach(rubifyText);
+    }
+    new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(rubify)))
+        .observe(document.body, { childList: true, subtree: true });
+
+    /* =====================================================================
+       データ … y:年号 / d:表示（かっこの 中が 年号の 読み）/ s:歌う かな
+                 ev:できごと / e:絵 / era:時代 / n:true なら 数字よみ
+       ===================================================================== */
+    const ITEMS = [
+        { y: 57, d: 'こんな（57）小さな 金印', s: 'こんなちいさなきんいん', ev: '倭の奴国{わのなのこく}の王が 漢から 金印を もらう', e: '🏅', era: '原始' },
+        { y: 239, d: '文（ふ）み来（く）る（239）卑弥呼の 手紙', s: 'ふみくるひみこのてがみ', ev: '卑弥呼{ひみこ}が 魏に 使いを おくる', e: '✉️', era: '原始' },
+        { y: 593, d: 'こくみ（593）んの ため 聖徳太子', s: 'こくみんのためしょうとくたいし', ev: '聖徳太子が 摂政{せっしょう}に なる', e: '👑', era: '飛鳥' },
+        { y: 604, d: '群（む）れよ（604）十七条', s: 'むれよじゅうしちじょう', ev: '十七条の憲法を 定める', e: '📜', era: '飛鳥' },
+        { y: 607, d: '群（む）れな（607）す 遣隋使', s: 'むれなすけんずいし', ev: '小野妹子{おののいもこ}を 隋に おくる', e: '🚢', era: '飛鳥' },
+        { y: 645, d: '蒸（む）し御飯（645）で 大化の改新', s: 'むしごはんでたいかのかいしん', ev: '中大兄皇子らが 蘇我氏を たおす', e: '🍚', era: '飛鳥' },
+        { y: 701, d: 'なお（70）い（1）そげ 大宝律令', s: 'なおいそげたいほうりつりょう', ev: '中国に ならった 法りつが 完成', e: '⚖️', era: '飛鳥' },
+        { y: 710, d: 'なんと（710）大きな 平城京', s: 'なんとおおきなへいじょうきょう', ev: '奈良に 都を うつす', e: '🏛️', era: '奈良' },
+        { y: 743, d: 'な（7）し（4）み（3）の 土地は わたしの もの', s: 'なじみのとちはわたしのもの', ev: '墾田永年私財法{こんでんえいねんしざいほう}', e: '🌾', era: '奈良' },
+        { y: 752, d: 'な（7）ご（5）や（2）かに 大仏 完成', s: 'なごやかにだいぶつかんせい', ev: '東大寺の 大仏が できる', e: '🗿', era: '奈良' },
+        { y: 794, d: '鳴くよ（794）うぐいす 平安京', s: 'なくようぐいすへいあんきょう', ev: '桓武天皇が 京都に 都を うつす', e: '🐦', era: '平安' },
+        { y: 894, d: '白紙（894）に もどす 遣唐使', s: 'はくしにもどすけんとうし', ev: '菅原道真の 意見で 遣唐使を やめる', e: '📄', era: '平安' },
+        { y: 1016, d: 'いち・れい・いち・ろく（1016）望月の 道長', s: 'いちれいいちろくもちづきのみちなが', ev: '藤原道長が 摂政に なる（摂関政治の 全盛）', e: '🌕', era: '平安', n: true },
+        { y: 1167, d: 'いい胸（1167）毛 平清盛', s: 'いいむなげたいらのきよもり', ev: '平清盛が 太政大臣{だいじょうだいじん}に なる', e: '💪', era: '平安' },
+        { y: 1192, d: 'いい国（1192）つくろう 鎌倉幕府', s: 'いいくにつくろうかまくらばくふ', ev: '源頼朝が 征夷大将軍に なる', e: '🏯', era: '鎌倉' },
+        { y: 1221, d: '人に 不意（1221）うち 承久の乱', s: 'ひとにふいうちじょうきゅうのらん', ev: '後鳥羽上皇が やぶれ、幕府の 力が 西にも およぶ', e: '⚔️', era: '鎌倉' },
+        { y: 1232, d: 'いち・に・さん・に（1232）と ならぶ 御成敗式目', s: 'いちにさんにとならぶごせいばいしきもく', ev: '北条泰時が 武士の ための 法りつを 定める', e: '📏', era: '鎌倉', n: true },
+        { y: 1274, d: '人（1）には（2）な（7）し（4）の 文永の役', s: 'ひとにはなしのぶんえいのえき', ev: '元が せめて くる（1281年は 弘安の役）', e: '🌊', era: '鎌倉' },
+        { y: 1333, d: '一味（13）さんざん（33）鎌倉滅亡', s: 'いちみさんざんかまくらめつぼう', ev: '鎌倉幕府が ほろびる', e: '💥', era: '鎌倉' },
+        { y: 1338, d: 'いざ都（1338）へ 室町幕府', s: 'いざみやこへむろまちばくふ', ev: '足利尊氏が 京都に 幕府を ひらく', e: '🏮', era: '室町' },
+        { y: 1392, d: 'いざ国（1392）まとめて 南北朝合一', s: 'いざくにまとめてなんぼくちょうごういつ', ev: '足利義満が 南北朝を 1つに する', e: '🤝', era: '室町' },
+        { y: 1404, d: 'いよ（14）押（0）し（4）よせる 勘合貿易', s: 'いよおしよせるかんごうぼうえき', ev: '明との 貿易が 始まる（合い札を つかう）', e: '🛳️', era: '室町' },
+        { y: 1467, d: '人の世 むな（1467）しい 応仁の乱', s: 'ひとのよむなしいおうにんのらん', ev: '11年つづく 戦い。京都が 焼け 戦国時代へ', e: '🔥', era: '室町' },
+        { y: 1543, d: '以後（15）よさん（43）鉄砲伝来', s: 'いごよさんてっぽうでんらい', ev: '種子島に 鉄砲が つたわる', e: '🎯', era: '室町' },
+        { y: 1549, d: '以後（15）よく（49）広まる キリスト教', s: 'いごよくひろまるきりすときょう', ev: 'ザビエルが 鹿児島に 上陸', e: '✝️', era: '室町' },
+        { y: 1573, d: 'いちご（15）涙（73）の 室町滅亡', s: 'いちごなみだのむろまちめつぼう', ev: '織田信長が 足利義昭を 京都から 追放', e: '😢', era: '室町' },
+        { y: 1582, d: '以後（15）やに（82）らみ 本能寺', s: 'いごやにらみほんのうじのへん', ev: '明智光秀が 織田信長を たおす', e: '🗡️', era: '安土桃山' },
+        { y: 1590, d: '以後（15）救（90）う 秀吉 天下統一', s: 'いごすくうひでよしてんかとういつ', ev: '豊臣秀吉が 全国を 統一する', e: '🌟', era: '安土桃山' },
+        { y: 1600, d: 'ヒーロー（16）ゼロゼロ（00）関ヶ原', s: 'ひーろーぜろぜろせきがはら', ev: '徳川家康が 石田三成らに 勝つ', e: '🐎', era: '安土桃山', n: true },
+        { y: 1603, d: '人（1）群（6）れ さわぐ（03）江戸幕府', s: 'ひとむれさわぐえどばくふ', ev: '徳川家康が 江戸に 幕府を ひらく', e: '🏯', era: '江戸' },
+        { y: 1637, d: 'いろ（16）みな（37）苦しい 島原・天草一揆', s: 'いろみなくるしいしまばらあまくさ', ev: 'キリスト教徒と 農民の 大きな 一揆', e: '🛡️', era: '江戸' },
+        { y: 1641, d: 'いろよい（1641）返事は オランダだけ', s: 'いろよいへんじはおらんだだけ', ev: '鎖国{さこく}が 完成する（長崎の 出島）', e: '🚫', era: '江戸' },
+        { y: 1716, d: 'いち・なな・いち・ろく（1716）享保の改革', s: 'いちなないちろくきょうほうのかいかく', ev: '徳川吉宗が 目安箱などの 改革を おこなう', e: '📮', era: '江戸', n: true },
+        { y: 1853, d: 'いやでござんす（1853）ペリーさん', s: 'いやでござんすぺりーさん', ev: 'ペリーが 浦賀に 来る（翌年 日米和親条約）', e: '🚢', era: '江戸' },
+        { y: 1858, d: 'いやはこわ（1858）不平等条約', s: 'いやはこわふびょうどうじょうやく', ev: '日米修好通商条約を 結ぶ', e: '📃', era: '江戸' },
+        { y: 1867, d: '人（1）は（8）む（6）な（7）しい 大政奉還', s: 'ひとはむなしいたいせいほうかん', ev: '徳川慶喜が 政権を 朝廷に かえす', e: '🎋', era: '江戸' },
+        { y: 1868, d: '一夜（18）やろう（68）明治維新', s: 'いちややろうめいじいしん', ev: '五箇条の御誓文。江戸を 東京に あらためる', e: '🌅', era: '明治' },
+        { y: 1871, d: '人（1）は（8）な（7）い（1）藩は なくなる', s: 'ひとはないはんはなくなる', ev: '廃藩置県{はいはんちけん}で 中央集権に', e: '🗺️', era: '明治' },
+        { y: 1873, d: '人（1）は（8）な（7）み（3）だの 地租改正', s: 'ひとはなみだのちそかいせい', ev: '土地の 価格の 3%を 現金で 納めさせる', e: '💸', era: '明治' },
+        { y: 1889, d: 'いち早く（1889）できた 帝国憲法', s: 'いちはやくできたていこくけんぽう', ev: '大日本帝国憲法の 発布（天皇が 定める）', e: '📖', era: '明治' },
+        { y: 1894, d: '一躍（1894）勝った 日清戦争', s: 'いちやくかったにっしんせんそう', ev: '同じ年に 陸奥宗光が 領事裁判権を てっぱい', e: '⚓', era: '明治' },
+        { y: 1904, d: '一（1）苦（9）労（0）し（4）た 日露戦争', s: 'いっくろうしたにちろせんそう', ev: '翌年 ポーツマス条約。賠償金は とれず', e: '🐻', era: '明治' },
+        { y: 1911, d: 'いく（19）いい（11）条約 関税自主権', s: 'いくいいじょうやくかんぜいじしゅけん', ev: '小村寿太郎が 関税自主権を 回復', e: '✂️', era: '明治' },
+        { y: 1914, d: '行く（19）いよ（14）いよ 第一次世界大戦', s: 'いくいよいよだいいちじせかいたいせん', ev: '日本は 連合国側で 参戦し 大戦景気に', e: '🌍', era: '大正' },
+        { y: 1925, d: '行く（19）25（25）さいの 普通選挙', s: 'いくにじゅうごさいのふつうせんきょ', ev: '25歳以上の 男子に 選挙権。治安維持法も', e: '🗳️', era: '大正' },
+        { y: 1931, d: '戦（いく）さ（1931）始まる 満州事変', s: 'いくさはじまるまんしゅうじへん', ev: '2年後に 日本は 国際連盟を 脱退', e: '💣', era: '昭和' },
+        { y: 1937, d: '戦（いく）さ長（な）びく（1937）日中戦争', s: 'いくさながびくにっちゅうせんそう', ev: '国家総動員法が つくられる', e: '🌐', era: '昭和' },
+        { y: 1941, d: '行く（19）よ（4）い（1）ぞ 太平洋戦争', s: 'いくよいぞたいへいようせんそう', ev: '真珠湾攻撃。1945年の 敗戦まで つづく', e: '✈️', era: '昭和' },
+        { y: 1945, d: '行く（19）よ（4）ご（5）いっしょに 平和へ', s: 'いくよごいっしょにへいわへ', ev: 'ポツダム宣言を 受け入れ 終戦', e: '🕊️', era: '昭和' },
+        { y: 1946, d: '行く（19）よ（4）ろ（6）っぽう 日本国憲法', s: 'いくよろっぽうにほんこくけんぽう', ev: '11月3日 公布、翌年 5月3日 施行', e: '📘', era: '昭和' },
+        { y: 1951, d: '行く（19）こ（5）い（1）サンフランシスコ', s: 'いくこいさんふらんしすこ', ev: '平和条約と 日米安全保障条約を 結ぶ', e: '🤝', era: '昭和' },
+        { y: 1956, d: '行く（19）ころ（56）国連へ', s: 'いくころこくれんへ', ev: '日ソ共同宣言の あと 国際連合に 加盟', e: '🌐', era: '昭和' },
+        { y: 1964, d: 'いち・きゅう・ろく・よん（1964）東京オリンピック', s: 'いちきゅうろくよんとうきょうおりんぴっく', ev: '東海道新幹線と 高速道路も 開通', e: '🏅', era: '昭和', n: true },
+        { y: 1972, d: '行く（19）な（7）に（2）沖縄 復帰', s: 'いくなにおきなわふっき', ev: '同じ年に 日中共同声明で 中国と 国交正常化', e: '🌺', era: '昭和' }
+    ];
+
+    const SONGS = [
+        { n: '🏺 古代の うた', ys: [57, 239, 593, 604, 607, 645, 701, 710, 743, 752] },
+        { n: '🌸 平安の うた', ys: [794, 894, 1016, 1167] },
+        { n: '🏯 鎌倉の うた', ys: [1192, 1221, 1232, 1274, 1333] },
+        { n: '🏮 室町・戦国の うた', ys: [1338, 1392, 1404, 1467, 1543, 1549, 1573] },
+        { n: '🗡️ 安土桃山・江戸の うた', ys: [1582, 1590, 1600, 1603, 1637, 1641, 1716] },
+        { n: '🌅 幕末・明治の うた', ys: [1853, 1858, 1867, 1868, 1871, 1873, 1889, 1894, 1904, 1911] },
+        { n: '🕊️ 大正・昭和の うた', ys: [1914, 1925, 1931, 1937, 1941, 1945, 1946, 1951, 1956, 1964, 1972] }
+    ];
+    const byYear = y => ITEMS.find(i => i.y === y);
+    const ERAS = [...new Set(ITEMS.map(i => i.era))];
+
+    // かな1文字を 1拍に。小さい かなと のばす ぼうは 前に くっつける
+    const SMALL = 'ゃゅょぁぃぅぇぉゎっーゝ';
+    function moraList(s) {
+        const out = [];
+        for (const ch of s) {
+            if (out.length && SMALL.indexOf(ch) >= 0) out[out.length - 1] += ch;
+            else out.push(ch);
+        }
+        return out;
+    }
+    // 年号の かっこを 目立たせる
+    const dispHTML = d => esc(d).replace(/（([^（）]*)）/g,
+        '<span class="num text-red-600">（$1）</span>');
+
+    const TABS = { sing: '🎤 うたう', book: '🖼️ 図鑑', quiz: '🎯 クイズ', who: '👑 人物' };
+    let tab = 'sing';
+    function renderNav() {
+        document.getElementById('tab-nav').innerHTML = Object.entries(TABS).map(([k, label]) =>
+            `<button onclick="setTab('${k}')" data-tab="${k}" class="${tab === k ? 'bg-orange-700 text-white' : 'bg-white border-2 border-amber-200 text-slate-600'} font-black px-4 py-2 rounded-full text-sm whitespace-nowrap bounce-hover">${label}</button>`).join('');
+    }
+    function setTab(k) {
+        if (k !== 'sing') stopSong();
+        tab = k;
+        Object.keys(TABS).forEach(t => document.getElementById('tab-' + t).classList.toggle('hidden', t !== k));
+        renderNav();
+        if (k === 'book' && !boReady) { drawBook(); boReady = true; }
+        if (k === 'quiz' && !qz) newQuiz();
+        if (k === 'who' && !whReady) { drawWho(); whReady = true; }
+    }
+
+    /* =====================================================================
+       ① うたう（メロディを その場で 合成する）
+       ===================================================================== */
+    const SCALE = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25];  // C長音階の 5音
+    const PATTERN = [0, 0, 1, 2, 2, 1, 0, 2, 3, 2, 1, 0, 1, 2, 3, 4];
+    const TEMPOS = [['ゆっくり', 88], ['ふつう', 108], ['はやい', 132]];
+    let songI = 0, bpm = 108, sound = true;
+    let ctx = null, master = null, timeline = null, raf = 0, t0 = 0, playing = false;
+    let stGoro = -1, stMora = -2, stYear = -2;
+
+    function ensureCtx() {
+        if (ctx) return ctx;
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        ctx = new AC();
+        master = ctx.createGain();
+        master.gain.value = 0.5;
+        master.connect(ctx.destination);
+        return ctx;
+    }
+    function beep(t, freq, dur, type, gain) {
+        if (!ctx) return;
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = type || 'triangle';
+        o.frequency.setValueAtTime(freq, t);
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(gain || 0.2, t + 0.012);
+        g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+        o.connect(g); g.connect(master);
+        o.start(t); o.stop(t + dur + 0.05);
+    }
+
+    // うたの 時間わりを つくる（音を 出さなくても これで 光らせる）
+    function buildTimeline(song, bpm) {
+        const beat = 30 / bpm;                 // 8分音符の 長さ（秒）
+        const ev = [];
+        let t = 0;
+        song.ys.forEach((y, gi) => {
+            const it = byYear(y);
+            const mor = moraList(it.s);
+            ev.push({ t, type: 'goro', gi, y });
+            mor.forEach((m, i) => {
+                ev.push({ t, type: 'mora', gi, i, m, f: SCALE[PATTERN[i % PATTERN.length]], dur: beat });
+                t += beat;
+            });
+            t += beat;                          // ひとやすみ
+            ev.push({ t, type: 'year', gi, y });
+            t += beat * 4;
+        });
+        return { ev, dur: t, mora: ev.filter(e => e.type === 'mora').length };
+    }
+    function scheduleAudio(tl, at) {
+        tl.ev.forEach(e => {
+            if (e.type === 'mora') beep(at + e.t, e.f, e.dur * 0.9, 'triangle', 0.2);
+            if (e.type === 'goro') beep(at + e.t, SCALE[0] / 2, 0.5, 'sine', 0.24);
+            if (e.type === 'year') {
+                [0, 1, 2].forEach(k => beep(at + e.t + k * 0.13, SCALE[3 + k], 0.18, 'square', 0.14));
+            }
+        });
+    }
+    function drawSongList() {
+        document.getElementById('so-list').innerHTML = SONGS.map((s, i) =>
+            `<button onclick="pickSong(${i})" data-song="${i}" class="${songI === i ? 'bg-orange-700 text-white' : 'bg-white border-2 border-amber-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${s.n} <span class="num opacity-80">${s.ys.length}</span></button>`).join('');
+        document.getElementById('so-tempo').innerHTML = TEMPOS.map(([n, v]) =>
+            `<button onclick="setBpm(${v})" data-bpm="${v}" class="${bpm === v ? 'bg-slate-700 text-white' : 'bg-white border-2 border-slate-200 text-slate-500'} font-black px-2.5 py-2 rounded-xl text-xs bounce-hover">${n}</button>`).join('');
+        document.getElementById('so-snd').className = sound
+            ? 'bg-emerald-600 text-white font-black px-3 py-2 rounded-xl text-sm bounce-hover'
+            : 'bg-white border-2 border-slate-200 text-slate-500 font-black px-3 py-2 rounded-xl text-sm bounce-hover';
+        document.getElementById('so-snd').innerText = sound ? '🔊 音 あり' : '🔇 音 なし';
+        document.getElementById('so-items').innerHTML = SONGS[songI].ys.map(y => {
+            const it = byYear(y);
+            return `<div class="flex items-start gap-2 border-l-4 border-orange-300 pl-2 py-1" data-si="${y}">
+                <span class="text-lg shrink-0">${it.e}</span>
+                <span class="num font-black text-sm w-12 shrink-0 text-red-700">${it.y}</span>
+                <div class="min-w-0">
+                    <p class="font-black text-sm leading-snug">${dispHTML(it.d)}</p>
+                    <p class="text-xs font-bold text-slate-500 leading-snug">${it.ev}</p>
+                </div>
+            </div>`;
+        }).join('');
+    }
+    function pickSong(i) { stopSong(); songI = i; drawSongList(); showGoro(0, -1); }
+    function setBpm(v) { const was = playing; stopSong(); bpm = v; drawSongList(); if (was) togglePlay(); }
+    function toggleSound() {
+        sound = !sound;
+        drawSongList();
+        if (playing) { const i = songI; stopSong(); songI = i; togglePlay(); }
+    }
+    function showGoro(gi, moraAt) {
+        const song = SONGS[songI], y = song.ys[gi], it = byYear(y);
+        const mor = moraList(it.s);
+        document.getElementById('ka-emoji').innerText = it.e;
+        document.getElementById('ka-era').innerText = `${it.era}　${gi + 1} / ${song.ys.length}`;
+        document.getElementById('ka-event').innerHTML = it.ev;
+        document.getElementById('ka-disp').innerHTML = dispHTML(it.d);
+        document.getElementById('ka-lyric').innerHTML = mor.map((m, i) =>
+            `<span class="mora ${i === moraAt ? 'on' : (moraAt >= 0 && i < moraAt ? 'done' : '')}" data-m="${i}">${esc(m)}</span>`).join('');
+        const ball = document.getElementById('ka-ball');
+        if (moraAt >= 0) {
+            const el = document.querySelector(`[data-m="${moraAt}"]`);
+            const host = document.getElementById('ka-lyric');
+            if (el && host) {
+                ball.style.left = (el.offsetLeft + el.offsetWidth / 2 - 10) + 'px';
+                ball.style.top = (el.offsetTop - 22) + 'px';
+                ball.style.opacity = '1';
+            }
+        } else ball.style.opacity = '0';
+    }
+    function showYear(gi) {
+        const it = byYear(SONGS[songI].ys[gi]);
+        const el = document.getElementById('ka-year');
+        el.innerText = it.y;
+        el.classList.remove('pop');
+        void el.offsetWidth;
+        el.classList.add('pop');
+    }
+    function togglePlay() {
+        if (playing) { stopSong(); return; }
+        timeline = buildTimeline(SONGS[songI], bpm);
+        if (sound) { ensureCtx(); if (ctx) { if (ctx.state === 'suspended') ctx.resume(); scheduleAudio(timeline, ctx.currentTime + 0.12); } }
+        t0 = performance.now() + 120;
+        playing = true;
+        resetAdvance();
+        document.getElementById('so-play').innerText = '⏸ とめる';
+        document.getElementById('ka-year').innerText = '';
+        tick();
+    }
+    function stopSong() {
+        playing = false;
+        if (raf) cancelAnimationFrame(raf);
+        raf = 0;
+        if (ctx) { try { master.gain.setTargetAtTime(0, ctx.currentTime, 0.02); } catch (e) { } }
+        if (ctx) setTimeout(() => { try { master.gain.setTargetAtTime(0.5, ctx.currentTime, 0.02); } catch (e) { } }, 60);
+        const pb = document.getElementById('so-play');
+        if (pb) pb.innerText = '▶ うたう';
+        document.getElementById('ka-bar').style.width = '0%';
+        document.getElementById('ka-pos').innerText = '';
+        document.getElementById('ka-ball').style.opacity = '0';
+    }
+    // 時間を 見て 画面を 進める（音が なくても 同じ うごき）
+    function resetAdvance() { stGoro = -1; stMora = -2; stYear = -2; }
+    function advance(el) {
+        const tl = timeline;
+        if (!tl) return false;
+        let gi = 0, moraAt = -1, yearGi = -1;
+        for (const e of tl.ev) {
+            if (e.t > el) break;
+            if (e.type === 'goro') { gi = e.gi; moraAt = -1; }
+            if (e.type === 'mora') { gi = e.gi; moraAt = e.i; }
+            if (e.type === 'year') yearGi = e.gi;
+        }
+        if (gi !== stGoro || moraAt !== stMora) { showGoro(gi, moraAt); stGoro = gi; stMora = moraAt; }
+        // 年号は「いまの ゴロの 歌い終わり」だけ 出す（つぎの ゴロが 始まると 消える）
+        const wantYear = yearGi === gi ? gi : -1;
+        if (wantYear !== stYear) {
+            stYear = wantYear;
+            if (wantYear >= 0) showYear(wantYear);
+            else document.getElementById('ka-year').innerText = '';
+        }
+        document.getElementById('ka-bar').style.width = Math.min(100, (el / tl.dur) * 100).toFixed(1) + '%';
+        document.getElementById('ka-pos').innerText = `${el.toFixed(1)} / ${tl.dur.toFixed(1)} びょう`;
+        return el < tl.dur;
+    }
+    function tick() {
+        if (!playing) return;
+        const el = (performance.now() - t0) / 1000;
+        if (el >= 0 && !advance(el)) { stopSong(); return; }
+        raf = requestAnimationFrame(tick);
+    }
+
+    /* =====================================================================
+       ② 図鑑
+       ===================================================================== */
+    let boReady = false, boEra = 'all', boQ = '';
+    function drawBook() {
+        const chips = ['all'].concat(ERAS);
+        document.getElementById('bo-chips').innerHTML = chips.map(e => {
+            const n = e === 'all' ? ITEMS.length : ITEMS.filter(i => i.era === e).length;
+            return `<button onclick="setBoEra('${e}')" data-bo="${e}" class="${boEra === e ? 'bg-orange-700 text-white' : 'bg-white border-2 border-amber-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${e === 'all' ? 'ぜんぶ' : e} <span class="num opacity-80">${n}</span></button>`;
+        }).join('');
+        const list = ITEMS.filter(i =>
+            (boEra === 'all' || i.era === boEra) &&
+            (!boQ || (i.y + i.d + i.s + i.ev + i.era).replace(/\{[^}]*\}/g, '').indexOf(boQ) >= 0));
+        document.getElementById('bo-count').innerText = `${list.length} こ`;
+        document.getElementById('bo-list').innerHTML = list.map(i =>
+            `<div class="border-2 border-amber-200 bg-white rounded-2xl p-3" data-bi="${i.y}">
+                <div class="flex items-center gap-2">
+                    <span class="text-3xl">${i.e}</span>
+                    <span class="num text-2xl font-black text-red-700">${i.y}</span>
+                    <span class="ml-auto text-[10px] font-black text-white bg-orange-500 px-2 py-0.5 rounded-full">${i.era}</span>
+                </div>
+                <p class="font-black text-sm mt-2 leading-snug">${dispHTML(i.d)}</p>
+                <p class="text-xs font-bold text-slate-500 mt-1 leading-snug">${i.ev}</p>
+                <p class="text-[11px] font-bold text-orange-700 mt-1">🎵 ${esc(i.s)}${i.n ? '　<span class="text-slate-400">（数字よみ）</span>' : ''}</p>
+            </div>`).join('') || `<p class="col-span-full text-center font-black text-slate-400 py-6">見つかりませんでした</p>`;
+    }
+    function setBoEra(e) { boEra = e; drawBook(); }
+
+    /* =====================================================================
+       ③ クイズ
+       ===================================================================== */
+    let qz = null;
+    function newQuiz() {
+        const it = pickOne(ITEMS);
+        const kind = rnd(3);
+        let ask, head, ans, choices;
+        if (kind === 0) {
+            ask = 'この ゴロ合わせは 何年？';
+            head = `<p class="font-black text-lg sm:text-2xl leading-relaxed">${dispHTML(it.d.replace(/（[^（）]*）/g, '（？）'))}</p>
+                    <p class="text-3xl mt-1">${it.e}</p>`;
+            ans = String(it.y);
+            const near = shuffle(ITEMS.filter(x => x.y !== it.y)).sort((a, b) => Math.abs(a.y - it.y) - Math.abs(b.y - it.y)).slice(0, 6);
+            choices = shuffle([ans].concat(shuffle(near).slice(0, 3).map(x => String(x.y))));
+        } else if (kind === 1) {
+            ask = 'この 年に あった できごとは？';
+            head = `<p class="num text-4xl sm:text-6xl font-black text-red-700">${it.y}</p>`;
+            ans = it.ev;
+            choices = shuffle([ans].concat(shuffle(ITEMS.filter(x => x.y !== it.y)).slice(0, 3).map(x => x.ev)));
+        } else {
+            ask = 'この できごとの ゴロ合わせは どれ？';
+            head = `<p class="num text-2xl font-black text-red-700">${it.y}</p>
+                    <p class="font-bold text-sm mt-1">${it.ev}</p>`;
+            ans = it.d;
+            choices = shuffle([ans].concat(shuffle(ITEMS.filter(x => x.y !== it.y)).slice(0, 3).map(x => x.d)));
+        }
+        qz = { it, kind, ans, choices, done: false };
+        document.getElementById('qz-ask').innerText = ask;
+        document.getElementById('qz-head').innerHTML = head;
+        document.getElementById('qz-choices').innerHTML = choices.map((c, i) =>
+            `<button onclick="ansQuiz(${i})" data-qzc="${i}" class="bg-white border-2 border-slate-200 hover:border-orange-500 font-bold text-left px-4 py-3 rounded-2xl bounce-hover text-sm leading-relaxed">${kind === 0 ? `<span class="num font-black text-lg">${esc(c)}</span> 年` : dispHTML(c)}</button>`).join('');
+        document.getElementById('qz-res').innerHTML = '';
+        document.getElementById('qz-score').innerText = `${S.quiz[0]} / ${S.quiz[1]}`;
+    }
+    function ansQuiz(i) {
+        if (!qz || qz.done) return;
+        qz.done = true;
+        const ok = qz.choices[i] === qz.ans;
+        S.quiz[1]++; if (ok) S.quiz[0]++;
+        document.querySelectorAll('[data-qzc]').forEach((el, j) => {
+            const isR = qz.choices[j] === qz.ans;
+            el.className = `${isR ? 'bg-green-50 border-green-500' : (j === i ? 'bg-red-50 border-red-400 shake' : 'bg-white border-slate-200 opacity-60')} border-2 font-bold text-left px-4 py-3 rounded-2xl text-sm leading-relaxed`;
+        });
+        const it = qz.it;
+        document.getElementById('qz-res').innerHTML = resultBox(ok, ok ? '⭕ せいかい！' : '❌ ざんねん…',
+            `<p class="text-2xl">${it.e} <span class="num text-red-700">${it.y}</span>　<span class="text-xs text-slate-400">${it.era}</span></p>
+             <p class="font-black mt-1">${dispHTML(it.d)}</p>
+             <p class="mt-1">${it.ev}</p>`);
+        document.getElementById('qz-score').innerText = `${S.quiz[0]} / ${S.quiz[1]}`;
+    }
+
+    /* =====================================================================
+       ④ 人物
+       ===================================================================== */
+    const WHO = [
+        { n: '聖徳太子', y: 'しょうとくたいし', e: '👑', era: '飛鳥', say: '和を もって とうとしと なす', d: '推古天皇を たすけ、十七条の憲法・冠位十二階を 定め、遣隋使を おくった。法隆寺も 建てた。' },
+        { n: '中大兄皇子', y: 'なかのおおえのおうじ', e: '⚔️', era: '飛鳥', say: '蘇我氏を たおして 新しい 国を つくる', d: '中臣鎌足と ともに 大化の改新（645年）。のちの 天智天皇。' },
+        { n: '聖武天皇', y: 'しょうむてんのう', e: '🗿', era: '奈良', say: '仏の 力で 国を まもる', d: '各地に 国分寺、都に 東大寺の 大仏（752年 完成）。ききんや 病気に 苦しむ 世を 仏教で 救おうと した。' },
+        { n: '桓武天皇', y: 'かんむてんのう', e: '🏯', era: '平安', say: '都を 平安京へ うつす', d: '794年。政治を やりなおす ため 京都へ。坂上田村麻呂を 東北へ おくった。' },
+        { n: '菅原道真', y: 'すがわらのみちざね', e: '📄', era: '平安', say: '遣唐使は もう いらない', d: '894年に 遣唐使の 停止を 提案。のちに 学問の 神さまとして まつられた（天満宮）。' },
+        { n: '藤原道長', y: 'ふじわらのみちなが', e: '🌕', era: '平安', say: 'この世をば わが世とぞ思ふ', d: '娘を 天皇の きさきに して 力を にぎる 摂関政治の 全盛。' },
+        { n: '平清盛', y: 'たいらのきよもり', e: '💪', era: '平安', say: '武士でも 太政大臣に なれる', d: '1167年。日宋貿易で 富を きずき、武士が 政治の 中心に 出る 道を ひらいた。' },
+        { n: '源頼朝', y: 'みなもとのよりとも', e: '🏹', era: '鎌倉', say: '御恩と 奉公で 武士を まとめる', d: '1192年 征夷大将軍。守護・地頭を おき、武士の 政権（鎌倉幕府）を つくった。' },
+        { n: '北条政子', y: 'ほうじょうまさこ', e: '🗣️', era: '鎌倉', say: '頼朝さまの ご恩を わすれたか', d: '承久の乱（1221年）で 御家人を 演説で まとめ、幕府を まもった「尼将軍」。' },
+        { n: '足利義満', y: 'あしかがよしみつ', e: '🌟', era: '室町', say: '明と 貿易し 金閣を 建てる', d: '南北朝を 合一（1392年）。勘合貿易を 始め、北山に 金閣を 建てた。' },
+        { n: '織田信長', y: 'おだのぶなが', e: '🔥', era: '安土桃山', say: '楽市楽座で 商売を 自由に', d: '鉄砲を 使った 長篠の戦い、関所の はいし。1582年 本能寺の変で たおれる。' },
+        { n: '豊臣秀吉', y: 'とよとみひでよし', e: '🌾', era: '安土桃山', say: '検地と 刀狩で 武士と 農民を 分ける', d: '1590年 全国統一。太閤検地で 田の 広さと 収かくを 調べ、兵農分離を すすめた。' },
+        { n: '徳川家康', y: 'とくがわいえやす', e: '🏯', era: '江戸', say: '265年の 平和の もとを つくる', d: '1600年 関ヶ原、1603年 江戸幕府。武家諸法度で 大名を 取りしまった。' },
+        { n: '徳川吉宗', y: 'とくがわよしむね', e: '📮', era: '江戸', say: '目安箱で 民の 声を 聞く', d: '享保の改革（1716年〜）。公事方御定書・上げ米の制。「米将軍」と よばれた。' },
+        { n: '杉田玄白', y: 'すぎたげんぱく', e: '📕', era: '江戸', say: 'オランダの 医学書を 日本語に', d: '前野良沢らと『解体新書』を 出し、蘭学{らんがく}が 広まる きっかけを つくった。' },
+        { n: '伊能忠敬', y: 'いのうただたか', e: '🗾', era: '江戸', say: '歩いて 日本の 地図を つくる', d: '55歳から 17年かけて 全国を 測量。おどろくほど 正確な 日本地図を のこした。' },
+        { n: '坂本龍馬', y: 'さかもとりょうま', e: '🤝', era: '江戸', say: '薩摩と 長州に 手を 組ませる', d: '薩長同盟を 仲立ちし、大政奉還への 道を ひらいた。' },
+        { n: '西郷隆盛', y: 'さいごうたかもり', e: '🐕', era: '明治', say: '江戸を 戦わずに 明けわたす', d: '勝海舟との 話し合いで 江戸無血開城。のちに 西南戦争（1877年）で たおれる。' },
+        { n: '大久保利通', y: 'おおくぼとしみち', e: '🗺️', era: '明治', say: '廃藩置県で 新しい 国を', d: '岩倉使節団で 欧米を 見て、殖産興業と 中央集権を すすめた。' },
+        { n: '伊藤博文', y: 'いとうひろぶみ', e: '📖', era: '明治', say: '憲法を つくり 国会を ひらく', d: 'ドイツを 参考に 大日本帝国憲法（1889年）を つくり、初代 内閣総理大臣に なった。' },
+        { n: '陸奥宗光', y: 'むつむねみつ', e: '⚓', era: '明治', say: '領事裁判権を てっぱいする', d: '1894年、イギリスとの 交渉で 成功。日清戦争の 直前だった。' },
+        { n: '小村寿太郎', y: 'こむらじゅたろう', e: '✂️', era: '明治', say: '関税自主権を とりもどす', d: '1911年、これで 幕末の 不平等条約の 改正が すべて 完成した。' },
+        { n: '福沢諭吉', y: 'ふくざわゆきち', e: '📚', era: '明治', say: '天は 人の 上に 人を 造らず', d: '『学問のすゝめ』を 書き、学ぶ ことで だれでも のびると 説いた。慶應義塾を つくった。' },
+        { n: '野口英世', y: 'のぐちひでよ', e: '🔬', era: '明治', say: '世界の 病気と たたかう', d: '細きんの 研究で 世界に 名を のこした 医学者。千円札に なった。' }
+    ];
+    let whReady = false, whSel = null;
+    function drawWho() {
+        document.getElementById('wh-list').innerHTML = WHO.map(w =>
+            `<button onclick="pickWho('${encodeURIComponent(w.n)}')" data-who="${esc(w.n)}"
+                class="text-left border-2 ${whSel === w.n ? 'border-orange-500 bg-orange-50' : 'border-amber-200 bg-white'} rounded-2xl p-3 bounce-hover">
+                <div class="flex items-center gap-2">
+                    <span class="text-3xl">${w.e}</span>
+                    <div class="min-w-0">
+                        <p class="font-black leading-none">${esc(w.n)}</p>
+                        <p class="text-[11px] font-bold text-slate-400">${esc(w.y)}　${esc(w.era)}</p>
+                    </div>
+                </div>
+                <p class="font-black text-sm text-orange-800 mt-2">「${esc(w.say)}」</p>
+                ${whSel === w.n ? `<p class="text-xs font-bold text-slate-600 mt-2 leading-relaxed pop">${w.d}</p>` : ''}
+            </button>`).join('');
+    }
+    function pickWho(enc) {
+        const n = decodeURIComponent(enc);
+        whSel = whSel === n ? null : n;
+        drawWho();
+    }
+
+    /* ===================== 起動 ===================== */
+    document.getElementById('hd-n').innerText = ITEMS.length;
+    document.getElementById('bo-search').addEventListener('input', e => { boQ = e.target.value.trim(); drawBook(); });
+    renderNav();
+    drawSongList();
+    showGoro(0, -1);
+    rubify(document.body);
+</script>
+</body>
+</html>
