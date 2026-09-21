@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIラボ</title>
+    <meta name="description" content="AIとLLMのしくみを、動くミニAIで体験する。トークンと次の言葉の予想、ChatGPT・Claude・Gemini・Copilot・Devin・Jev などの図鑑、Jev（システム1モデル）の解説、上手なつかい方とクイズ。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums }
+        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace }
+        .bounce-hover { transition: transform .12s cubic-bezier(.175,.885,.32,1.275) }
+        .bounce-hover:active { transform: scale(.94) }
+        @keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.1) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275) }
+        @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+        .shake { animation: shake .3s ease-in-out }
+        rt { font-size: .55em; font-weight: 700; color: #4338ca }
+        .tok { display: inline-block; padding: 2px 8px; margin: 2px; border-radius: 8px; font-weight: 900; }
+        input[type=range] { accent-color: #6366f1; width: 100% }
+        .bar { height: 10px; border-radius: 999px; background: #e2e8f0; overflow: hidden }
+        .bar > i { display: block; height: 100%; background: #6366f1 }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-slate-900 via-indigo-800 to-violet-800 text-white p-3 shadow-lg sticky top-0 z-30">
+        <div class="max-w-4xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">🤖</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">AIラボ</h1>
+                    <p class="text-xs text-indigo-200 font-bold hidden sm:block">LLMの しくみを ミニAIで 体験する</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[64px] z-20 bg-slate-100/95 backdrop-blur border-b border-slate-300">
+        <div class="max-w-4xl mx-auto flex gap-2 p-3 overflow-x-auto" id="tab-nav"></div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto w-full p-3 sm:p-5 flex-grow space-y-4">
+
+        <!-- ===== ① ミニAI ===== -->
+        <section id="tab-mini" class="space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">🔤 LLMは「つぎの ことば」を 予想する 機械</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    LLM（大規模{だいきぼ}言語モデル）は、文を <b class="text-indigo-700">トークン</b>という 小さな かたまりに 分けて、
+                    「この つづきに くる ことばは 何か」を <b class="text-indigo-700">かくりつ</b>で 予想する。
+                    それを くりかえすと 文章に なる。
+                </p>
+                <div class="bg-indigo-50 border-2 border-indigo-200 rounded-2xl p-3 mt-3">
+                    <p class="text-xs font-black text-indigo-800">いま までの 文（トークンで 色分け）</p>
+                    <div id="mi-text" class="mt-1 text-base sm:text-xl leading-loose min-h-[3rem]"></div>
+                </div>
+                <div class="mt-3">
+                    <div class="flex justify-between items-baseline">
+                        <span class="text-xs font-black text-slate-600">おんど（temperature）… 大きいほど 自由・小さいほど かたい</span>
+                        <span class="num font-black text-sm" id="mi-temp-v">1.0</span>
+                    </div>
+                    <input id="mi-temp" type="range" min="0.2" max="2" step="0.1" value="1" oninput="setTemp(this.value)">
+                </div>
+                <div class="flex flex-wrap gap-2 mt-2">
+                    <button onclick="miStep()" id="mi-step" class="bg-gradient-to-r from-indigo-600 to-violet-700 text-white font-black px-4 py-2 rounded-xl border-b-4 border-indigo-900 bounce-hover text-sm">🎲 AIに 1つ えらばせる</button>
+                    <button onclick="miAuto()" class="bg-white border-2 border-indigo-200 text-indigo-700 font-black px-4 py-2 rounded-xl bounce-hover text-sm">⏩ 文の おわりまで</button>
+                    <button onclick="miReset()" class="bg-white border-2 border-slate-200 text-slate-600 font-black px-4 py-2 rounded-xl bounce-hover text-sm">🔄 やりなおす</button>
+                </div>
+                <p class="text-xs font-black text-slate-500 mt-3">つぎの ことばの 予想（自分で えらんでも いいよ）</p>
+                <div id="mi-cands" class="space-y-1.5 mt-1"></div>
+                <p id="mi-msg" class="font-black text-center mt-2 min-h-[1.5rem] text-sm"></p>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">📚 この ミニAIの 中身</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    上の AIは <b id="mi-nsent" class="num text-indigo-700">0</b>この 文（ぜんぶで
+                    <b id="mi-ntok" class="num text-indigo-700">0</b>トークン、ちがう ことばは
+                    <b id="mi-nvocab" class="num text-indigo-700">0</b>しゅるい）だけを 読んで、
+                    「ことば → つぎに きた ことばの 回数」を 数えた だけの しくみ（2グラム言語モデル）。
+                </p>
+                <div id="mi-table" class="mt-3 space-y-1"></div>
+                <p class="text-xs font-bold text-slate-400 mt-3">
+                    ※ 本物の LLMは 何十おくもの 文章から 学び、ことばの 意味の つながりまで 計算して いる。
+                    でも「つぎの トークンを かくりつで 予想する」という <b>いちばんの しくみは 同じ</b>だよ。
+                </p>
+            </div>
+        </section>
+
+        <!-- ===== ② AI図鑑 ===== -->
+        <section id="tab-zukan" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">🗂️ 主要な AI・エージェント図鑑</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    <b class="text-indigo-700">モデル</b>＝答えを 作る 頭。
+                    <b class="text-indigo-700">エージェント</b>＝その 頭が <b>道具（ツール）</b>を つかって、
+                    自分で 手順を すすめる しくみ。
+                </p>
+                <div id="zk-chips" class="flex flex-wrap gap-2 mt-3"></div>
+                <div id="zk-list" class="grid sm:grid-cols-2 gap-3 mt-3"></div>
+                <p class="text-xs font-bold text-slate-400 mt-3">※ 2026年9月ごろの 情報。AIは 進み方が とても 速いので、最新は 公式サイトで たしかめてね。</p>
+            </div>
+        </section>
+
+        <!-- ===== ③ Jev ===== -->
+        <section id="tab-jev" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">⚡ Jev … 文章を 作らない「判断{はんだん}の AI」</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    <b class="text-indigo-700">Jev</b>は TypeSafe AI が 2026年9月に 発表した、まったく 新しい しゅるいの モデル。
+                    文章を 作らず、<b>決められた かたちの 答え（型{かた}）</b>と
+                    <b>その 自信の 度合い（かくりつ）</b>だけを 返す。これを
+                    <b class="text-indigo-700">システム1モデル</b>と よぶ。
+                </p>
+                <div class="bg-violet-50 border-2 border-violet-200 rounded-2xl p-3 mt-3">
+                    <p class="font-black text-violet-900">🧠 システム1と システム2</p>
+                    <p class="text-sm font-bold text-slate-600 mt-1 leading-relaxed">
+                        心理学者 ダニエル・カーネマンの『ファスト＆スロー』から とった 名前。<br>
+                        <b>システム1</b>＝「1＋1は？」のように <b>パッと 出る 速い 判断</b>。<br>
+                        <b>システム2</b>＝「17×24は？」のように <b>じっくり 考える おそい 思考</b>。<br>
+                        いままでの LLM は システム2の 役。Jev は その 前に ある「パッと 決める」役を うけもつ。
+                    </p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">🆚 LLM と Jev を くらべて みる</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">おなじ 入力を 入れた ときの イメージ。カードを えらんで みよう。</p>
+                <div id="jv-chips" class="flex flex-wrap gap-2 mt-3"></div>
+                <div class="bg-slate-800 text-slate-100 rounded-2xl p-3 mt-3">
+                    <p class="text-xs font-black text-slate-400">入力</p>
+                    <p id="jv-in" class="mono text-sm mt-1 leading-relaxed"></p>
+                </div>
+                <div class="grid sm:grid-cols-2 gap-3 mt-3">
+                    <div class="border-2 border-sky-200 bg-sky-50 rounded-2xl p-3">
+                        <p class="font-black text-sky-800">💬 ふつうの LLM</p>
+                        <p id="jv-llm" class="text-sm font-bold text-slate-700 mt-1 leading-relaxed"></p>
+                        <p class="text-xs font-bold text-sky-700 mt-2">文章なので 読みやすいが、プログラムで あつかうには 形が バラバラ。</p>
+                    </div>
+                    <div class="border-2 border-violet-300 bg-violet-50 rounded-2xl p-3">
+                        <p class="font-black text-violet-900">⚡ Jev（システム1モデル）</p>
+                        <div id="jv-out" class="mt-2 space-y-1.5"></div>
+                        <p class="text-xs font-bold text-violet-800 mt-2">決められた 選択肢の どれか＋かくりつ。プログラムが そのまま つかえる。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">📋 ちがいの まとめ</h2>
+                <div class="overflow-x-auto mt-2">
+                    <table class="w-full text-sm min-w-[480px]">
+                        <thead><tr class="text-left">
+                            <th class="p-2 font-black"></th>
+                            <th class="p-2 font-black text-sky-800">ふつうの LLM</th>
+                            <th class="p-2 font-black text-violet-900">Jev</th>
+                        </tr></thead>
+                        <tbody id="jv-table"></tbody>
+                    </table>
+                </div>
+                <p class="text-xs font-bold text-slate-400 mt-3">
+                    ※ 速さ・ねだんは 発表された 数字（2026年9月）。
+                    Jev は Vercel AI Gateway や Cloudflare Workers AI から つかえる と 発表された。
+                </p>
+            </div>
+        </section>
+
+        <!-- ===== ④ つかい方 ===== -->
+        <section id="tab-use" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">👻 ハルシネーション（もっともらしい ウソ）</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    LLMは「つぎの ことばを 予想する」しくみなので、<b class="text-rose-700">知らない ことでも
+                    それらしい 文を 作って しまう</b>。これを ハルシネーション（幻覚{げんかく}）と いう。
+                </p>
+                <div id="hal-list" class="space-y-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">🧰 プロンプト（たのみ方）を 組み立てる</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    <b class="text-indigo-700">だれに・なにを・どんな形で・じょうけん</b>を そろえると、ぐっと よい 答えに なる。
+                </p>
+                <div id="pb-ctrl" class="space-y-3 mt-3"></div>
+                <div class="bg-slate-800 text-slate-100 rounded-2xl p-3 mt-3">
+                    <p class="text-xs font-black text-slate-400">できた プロンプト</p>
+                    <p id="pb-out" class="mono text-sm mt-1 leading-relaxed"></p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">🛡️ こんな とき どう する？</h2>
+                    <span id="sc-score" class="num bg-indigo-100 text-indigo-700 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newScene()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <p id="sc-q" class="font-black text-base sm:text-lg mt-3 leading-relaxed"></p>
+                <div id="sc-choices" class="grid gap-2 mt-3"></div>
+                <div id="sc-res" class="mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ⑤ クイズ ===== -->
+        <section id="tab-quiz" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">❓ AIクイズ</h2>
+                    <span id="qz-score" class="num bg-indigo-100 text-indigo-700 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newQuiz()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <div id="qz-fields" class="flex flex-wrap gap-2 mt-3"></div>
+                <p id="qz-q" class="font-black text-base sm:text-lg mt-3 leading-relaxed"></p>
+                <div id="qz-choices" class="grid gap-2 mt-3"></div>
+                <div id="qz-res" class="mt-3"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center text-xs text-slate-400 font-bold p-4">AIラボ © 2026</footer>
+
+<script>
+    /* ===================== きょうつう ===================== */
+    const rnd = n => Math.floor(Math.random() * n);
+    const pickOne = a => a[rnd(a.length)];
+    function shuffle(a) { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = rnd(i + 1); const t = b[i]; b[i] = b[j]; b[j] = t; } return b; }
+    function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    function resultBox(ok, title, body) {
+        return `<div class="pop ${ok ? 'bg-green-50 border-green-300' : 'bg-amber-50 border-amber-300'} border-2 rounded-2xl p-3">
+            <p class="font-black ${ok ? 'text-green-700' : 'text-amber-700'}">${title}</p>
+            <div class="font-bold text-sm mt-1 leading-relaxed">${body}</div></div>`;
+    }
+    const S = { scene: [0, 0], quiz: [0, 0] };
+    function scoreBox(id, s) { document.getElementById(id).innerText = `${s[0]} / ${s[1]}`; }
+    function markChoices(sel, isRight, picked, cls) {
+        document.querySelectorAll(sel).forEach((el, j) => {
+            el.className = `${isRight(j) ? 'bg-green-50 border-green-500' : (j === picked ? 'bg-red-50 border-red-400 shake' : 'bg-white border-slate-200 opacity-60')} border-2 ${cls}`;
+        });
+    }
+
+    /* 漢字{よみ} を ルビに */
+    const RUBY_RE = /([一-鿿々]+)\{([^{}]+)\}/g;
+    function rubySkip(el) {
+        for (let n = el; n; n = n.parentNode) {
+            const tag = n.nodeType === 1 ? n.tagName.toLowerCase() : '';
+            if (tag === 'script' || tag === 'style' || tag === 'svg' || tag === 'ruby') return true;
+        }
+        return false;
+    }
+    function rubifyText(node) {
+        const t = node.nodeValue;
+        if (t.indexOf('{') < 0 || !node.parentNode || rubySkip(node.parentNode)) return;
+        RUBY_RE.lastIndex = 0;
+        if (!RUBY_RE.test(t)) return;
+        RUBY_RE.lastIndex = 0;
+        const frag = document.createDocumentFragment();
+        let last = 0, m;
+        while ((m = RUBY_RE.exec(t))) {
+            if (m.index > last) frag.appendChild(document.createTextNode(t.slice(last, m.index)));
+            const ruby = document.createElement('ruby');
+            ruby.appendChild(document.createTextNode(m[1]));
+            const rt = document.createElement('rt');
+            rt.textContent = m[2];
+            ruby.appendChild(rt);
+            frag.appendChild(ruby);
+            last = m.index + m[0].length;
+        }
+        if (last < t.length) frag.appendChild(document.createTextNode(t.slice(last)));
+        node.parentNode.replaceChild(frag, node);
+    }
+    function rubify(root) {
+        if (root.nodeType === 3) return rubifyText(root);
+        if (root.nodeType !== 1 || rubySkip(root)) return;
+        const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        const list = [];
+        while (w.nextNode()) if (w.currentNode.nodeValue.indexOf('{') >= 0) list.push(w.currentNode);
+        list.forEach(rubifyText);
+    }
+    new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(rubify)))
+        .observe(document.body, { childList: true, subtree: true });
+
+    const TABS = { mini: '🔤 ミニAI', zukan: '🗂️ AI図鑑', jev: '⚡ Jev', use: '🛡️ つかい方', quiz: '❓ クイズ' };
+    let tab = 'mini';
+    function renderNav() {
+        document.getElementById('tab-nav').innerHTML = Object.entries(TABS).map(([k, label]) =>
+            `<button onclick="setTab('${k}')" data-tab="${k}" class="${tab === k ? 'bg-indigo-700 text-white' : 'bg-white border-2 border-indigo-200 text-slate-600'} font-black px-4 py-2 rounded-full text-sm whitespace-nowrap bounce-hover">${label}</button>`).join('');
+    }
+    function setTab(k) {
+        tab = k;
+        Object.keys(TABS).forEach(t => document.getElementById('tab-' + t).classList.toggle('hidden', t !== k));
+        renderNav();
+        if (k === 'zukan' && !zkReady) { drawZukan(); zkReady = true; }
+        if (k === 'jev' && !jvReady) { drawJev(); drawJevTable(); jvReady = true; }
+        if (k === 'use' && !sc) { drawHal(); drawPromptBuilder(); newScene(); }
+        if (k === 'quiz' && !qz) newQuiz();
+    }
+
+    /* =====================================================================
+       ① ミニAI（2グラム言語モデル）
+       ===================================================================== */
+    const START = '▶';
+    // 文を あらかじめ トークン（ことばの かたまり）に 分けて 用意して ある
+    const CORPUS = [
+        ['きょう', 'は', 'とても', 'あつい', 'ので', 'プール', 'に', 'いき', 'ました', '。'],
+        ['きょう', 'は', 'すこし', 'さむい', 'から', 'こうえん', 'に', 'いき', 'ました', '。'],
+        ['あした', 'は', 'がっこう', 'に', 'いき', 'ます', '。'],
+        ['ぼく', 'は', 'カレー', 'を', 'たべ', 'ました', '。'],
+        ['わたし', 'は', 'ラーメン', 'を', 'たべ', 'たい', '。'],
+        ['カレー', 'は', 'とても', 'おいしい', '。'],
+        ['ラーメン', 'も', 'とても', 'おいしい', '。'],
+        ['ぼく', 'は', 'ねこ', 'と', 'あそび', 'ました', '。'],
+        ['わたし', 'は', 'いぬ', 'と', 'あそび', 'たい', '。'],
+        ['ねこ', 'は', 'とても', 'かわいい', '。'],
+        ['いぬ', 'も', 'とても', 'かわいい', '。'],
+        ['きょう', 'は', '本', 'を', 'よみ', 'ました', '。'],
+        ['あした', 'は', '本', 'を', 'よみ', 'たい', '。'],
+        ['がっこう', 'は', 'とても', 'たのしい', '。'],
+        ['プール', 'は', 'とても', 'たのしい', '。'],
+        ['こうえん', 'で', 'ねこ', 'に', 'あい', 'ました', '。'],
+        ['こうえん', 'で', 'いぬ', 'と', 'あそび', 'ました', '。'],
+        ['ぼく', 'は', 'あした', 'プール', 'に', 'いき', 'たい', '。'],
+        ['わたし', 'は', 'きょう', 'がっこう', 'で', '本', 'を', 'よみ', 'ました', '。'],
+        ['きょう', 'は', 'あつい', 'ので', 'アイス', 'を', 'たべ', 'ました', '。'],
+        ['あした', 'は', 'さむい', 'から', 'なべ', 'を', 'たべ', 'ます', '。'],
+        ['ねこ', 'が', 'カレー', 'を', 'たべ', 'ました', '。'],
+        ['いぬ', 'が', 'ラーメン', 'を', 'たべ', 'ました', '。'],
+        ['ぼく', 'は', 'とても', 'たのしい', '。'],
+        ['わたし', 'も', 'とても', 'たのしい', '。'],
+        ['アイス', 'は', 'とても', 'おいしい', '。'],
+        ['なべ', 'も', 'とても', 'おいしい', '。'],
+        ['きょう', 'は', 'こうえん', 'で', 'あそび', 'ました', '。'],
+        ['あした', 'は', 'プール', 'で', 'あそび', 'ます', '。'],
+        ['がっこう', 'で', 'ねこ', 'と', 'あそび', 'たい', '。'],
+        ['きょう', 'は', 'とても', 'さむい', 'から', 'なべ', 'を', 'たべ', 'ました', '。'],
+        ['あした', 'は', 'すこし', 'あつい', 'ので', 'プール', 'で', 'あそび', 'ます', '。']
+    ];
+    // ことば -> つぎに きた ことばの 回数
+    const NEXT = {};
+    const VOCAB = new Set([START]);
+    let NTOK = 0;
+    CORPUS.forEach(sent => {
+        const seq = [START].concat(sent);
+        NTOK += sent.length;
+        for (let i = 0; i < seq.length - 1; i++) {
+            const a = seq[i], b = seq[i + 1];
+            VOCAB.add(a); VOCAB.add(b);
+            (NEXT[a] = NEXT[a] || {})[b] = (NEXT[a][b] || 0) + 1;
+        }
+    });
+    // かくりつ（おんど つき）を 計算する
+    function probs(word, temp) {
+        const row = NEXT[word];
+        if (!row) return [];
+        const t = Math.max(0.05, temp);
+        const raw = Object.keys(row).map(w => [w, Math.pow(row[w], 1 / t)]);
+        const sum = raw.reduce((s, r) => s + r[1], 0);
+        return raw.map(([w, v]) => [w, v / sum, row[w]]).sort((a, b) => b[1] - a[1]);
+    }
+    const TOKCOL = ['#6366f1', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#a855f7', '#14b8a6', '#f43f5e'];
+
+    const mini = { seq: [], temp: 1 };
+    function miReset() { mini.seq = []; drawMini(); document.getElementById('mi-msg').innerText = ''; }
+    function setTemp(v) {
+        mini.temp = +v;
+        document.getElementById('mi-temp-v').innerText = (+v).toFixed(1);
+        drawMini();
+    }
+    function drawMini() {
+        const cur = mini.seq.length ? mini.seq[mini.seq.length - 1] : START;
+        document.getElementById('mi-text').innerHTML = mini.seq.length
+            ? mini.seq.map((w, i) => `<span class="tok" style="background:${TOKCOL[i % TOKCOL.length]}22;color:${TOKCOL[i % TOKCOL.length]}">${esc(w)}</span>`).join('')
+            : `<span class="text-slate-400 font-bold text-sm">（まだ 何も ない。下の 予想から えらぶか、ボタンを おしてね）</span>`;
+        const ps = probs(cur, mini.temp);
+        const done = ps.length === 0;
+        document.getElementById('mi-step').disabled = done;
+        document.getElementById('mi-cands').innerHTML = done
+            ? `<p class="text-sm font-bold text-slate-400">「。」で 文が おわったよ。やりなおして みよう。</p>`
+            : ps.slice(0, 6).map(([w, p, c]) =>
+                `<button onclick="miPick('${encodeURIComponent(w)}')" data-cand="${esc(w)}"
+                    class="w-full flex items-center gap-2 bg-white border-2 border-slate-200 hover:border-indigo-500 rounded-xl px-3 py-2 bounce-hover">
+                    <span class="font-black text-sm w-20 text-left truncate">${esc(w)}</span>
+                    <span class="bar flex-1"><i style="width:${(p * 100).toFixed(1)}%"></i></span>
+                    <span class="num text-xs font-black text-indigo-700 w-12 text-right">${(p * 100).toFixed(0)}%</span>
+                    <span class="num text-[10px] font-bold text-slate-400 w-10 text-right">${c}回</span>
+                </button>`).join('');
+        document.getElementById('mi-nsent').innerText = CORPUS.length;
+        document.getElementById('mi-ntok').innerText = NTOK;
+        document.getElementById('mi-nvocab').innerText = VOCAB.size - 1;
+        // 「ことば → つぎの ことば」の 数えあげ表（いま の ことばを 先頭に）
+        const keys = [cur].concat(Object.keys(NEXT).filter(k => k !== cur)).filter(k => NEXT[k]);
+        document.getElementById('mi-table').innerHTML = keys.slice(0, 8).map(k => {
+            const row = NEXT[k];
+            const tot = Object.values(row).reduce((a, b) => a + b, 0);
+            const items = Object.entries(row).sort((a, b) => b[1] - a[1]).slice(0, 6)
+                .map(([w, c]) => `<span class="tok text-xs" style="background:#eef2ff;color:#4338ca">${esc(w)} <span class="num opacity-60">${c}</span></span>`).join('');
+            return `<div class="flex flex-wrap items-baseline gap-1 ${k === cur ? 'bg-indigo-50 rounded-xl px-2 py-1' : ''}" data-row="${esc(k)}">
+                <span class="font-black text-sm w-16 shrink-0">${esc(k)}</span>
+                <span class="text-slate-400 text-xs font-bold">→</span>${items}
+                <span class="num text-[10px] font-bold text-slate-400">（ぜんぶで ${tot}回）</span></div>`;
+        }).join('');
+    }
+    function miPick(enc) {
+        const w = decodeURIComponent(enc);
+        mini.seq.push(w);
+        drawMini();
+        document.getElementById('mi-msg').innerHTML = `<span class="text-slate-500">「${esc(w)}」を えらんだ</span>`;
+    }
+    function miStep() {
+        const cur = mini.seq.length ? mini.seq[mini.seq.length - 1] : START;
+        const ps = probs(cur, mini.temp);
+        if (!ps.length) return false;
+        let r = Math.random(), hit = ps[ps.length - 1][0];
+        for (const [w, p] of ps) { r -= p; if (r <= 0) { hit = w; break; } }
+        mini.seq.push(hit);
+        drawMini();
+        document.getElementById('mi-msg').innerHTML =
+            `<span class="text-indigo-700">AIは かくりつで 「${esc(hit)}」を えらんだ</span>`;
+        return true;
+    }
+    function miAuto() {
+        for (let i = 0; i < 24; i++) if (!miStep()) break;
+        document.getElementById('mi-msg').innerHTML = `<span class="text-indigo-700">文の おわりまで 予想した</span>`;
+    }
+
+    /* =====================================================================
+       ② AI図鑑
+       ===================================================================== */
+    const KINDS = [
+        ['all', 'ぜんぶ', 'bg-slate-700'],
+        ['chat', '💬 チャット', 'bg-sky-600'],
+        ['code', '💻 コーディング', 'bg-emerald-600'],
+        ['search', '🔎 検索', 'bg-amber-600'],
+        ['judge', '⚡ 判断', 'bg-violet-600']
+    ];
+    const AIS = [
+        { n: 'ChatGPT', k: 'chat', by: 'OpenAI（アメリカ）', y: '2022年11月',
+          good: '文章・絵・音声まで はば広く あつかえる。世界で いちばん 名前が 知られて いる チャットAI。',
+          note: '中身の モデルは GPT シリーズ。「生成AI」が 広まった きっかけに なった。' },
+        { n: 'Claude', k: 'chat', by: 'Anthropic（アメリカ）', y: '2023年3月',
+          good: '長い 文章を 読んで まとめたり、ていねいに 考えたり するのが 得意。',
+          note: '安全性（Safety）を とくに 大事に して 作られて いる。Opus・Sonnet・Haiku など 大きさの ちがう モデルが ある。' },
+        { n: 'Gemini', k: 'chat', by: 'Google（アメリカ）', y: '2023年12月',
+          good: '文・画像・音・動画を まとめて あつかえる。Google の 検索や アプリと つながる。',
+          note: 'もとの 名前は Bard。Android や Workspace にも 入って いる。' },
+        { n: 'GitHub Copilot', k: 'code', by: 'GitHub・Microsoft', y: '2021年6月',
+          good: 'プログラムを 書いて いる とちゅうで、<b>つづきの コード</b>を 予想して 出して くれる。',
+          note: '「副操縦士（Copilot）」の 名前どおり、人の となりで 手つだう 立ち位置。' },
+        { n: 'Claude Code', k: 'code', by: 'Anthropic', y: '2025年2月',
+          good: 'ターミナル（黒い 画面）で 動く <b>コーディングエージェント</b>。ファイルを 読み、直し、テストを 走らせる。',
+          note: '人が 1つ たのむと、自分で 何十回も 道具を つかって 進める。エージェントの 代表例。' },
+        { n: 'Devin', k: 'code', by: 'Cognition（アメリカ）', y: '2024年3月',
+          good: '自分で 計画を 立て、長い 作業を 最後まで すすめる <b>自律型{じりつがた}エージェント</b>。',
+          note: '「AIソフトウェアエンジニア」として 話題に なった。' },
+        { n: 'Cursor', k: 'code', by: 'Anysphere（アメリカ）', y: '2023年',
+          good: 'AIが はじめから 組みこまれた エディタ（コードを 書く アプリ）。',
+          note: '中では Claude や GPT などの モデルを えらんで つかえる。' },
+        { n: 'Perplexity', k: 'search', by: 'Perplexity AI（アメリカ）', y: '2022年12月',
+          good: 'ウェブを 検索して、<b>出典（リンク）つき</b>で 答える。',
+          note: '答えの もとが 見えるので、たしかめやすい。これを RAG（検索して から 答える しくみ）と いう。' },
+        { n: 'Jev', k: 'judge', by: 'TypeSafe AI', y: '2026年9月',
+          good: '文章を 作らず、<b>決められた 型の 判断＋かくりつ</b>だけを 返す「システム1モデル」。とても 速い。',
+          note: '「これは 迷惑メール？」「この 問い合わせは どの 係？」のような 仕分けや 点数づけが 仕事。くわしくは ⚡Jev タブへ。' }
+    ];
+    let zkReady = false, zkKind = 'all';
+    function drawZukan() {
+        document.getElementById('zk-chips').innerHTML = KINDS.map(([k, label, col]) => {
+            const n = k === 'all' ? AIS.length : AIS.filter(a => a.k === k).length;
+            return `<button onclick="setZk('${k}')" data-zk="${k}" class="${zkKind === k ? col + ' text-white' : 'bg-white border-2 border-slate-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${label} <span class="num opacity-80">${n}</span></button>`;
+        }).join('');
+        const col = { chat: 'border-sky-200 bg-sky-50', code: 'border-emerald-200 bg-emerald-50', search: 'border-amber-200 bg-amber-50', judge: 'border-violet-300 bg-violet-50' };
+        const list = AIS.filter(a => zkKind === 'all' || a.k === zkKind);
+        document.getElementById('zk-list').innerHTML = list.map(a =>
+            `<div class="border-2 ${col[a.k]} rounded-2xl p-3" data-ai="${esc(a.n)}">
+                <p class="font-black text-lg">${esc(a.n)}</p>
+                <p class="text-xs font-bold text-slate-500">${esc(a.by)}　／　${esc(a.y)}</p>
+                <p class="text-sm font-bold text-slate-700 mt-2 leading-relaxed">${a.good}</p>
+                <p class="text-xs font-bold text-slate-500 mt-1 leading-relaxed">${a.note}</p>
+            </div>`).join('');
+    }
+    function setZk(k) { zkKind = k; drawZukan(); }
+
+    /* =====================================================================
+       ③ Jev
+       ===================================================================== */
+    const JEV_CASES = [
+        { n: '📧 メールの 仕分け',
+          input: '件名: 【緊急】アカウントが 停止されます\n本文: 24時間以内に 下の リンクから カード情報を 入力して ください。',
+          llm: '「このメールは フィッシング詐欺の 可能性が 高いと 考えられます。理由は 緊急性を 強調して いる 点、リンクから カード情報を 求めて いる 点です。リンクは 開かず…」（このあとも 文章が つづく）',
+          out: [['あぶない（フィッシング）', 0.96], ['宣伝メール', 0.03], ['ふつうの メール', 0.01]] },
+        { n: '🎧 問い合わせの ふりわけ',
+          input: '「先週 買った スピーカーから 音が 出ません。返品したいです。」',
+          llm: '「お客さまの お問い合わせは 製品の 不具合と 返品の ご希望と 思われます。まず 技術サポート部門で 確認の うえ…」（このあとも 文章が つづく）',
+          out: [['返品・交換の 係', 0.71], ['技術サポートの 係', 0.26], ['料金の 係', 0.02], ['その他', 0.01]] },
+        { n: '⭐ レビューの 気もち判定',
+          input: '「ねだんは 高いけど、音は すごく よかった。買って よかったと 思う。」',
+          llm: '「全体として 肯定的な レビューです。価格に 対する 不満は あるものの、音質に 満足して おり…」（このあとも 文章が つづく）',
+          out: [['よい 気もち', 0.88], ['どちらとも いえない', 0.10], ['わるい 気もち', 0.02]] },
+        { n: '🚦 つぎに やる ことを 決める',
+          input: '{ テストの 結果: 3件 失敗, 直した ファイル: 2, のこり 時間: 少ない }',
+          llm: '「テストが 3件 失敗して いるので、まず 失敗の 原因を 調べる ことを おすすめします。時間が 少ない ため…」（このあとも 文章が つづく）',
+          out: [['失敗の 原因を 調べる', 0.82], ['もう一度 テストする', 0.12], ['人に 相談する', 0.05], ['そのまま 出す', 0.01]] }
+    ];
+    let jvReady = false, jvSel = 0;
+    function drawJev() {
+        document.getElementById('jv-chips').innerHTML = JEV_CASES.map((c, i) =>
+            `<button onclick="setJv(${i})" data-jv="${i}" class="${jvSel === i ? 'bg-violet-700 text-white' : 'bg-white border-2 border-violet-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${c.n}</button>`).join('');
+        const c = JEV_CASES[jvSel];
+        document.getElementById('jv-in').innerText = c.input;
+        document.getElementById('jv-llm').innerText = c.llm;
+        document.getElementById('jv-out').innerHTML = c.out.map(([label, p], i) =>
+            `<div data-jvo="${i}">
+                <div class="flex justify-between items-baseline">
+                    <span class="font-black text-sm ${i === 0 ? 'text-violet-900' : 'text-slate-500'}">${i === 0 ? '✅ ' : ''}${esc(label)}</span>
+                    <span class="num font-black text-xs ${i === 0 ? 'text-violet-900' : 'text-slate-400'}">${(p * 100).toFixed(0)}%</span>
+                </div>
+                <span class="bar block"><i style="width:${(p * 100).toFixed(1)}%;background:${i === 0 ? '#7c3aed' : '#c4b5fd'}"></i></span>
+            </div>`).join('') +
+            `<p class="text-[11px] font-bold text-violet-700 mt-1">※ 選択肢は 先に プログラムで 決めて おく。だから この 外の 答えは 出て こない。</p>`;
+    }
+    function setJv(i) { jvSel = i; drawJev(); }
+
+    const JVROWS = [
+        ['出す もの', '自由な 文章', '決められた 型の 判断＋かくりつ'],
+        ['考え方の たとえ', 'システム2（じっくり 考える）', 'システム1（パッと 決める）'],
+        ['速さ', 'ふつう', '同じような 仕事で <b>40〜200倍 速い</b>と 発表'],
+        ['ねだん', '入力・出力の 両方に かかる', '入力 100万トークンで <b>$0.042</b>、出力は 無料と 発表'],
+        ['学習の やり方', 'RLHF（人の 好みに 合わせる）', 'RLCD（かくりつの 当たり具合を そろえる）'],
+        ['でたらめ（ハルシネーション）', '起こりうる', '決められた 選択肢しか 出せないので <b>作れない</b>'],
+        ['とくいな 仕事', '書く・まとめる・説明する・話し合う', '仕分ける・点数を つける・条件を 判定する'],
+        ['にがてな 仕事', '一瞬で 何万回も 判断する こと', '文章を 書く こと（そもそも 作らない）']
+    ];
+    function drawJevTable() {
+        document.getElementById('jv-table').innerHTML = JVROWS.map(([h, a, b], i) =>
+            `<tr class="${i % 2 ? 'bg-slate-50' : ''}" data-jvrow="${esc(h)}">
+                <td class="p-2 font-black align-top">${h}</td>
+                <td class="p-2 font-bold text-slate-600 align-top">${a}</td>
+                <td class="p-2 font-bold text-violet-900 align-top">${b}</td>
+            </tr>`).join('');
+    }
+
+    /* =====================================================================
+       ④ つかい方
+       ===================================================================== */
+    const HALS = [
+        ['なぜ 起きる？', 'LLMは「本当か どうか」を 調べて いる のではなく、<b>いちばん ありそうな つづき</b>を 作って いる。だから 知らない ことでも すらすら 答えて しまう。'],
+        ['よく ある 例', '・ない 本や 論文の 名前を 作る<br>・人の 生まれた 年を まちがえる<br>・計算を 少し まちがえる<br>・古い 情報を 今の ことの ように 言う'],
+        ['見つけ方', '・「出典（どこに 書いて あった か）」を 聞く<br>・自分で 検索して たしかめる<br>・数字や 名前は とくに うたがう<br>・同じ ことを 言い方を かえて もう一度 聞いて みる'],
+        ['大事な こと', 'AIの 答えは <b>下書き</b>。たしかめて 使うのは 人の 役目。学校の 宿題や 大事な 場面では とくに 気をつける。']
+    ];
+    function drawHal() {
+        document.getElementById('hal-list').innerHTML = HALS.map(([t, d]) =>
+            `<div class="border-2 border-rose-200 bg-rose-50 rounded-2xl p-3" data-hal="${t}">
+                <p class="font-black text-rose-800">${t}</p>
+                <p class="text-sm font-bold text-slate-600 mt-1 leading-relaxed">${d}</p>
+            </div>`).join('');
+    }
+
+    const PB = {
+        who: ['小学生に 教える 先生', '作文の コーチ', '理科の 研究者', 'クイズを 作る 人'],
+        what: ['台風が できる しくみを 説明して', 'この 作文の よい ところを 見つけて', '分数の わり算の 考え方を 教えて', '自由研究の アイデアを 出して'],
+        how: ['小学4年生に わかる ことばで', '3つの 箇条書きで', '表に まとめて', '学校の 発表で 話せる 原稿で'],
+        cond: ['200字くらいで', 'むずかしい 漢字は つかわずに', '答えは 言わず ヒントだけ', 'たとえを 1つ 入れて']
+    };
+    const pb = { who: 0, what: 0, how: 0, cond: 0 };
+    function drawPromptBuilder() {
+        const rows = [['who', '① だれに（役）'], ['what', '② なにを（したいこと）'], ['how', '③ どんな形で'], ['cond', '④ じょうけん']];
+        document.getElementById('pb-ctrl').innerHTML = rows.map(([k, label]) => `
+            <div>
+                <p class="text-xs font-black text-slate-600">${label}</p>
+                <div class="flex flex-wrap gap-1.5 mt-1">
+                    ${PB[k].map((v, i) => `<button onclick="pbSet('${k}',${i})" data-pb="${k}${i}"
+                        class="${pb[k] === i ? 'bg-indigo-700 text-white' : 'bg-white border-2 border-slate-200 text-slate-600'} font-bold px-2.5 py-1.5 rounded-lg text-xs bounce-hover">${esc(v)}</button>`).join('')}
+                </div>
+            </div>`).join('');
+        document.getElementById('pb-out').innerText =
+            `あなたは${PB.who[pb.who]}です。\n${PB.what[pb.what]}ください。\n${PB.how[pb.how]}、${PB.cond[pb.cond]}お願いします。`;
+    }
+    function pbSet(k, i) { pb[k] = i; drawPromptBuilder(); }
+
+    const SCENES = [
+        { q: 'AIに 読書感想文を「ぜんぶ 書いて」と たのんで、そのまま 出す。',
+          a: '自分で 書いて、AIには 直す ところを 聞く',
+          x: ['そのまま 出す。ばれなければ いい', 'すこし だけ 直して 出す', 'AIの 名前を 書けば そのままでも いい'],
+          e: 'そのまま 出すのは 自分の 作品では ない。「どこが わかりにくい？」「べつの 言い方は？」と 聞くと、自分の 力が のびる。' },
+        { q: 'AIに「わたしの 名前と 学校と 住所を 教えるね」と 打ちこもうと して いる。',
+          a: '個人情報{こじんじょうほう}は 入れない',
+          x: ['名前だけなら いい', '学校名だけなら いい', 'AIは わすれるから 大丈夫'],
+          e: '入れた 文は 会社の サーバーに 送られる。名前・住所・学校・電話・写真・パスワードは 入れない。' },
+        { q: 'AIが「その 本の 作者は 〇〇です」と はっきり 答えた。',
+          a: '自分で 調べて たしかめる',
+          x: ['はっきり 言ったので 正しい', '長い 文だったので 正しい', 'もう一度 同じ ことを 聞けば 安心'],
+          e: 'LLMは それらしい 文を 作る しくみ。名前・数字・日付は とくに まちがいやすい（ハルシネーション）。' },
+        { q: '算数の 宿題が わからない。AIに どう 聞くと 力に なる？',
+          a: '「答えは 言わずに 考え方の ヒントを ください」',
+          x: ['「答えを 全部 教えて」', '「かわりに 全部 といて」', '「答えだけ 数字で」'],
+          e: '答えを もらうと その場は 楽だが、テストでは できない。考え方を 聞いて 自分で とくのが 本当の 近道。' },
+        { q: 'AIの 答えが なんだか 短くて 役に 立たない。',
+          a: '目的・形・じょうけんを くわしく つけて もう一度 たのむ',
+          x: ['AIは だめだと あきらめる', '同じ 文を 何回も 送る', '大きな 声で 打ちこむ'],
+          e: '「だれに・なにを・どんな形で・じょうけん」を そろえると ぐっと よく なる。これが プロンプトの コツ。' },
+        { q: 'AIが 作った 絵を 自分が かいた ことに して コンクールに 出す。',
+          a: '出さない。AIで 作った ことを かならず 伝える',
+          x: ['じょうずなので 出す', '少し 手を 入れれば 自分の 作品', 'だれにも 言わなければ いい'],
+          e: '自分で 作って いない ものを 自分の 作品と 言うのは ルール違反。AIを つかった ことは 正直に 書く。' },
+        { q: 'AIが 友だちの わるい うわさを 書いた 文を 作って くれた。',
+          a: 'つかわずに 消す',
+          x: ['おもしろいので 送る', '名前を かえて 送る', 'AIが 書いたので 自分の せいでは ない'],
+          e: '人を きずつける ことに つかうのは だめ。AIが 書いても、送った 人の せきにんに なる。' },
+        { q: 'AIエージェントに「この フォルダを ぜんぶ 消して」と たのむ とき。',
+          a: '何を するかを たしかめて、もどせるように してから たのむ',
+          x: ['すぐ 実行させる', '目を つむって 待つ', 'あとで 考える'],
+          e: 'エージェントは 自分で 道具を つかって 実行する。消す・送るなど もどせない ことは、人が かくにんしてから。' },
+        { q: '「このAIは 何でも 正しく 知って いる」と 友だちが 言って いる。',
+          a: '学んだ 時点までの 情報で、まちがう ことも あると 伝える',
+          x: ['そのとおりだと 言う', 'AIに 聞いて 決める', '新しい AIなら 完ぺき'],
+          e: 'AIには 学んだ 時期（知識の 区切り）が ある。最新の ニュースや 個人の ことは 知らない ことが 多い。' },
+        { q: 'Jev のような「判断だけ 返す AI」は どんな とき 向いて いる？',
+          a: '決まった 選択肢に すばやく 仕分けたい とき',
+          x: ['感想文を 書いて ほしい とき', '物語を 作って ほしい とき', '長い 説明を して ほしい とき'],
+          e: '書く 仕事は LLM、仕分けや 点数づけは Jev のような システム1モデル。役わりが ちがう。' }
+    ];
+    let sc = null;
+    function newScene() {
+        const s = pickOne(SCENES);
+        sc = { s, choices: shuffle([s.a].concat(s.x)), done: false };
+        document.getElementById('sc-q').innerText = s.q;
+        document.getElementById('sc-choices').innerHTML = sc.choices.map((c, i) =>
+            `<button onclick="ansScene(${i})" data-scc="${i}" class="bg-white border-2 border-slate-200 hover:border-indigo-500 font-bold text-left px-4 py-3 rounded-2xl bounce-hover text-sm leading-relaxed">${esc(c)}</button>`).join('');
+        document.getElementById('sc-res').innerHTML = '';
+        scoreBox('sc-score', S.scene);
+    }
+    function ansScene(i) {
+        if (!sc || sc.done) return;
+        sc.done = true;
+        const ok = sc.choices[i] === sc.s.a;
+        S.scene[1]++; if (ok) S.scene[0]++;
+        markChoices('[data-scc]', j => sc.choices[j] === sc.s.a, i, 'font-bold text-left px-4 py-3 rounded-2xl text-sm leading-relaxed');
+        document.getElementById('sc-res').innerHTML = resultBox(ok, ok ? '⭕ そのとおり！' : `❌ いちばん よいのは 「${esc(sc.s.a)}」`, sc.s.e);
+        scoreBox('sc-score', S.scene);
+    }
+
+    /* =====================================================================
+       ⑤ クイズ
+       ===================================================================== */
+    const QS = [
+        { f: 'しくみ', q: 'LLM が いちばんの しごととして やって いる ことは？', a: 'つぎに くる トークンを かくりつで 予想する', x: ['インターネットを 毎回 検索する', '答えを 表から さがす', '人に 聞いて 返す'], e: 'それを くりかえす ことで 文章に なる。だから「もっともらしい つづき」が 得意。' },
+        { f: 'しくみ', q: '文を 分ける 小さな かたまりを 何と いう？', a: 'トークン', x: ['ピクセル', 'バイト', 'レイヤー'], e: '英語では 単語の 一部、日本語では 1〜数文字が 1トークンに なる ことが 多い。' },
+        { f: 'しくみ', q: '「LLM」は 何の 略？', a: '大規模言語モデル（Large Language Model）', x: ['論理学習機械', '長期記憶モデル', '線形学習法'], e: 'とても たくさんの 文章から 学んだ「ことばの モデル」という 意味。' },
+        { f: 'しくみ', q: '答えの ばらつきを 決める 設定を 何と いう？', a: 'temperature（おんど）', x: ['volume', 'bitrate', 'padding'], e: '小さいと 同じような かたい 答え、大きいと 自由で おもしろいが へんな 答えも ふえる。' },
+        { f: 'しくみ', q: 'AIに たのむ ときの 文（指示）を 何と いう？', a: 'プロンプト', x: ['コンパイル', 'デバッグ', 'パッチ'], e: '「だれに・なにを・どんな形で・じょうけん」を そろえるのが コツ。' },
+        { f: 'しくみ', q: 'AIが「学んだ 時期より 新しい ことを 知らない」ことを 何と いう？', a: '知識の カットオフ', x: ['オーバーフロー', 'タイムアウト', 'キャッシュミス'], e: '最新の ニュースは 検索と 組み合わせる（RAG）ことで 補える。' },
+        { f: 'しくみ', q: '検索した 結果を 見せながら 答えさせる しくみを 何と いう？', a: 'RAG', x: ['GPU', 'API', 'SSL'], e: 'Retrieval（検索）して Augment（おぎなって）Generate（作る）。出典が 出せるので たしかめやすい。' },
+        { f: 'しくみ', q: 'AIが 知らない ことを もっともらしく 作って しまう ことを？', a: 'ハルシネーション', x: ['コンパイルエラー', 'バグ', 'フリーズ'], e: '「幻覚」の 意味。数字・名前・日付は とくに たしかめる。' },
+        { f: 'エージェント', q: '「AIエージェント」の いちばんの とくちょうは？', a: '道具を つかって 自分で 手順を すすめる', x: ['絵が きれい', '無料で つかえる', '人間より かしこい'], e: 'ファイルを 読む・コマンドを 走らせる・検索する などの 道具を 自分で 選んで 使う。' },
+        { f: 'エージェント', q: 'ターミナルで 動く Anthropic の コーディングエージェントは？', a: 'Claude Code', x: ['Copilot', 'Cursor', 'Perplexity'], e: 'ファイルを 読んで 直し、テストまで 走らせる。1つ たのむと 何十回も 道具を つかう。' },
+        { f: 'エージェント', q: 'エディタの 中で「つづきの コード」を 出して くれるのは？', a: 'GitHub Copilot', x: ['Jev', 'Gemini', 'DALL·E'], e: '「副操縦士」の 名前どおり、人の となりで 手つだう 立ち位置。' },
+        { f: 'エージェント', q: '「AIソフトウェアエンジニア」として 話題に なった 自律型エージェントは？', a: 'Devin', x: ['Claude', 'Llama', 'Whisper'], e: 'Cognition 社。自分で 計画を 立てて 長い 作業を すすめる。' },
+        { f: 'エージェント', q: '出典（リンク）つきで 答える ことを 売りに して いる サービスは？', a: 'Perplexity', x: ['Midjourney', 'Copilot', 'Jev'], e: '検索して から 答える（RAG）ため、答えの もとが 見える。' },
+        { f: 'エージェント', q: 'ChatGPT を 作った 会社は？', a: 'OpenAI', x: ['Anthropic', 'Google', 'Microsoft'], e: 'Claude は Anthropic、Gemini は Google、Copilot は GitHub・Microsoft。' },
+        { f: 'エージェント', q: 'Claude を 作った 会社は？', a: 'Anthropic', x: ['OpenAI', 'Meta', 'Cognition'], e: '安全性を とくに 大事に して いる。Opus・Sonnet・Haiku などの 大きさが ある。' },
+        { f: 'エージェント', q: 'Gemini を 作った 会社は？', a: 'Google', x: ['Apple', 'Amazon', 'TypeSafe AI'], e: '文・画像・音・動画を まとめて あつかえる。' },
+        { f: 'Jev', q: 'Jev が 返すのは？', a: '決められた 型の 判断と その かくりつ', x: ['長い 文章', '画像', '音声'], e: '文章を まったく 作らない。だから プログラムが そのまま つかえる。' },
+        { f: 'Jev', q: 'Jev が「システム1モデル」と よばれる 理由は？', a: 'カーネマンの いう 速い直感（システム1）の 役だから', x: ['1番目に 作られた から', 'システムが 1つだけ だから', '1秒で 学習できる から'], e: '『ファスト＆スロー』の システム1＝速い 判断、システム2＝じっくり 考える。' },
+        { f: 'Jev', q: 'Jev を 作った 会社は？', a: 'TypeSafe AI', x: ['OpenAI', 'Anthropic', 'Google'], e: '2026年9月に 発表された、とても 新しい しゅるいの モデル。' },
+        { f: 'Jev', q: 'Jev が「でたらめを 作れない」と いわれる 理由は？', a: '決められた 選択肢の 外は 出せないから', x: ['人が 全部 チェックするから', 'インターネットを 見ないから', '日本語しか つかわないから'], e: '出す かたちが 型で しばられて いるので、型の 外の 答えや 形のまちがいが 起きない。' },
+        { f: 'Jev', q: 'Jev の 学習方法 RLCD が そろえようと して いるのは？', a: 'かくりつの 当たり具合（キャリブレーション）', x: ['人の 好み', '文章の 長さ', '絵の きれいさ'], e: 'ふつうの LLM は RLHF（人の 好みに 合わせる）。ねらいが ちがう。' },
+        { f: 'Jev', q: 'Jev が 向いて いる 仕事は どれ？', a: '迷惑メールか どうかの 仕分け', x: ['読書感想文を 書く', '物語を 作る', '絵を かく'], e: '仕分け・点数づけ・条件の 判定が とくい。書く 仕事は LLM の 役。' },
+        { f: 'Jev', q: '発表された Jev の 速さは、同じような 仕事で およそ？', a: '最先端 LLM の 40〜200倍 速い', x: ['同じくらい', '2倍 速い', '10倍 おそい'], e: '文章を 作らず、1回の 計算で 判断を 出す ためと 説明されて いる。' },
+        { f: 'つかい方', q: 'AIに 入れては いけない ものは？', a: '名前・住所・学校・パスワードなどの 個人情報', x: ['算数の もんだい', '作文の 下書き', '英語の 単語'], e: '入れた 文は 会社の サーバーに 送られる。個人が わかる ことは 入れない。' },
+        { f: 'つかい方', q: 'AIの 答えを つかう ときの 正しい 心がまえは？', a: '下書きと 考えて、自分で たしかめる', x: ['そのまま コピーする', 'いつも 正しいと 信じる', '長い ほうを 信じる'], e: 'たしかめるのは 人の 役目。とくに 数字・名前・日付。' },
+        { f: 'つかい方', q: '宿題で AIを つかう とき いちばん 力に なるのは？', a: '答えでは なく 考え方の ヒントを 聞く', x: ['ぜんぶ 書いて もらう', 'コピーして 名前を 書く', '答えだけ 写す'], e: '「なぜ そう なるの？」「どこが まちがって いる？」と 聞くのが いちばん のびる。' },
+        { f: 'つかい方', q: 'AIが 作った 絵や 文を つかう とき 大事な ことは？', a: 'AIを つかった ことを 正直に 伝える', x: ['自分の 作品として 出す', 'だれにも 言わない', '少し 直せば 自分の もの'], e: 'コンクールや 発表には ルールが ある。かならず たしかめてから つかう。' },
+        { f: 'つかい方', q: 'AIエージェントに「消す」「送る」を たのむ 前に する ことは？', a: '何を するかを たしかめ、もどせるように する', x: ['すぐ 実行させる', '目を つむる', 'あとで 直す'], e: 'エージェントは 自分で 実行する。もどせない ことは 人が かくにんしてから。' },
+        { f: 'つかい方', q: 'temperature を 0 に 近づけると どう なる？', a: 'いつも 同じような かたい 答えに なる', x: ['答えが 長く なる', '絵が かけるように なる', 'まちがいが ゼロに なる'], e: 'いちばん かくりつの 高い ことばだけを えらぶように なる。創作には 向かない。' },
+        { f: 'つかい方', q: 'AIの 答えが いまいちな とき、まず する ことは？', a: '目的・形・じょうけんを くわしく して たのみ直す', x: ['何回も 同じ 文を 送る', 'あきらめる', '別の 言語で 聞く'], e: '例を 見せる（few-shot）のも とても 効く。' }
+    ];
+    let qz = null, qzField = 'all';
+    function newQuiz() {
+        const pool = qzField === 'all' ? QS : QS.filter(q => q.f === qzField);
+        const q = pool[rnd(pool.length)];
+        qz = { q, choices: shuffle([q.a].concat(q.x)), done: false };
+        const fields = ['all'].concat([...new Set(QS.map(x => x.f))]);
+        document.getElementById('qz-fields').innerHTML = fields.map(f =>
+            `<button onclick="setField('${f}')" data-qf="${f}" class="${qzField === f ? 'bg-indigo-700 text-white' : 'bg-white border-2 border-indigo-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${f === 'all' ? 'ぜんぶ ' + QS.length : f + ' ' + QS.filter(x => x.f === f).length}</button>`).join('');
+        document.getElementById('qz-q').innerHTML = `<span class="text-xs font-black text-indigo-700 bg-indigo-100 px-2 py-1 rounded-lg mr-2">${esc(q.f)}</span>${esc(q.q)}`;
+        document.getElementById('qz-choices').innerHTML = qz.choices.map((c, i) =>
+            `<button onclick="ansQuiz(${i})" data-qzc="${i}" class="bg-white border-2 border-slate-200 hover:border-indigo-500 font-bold text-left px-4 py-3 rounded-2xl bounce-hover">${esc(c)}</button>`).join('');
+        document.getElementById('qz-res').innerHTML = '';
+        scoreBox('qz-score', S.quiz);
+    }
+    function setField(f) { qzField = f; newQuiz(); }
+    function ansQuiz(i) {
+        if (!qz || qz.done) return;
+        qz.done = true;
+        const ok = qz.choices[i] === qz.q.a;
+        S.quiz[1]++; if (ok) S.quiz[0]++;
+        markChoices('[data-qzc]', j => qz.choices[j] === qz.q.a, i, 'font-bold text-left px-4 py-3 rounded-2xl');
+        document.getElementById('qz-res').innerHTML = resultBox(ok, ok ? '⭕ せいかい！' : `❌ こたえは 「${esc(qz.q.a)}」`, qz.q.e);
+        scoreBox('qz-score', S.quiz);
+    }
+
+    /* ===================== 起動 ===================== */
+    renderNav();
+    drawMini();
+    rubify(document.body);
+</script>
+</body>
+</html>
