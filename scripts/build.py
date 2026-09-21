@@ -28,9 +28,10 @@ ROOT = Path(__file__).resolve().parent.parent
 APPS_DIR = ROOT / "apps"
 OUT_DIR = ROOT / "_site"
 INDEX_FILE = ROOT / "index.html"
-# 楽天アフィリエイトの ウィジェットを 貼る ファイル。
-# コメントだけの ときは 広告枠を 出さない。
-ADS_FILE = ROOT / "ads" / "rakuten-widget.html"
+# 広告を 貼る フォルダ。ads/*.html が 1ファイル＝1枠。
+# ファイル名の じゅんばんに ならぶ（01- のような 数字を つけると 順を 決められる）。
+# コメントだけの ファイルは 枠を 出さない。
+ADS_DIR = ROOT / "ads"
 
 SITE_TITLE = "キッズ がくしゅうアプリ"
 SITE_SUBTITLE = "あそびながら まなべる ミニアプリ あつめ"
@@ -103,24 +104,48 @@ def collect_apps() -> list[dict]:
 
 
 COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
+AD_LABEL_RE = re.compile(r"<!--\s*label:\s*(.+?)\s*-->")
 
 
-def read_ad_slot() -> str:
-    """広告ファイルから、HTMLコメントを のぞいた 中身を かえす（なければ 空文字）。"""
-    if not ADS_FILE.exists():
+def read_ad_slots() -> list[tuple[str, str]]:
+    """ads/*.html を (枠の名前, 広告コード) の ならびで かえす。
+
+    ・ファイル名の じゅんばん。01- のような 数字を つけると 順を 決められる
+    ・`<!-- label: 楽天アフィリエイト -->` で 枠の 名前を 決める（なければ ファイル名）
+    ・コメントだけの ファイルは 枠を 出さない（貼る 前の ひな形が そのまま 出ないように）
+    """
+    if not ADS_DIR.is_dir():
+        return []
+    slots = []
+    for path in sorted(ADS_DIR.glob("*.html")):
+        raw = path.read_text(encoding="utf-8")
+        code = COMMENT_RE.sub("", raw).strip()
+        if not code:
+            continue
+        m = AD_LABEL_RE.search(raw)
+        slots.append((m.group(1) if m else path.stem, code))
+    return slots
+
+
+def render_ads(slots: list[tuple[str, str]]) -> str:
+    """広告枠。ステマ規制に あわせて「広告」ラベルと 保護者向けの 注記を 必ず つける。
+
+    枠が どの 広告かを 1つずつ 名前で 出す（どこの 広告か わかる ように する ため）。
+    """
+    if not slots:
         return ""
-    raw = ADS_FILE.read_text(encoding="utf-8")
-    return COMMENT_RE.sub("", raw).strip()
-
-
-def render_ad(ad_code: str) -> str:
-    """広告枠。ステマ規制に あわせて「広告」ラベルと 保護者向けの 注記を 必ず つける。"""
-    if not ad_code:
-        return ""
+    boxes = "\n".join(
+        f"""      <div class="ad-slot">
+        <p class="ad-label"><span class="ad-tag">広告</span>{html.escape(label)}</p>
+        <div class="ad-box">
+{code}
+        </div>
+      </div>"""
+        for label, code in slots
+    )
     return f"""  <section class="ad" aria-label="広告">
-    <p class="ad-label"><span class="ad-tag">広告</span>楽天アフィリエイト</p>
-    <div class="ad-box">
-{ad_code}
+    <div class="ad-row">
+{boxes}
     </div>
     <p class="ad-note">※ ここは 広告です。学習アプリとは かんけいが ありません。
       買いものは かならず おうちの人と いっしょに して ください。</p>
@@ -169,7 +194,7 @@ def render_index(apps: list[dict]) -> str:
             f'    <div class="grid">\n{cards}\n    </div>\n'
             f"  </section>"
         )
-    ad_section = render_ad(read_ad_slot())
+    ad_section = render_ads(read_ad_slots())
     body = "\n".join(sections) if sections else (
         '  <p class="empty">まだアプリがありません。apps/ に HTML を追加してね。</p>'
     )
@@ -283,6 +308,11 @@ def render_index(apps: list[dict]) -> str:
   /* body が flex なので min-width: 0 が ないと、中の 468px の ウィジェットに
      引きのばされて ページ全体が 横スクロールして しまう。 */
   .ad {{ max-width: 1100px; width: 100%; min-width: 0; margin: 8px auto 0; padding: 0 16px 8px; box-sizing: border-box; }}
+  /* 枠が 2つ以上 あるとき、広い 画面では よこに ならべ、せまい 画面では たてに つむ。
+     .ad-slot にも min-width: 0 が 必要（.ad と 同じ 理由。ないと 固定幅の
+     ウィジェットに 引きのばされて ページ全体が 横スクロールする）。 */
+  .ad-row {{ display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; min-width: 0; }}
+  .ad-slot {{ flex: 1 1 300px; min-width: 0; max-width: 100%; }}
   .ad-label {{
     margin: 0 0 6px; font-size: .72rem; font-weight: 900; color: #94a3b8;
     display: flex; align-items: center; gap: 6px;
