@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>おかねラボ</title>
-    <meta name="description" content="小学生から学べる金融リテラシー。お金が生まれた理由と3つのはたらき、支払い方法のちがい、おこづかいのやりくり、複利のグラフ、詐欺や課金から身をまもる判断クイズ。">
+    <meta name="description" content="小学生から学べる金融リテラシー。お金の3つのはたらき、支払い方法のちがい、おこづかいのやりくり、複利のグラフ、インフレと金利と株のいまを図解、詐欺や課金から身をまもる判断クイズ。">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
     <style>
@@ -140,7 +140,91 @@
             </div>
         </section>
 
-        <!-- ===== ④ 気をつける ===== -->
+        <!-- ===== ④ いまの けいざい ===== -->
+        <section id="tab-econ" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <h2 class="font-black">🍙 インフレって なに？</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    <b class="text-emerald-700">インフレ</b>＝ ものの ねだん（物価{ぶっか}）が どんどん 上がる こと。
+                    ねだんが 上がると、<b class="text-rose-700">同じ お金で 買える 量が へる</b>。
+                    つまり「お金の 力が よわく なる」ということ。
+                </p>
+                <div id="inf-ctrl" class="space-y-3 mt-3"></div>
+                <div id="inf-fig" class="mt-2"></div>
+                <div id="inf-info" class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-3 text-sm font-bold leading-relaxed"></div>
+                <div class="grid sm:grid-cols-2 gap-2 mt-3">
+                    <div class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-3">
+                        <p class="font-black text-amber-800 text-sm">📈 インフレ（いまの 日本）</p>
+                        <p class="text-xs font-bold text-slate-600 mt-1 leading-relaxed">ねだんが 上がる。おこづかいが 同じなら 買える ものは へる。少しの インフレは「みんなが 買う → 会社が もうかる → お給料が 上がる」に つながる ことも ある。</p>
+                    </div>
+                    <div class="bg-sky-50 border-2 border-sky-200 rounded-2xl p-3">
+                        <p class="font-black text-sky-800 text-sm">📉 デフレ（むかしの 日本）</p>
+                        <p class="text-xs font-bold text-slate-600 mt-1 leading-relaxed">ねだんが 下がりつづける。うれしそうだけど、会社の もうけも お給料も へって、仕事が なくなる ことも ある。日本は 20年 以上 これで 困って いた。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <h2 class="font-black">🤔 どうして ねだんが 上がったの？</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    りゆうは 1つでは なく、いくつも かさなって いる。カードを タップして みよう。
+                </p>
+                <div id="why-chips" class="flex flex-wrap gap-2 mt-3"></div>
+                <div id="why-fig" class="mt-2"></div>
+                <div id="why-info" class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-3 text-sm font-bold leading-relaxed"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <h2 class="font-black">🏦 金利{きんり}が 上がって きた りゆう</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    日本の 中央銀行（<b class="text-emerald-700">日本銀行{にほんぎんこう}＝日銀{にちぎん}</b>）は、
+                    国ぜんたいの 金利を 上げたり 下げたり して、物価が 上がりすぎ・下がりすぎに ならない ように 調節して いる。
+                    これを <b>金融政策{きんゆうせいさく}</b>と いう。
+                </p>
+                <div id="rate-fig" class="mt-3"></div>
+                <div id="rate-note" class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-3 text-sm font-bold leading-relaxed"></div>
+                <div class="grid sm:grid-cols-2 gap-3 mt-3">
+                    <div class="bg-slate-50 border-2 border-slate-200 rounded-2xl p-3">
+                        <p class="font-black text-sm">🔻 金利を 下げると</p>
+                        <p class="text-xs font-bold text-slate-600 mt-1 leading-relaxed">お金を 借りやすい → 会社は 工場を つくり、人は 家を 買う → みんなが お金を つかう → 景気{けいき}が よく なり 物価が 上がる。<br>日本は デフレを ぬけ出す ため、2016年から <b>マイナス金利</b>という めずらしい 方法まで つかって いた。</p>
+                    </div>
+                    <div class="bg-slate-50 border-2 border-slate-200 rounded-2xl p-3">
+                        <p class="font-black text-sm">🔺 金利を 上げると</p>
+                        <p class="text-xs font-bold text-slate-600 mt-1 leading-relaxed">お金を 借りると 利息が 高い → 借りる 人が へる → つかう お金が へって、物価の 上がり方が おちつく。<br>物価が 上がりつづけて いる いま、日銀は 少しずつ 金利を 上げて いる。</p>
+                    </div>
+                </div>
+                <p class="font-black text-sm mt-4">🏠 金利が 上がると わたしたちは どう なる？</p>
+                <div id="rate-eff" class="space-y-2 mt-2"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <h2 class="font-black">📊 株{かぶ}と 日経平均{にっけいへいきん}</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    <b class="text-emerald-700">株</b>＝ 会社の オーナーの 券。会社が もうかりそうだと 思う 人が ふえると ねだん（株価{かぶか}）が 上がる。
+                    <b>日経平均株価</b>は、日本を 代表する 225社の 株価を まとめた「日本の 株の 元気さメーター」。
+                </p>
+                <div id="nk-fig" class="mt-3"></div>
+                <div id="nk-story" class="space-y-2 mt-2"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <h2 class="font-black">🌍 世界と つながって いる</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    日本の ねだんや 株は、世界の できごとで 動く。えんぴつ1本の ねだんも 世界と つながって いる。
+                </p>
+                <div id="world-list" class="space-y-2 mt-3"></div>
+                <div class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-3 mt-3">
+                    <p class="font-black text-amber-800 text-sm">⚠️ 大事な やくそく</p>
+                    <p class="text-xs font-bold text-slate-600 mt-1 leading-relaxed">
+                        株は <b>下がる ことも ある</b>。「上がって いるから 今 買えば もうかる」は まちがい。
+                        ここの 数字は <b>2026年9月まで</b>の きろく。けいざいは 毎日 動くから、
+                        いまの ねだんは ニュースや 新聞で 自分の 目で たしかめよう。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== ⑤ 気をつける ===== -->
         <section id="tab-guard" class="hidden space-y-4">
             <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
                 <div class="flex flex-wrap items-center gap-2">
@@ -159,7 +243,7 @@
             </div>
         </section>
 
-        <!-- ===== ⑤ クイズ ===== -->
+        <!-- ===== ⑥ クイズ ===== -->
         <section id="tab-quiz" class="hidden space-y-4">
             <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
                 <div class="flex flex-wrap items-center gap-2">
@@ -242,7 +326,7 @@
     new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(rubify)))
         .observe(document.body, { childList: true, subtree: true });
 
-    const TABS = { what: '🪙 おかねの しくみ', budget: '🧾 やりくり', grow: '📈 ためる・ふやす', guard: '🛡️ 気をつける', quiz: '❓ クイズ' };
+    const TABS = { what: '🪙 おかねの しくみ', budget: '🧾 やりくり', grow: '📈 ためる・ふやす', econ: '📊 いまの けいざい', guard: '🛡️ 気をつける', quiz: '❓ クイズ' };
     let tab = 'what';
     function renderNav() {
         document.getElementById('tab-nav').innerHTML = Object.entries(TABS).map(([k, label]) =>
@@ -254,6 +338,7 @@
         renderNav();
         if (k === 'budget' && !budgetReady) { drawBudget(); drawGoal(); drawWallets(); budgetReady = true; }
         if (k === 'grow' && !growReady) { drawCompound(); drawRisk(); growReady = true; }
+        if (k === 'econ' && !econReady) { drawInf(); setWhy(0); drawRate(); drawNikkei(); drawWorld(); econReady = true; }
         if (k === 'guard' && !sc) { newScene(); drawSigns(); }
         if (k === 'quiz' && !qz) newQuiz();
     }
@@ -556,7 +641,242 @@
     }
 
     /* =====================================================================
-       ④ 気をつける
+       ④ いまの けいざい
+       （数字は 2026年9月までに 発表された ものを のせて いる）
+       ===================================================================== */
+    let econReady = false;
+    const INF = { rate: 2, years: 10 };
+    function infSet(k, v) { INF[k] = +v; drawInf(); }
+    function drawInf() {
+        const rows = [
+            ['rate', '1年で 上がる わりあい（物価上昇率）', 0, 10, 0.5, v => v + '%'],
+            ['years', '何年 たったら', 1, 30, 1, v => v + '年後']
+        ];
+        document.getElementById('inf-ctrl').innerHTML = rows.map(([k, label, min, max, step, fmt]) => `
+            <div>
+                <div class="flex justify-between items-baseline">
+                    <span class="text-xs font-black text-slate-600">${label}</span>
+                    <span class="num font-black text-sm" data-infv="${k}">${fmt(INF[k])}</span>
+                </div>
+                <input type="range" min="${min}" max="${max}" step="${step}" value="${INF[k]}" data-inf="${k}" oninput="infSet('${k}', this.value)">
+            </div>`).join('');
+
+        const r = INF.rate / 100, Y = INF.years;
+        const price = y => 100 * Math.pow(1 + r, y);       // いま 100円の おかし
+        const end = price(Y);
+        const W = 560, H = 308, L = 52, R = 540, T = 22, B = 196;
+        const maxV = Math.max(120, end);
+        const bx = y => L + (Y === 0 ? 0 : y / Y) * (R - L - 30);
+        const by = v => B - (v / maxV) * (B - T);
+        let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="#f0fdf4"/>`;
+        for (let i = 0; i <= 4; i++) {
+            const v = maxV * i / 4;
+            g += `<line x1="${L}" y1="${by(v).toFixed(1)}" x2="${R}" y2="${by(v).toFixed(1)}" stroke="#d1fae5" stroke-width="1.5"/>
+                  <text x="${L - 6}" y="${(by(v) + 4).toFixed(1)}" text-anchor="end" font-size="11" font-weight="800" fill="#64748b">${Math.round(v)}円</text>`;
+        }
+        // 年ごとの ぼう（多い ときは 間を あけて 出す）
+        const stepY = Math.max(1, Math.ceil(Y / 12));
+        for (let y = 0; y <= Y; y += stepY) {
+            const p = price(y), x = bx(y), w = Math.min(28, (R - L - 30) / (Y / stepY + 1) - 4);
+            g += `<rect x="${(x).toFixed(1)}" y="${by(p).toFixed(1)}" width="${Math.max(6, w).toFixed(1)}" height="${(B - by(p)).toFixed(1)}" rx="3" fill="${y === 0 ? '#94a3b8' : '#059669'}" opacity="${y === 0 ? 1 : 0.35 + 0.65 * (Y ? y / Y : 1)}"/>`;
+            if (y === 0 || y === Y || Y <= 10)
+                g += `<text x="${(x + Math.max(6, w) / 2).toFixed(1)}" y="${B + 18}" text-anchor="middle" font-size="10" font-weight="800" fill="#64748b">${y}年</text>`;
+        }
+        g += `<line x1="${L}" y1="${B}" x2="${R}" y2="${B}" stroke="#a7f3d0" stroke-width="2.5"/>`;
+        g += `<text x="${L}" y="${T - 6}" font-size="12" font-weight="900" fill="#047857">いま 100円の おかしの ねだん</text>`;
+        // 1000円で 買える 数を おかしの 絵で（いま と ○年後 を ならべる）
+        const nowN = 10, thenN = Math.floor(1000 / end);
+        const IX = L + 82;                                  // 絵を ならべ はじめる よこ位置
+        const iconRow = (n, cy, col, label) => {
+            let s = `<text x="${L}" y="${cy + 6}" font-size="12" font-weight="900" fill="${col}">${label}</text>`;
+            for (let i = 0; i < Math.min(n, 10); i++) s += `<text x="${IX + i * 30}" y="${cy + 8}" font-size="22">🍘</text>`;
+            return s + `<text x="${IX + 10 * 30 + 8}" y="${cy + 7}" font-size="14" font-weight="900" fill="${col}">${n}こ</text>`;
+        };
+        g += `<text x="${L}" y="${B + 46}" font-size="12" font-weight="900" fill="#047857">1000円で 買える おかしの 数</text>`;
+        g += iconRow(nowN, B + 70, '#64748b', 'いま');
+        g += iconRow(thenN, B + 102, '#b45309', `${Y}年後`);
+        document.getElementById('inf-fig').innerHTML = svg(W, H, g);
+
+        const el = document.getElementById('inf-info');
+        if (INF.rate === 0) {
+            el.innerHTML = `上がりわけが 0%なら、${Y}年後も おかしは <b>100円</b>。1000円で <b>10こ</b> 買える ままだよ。
+                スライダーを 動かして、ねだんが 上がる 世界を 見て みよう。`;
+        } else {
+            el.innerHTML = `1年で ${INF.rate}% ずつ 上がると、いま 100円の おかしは ${Y}年後に
+                <b class="text-rose-700">${yen(end)}</b>（${(end / 100).toFixed(2)}倍）。<br>
+                1000円で 買える 数は <b>10こ → ${thenN}こ</b>に へって しまう。
+                お金の ねだんは 同じでも <b>買える 量が へる</b>＝これが インフレの こわい ところ。<br>
+                <span class="text-slate-600">💡 だから お金は「へらない ように しまう」だけでなく、
+                「はたらいて もらう（ためる・ふやす）」ことも 大事に なる。</span>`;
+        }
+    }
+
+    const WHYS = [
+        { e: '🛢️', n: '原料と エネルギーが 高い',
+          chain: [['🛢️', '石油・小麦'], ['🏭', 'つくる 費用'], ['🏪', 'お店の ねだん']],
+          d: 'おかしを つくるには 小麦・さとう・油が いる。工場を 動かす 電気やガスも いる。世界で これらが 高く なると、つくる ねだんが 上がって、お店の ねだんも 上がる。' },
+        { e: '💱', n: '円安（えんやす）',
+          chain: [['💱', '1ドル=150円'], ['🚢', '輸入が 高い'], ['🏪', 'お店の ねだん']],
+          d: '日本は 小麦や 石油の ほとんどを 外国から 買って いる。1ドル 100円から 150円に なると、同じ 1ドルの ものを 買うのに 150円 必要。だから 輸入品が いっきに 高く なる。' },
+        { e: '🧑‍🍳', n: 'はたらく 人が 足りない',
+          chain: [['👶', '子どもが へる'], ['🧑‍🍳', '人手不足'], ['💰', 'お給料 上がる']],
+          d: '日本は 子どもが へって、はたらける 人が へって いる。人を さがすには お給料を 上げないと 来て くれない。お給料が 上がると、その ぶんが ねだんに 入る。（お給料が 上がるのは よい ことでも ある）' },
+        { e: '🌍', n: '世界の できごと',
+          chain: [['⚡', 'せんそう・天気'], ['📦', 'ものが 足りない'], ['🏪', 'お店の ねだん']],
+          d: '遠い 国の せんそうや 大雨・不作で、小麦や 石油が とれなく なると、世界中で 取りあいに なって ねだんが 上がる。日本だけでは どうにも できない りゆう。' },
+        { e: '🏦', n: 'お金が たくさん 出まわった',
+          chain: [['🏦', '金利を 下げる'], ['💸', 'お金が ふえる'], ['🛒', 'みんな 買う']],
+          d: '日本は 長い あいだ デフレだったので、金利を ゼロや マイナスまで 下げて、世の中に お金を たくさん 流して いた。お金が ふえて みんなが 買うように なると、ねだんは 上がる。これは <b>ねらって いた こと</b>でも ある。' }
+    ];
+    let whyI = 0;
+    function setWhy(i) {
+        whyI = i;
+        const w = WHYS[i];
+        document.getElementById('why-chips').innerHTML = WHYS.map((x, j) =>
+            `<button onclick="setWhy(${j})" data-why="${j}" class="${j === i ? 'bg-emerald-700 text-white' : 'bg-white border-2 border-emerald-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${x.e} ${x.n.replace(/\{[^}]*\}/g, '')}</button>`).join('');
+        const W = 560, H = 110, bw = 150, gap = 26;
+        const x0 = (W - (bw * 3 + gap * 2)) / 2;
+        let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="#f0fdf4"/>`;
+        w.chain.forEach(([emoji, label], k) => {
+            const x = x0 + k * (bw + gap);
+            g += `<rect x="${x}" y="24" width="${bw}" height="62" rx="12" fill="#ffffff" stroke="#6ee7b7" stroke-width="2.5"/>
+                  <text x="${x + bw / 2}" y="52" text-anchor="middle" font-size="22">${emoji}</text>
+                  <text x="${x + bw / 2}" y="76" text-anchor="middle" font-size="12" font-weight="900" fill="#334155">${label}</text>`;
+            if (k < 2) g += `<text x="${x + bw + gap / 2}" y="62" text-anchor="middle" font-size="20" font-weight="900" fill="#059669">➡</text>`;
+        });
+        document.getElementById('why-fig').innerHTML = svg(W, H, g);
+        document.getElementById('why-info').innerHTML = `<b class="text-emerald-800">${w.e} ${w.n}</b><br>${w.d}`;
+    }
+
+    /* 日本銀行の 政策金利（短期金利）の 動き。日付は 決めた とき */
+    const RATES = [
+        { t: '2016年2月', v: -0.1, tag: 'マイナス金利', col: '#2563eb' },
+        { t: '2024年3月', v: 0.05, tag: 'マイナス金利 やめる', col: '#059669' },
+        { t: '2024年7月', v: 0.25, tag: '', col: '#059669' },
+        { t: '2025年1月', v: 0.5, tag: '', col: '#059669' },
+        { t: '2025年12月', v: 0.75, tag: '', col: '#059669' },
+        { t: '2026年6月', v: 1.0, tag: '', col: '#059669' },
+        { t: '2026年9月', v: 1.25, tag: 'やく31年ぶりの 高さ', col: '#b45309' }
+    ];
+    function drawRate() {
+        const W = 560, H = 250, L = 52, R = 536, T = 30, B = 186;
+        const lo = -0.3, hi = 1.5;
+        const px = i => L + i * (R - L) / (RATES.length - 1);
+        const py = v => B - ((v - lo) / (hi - lo)) * (B - T);
+        let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="#f0fdf4"/>`;
+        for (let v = 0; v <= 1.5; v += 0.5) {
+            g += `<line x1="${L}" y1="${py(v).toFixed(1)}" x2="${R}" y2="${py(v).toFixed(1)}" stroke="#d1fae5" stroke-width="1.5"/>
+                  <text x="${L - 6}" y="${(py(v) + 4).toFixed(1)}" text-anchor="end" font-size="11" font-weight="800" fill="#64748b">${v.toFixed(1)}%</text>`;
+        }
+        g += `<line x1="${L}" y1="${py(0).toFixed(1)}" x2="${R}" y2="${py(0).toFixed(1)}" stroke="#94a3b8" stroke-width="2" stroke-dasharray="5 4"/>`;
+        // かいだん状（決めた ときに ぽんと 上がる）
+        const pts = [];
+        RATES.forEach((r, i) => {
+            if (i > 0) pts.push(`${px(i).toFixed(1)},${py(RATES[i - 1].v).toFixed(1)}`);
+            pts.push(`${px(i).toFixed(1)},${py(r.v).toFixed(1)}`);
+        });
+        g += `<polyline points="${pts.join(' ')}" fill="none" stroke="#059669" stroke-width="3.5" stroke-linejoin="round"/>`;
+        RATES.forEach((r, i) => {
+            // さいしょの −0.1% だけ よこに ずらす（たてじくの 0.0% と かぶる ため）
+            const lx = i === 0 ? px(i) + 26 : px(i);
+            g += `<circle cx="${px(i).toFixed(1)}" cy="${py(r.v).toFixed(1)}" r="5.5" fill="${r.col}"/>
+                  <text x="${lx.toFixed(1)}" y="${(py(r.v) - 12).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="900" fill="${r.col}">${r.v > 0 ? r.v.toFixed(2).replace(/0$/, '') : r.v}%</text>`;
+            const parts = r.t.replace('年', '年\n').split('\n');
+            g += `<text x="${px(i).toFixed(1)}" y="${B + 18}" text-anchor="middle" font-size="10" font-weight="800" fill="#64748b">${parts[0]}</text>
+                  <text x="${px(i).toFixed(1)}" y="${B + 30}" text-anchor="middle" font-size="10" font-weight="800" fill="#64748b">${parts[1] || ''}</text>`;
+        });
+        g += `<text x="${L}" y="${T - 10}" font-size="12" font-weight="900" fill="#047857">日銀が 決める 金利（政策金利）</text>
+              <text x="${px(0).toFixed(1)}" y="${py(-0.1) + 20}" font-size="10" font-weight="900" fill="#2563eb">マイナス金利</text>
+              <text x="${R}" y="${B + 44}" text-anchor="end" font-size="9" font-weight="700" fill="#94a3b8">※ よこは 日付の 順番（間かくは 同じに して あります）</text>`;
+        document.getElementById('rate-fig').innerHTML = svg(W, H, g);
+        document.getElementById('rate-note').innerHTML =
+            `日本は ずっと「ねだんが 上がらない（デフレ）」に 困って いたので、金利を <b>ゼロより 下（マイナス金利）</b>まで 下げて いた。
+             ところが 2022年ごろから 世界の 原料高と 円安で ねだんが どんどん 上がりはじめた。<br>
+             そこで 日銀は <b>2024年3月に マイナス金利を やめ</b>、少しずつ 金利を 上げて いる。
+             2026年9月には <b class="text-amber-700">やく1.25%</b>まで 上がり、これは やく <b>31年ぶり</b>の 高さ。<br>
+             <span class="text-slate-600">目じるしは「物価が 1年で <b>2%</b>くらい 上がりつづける こと」。
+             2026年8月の 物価（生鮮食品を のぞく 消費者物価）は 1年前より <b>+1.7%</b>で、8か月 つづけて 1%台だった。</span>`;
+        const EFF = [
+            ['🏦', '貯金の 利息が ふえる', 'ずっと 0.001%（100万円で 1年 10円）だった 普通預金の 利息が、0.2%以上（100万円で 2000円以上）に なった 銀行も ある。ためる 人には うれしい。'],
+            ['🏠', '借りる ときの 利息も ふえる', '家や 車を 買う ために 借りる お金（ローン）の 利息も 上がる。同じ 金額を 借りても 毎月 返す 額が ふえるので、家が 買いにくく なる。'],
+            ['💱', '円が 強く なりやすい', '日本の 金利が 上がると「円で 持って いた ほうが 得」に なり、円を ほしい 人が ふえて 円高に 近づく。すると 輸入品は 安く なりやすい。'],
+            ['🏢', '会社は 慎重{しんちょう}に なる', '借りる 利息が 高いと、新しい 工場や お店を つくるのを ためらう。だから 金利を 上げすぎると 景気が 冷えて しまう。上げ方は とても 慎重に 決められる。']
+        ];
+        document.getElementById('rate-eff').innerHTML = EFF.map(([e, n, d]) =>
+            `<div class="border-2 border-emerald-200 bg-emerald-50 rounded-2xl p-3" data-eff="${n.replace(/\{[^}]*\}/g, '')}">
+                <p class="font-black text-sm">${e} ${n}</p>
+                <p class="text-xs font-bold text-slate-600 mt-0.5 leading-relaxed">${d}</p>
+            </div>`).join('');
+    }
+
+    /* 日経平均の 記録に のこる 日（終値） */
+    const NK = [
+        { y: 1989.99, v: 38915, d: '1989年12月29日', n: 'バブルの 最高値', col: '#dc2626',
+          s: '土地も 株も 上がりつづけた「バブル」の てっぺん。やく 3万8915円。ここから 株は 大きく 下がり、長い 不景気に 入った。' },
+        { y: 2009.19, v: 7055, d: '2009年3月10日', n: 'バブル後の 底', col: '#2563eb',
+          s: '世界の 大不景気（リーマン・ショック）で 7000円台まで。最高値の <b>5分の1 以下</b>。株は こんなに 下がる ことも ある。' },
+        { y: 2024.14, v: 39099, d: '2024年2月22日', n: '34年ぶりに 最高値こえ', col: '#059669',
+          s: 'やく 3万9098円68銭で、1989年の 記録を <b>34年2か月ぶり</b>に こえた。会社の もうけが ふえ、円安も 追い風に なった。' },
+        { y: 2026.32, v: 60537, d: '2026年4月27日', n: 'はじめて 6万円台', col: '#b45309',
+          s: 'はじめて 6万円を こえて おわった。5万円から 6万円までは <b>やく 半年</b>という 早さ。AIや 半導体に 世界の お金が 集まった ことが 大きい。' }
+    ];
+    function drawNikkei() {
+        const W = 560, H = 250, L = 56, R = 540, T = 26, B = 196;
+        const y0 = 1986, y1 = 2028, maxV = 66000;
+        const px = y => L + (y - y0) / (y1 - y0) * (R - L);
+        const py = v => B - v / maxV * (B - T);
+        let g = `<rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="#f0fdf4"/>`;
+        for (let v = 0; v <= 60000; v += 20000) {
+            g += `<line x1="${L}" y1="${py(v).toFixed(1)}" x2="${R}" y2="${py(v).toFixed(1)}" stroke="#d1fae5" stroke-width="1.5"/>
+                  <text x="${L - 6}" y="${(py(v) + 4).toFixed(1)}" text-anchor="end" font-size="11" font-weight="800" fill="#64748b">${v / 10000}万</text>`;
+        }
+        for (let y = 1990; y <= 2025; y += 10) {
+            g += `<text x="${px(y).toFixed(1)}" y="${B + 18}" text-anchor="middle" font-size="11" font-weight="800" fill="#64748b">${y}年</text>`;
+        }
+        g += `<polyline points="${NK.map(p => px(p.y).toFixed(1) + ',' + py(p.v).toFixed(1)).join(' ')}"
+               fill="none" stroke="#a7f3d0" stroke-width="3" stroke-dasharray="6 5"/>`;
+        NK.forEach(p => {
+            // ねだんの 文字は いつも 点の 上（下に 出すと よこじくの 線に かぶる）
+            g += `<circle cx="${px(p.y).toFixed(1)}" cy="${py(p.v).toFixed(1)}" r="6.5" fill="${p.col}"/>
+                  <text x="${px(p.y).toFixed(1)}" y="${(py(p.v) - 14).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="900" fill="${p.col}">${p.v.toLocaleString('ja-JP')}円</text>`;
+        });
+        g += `<line x1="${L}" y1="${B}" x2="${R}" y2="${B}" stroke="#a7f3d0" stroke-width="2.5"/>
+              <text x="${L}" y="${T - 8}" font-size="12" font-weight="900" fill="#047857">日経平均株価（記録に のこる 日の おわりね）</text>
+              <text x="${R}" y="${B + 34}" text-anchor="end" font-size="9" font-weight="700" fill="#94a3b8">※ 点の あいだは 上がったり 下がったり しながら 動いた</text>`;
+        document.getElementById('nk-fig').innerHTML = svg(W, H, g);
+        document.getElementById('nk-story').innerHTML = NK.map(p =>
+            `<div class="border-2 rounded-2xl p-3" style="border-color:${p.col}33;background:${p.col}0d" data-nk="${p.d}">
+                <p class="font-black text-sm" style="color:${p.col}">${p.d}　${p.n}　<span class="num">${p.v.toLocaleString('ja-JP')}円</span></p>
+                <p class="text-xs font-bold text-slate-600 mt-0.5 leading-relaxed">${p.s}</p>
+            </div>`).join('') +
+            `<div class="border-2 border-emerald-200 bg-emerald-50 rounded-2xl p-3">
+                <p class="font-black text-sm text-emerald-800">📌 なぜ 最近 上がったの？（4つの りゆう）</p>
+                <p class="text-xs font-bold text-slate-600 mt-1 leading-relaxed">
+                ① <b>AI・半導体ブーム</b>… AIを 動かす 部品を つくる 会社に 世界の お金が 集まった。<br>
+                ② <b>円安</b>… 車や 機械を 外国に 売る 会社は、円が 安いと もうけが ふえる。<br>
+                ③ <b>デフレから ぬけ出した</b>… ねだんも お給料も 上がる ふつうの けいざいに 近づいた。<br>
+                ④ <b>会社が 変わった</b>… もうけを 株主に 返したり、むだを へらす 会社が ふえた。</p>
+            </div>`;
+    }
+
+    const WORLD = [
+        ['🇺🇸', 'アメリカの 株（S&amp;P500）', 'アメリカの 代表 500社の メーター。世界の お金が いちばん 集まる 場所なので、<b>アメリカが 下がると 日本も 下がりやすい</b>。朝 起きたら 日本の 株が 下がって いるのは、夜の あいだに アメリカが 下がった から という ことが 多い。'],
+        ['🤖', 'AIと 半導体', 'AIを 動かすには とても 速い コンピューターが いる。その 部品（半導体）を つくる 会社に お金が 集まり、その 材料や 工場の 機械を つくる 日本の 会社の 株も 上がった。'],
+        ['💱', '円安・円高', '1ドル 100円 → 150円が <b>円安</b>。輸入する 小麦・石油・ゲーム機が 高く なる。いっぽうで 外国に 売る 会社は もうかり、外国から 来る 旅行客も ふえる。よい 面と こまる 面が ある。'],
+        ['🌾', 'せんそうと 天気', '小麦や 石油が とれる 国で せんそうや 大雨が あると、世界中で 取りあいに なって ねだんが 上がる。パンや 電気の ねだんは 遠い 国と つながって いる。'],
+        ['🏦', '世界の 金利', 'アメリカや ヨーロッパも 2022年から インフレを おさえる ため 金利を 大きく 上げた。金利が 高い 国に お金は 集まる。日本の 金利が 低かった ことが、円安の 大きな りゆうの 1つ。'],
+        ['🚢', '運ぶ ねだん・人手', '船や トラックの 運賃、荷物を あつかう 人の お給料も ねだんの 中に 入って いる。世界で 港が こんだり、運転する 人が 足りないと、ものの ねだんは 上がる。']
+    ];
+    function drawWorld() {
+        document.getElementById('world-list').innerHTML = WORLD.map(([e, n, d]) =>
+            `<div class="border-2 border-sky-200 bg-sky-50 rounded-2xl p-3" data-world="${n.replace(/\{[^}]*\}/g, '')}">
+                <p class="font-black text-sm">${e} ${n}</p>
+                <p class="text-xs font-bold text-slate-600 mt-0.5 leading-relaxed">${d}</p>
+            </div>`).join('');
+    }
+
+    /* =====================================================================
+       ⑤ 気をつける
        ===================================================================== */
     const SCENES = [
         { q: '知らない ところから「あなたは 1000万円に 当せんしました！ここを タップ」という メールが きた。',
@@ -685,7 +1005,18 @@
         { f: 'まもる', q: '友だちに お金を 貸して ほしいと 言われた とき いちばん よいのは？', a: '貸さずに、おうちの人に 相談する', x: ['すぐ 貸す', '利息を つけて 貸す', 'だまって あげる'], e: 'お金の 貸し借りは 友だちを なくす いちばんの もと。学校では しない。' },
         { f: 'まもる', q: 'IDや パスワードは どう する？', a: 'だれにも 教えず、ちがう サービスで 同じに しない', x: ['友だちには 教える', 'ノートに 貼って おく', '誕生日に して おく'], e: '家の かぎと 同じ。使いまわすと 1つ もれた とき 全部 あぶない。' },
         { f: 'まもる', q: 'スマホゲームで つかいすぎない ために よいのは？', a: '先に 上限を 決めて おうちの人と 共有する', x: ['気が すむまで つかう', '安い ものだけ 何回も 買う', '友だちと きそって 買う'], e: '「安いから」を くりかえすと 合計は 大きく なる。記録を 見える ように する。' },
-        { f: 'まもる', q: '買いものの あとに レシートを どう する？', a: 'とって おいて、つかった お金を 記録する', x: ['すぐ すてる', '見ずに ためる', '友だちに あげる'], e: '記録すると「何に いくら つかったか」が わかる。やりくりの 第一歩。' }
+        { f: 'まもる', q: '買いものの あとに レシートを どう する？', a: 'とって おいて、つかった お金を 記録する', x: ['すぐ すてる', '見ずに ためる', '友だちに あげる'], e: '記録すると「何に いくら つかったか」が わかる。やりくりの 第一歩。' },
+
+        { f: 'けいざい', q: '日本ぜんたいの 金利を 上げたり 下げたり して 物価を 調節して いるのは？', a: '日本銀行（日銀）', x: ['大きな 銀行', '大きな 会社', 'コンビニ'], e: '国の 中央銀行。お札を 発行し、金利を 決める。この 仕事を 金融政策と いう。' },
+        { f: 'けいざい', q: '日銀が 目標に して いる 物価の 上がり方は 1年で およそ 何％？', a: '2%', x: ['0%', '10%', '50%'], e: '上がらない（デフレ）のも 上がりすぎるのも こまる。ゆるやかに 上がりつづける 2%が ちょうど よいと されて いる。' },
+        { f: 'けいざい', q: '金利が 上がると、銀行に あずけた お金の 利息は？', a: 'ふえる', x: ['へる', '変わらない', 'なくなる'], e: 'ずっと 0.001%だった 普通預金が、0.2%以上に なった 銀行も ある。ためる 人には よい 変化。' },
+        { f: 'けいざい', q: '金利が 上がると、家を 買う ために 借りた お金（ローン）は？', a: '返す 利息が ふえて 大変に なる', x: ['返さなくて よく なる', '利息が なくなる', '半分に なる'], e: '借りる 人には つらい 変化。金利には よい 面と こまる 面が 両方 ある。' },
+        { f: 'けいざい', q: '日銀が 2024年3月に やめた、めずらしい 金利の しくみは？', a: 'マイナス金利', x: ['消費税', '両替', '預金保険'], e: 'デフレから ぬけ出す ために 2016年から つづけて いた。金利が ゼロより 下という とても めずらしい 方法。' },
+        { f: 'けいざい', q: '日経平均株価が あらわして いるのは？', a: '日本を 代表する 225社の 株価を まとめた 数字', x: ['日本の 会社 ぜんぶの もうけ', '1ドルが 何円かの 数字', '国が 集めた 税金の 額'], e: '「日本の 株の 元気さメーター」。1社ずつの 株価では なく、まとめた 目じるし。' },
+        { f: 'けいざい', q: '日経平均が 1989年の バブル最高値を こえたのは いつ？', a: '2024年（34年ぶり）', x: ['1995年', '2010年', 'まだ こえて いない'], e: '1989年12月29日の やく 3万8915円を、2024年2月22日に こえた。そのあと 2026年4月には はじめて 6万円台に なった。' },
+        { f: 'けいざい', q: '円安（1ドル 100円 → 150円）に なると、外国から 買う ものは？', a: '高く なる', x: ['安く なる', '変わらない', 'ただに なる'], e: '同じ 1ドルの ものを 買うのに 150円 必要に なる。日本は 小麦や 石油を 輸入して いるので、ねだんが 上がる。' },
+        { f: 'けいざい', q: '株の ねだんに ついて 正しいのは？', a: '上がる ことも 下がる ことも ある', x: ['ずっと 上がりつづける', 'ぜったいに 下がらない', '国が 決めて いる'], e: '2009年には バブル最高値の 5分の1 以下まで 下がった。だから 一度に 全部 かけない（分散）・長い 目で 見るのが 大事。' },
+        { f: 'けいざい', q: 'ねだんが 下がりつづけて、会社の もうけや お給料も へって しまう ことを？', a: 'デフレ', x: ['インフレ', '円安', '複利'], e: '日本は 20年 以上 これで 困って いた。ねだんが 安いのは うれしいが、仕事や お給料が へるので 国ぜんたいは 元気を なくす。' }
     ];
     let qz = null, qzField = 'all';
     function newQuiz() {
