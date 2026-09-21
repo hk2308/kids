@@ -2,5 +2,6 @@
   "title": "ビジュアル すうがくラボ",
   "description": "円周率π、ネイピア数e、sin・cos・tan を 動かしながら 目で見て わかる ページ。",
   "emoji": "📐",
+  "group": "算数",
   "order": 3
 }

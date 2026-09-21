@@ -68,12 +68,15 @@ scripts/make_prefecture_paths.py ← 日本地図のSVGパスを作りなおす�
      "title": "アプリのなまえ",
      "description": "かんたんな せつめい",
      "emoji": "🚀",
+     "group": "理科",
      "order": 2
    }
    ```
 
    省略した場合は HTML の `<title>` と `<meta name="description">` から自動で拾う。
    `order` は小さいほど前に並ぶ（省略時は 999）。
+   `group` は `scripts/build.py` の `GROUPS`（算数／ことば／理科／社会／受験／パズル／音・アート／くらし・AI）から選ぶ。
+   トップページは group ごとに見出しが付き、チップと検索でしぼりこめる（選んだ group はブラウザに記憶される）。
 4. `main` に push する → GitHub Actions が自動で公開する
    （push 前に build.py を忘れても、デプロイ時に作りなおされる）
 

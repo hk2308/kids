@@ -21,7 +21,7 @@
   header {
     background: linear-gradient(120deg, #2dd4bf, #38bdf8, #818cf8);
     color: #fff;
-    padding: 48px 16px 56px;
+    padding: 40px 16px 48px;
     text-align: center;
   }
   header h1 { margin: 0 0 8px; font-size: clamp(1.8rem, 6vw, 3rem); font-weight: 900; letter-spacing: .04em; }
@@ -31,13 +31,55 @@
     background: rgba(255, 255, 255, .22); border: 1px solid rgba(255, 255, 255, .4);
     border-radius: 999px; font-size: .8rem;
   }
-  main { flex: 1; width: 100%; max-width: 960px; margin: -28px auto 0; padding: 0 16px 48px; }
-  .grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+
+  .bar {
+    position: sticky; top: 0; z-index: 20;
+    background: rgba(255, 251, 235, .95);
+    backdrop-filter: blur(8px);
+    border-bottom: 2px solid #fde68a;
+    padding: 10px 16px;
+  }
+  .bar-in { max-width: 960px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; }
+  .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip {
+    flex: none; display: inline-flex; align-items: center; gap: 6px;
+    font-family: inherit; font-weight: 900; font-size: .85rem;
+    padding: 7px 14px; border-radius: 999px; cursor: pointer;
+    background: #fff; color: #475569; border: 2px solid #e2e8f0;
+    transition: transform .12s cubic-bezier(.175,.885,.32,1.275);
+  }
+  .chip:active { transform: scale(.94); }
+  .chip .n { font-size: .72rem; opacity: .7; font-variant-numeric: tabular-nums; }
+  .chip.on { background: #1e293b; color: #fff; border-color: #1e293b; }
+  .chip[style*="--dot"].on { background: var(--dot); border-color: var(--dot); color: #fff; }
+  .search {
+    width: 100%; font-family: inherit; font-weight: 700; font-size: .95rem;
+    padding: 10px 14px; border-radius: 14px; border: 2px solid #e2e8f0; background: #fff; color: inherit;
+  }
+  .search:focus { outline: none; border-color: #38bdf8; }
+
+  main { flex: 1; width: 100%; max-width: 960px; margin: 0 auto; padding: 20px 16px 48px; }
+  .group { margin-bottom: 34px; }
+  .group[hidden] { display: none; }
+  .gtitle {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    margin: 0 0 14px; padding: 10px 16px; border-radius: 16px;
+    font-size: 1.15rem; font-weight: 900; color: #fff;
+    background: linear-gradient(120deg, var(--from), var(--to));
+  }
+  .gemoji { font-size: 1.5rem; line-height: 1; }
+  .gdesc { font-size: .78rem; font-weight: 700; opacity: .9; }
+  .gn {
+    margin-left: auto; font-size: .78rem; font-variant-numeric: tabular-nums;
+    background: rgba(255,255,255,.25); border-radius: 999px; padding: 2px 10px;
+  }
+  .grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
   .card {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    padding: 24px;
+    padding: 22px;
     border-radius: 24px;
     border: 4px solid #fff;
     color: #fff;
@@ -47,20 +89,25 @@
     position: relative;
     overflow: hidden;
   }
+  .card[hidden] { display: none; }
   .card:hover, .card:focus-visible { transform: translateY(-4px) scale(1.02); box-shadow: 0 16px 32px rgba(15, 23, 42, .2); }
   .card:active { transform: scale(.98); }
-  .card .emoji { font-size: 2.6rem; line-height: 1; }
-  .card h2 { margin: 0; font-size: 1.35rem; font-weight: 900; }
-  .card p { margin: 0; font-size: .9rem; font-weight: 700; opacity: .95; line-height: 1.6; }
+  .card .emoji { font-size: 2.4rem; line-height: 1; }
+  .card h3 { margin: 0; font-size: 1.25rem; font-weight: 900; }
+  .card p { margin: 0; font-size: .88rem; font-weight: 700; opacity: .95; line-height: 1.6; }
   .card .go {
     margin-top: auto; align-self: flex-start;
     background: #fff; color: #334155; font-weight: 900; font-size: .85rem;
     padding: 8px 18px; border-radius: 999px;
   }
-  .empty { font-weight: 700; color: #64748b; text-align: center; }
+  .empty { font-weight: 900; color: #64748b; text-align: center; padding: 40px 0; }
   footer { text-align: center; padding: 20px; font-size: .75rem; font-weight: 700; color: #94a3b8; }
   @media (prefers-color-scheme: dark) {
     body { background: #0f172a; color: #e2e8f0; }
+    .bar { background: rgba(15,23,42,.95); border-bottom-color: #1e293b; }
+    .chip { background: #1e293b; color: #cbd5e1; border-color: #334155; }
+    .chip.on { background: #f1f5f9; color: #0f172a; border-color: #f1f5f9; }
+    .search { background: #1e293b; border-color: #334155; }
     .card { border-color: rgba(255,255,255,.18); }
     .card .go { background: rgba(15,23,42,.85); color: #f1f5f9; }
     .empty { color: #94a3b8; }
@@ -73,172 +120,275 @@
   <p>あそびながら まなべる ミニアプリ あつめ</p>
   <p class="count">ぜんぶで 27こ の アプリ</p>
 </header>
-<main>
-  <div class="grid">
-    <a class="card" href="apps/elements/" style="background: linear-gradient(135deg, #f472b6, #fb7185);">
-      <span class="emoji">🧪</span>
-      <h2>元素記号キッズマスター</h2>
-      <p>クイズ・しんけいすいじゃく・げんそずかんで、元素記号をたのしくおぼえよう！</p>
-      <span class="go">あそぶ →</span>
-    </a>
-    <a class="card" href="apps/molecules/" style="background: linear-gradient(135deg, #fbbf24, #fb923c);">
-      <span class="emoji">⚛️</span>
-      <h2>分子ビルダー キッズラボ</h2>
-      <p>げんしを くっつけて 水や 二酸化炭素を つくろう！分子のかたちが まなべるゲーム。</p>
-      <span class="go">あそぶ →</span>
-    </a>
-    <a class="card" href="apps/math-lab/" style="background: linear-gradient(135deg, #34d399, #0d9488);">
-      <span class="emoji">📐</span>
-      <h2>ビジュアル すうがくラボ</h2>
-      <p>円周率π、ネイピア数e、sin・cos・tan を 動かしながら 目で見て わかる ページ。</p>
-      <span class="go">あそぶ →</span>
-    </a>
-    <a class="card" href="apps/rhythm/" style="background: linear-gradient(135deg, #60a5fa, #6366f1);">
-      <span class="emoji">🥁</span>
-      <h2>リズム たいそう</h2>
-      <p>拍にあわせてタップするリズムゲーム。音を消しても拍が目で見えるので遊べる。</p>
-      <span class="go">あそぶ →</span>
-    </a>
-    <a class="card" href="apps/organic/" style="background: linear-gradient(135deg, #c084fc, #a855f7);">
-      <span class="emoji">🧫</span>
-      <h2>ゆうき化学ラボ</h2>
-      <p>ベンゼン環の共鳴、官能基パズル、構造式ずかんで有機化学を目で見て学ぼう。</p>
-      <span class="go">あそぶ →</span>
-    </a>
-    <a class="card" href="apps/multiply/" style="background: linear-gradient(135deg, #22d3ee, #0ea5e9);">
-      <span class="emoji">✖️</span>
-      <h2>かけ算ラボ</h2>
-      <p>九九を面積モデルと読み方で覚えて、ドリルで練習。インド式2けたかけ算も手順つきで学べる。</p>
-      <span class="go">あそぶ →</span>
-    </a>
-    <a class="card" href="apps/japan/" style="background: linear-gradient(135deg, #f472b6, #fb7185);">
-      <span class="emoji">🗾</span>
-      <h2>日本地図ラボ</h2>
-      <p>日本地図をタップして47都道府県の県庁所在地や名産品を学ぼう。位置あて・名前あてクイズつき。</p>
-      <span class="go">あそぶ →</span>
-    </a>
-    <a class="card" href="apps/arithmetic/" style="background: linear-gradient(135deg, #fbbf24, #fb923c);">
-      <span class="emoji">🧮</span>
-      <h2>さんすうランド</h2>
-      <p>くり上がりのたしざん、時計、分数、わり算、大きい数を目で見て学ぶ小1〜3の算数。</p>
-      <span class="go">あそぶ →</span>
-    </a>
-    <a class="card" href="apps/kokugo/" style="background: linear-gradient(135deg, #34d399, #0d9488);">
-      <span class="emoji">✏️</span>
-      <h2>こくごランド</h2>
-      <p>50音表と、小1〜3年で習う漢字440字（学年別漢字配当表）を読み方・例のことば・クイズで学ぼう。</p>
-      <span class="go">あそぶ →</span>
-    </a>
-    <a class="card" href="apps/science/" style="background: linear-gradient(135deg, #60a5fa, #6366f1);">
-      <span class="emoji">🔬</span>
-      <h2>りか・しゃかいランド</h2>
-      <p>じしゃく、電気の通り道、こん虫と植物のからだ、地図記号、八方位を小3向けにゲームで学ぼう。</p>
-      <span class="go">あそぶ →</span>
-    </a>
-    <a class="card" href="apps/kana-origin/" style="background: linear-gradient(135deg, #c084fc, #a855f7);">
-      <span class="emoji">🖌️</span>
-      <h2>かなのルーツ</h2>
-      <p>ひらがな・カタカナ五十音すべての、もとになった漢字（字源）を表とクイズで確かめよう。</p>
-      <span class="go">あそぶ →</span>
-    </a>
-    <a class="card" href="apps/seasons/" style="background: linear-gradient(135deg, #22d3ee, #0ea5e9);">
-      <span class="emoji">🍂</span>
-      <h2>きせつ はっけん</h2>
-      <p>春夏秋冬の花・旬の食べもの・行事・生きものを図鑑と季節わけゲーム、行事カレンダーで学ぼう。</p>
-      <span class="go">あそぶ →</span>
-    </a>
-    <a class="card" href="apps/drawing/" style="background: linear-gradient(135deg, #f472b6, #fb7185);">
-      <span class="emoji">🎨</span>
-      <h2>おえかき教室</h2>
-      <p>丸や三角から描くステップお手本、タップで塗れるぬりえ、色えらびと影のつけ方のコツ。</p>
-      <span class="go">あそぶ →</span>
-    </a>
-    <a class="card" href="apps/ojuken/" style="background: linear-gradient(135deg, #fbbf24, #fb923c);">
-      <span class="emoji">🎓</span>
-      <h2>おうけん チャレンジ</h2>
-      <p>小学校受験のペーパー6分野（数量・図形・言語・推理・記憶・常識）を、絵とゲームでれんしゅう。</p>
-      <span class="go">あそぶ →</span>
-    </a>
-    <a class="card" href="apps/juken-math/" style="background: linear-gradient(135deg, #34d399, #0d9488);">
-      <span class="emoji">🧮</span>
-      <h2>とくしゅ算ラボ</h2>
-      <p>つるかめ算・和差算・植木算・旅人算・過不足算・平均算を、面積図や線分図でしくみから理解する。</p>
-      <span class="go">あそぶ →</span>
-    </a>
-    <a class="card" href="apps/romaji-get/" style="background: linear-gradient(135deg, #60a5fa, #6366f1);">
-      <span class="emoji">⚪</span>
-      <h2>ローマ字ゲットだぜ</h2>
-      <p>モンスターの名前をローマ字で打つとゲット！151匹ずかんコンプリートをめざすローマ字入力れんしゅう。</p>
-      <span class="go">あそぶ →</span>
-    </a>
-    <a class="card" href="apps/soroban/" style="background: linear-gradient(135deg, #c084fc, #a855f7);">
-      <span class="emoji">🧮</span>
-      <h2>そろばん道場</h2>
-      <p>珠をさわって学ぶそろばん。5の補数・くり上がりの指づかいを1手ずつお手本で確認、クイズとフラッシュ暗算つき。</p>
-      <span class="go">あそぶ →</span>
-    </a>
-    <a class="card" href="apps/marble/" style="background: linear-gradient(135deg, #22d3ee, #0ea5e9);">
-      <span class="emoji">🔮</span>
-      <h2>ビー玉コース工作室</h2>
-      <p>さか・カーブ・ジャンプ台・トランポリン・ベルト・風車・シーソー・ワープなど16種のパーツでコースを自作して転がす。</p>
-      <span class="go">あそぶ →</span>
-    </a>
-    <a class="card" href="apps/yamanote/" style="background: linear-gradient(135deg, #f472b6, #fb7185);">
-      <span class="emoji">🚃</span>
-      <h2>山手線マスター</h2>
-      <p>全30駅を路線図・つぎの駅クイズ・位置あて・一周チャレンジ・読みかたクイズでおぼえる。内回りと外回りも。</p>
-      <span class="go">あそぶ →</span>
-    </a>
-    <a class="card" href="apps/puzzle1024/" style="background: linear-gradient(135deg, #fbbf24, #fb923c);">
-      <span class="emoji">🔢</span>
-      <h2>1024 パズル</h2>
-      <p>同じ数どうしをくっつけて1024をめざすスライドパズル。スワイプ・やじるしキー・ボタン対応。</p>
-      <span class="go">あそぶ →</span>
-    </a>
-    <a class="card" href="apps/colormix/" style="background: linear-gradient(135deg, #34d399, #0d9488);">
-      <span class="emoji">🎨</span>
-      <h2>いろみず ラボ</h2>
-      <p>絵の具の色水を混ぜて何色になるかを実験。光の三原色とのちがい、まぜかたクイズ、色あてチャレンジつき。</p>
-      <span class="go">あそぶ →</span>
-    </a>
-    <a class="card" href="apps/taiko/" style="background: linear-gradient(135deg, #60a5fa, #6366f1);">
-      <span class="emoji">🥁</span>
-      <h2>どんカツ たいこ</h2>
-      <p>流れてくる赤と青の音符をタイミングよくたたくリズムゲーム。著作権の切れた有名曲10曲、音を消しても遊べる。</p>
-      <span class="go">あそぶ →</span>
-    </a>
-    <a class="card" href="apps/rubik/" style="background: linear-gradient(135deg, #c084fc, #a855f7);">
-      <span class="emoji">🧩</span>
-      <h2>ルービックキューブ 解きかたナビ</h2>
-      <p>6面の色を入力すると、そろえるまでの手順を1手ずつ教えてくれる。初心者向けの層ごとの解き方を図と記号で案内。</p>
-      <span class="go">あそぶ →</span>
-    </a>
-    <a class="card" href="apps/kotowaza/" style="background: linear-gradient(135deg, #22d3ee, #0ea5e9);">
-      <span class="emoji">📜</span>
-      <h2>ことわざ・四字熟語ラボ</h2>
-      <p>ことわざ・四字熟語・故事成語を意味クイズ・穴うめ・線むすびでおぼえる。故事成語はもとになった中国の物語つき。</p>
-      <span class="go">あそぶ →</span>
-    </a>
-    <a class="card" href="apps/juken-science/" style="background: linear-gradient(135deg, #f472b6, #fb7185);">
-      <span class="emoji">🔬</span>
-      <h2>中学受験 理科ラボ</h2>
-      <p>てこ・かっ車・電気回路・中和・月の満ち欠けをうごかしながら計算問題を練習。生物と地学は一問一答で。</p>
-      <span class="go">あそぶ →</span>
-    </a>
-    <a class="card" href="apps/juken-social/" style="background: linear-gradient(135deg, #fbbf24, #fb923c);">
-      <span class="emoji">🗾</span>
-      <h2>中学受験 社会ラボ</h2>
-      <p>6都市の雨温図で気候を見分け、日本史58のできごとを年表と並べかえで、三権分立は図をタップして。一問一答つき。</p>
-      <span class="go">あそぶ →</span>
-    </a>
-    <a class="card" href="apps/juken-kokugo/" style="background: linear-gradient(135deg, #34d399, #0d9488);">
-      <span class="emoji">✍️</span>
-      <h2>中学受験 国語ラボ</h2>
-      <p>二字熟語の組み立て6種、対義語・類義語、敬語の使い分け、からだの慣用句、つなぎことばをクイズで練習。</p>
-      <span class="go">あそぶ →</span>
-    </a>
+
+<div class="bar">
+  <div class="bar-in">
+    <div class="chips" id="chips">
+      <button class="chip on" data-chip="all" type="button">🎒 ぜんぶ <span class="n">27</span></button>
+      <button class="chip" data-chip="算数" type="button" style="--dot: #60a5fa;">🔢 算数 <span class="n">4</span></button>
+      <button class="chip" data-chip="ことば" type="button" style="--dot: #f472b6;">✍️ ことば <span class="n">4</span></button>
+      <button class="chip" data-chip="理科" type="button" style="--dot: #34d399;">🔬 理科 <span class="n">5</span></button>
+      <button class="chip" data-chip="社会" type="button" style="--dot: #fbbf24;">🗾 社会 <span class="n">2</span></button>
+      <button class="chip" data-chip="受験" type="button" style="--dot: #c084fc;">🎓 受験 <span class="n">5</span></button>
+      <button class="chip" data-chip="パズル" type="button" style="--dot: #22d3ee;">🧩 パズル <span class="n">3</span></button>
+      <button class="chip" data-chip="音・アート" type="button" style="--dot: #fb923c;">🎵 音・アート <span class="n">3</span></button>
+      <button class="chip" data-chip="くらし・AI" type="button" style="--dot: #a3e635;">💡 くらし・AI <span class="n">1</span></button>
+    </div>
+    <input class="search" id="search" type="search" placeholder="🔍 アプリを さがす（元素・かけ算・受験 …）"
+           autocomplete="off">
   </div>
+</div>
+
+<main id="main">
+  <section class="group" data-group="算数">
+    <h2 class="gtitle" style="--from: #60a5fa; --to: #4f46e5;"><span class="gemoji">🔢</span>算数<span class="gdesc">かず・計算・そろばん</span><span class="gn">4</span></h2>
+    <div class="grid">
+      <a class="card" href="apps/math-lab/" data-search="ビジュアル すうがくラボ 円周率π、ネイピア数e、sin・cos・tan を 動かしながら 目で見て わかる ページ。 算数 math-lab" style="background: linear-gradient(135deg, #60a5fa, #4f46e5);">
+        <span class="emoji">📐</span>
+        <h3>ビジュアル すうがくラボ</h3>
+        <p>円周率π、ネイピア数e、sin・cos・tan を 動かしながら 目で見て わかる ページ。</p>
+        <span class="go">あそぶ →</span>
+      </a>
+      <a class="card" href="apps/multiply/" data-search="かけ算ラボ 九九を面積モデルと読み方で覚えて、ドリルで練習。インド式2けたかけ算も手順つきで学べる。 算数 multiply" style="background: linear-gradient(135deg, #60a5fa, #4f46e5);">
+        <span class="emoji">✖️</span>
+        <h3>かけ算ラボ</h3>
+        <p>九九を面積モデルと読み方で覚えて、ドリルで練習。インド式2けたかけ算も手順つきで学べる。</p>
+        <span class="go">あそぶ →</span>
+      </a>
+      <a class="card" href="apps/arithmetic/" data-search="さんすうランド くり上がりのたしざん、時計、分数、わり算、大きい数を目で見て学ぶ小1〜3の算数。 算数 arithmetic" style="background: linear-gradient(135deg, #60a5fa, #4f46e5);">
+        <span class="emoji">🧮</span>
+        <h3>さんすうランド</h3>
+        <p>くり上がりのたしざん、時計、分数、わり算、大きい数を目で見て学ぶ小1〜3の算数。</p>
+        <span class="go">あそぶ →</span>
+      </a>
+      <a class="card" href="apps/soroban/" data-search="そろばん道場 珠をさわって学ぶそろばん。5の補数・くり上がりの指づかいを1手ずつお手本で確認、クイズとフラッシュ暗算つき。 算数 soroban" style="background: linear-gradient(135deg, #60a5fa, #4f46e5);">
+        <span class="emoji">🧮</span>
+        <h3>そろばん道場</h3>
+        <p>珠をさわって学ぶそろばん。5の補数・くり上がりの指づかいを1手ずつお手本で確認、クイズとフラッシュ暗算つき。</p>
+        <span class="go">あそぶ →</span>
+      </a>
+    </div>
+  </section>
+  <section class="group" data-group="ことば">
+    <h2 class="gtitle" style="--from: #f472b6; --to: #e11d48;"><span class="gemoji">✍️</span>ことば<span class="gdesc">ひらがな・漢字・ことわざ</span><span class="gn">4</span></h2>
+    <div class="grid">
+      <a class="card" href="apps/kokugo/" data-search="こくごランド 50音表と、小1〜3年で習う漢字440字（学年別漢字配当表）を読み方・例のことば・クイズで学ぼう。 ことば kokugo" style="background: linear-gradient(135deg, #f472b6, #e11d48);">
+        <span class="emoji">✏️</span>
+        <h3>こくごランド</h3>
+        <p>50音表と、小1〜3年で習う漢字440字（学年別漢字配当表）を読み方・例のことば・クイズで学ぼう。</p>
+        <span class="go">あそぶ →</span>
+      </a>
+      <a class="card" href="apps/kana-origin/" data-search="かなのルーツ ひらがな・カタカナ五十音すべての、もとになった漢字（字源）を表とクイズで確かめよう。 ことば kana-origin" style="background: linear-gradient(135deg, #f472b6, #e11d48);">
+        <span class="emoji">🖌️</span>
+        <h3>かなのルーツ</h3>
+        <p>ひらがな・カタカナ五十音すべての、もとになった漢字（字源）を表とクイズで確かめよう。</p>
+        <span class="go">あそぶ →</span>
+      </a>
+      <a class="card" href="apps/romaji-get/" data-search="ローマ字ゲットだぜ モンスターの名前をローマ字で打つとゲット！151匹ずかんコンプリートをめざすローマ字入力れんしゅう。 ことば romaji-get" style="background: linear-gradient(135deg, #f472b6, #e11d48);">
+        <span class="emoji">⚪</span>
+        <h3>ローマ字ゲットだぜ</h3>
+        <p>モンスターの名前をローマ字で打つとゲット！151匹ずかんコンプリートをめざすローマ字入力れんしゅう。</p>
+        <span class="go">あそぶ →</span>
+      </a>
+      <a class="card" href="apps/kotowaza/" data-search="ことわざ・四字熟語ラボ ことわざ・四字熟語・故事成語を意味クイズ・穴うめ・線むすびでおぼえる。故事成語はもとになった中国の物語つき。 ことば kotowaza" style="background: linear-gradient(135deg, #f472b6, #e11d48);">
+        <span class="emoji">📜</span>
+        <h3>ことわざ・四字熟語ラボ</h3>
+        <p>ことわざ・四字熟語・故事成語を意味クイズ・穴うめ・線むすびでおぼえる。故事成語はもとになった中国の物語つき。</p>
+        <span class="go">あそぶ →</span>
+      </a>
+    </div>
+  </section>
+  <section class="group" data-group="理科">
+    <h2 class="gtitle" style="--from: #34d399; --to: #0f766e;"><span class="gemoji">🔬</span>理科<span class="gdesc">元素・分子・じっけん・色</span><span class="gn">5</span></h2>
+    <div class="grid">
+      <a class="card" href="apps/elements/" data-search="元素記号キッズマスター クイズ・しんけいすいじゃく・げんそずかんで、元素記号をたのしくおぼえよう！ 理科 elements" style="background: linear-gradient(135deg, #34d399, #0f766e);">
+        <span class="emoji">🧪</span>
+        <h3>元素記号キッズマスター</h3>
+        <p>クイズ・しんけいすいじゃく・げんそずかんで、元素記号をたのしくおぼえよう！</p>
+        <span class="go">あそぶ →</span>
+      </a>
+      <a class="card" href="apps/molecules/" data-search="分子ビルダー キッズラボ げんしを くっつけて 水や 二酸化炭素を つくろう！分子のかたちが まなべるゲーム。 理科 molecules" style="background: linear-gradient(135deg, #34d399, #0f766e);">
+        <span class="emoji">⚛️</span>
+        <h3>分子ビルダー キッズラボ</h3>
+        <p>げんしを くっつけて 水や 二酸化炭素を つくろう！分子のかたちが まなべるゲーム。</p>
+        <span class="go">あそぶ →</span>
+      </a>
+      <a class="card" href="apps/organic/" data-search="ゆうき化学ラボ ベンゼン環の共鳴、官能基パズル、構造式ずかんで有機化学を目で見て学ぼう。 理科 organic" style="background: linear-gradient(135deg, #34d399, #0f766e);">
+        <span class="emoji">🧫</span>
+        <h3>ゆうき化学ラボ</h3>
+        <p>ベンゼン環の共鳴、官能基パズル、構造式ずかんで有機化学を目で見て学ぼう。</p>
+        <span class="go">あそぶ →</span>
+      </a>
+      <a class="card" href="apps/science/" data-search="りか・しゃかいランド じしゃく、電気の通り道、こん虫と植物のからだ、地図記号、八方位を小3向けにゲームで学ぼう。 理科 science" style="background: linear-gradient(135deg, #34d399, #0f766e);">
+        <span class="emoji">🔬</span>
+        <h3>りか・しゃかいランド</h3>
+        <p>じしゃく、電気の通り道、こん虫と植物のからだ、地図記号、八方位を小3向けにゲームで学ぼう。</p>
+        <span class="go">あそぶ →</span>
+      </a>
+      <a class="card" href="apps/colormix/" data-search="いろみず ラボ 絵の具の色水を混ぜて何色になるかを実験。光の三原色とのちがい、まぜかたクイズ、色あてチャレンジつき。 理科 colormix" style="background: linear-gradient(135deg, #34d399, #0f766e);">
+        <span class="emoji">🎨</span>
+        <h3>いろみず ラボ</h3>
+        <p>絵の具の色水を混ぜて何色になるかを実験。光の三原色とのちがい、まぜかたクイズ、色あてチャレンジつき。</p>
+        <span class="go">あそぶ →</span>
+      </a>
+    </div>
+  </section>
+  <section class="group" data-group="社会">
+    <h2 class="gtitle" style="--from: #fbbf24; --to: #ea580c;"><span class="gemoji">🗾</span>社会<span class="gdesc">地図・鉄道・歴史</span><span class="gn">2</span></h2>
+    <div class="grid">
+      <a class="card" href="apps/japan/" data-search="日本地図ラボ 日本地図をタップして47都道府県の県庁所在地や名産品を学ぼう。位置あて・名前あてクイズつき。 社会 japan" style="background: linear-gradient(135deg, #fbbf24, #ea580c);">
+        <span class="emoji">🗾</span>
+        <h3>日本地図ラボ</h3>
+        <p>日本地図をタップして47都道府県の県庁所在地や名産品を学ぼう。位置あて・名前あてクイズつき。</p>
+        <span class="go">あそぶ →</span>
+      </a>
+      <a class="card" href="apps/yamanote/" data-search="山手線マスター 全30駅を路線図・つぎの駅クイズ・位置あて・一周チャレンジ・読みかたクイズでおぼえる。内回りと外回りも。 社会 yamanote" style="background: linear-gradient(135deg, #fbbf24, #ea580c);">
+        <span class="emoji">🚃</span>
+        <h3>山手線マスター</h3>
+        <p>全30駅を路線図・つぎの駅クイズ・位置あて・一周チャレンジ・読みかたクイズでおぼえる。内回りと外回りも。</p>
+        <span class="go">あそぶ →</span>
+      </a>
+    </div>
+  </section>
+  <section class="group" data-group="受験">
+    <h2 class="gtitle" style="--from: #c084fc; --to: #7e22ce;"><span class="gemoji">🎓</span>受験<span class="gdesc">小学校受験・中学受験の4教科</span><span class="gn">5</span></h2>
+    <div class="grid">
+      <a class="card" href="apps/ojuken/" data-search="おうけん チャレンジ 小学校受験のペーパー6分野（数量・図形・言語・推理・記憶・常識）を、絵とゲームでれんしゅう。 受験 ojuken" style="background: linear-gradient(135deg, #c084fc, #7e22ce);">
+        <span class="emoji">🎓</span>
+        <h3>おうけん チャレンジ</h3>
+        <p>小学校受験のペーパー6分野（数量・図形・言語・推理・記憶・常識）を、絵とゲームでれんしゅう。</p>
+        <span class="go">あそぶ →</span>
+      </a>
+      <a class="card" href="apps/juken-math/" data-search="とくしゅ算ラボ つるかめ算・和差算・植木算・旅人算・過不足算・平均算を、面積図や線分図でしくみから理解する。 受験 juken-math" style="background: linear-gradient(135deg, #c084fc, #7e22ce);">
+        <span class="emoji">🧮</span>
+        <h3>とくしゅ算ラボ</h3>
+        <p>つるかめ算・和差算・植木算・旅人算・過不足算・平均算を、面積図や線分図でしくみから理解する。</p>
+        <span class="go">あそぶ →</span>
+      </a>
+      <a class="card" href="apps/juken-science/" data-search="中学受験 理科ラボ てこ・かっ車・電気回路・中和・月の満ち欠けをうごかしながら計算問題を練習。生物と地学は一問一答で。 受験 juken-science" style="background: linear-gradient(135deg, #c084fc, #7e22ce);">
+        <span class="emoji">🔬</span>
+        <h3>中学受験 理科ラボ</h3>
+        <p>てこ・かっ車・電気回路・中和・月の満ち欠けをうごかしながら計算問題を練習。生物と地学は一問一答で。</p>
+        <span class="go">あそぶ →</span>
+      </a>
+      <a class="card" href="apps/juken-social/" data-search="中学受験 社会ラボ 6都市の雨温図で気候を見分け、日本史61のできごとを年表と並べかえで、三権分立は図をタップして。一問一答つき。 受験 juken-social" style="background: linear-gradient(135deg, #c084fc, #7e22ce);">
+        <span class="emoji">🗾</span>
+        <h3>中学受験 社会ラボ</h3>
+        <p>6都市の雨温図で気候を見分け、日本史61のできごとを年表と並べかえで、三権分立は図をタップして。一問一答つき。</p>
+        <span class="go">あそぶ →</span>
+      </a>
+      <a class="card" href="apps/juken-kokugo/" data-search="中学受験 国語ラボ 二字熟語の組み立て6種、対義語・類義語、敬語の使い分け、からだの慣用句、つなぎことばをクイズで練習。 受験 juken-kokugo" style="background: linear-gradient(135deg, #c084fc, #7e22ce);">
+        <span class="emoji">✍️</span>
+        <h3>中学受験 国語ラボ</h3>
+        <p>二字熟語の組み立て6種、対義語・類義語、敬語の使い分け、からだの慣用句、つなぎことばをクイズで練習。</p>
+        <span class="go">あそぶ →</span>
+      </a>
+    </div>
+  </section>
+  <section class="group" data-group="パズル">
+    <h2 class="gtitle" style="--from: #22d3ee; --to: #0369a1;"><span class="gemoji">🧩</span>パズル<span class="gdesc">あたまを つかう あそび</span><span class="gn">3</span></h2>
+    <div class="grid">
+      <a class="card" href="apps/marble/" data-search="ビー玉コース工作室 さか・カーブ・ジャンプ台・トランポリン・ベルト・風車・シーソー・ワープなど16種のパーツでコースを自作して転がす。 パズル marble" style="background: linear-gradient(135deg, #22d3ee, #0369a1);">
+        <span class="emoji">🔮</span>
+        <h3>ビー玉コース工作室</h3>
+        <p>さか・カーブ・ジャンプ台・トランポリン・ベルト・風車・シーソー・ワープなど16種のパーツでコースを自作して転がす。</p>
+        <span class="go">あそぶ →</span>
+      </a>
+      <a class="card" href="apps/puzzle1024/" data-search="1024 パズル 同じ数どうしをくっつけて1024をめざすスライドパズル。スワイプ・やじるしキー・ボタン対応。 パズル puzzle1024" style="background: linear-gradient(135deg, #22d3ee, #0369a1);">
+        <span class="emoji">🔢</span>
+        <h3>1024 パズル</h3>
+        <p>同じ数どうしをくっつけて1024をめざすスライドパズル。スワイプ・やじるしキー・ボタン対応。</p>
+        <span class="go">あそぶ →</span>
+      </a>
+      <a class="card" href="apps/rubik/" data-search="ルービックキューブ 解きかたナビ 6面の色を入力すると、そろえるまでの手順を1手ずつ教えてくれる。初心者向けの層ごとの解き方を図と記号で案内。 パズル rubik" style="background: linear-gradient(135deg, #22d3ee, #0369a1);">
+        <span class="emoji">🧩</span>
+        <h3>ルービックキューブ 解きかたナビ</h3>
+        <p>6面の色を入力すると、そろえるまでの手順を1手ずつ教えてくれる。初心者向けの層ごとの解き方を図と記号で案内。</p>
+        <span class="go">あそぶ →</span>
+      </a>
+    </div>
+  </section>
+  <section class="group" data-group="音・アート">
+    <h2 class="gtitle" style="--from: #fb923c; --to: #db2777;"><span class="gemoji">🎵</span>音・アート<span class="gdesc">リズム・絵・デザイン</span><span class="gn">3</span></h2>
+    <div class="grid">
+      <a class="card" href="apps/rhythm/" data-search="リズム たいそう 拍にあわせてタップするリズムゲーム。音を消しても拍が目で見えるので遊べる。 音・アート rhythm" style="background: linear-gradient(135deg, #fb923c, #db2777);">
+        <span class="emoji">🥁</span>
+        <h3>リズム たいそう</h3>
+        <p>拍にあわせてタップするリズムゲーム。音を消しても拍が目で見えるので遊べる。</p>
+        <span class="go">あそぶ →</span>
+      </a>
+      <a class="card" href="apps/drawing/" data-search="おえかき教室 丸や三角から描くステップお手本、タップで塗れるぬりえ、色えらびと影のつけ方のコツ。 音・アート drawing" style="background: linear-gradient(135deg, #fb923c, #db2777);">
+        <span class="emoji">🎨</span>
+        <h3>おえかき教室</h3>
+        <p>丸や三角から描くステップお手本、タップで塗れるぬりえ、色えらびと影のつけ方のコツ。</p>
+        <span class="go">あそぶ →</span>
+      </a>
+      <a class="card" href="apps/taiko/" data-search="どんカツ たいこ 流れてくる赤と青の音符をタイミングよくたたくリズムゲーム。著作権の切れた有名曲10曲、音を消しても遊べる。 音・アート taiko" style="background: linear-gradient(135deg, #fb923c, #db2777);">
+        <span class="emoji">🥁</span>
+        <h3>どんカツ たいこ</h3>
+        <p>流れてくる赤と青の音符をタイミングよくたたくリズムゲーム。著作権の切れた有名曲10曲、音を消しても遊べる。</p>
+        <span class="go">あそぶ →</span>
+      </a>
+    </div>
+  </section>
+  <section class="group" data-group="くらし・AI">
+    <h2 class="gtitle" style="--from: #a3e635; --to: #15803d;"><span class="gemoji">💡</span>くらし・AI<span class="gdesc">きせつ・おかね・きもち・AI</span><span class="gn">1</span></h2>
+    <div class="grid">
+      <a class="card" href="apps/seasons/" data-search="きせつ はっけん 春夏秋冬の花・旬の食べもの・行事・生きものを図鑑と季節わけゲーム、行事カレンダーで学ぼう。 くらし・ai seasons" style="background: linear-gradient(135deg, #a3e635, #15803d);">
+        <span class="emoji">🍂</span>
+        <h3>きせつ はっけん</h3>
+        <p>春夏秋冬の花・旬の食べもの・行事・生きものを図鑑と季節わけゲーム、行事カレンダーで学ぼう。</p>
+        <span class="go">あそぶ →</span>
+      </a>
+    </div>
+  </section>
+  <p class="empty" id="nohit" hidden>🔍 見つかりませんでした</p>
 </main>
 <footer>© 2026 kids apps</footer>
+
+<script>
+(function () {
+  var KEY = 'kids-index-group';
+  var chips = Array.prototype.slice.call(document.querySelectorAll('[data-chip]'));
+  var groups = Array.prototype.slice.call(document.querySelectorAll('.group'));
+  var cards = Array.prototype.slice.call(document.querySelectorAll('.card'));
+  var search = document.getElementById('search');
+  var nohit = document.getElementById('nohit');
+  var picked = 'all';
+
+  function apply() {
+    var q = search.value.trim().toLowerCase();
+    var shown = 0;
+    groups.forEach(function (g) {
+      var inGroup = picked === 'all' || g.dataset.group === picked;
+      var visible = 0;
+      Array.prototype.forEach.call(g.querySelectorAll('.card'), function (c) {
+        var hit = inGroup && (!q || c.dataset.search.indexOf(q) >= 0);
+        c.hidden = !hit;
+        if (hit) visible++;
+      });
+      g.hidden = visible === 0;
+      shown += visible;
+    });
+    nohit.hidden = shown > 0;
+    chips.forEach(function (b) { b.classList.toggle('on', b.dataset.chip === picked); });
+  }
+
+  chips.forEach(function (b) {
+    b.addEventListener('click', function () {
+      picked = b.dataset.chip;
+      try { localStorage.setItem(KEY, picked); } catch (e) {}
+      apply();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+  search.addEventListener('input', apply);
+
+  var saved = null;
+  try { saved = localStorage.getItem(KEY); } catch (e) {}
+  if (saved && chips.some(function (b) { return b.dataset.chip === saved; })) picked = saved;
+  apply();
+})();
+</script>
 </body>
 </html>
