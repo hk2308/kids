@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>どんカツ たいこ 10曲のリズムゲーム</title>
+    <meta name="description" content="流れてくる赤と青の音符をタイミングよくたたくリズムゲーム。きらきら星や第九など著作権の切れた有名な曲10曲、音を消しても遊べる。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums }
+        .bounce-hover { transition: transform .1s cubic-bezier(.175,.885,.32,1.275) }
+        .bounce-hover:active { transform: scale(.95) }
+        @keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.1) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275) }
+        #stage { touch-action: manipulation }
+        .pad { user-select: none }
+        @keyframes flash { from { opacity: .55 } to { opacity: 0 } }
+        .flash { animation: flash .18s ease-out forwards }
+        rt { font-size: .55em; font-weight: 700; color: #b91c1c }
+    </style>
+</head>
+<body class="bg-stone-100 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-red-600 via-orange-600 to-amber-500 text-white p-3 shadow-lg sticky top-0 z-30">
+        <div class="max-w-3xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">🥁</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">どんカツ たいこ</h1>
+                    <p class="text-xs text-amber-50 font-bold hidden sm:block">赤は ドン・青は カッ</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="btn-sound" onclick="toggleSound()" class="bg-white/20 backdrop-blur border border-white/30 font-black px-3 py-1.5 rounded-full text-xs">🔊 音 ON</button>
+                <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-3xl mx-auto w-full p-3 sm:p-5 flex-grow space-y-4">
+
+        <!-- ===== 曲えらび ===== -->
+        <section id="view-select" class="space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-red-100">
+                <h2 class="font-black">🎵 曲を えらぶ</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    どれも <ruby>著作権<rt>ちょさくけん</rt></ruby>の きれた 古い 曲（民謡や クラシック）だよ。
+                </p>
+                <div class="flex flex-wrap items-center gap-2 mt-3">
+                    <span class="font-black text-sm text-slate-500">むずかしさ</span>
+                    <div id="diff-buttons" class="flex gap-2"></div>
+                </div>
+            </div>
+            <div id="song-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+        </section>
+
+        <!-- ===== プレイ ===== -->
+        <section id="view-play" class="hidden space-y-3">
+            <div class="bg-white rounded-2xl p-2 shadow border-2 border-red-100 flex items-center gap-2 flex-wrap">
+                <span id="play-song" class="font-black text-sm"></span>
+                <span id="play-diff" class="bg-red-100 text-red-700 font-black px-2 py-0.5 rounded-full text-xs"></span>
+                <span id="play-score" class="num ml-auto font-black text-xl text-red-600">0</span>
+                <button onclick="quitPlay()" class="bg-white border-2 border-slate-200 text-slate-500 font-black px-3 py-1.5 rounded-full text-xs">やめる</button>
+            </div>
+
+            <div class="relative bg-white rounded-2xl shadow border-2 border-red-100 overflow-hidden">
+                <canvas id="stage" width="900" height="260" class="w-full h-auto block"></canvas>
+                <div id="hitflash" class="absolute inset-0 bg-white pointer-events-none" style="opacity:0"></div>
+            </div>
+
+            <div class="flex gap-2">
+                <button class="pad flex-1 bg-gradient-to-b from-rose-500 to-red-600 text-white font-black py-6 rounded-2xl border-b-4 border-red-800 bounce-hover text-xl"
+                        onmousedown="hit('don')" ontouchstart="hit('don',event)">🔴 ドン<span class="block text-xs font-bold">F / J</span></button>
+                <button class="pad flex-1 bg-gradient-to-b from-sky-400 to-blue-600 text-white font-black py-6 rounded-2xl border-b-4 border-blue-800 bounce-hover text-xl"
+                        onmousedown="hit('ka')" ontouchstart="hit('ka',event)">🔵 カッ<span class="block text-xs font-bold">D / K</span></button>
+            </div>
+
+            <div class="grid grid-cols-4 gap-2 text-center">
+                <div class="bg-white rounded-xl p-2 shadow border-2 border-red-100">
+                    <p class="text-[11px] font-black text-slate-400">良</p>
+                    <p id="cnt-good" class="num text-xl font-black text-amber-500">0</p></div>
+                <div class="bg-white rounded-xl p-2 shadow border-2 border-red-100">
+                    <p class="text-[11px] font-black text-slate-400">可</p>
+                    <p id="cnt-ok" class="num text-xl font-black text-slate-500">0</p></div>
+                <div class="bg-white rounded-xl p-2 shadow border-2 border-red-100">
+                    <p class="text-[11px] font-black text-slate-400">不可</p>
+                    <p id="cnt-bad" class="num text-xl font-black text-rose-500">0</p></div>
+                <div class="bg-white rounded-xl p-2 shadow border-2 border-red-100">
+                    <p class="text-[11px] font-black text-slate-400">コンボ</p>
+                    <p id="cnt-combo" class="num text-xl font-black text-emerald-600">0</p></div>
+            </div>
+        </section>
+
+        <!-- ===== けっか ===== -->
+        <section id="view-result" class="hidden">
+            <div class="bg-white rounded-3xl p-5 shadow-md border-2 border-red-100 text-center pop">
+                <p id="res-clear" class="text-3xl font-black"></p>
+                <p id="res-song" class="font-black text-slate-500 mt-1"></p>
+                <p id="res-score" class="num text-5xl font-black text-red-600 my-3">0</p>
+                <div class="grid grid-cols-3 gap-2 text-center">
+                    <div class="bg-amber-50 rounded-xl p-2"><p class="text-xs font-black text-amber-600">良</p>
+                        <p id="res-good" class="num text-2xl font-black">0</p></div>
+                    <div class="bg-slate-50 rounded-xl p-2"><p class="text-xs font-black text-slate-500">可</p>
+                        <p id="res-ok" class="num text-2xl font-black">0</p></div>
+                    <div class="bg-rose-50 rounded-xl p-2"><p class="text-xs font-black text-rose-500">不可</p>
+                        <p id="res-bad" class="num text-2xl font-black">0</p></div>
+                </div>
+                <p id="res-combo" class="font-black text-slate-500 mt-2"></p>
+                <div class="h-4 bg-slate-100 rounded-full mt-3 overflow-hidden border border-slate-200">
+                    <div id="res-gauge" class="h-full bg-gradient-to-r from-amber-400 to-red-500" style="width:0%"></div>
+                </div>
+                <p class="text-xs font-bold text-slate-400 mt-1">ノルマ 80% で クリア</p>
+                <div class="flex gap-2 mt-4">
+                    <button onclick="retry()" class="flex-1 bg-gradient-to-r from-red-500 to-orange-600 text-white font-black py-3 rounded-2xl border-b-4 border-red-700 bounce-hover">もう いちど</button>
+                    <button onclick="backToSelect()" class="flex-1 bg-white border-2 border-red-200 text-red-600 font-black py-3 rounded-2xl bounce-hover">曲を えらぶ</button>
+                </div>
+            </div>
+        </section>
+
+        <details class="bg-white rounded-3xl p-4 shadow-md border-2 border-red-100">
+            <summary class="font-black cursor-pointer">🥁 あそびかた</summary>
+            <ul class="text-sm font-bold text-slate-600 mt-2 space-y-1 leading-relaxed">
+                <li>・音符が 左の <b>まる</b>に かさなった しゅんかんに たたく。</li>
+                <li>・<span class="text-red-600">赤（ドン）</span>は まん中を たたく 音、<span class="text-blue-600">青（カッ）</span>は ふちを たたく 音。</li>
+                <li>・キーボードは <b>F・J でドン</b>、<b>D・K でカッ</b>。</li>
+                <li>・ぴったりだと <b>良</b>、すこし ずれると <b>可</b>、はずすと <b>不可</b>。</li>
+                <li>・音を 消しても、音符と ひかる 拍（はく）で あそべるよ。</li>
+            </ul>
+        </details>
+    </main>
+
+    <footer class="text-center py-3 text-xs text-slate-400 font-bold">どんカツ たいこ © 2026</footer>
+
+    <script>
+        /* ===================== 曲データ =====================
+           どれも 著作権の きれた 曲（民謡・クラシック）。
+           [音の 高さ, ながさ(拍)]  'r' は やすみ。子ども向けの かんたんな アレンジ。 */
+        const SONGS = [
+            {
+                id: 'kirakira', name: 'きらきら星', origin: 'フランス民謡', bpm: 104, emoji: '⭐',
+                notes: [['C4', 1], ['C4', 1], ['G4', 1], ['G4', 1], ['A4', 1], ['A4', 1], ['G4', 2],
+                ['F4', 1], ['F4', 1], ['E4', 1], ['E4', 1], ['D4', 1], ['D4', 1], ['C4', 2],
+                ['G4', 1], ['G4', 1], ['F4', 1], ['F4', 1], ['E4', 1], ['E4', 1], ['D4', 2],
+                ['G4', 1], ['G4', 1], ['F4', 1], ['F4', 1], ['E4', 1], ['E4', 1], ['D4', 2],
+                ['C4', 1], ['C4', 1], ['G4', 1], ['G4', 1], ['A4', 1], ['A4', 1], ['G4', 2],
+                ['F4', 1], ['F4', 1], ['E4', 1], ['E4', 1], ['D4', 1], ['D4', 1], ['C4', 2]]
+            },
+            {
+                id: 'chocho', name: 'ちょうちょう', origin: 'ドイツ民謡', bpm: 108, emoji: '🦋',
+                notes: [['G4', 1], ['E4', 1], ['E4', 2], ['F4', 1], ['D4', 1], ['D4', 2],
+                ['C4', 1], ['D4', 1], ['E4', 1], ['F4', 1], ['G4', 1], ['G4', 1], ['G4', 2],
+                ['G4', 1], ['E4', 1], ['E4', 2], ['F4', 1], ['D4', 1], ['D4', 2],
+                ['C4', 1], ['E4', 1], ['G4', 1], ['G4', 1], ['E4', 4]]
+            },
+            {
+                id: 'mary', name: 'メリーさんのひつじ', origin: 'アメリカ民謡', bpm: 112, emoji: '🐑',
+                notes: [['E4', 1], ['D4', 1], ['C4', 1], ['D4', 1], ['E4', 1], ['E4', 1], ['E4', 2],
+                ['D4', 1], ['D4', 1], ['D4', 2], ['E4', 1], ['G4', 1], ['G4', 2],
+                ['E4', 1], ['D4', 1], ['C4', 1], ['D4', 1], ['E4', 1], ['E4', 1], ['E4', 1], ['E4', 1],
+                ['D4', 1], ['D4', 1], ['E4', 1], ['D4', 1], ['C4', 4]]
+            },
+            {
+                id: 'kaeru', name: 'かえるの合唱', origin: 'ドイツ民謡', bpm: 116, emoji: '🐸',
+                notes: [['C4', 1], ['D4', 1], ['E4', 1], ['F4', 1], ['E4', 1], ['D4', 1], ['C4', 2],
+                ['E4', 1], ['F4', 1], ['G4', 1], ['A4', 1], ['G4', 1], ['F4', 1], ['E4', 2],
+                ['C4', 1], ['r', 1], ['C4', 1], ['r', 1], ['C4', 1], ['r', 1], ['C4', 1], ['r', 1],
+                ['C4', .5], ['C4', .5], ['D4', .5], ['D4', .5], ['E4', .5], ['E4', .5], ['F4', .5], ['F4', .5],
+                ['E4', 1], ['D4', 1], ['C4', 2]]
+            },
+            {
+                id: 'london', name: 'ロンドン橋', origin: 'イギリス民謡', bpm: 118, emoji: '🌉',
+                notes: [['G4', 1], ['A4', 1], ['G4', 1], ['F4', 1], ['E4', 1], ['F4', 1], ['G4', 2],
+                ['D4', 1], ['E4', 1], ['F4', 2], ['E4', 1], ['F4', 1], ['G4', 2],
+                ['G4', 1], ['A4', 1], ['G4', 1], ['F4', 1], ['E4', 1], ['F4', 1], ['G4', 2],
+                ['D4', 2], ['G4', 1], ['E4', 1], ['C4', 4]]
+            },
+            {
+                id: 'saints', name: '聖者の行進', origin: 'アメリカ民謡', bpm: 120, emoji: '🎺',
+                notes: [['C4', 1], ['E4', 1], ['F4', 1], ['G4', 3], ['r', 1],
+                ['C4', 1], ['E4', 1], ['F4', 1], ['G4', 3], ['r', 1],
+                ['C4', 1], ['E4', 1], ['F4', 1], ['G4', 2], ['E4', 1], ['C4', 1], ['E4', 1], ['D4', 2],
+                ['E4', 2], ['E4', 1], ['D4', 1], ['C4', 4]]
+            },
+            {
+                id: 'jingle', name: 'ジングルベル', origin: 'ピアポント（1857年）', bpm: 124, emoji: '🔔',
+                notes: [['E4', 1], ['E4', 1], ['E4', 2], ['E4', 1], ['E4', 1], ['E4', 2],
+                ['E4', 1], ['G4', 1], ['C4', 1], ['D4', 1], ['E4', 4],
+                ['F4', 1], ['F4', 1], ['F4', 1], ['F4', 1], ['F4', 1], ['E4', 1], ['E4', 1], ['E4', 1],
+                ['E4', 1], ['D4', 1], ['D4', 1], ['E4', 1], ['D4', 2], ['G4', 2]]
+            },
+            {
+                id: 'silent', name: 'きよしこの夜', origin: 'グルーバー（1818年）', bpm: 84, emoji: '🌙',
+                notes: [['G4', 1.5], ['A4', .5], ['G4', 1], ['E4', 3],
+                ['G4', 1.5], ['A4', .5], ['G4', 1], ['E4', 3],
+                ['D5', 2], ['D5', 1], ['B4', 3], ['C5', 2], ['C5', 1], ['G4', 3],
+                ['A4', 2], ['A4', 1], ['C5', 1.5], ['B4', .5], ['A4', 1],
+                ['G4', 1.5], ['A4', .5], ['G4', 1], ['E4', 3]]
+            },
+            {
+                id: 'joy', name: '歓喜の歌（第九）', origin: 'ベートーベン（1824年）', bpm: 116, emoji: '🎼',
+                notes: [['E4', 1], ['E4', 1], ['F4', 1], ['G4', 1], ['G4', 1], ['F4', 1], ['E4', 1], ['D4', 1],
+                ['C4', 1], ['C4', 1], ['D4', 1], ['E4', 1], ['E4', 1.5], ['D4', .5], ['D4', 2],
+                ['E4', 1], ['E4', 1], ['F4', 1], ['G4', 1], ['G4', 1], ['F4', 1], ['E4', 1], ['D4', 1],
+                ['C4', 1], ['C4', 1], ['D4', 1], ['E4', 1], ['D4', 1.5], ['C4', .5], ['C4', 2]]
+            },
+            {
+                id: 'kakko', name: 'かっこう', origin: 'ドイツ民謡', bpm: 110, emoji: '🐦',
+                notes: [['G4', 1], ['E4', 2], ['G4', 1], ['E4', 2],
+                ['G4', 1], ['C5', 1], ['B4', 1], ['A4', 1], ['G4', 2],
+                ['G4', 1], ['E4', 2], ['G4', 1], ['E4', 2],
+                ['G4', 1], ['C5', 1], ['B4', 1], ['A4', 1], ['G4', 2]]
+            }
+        ];
+
+        const FREQ = {
+            'C4': 261.63, 'D4': 293.66, 'E4': 329.63, 'F4': 349.23, 'G4': 392.00, 'A4': 440.00,
+            'B4': 493.88, 'C5': 523.25, 'D5': 587.33, 'E5': 659.25
+        };
+        const PITCH_ORDER = Object.keys(FREQ);
+
+        const DIFFS = {
+            easy: { name: 'かんたん', speed: 260, good: .14, ok: .26, thin: true },
+            normal: { name: 'ふつう', speed: 340, good: .11, ok: .22 },
+            hard: { name: 'むずかしい', speed: 460, good: .08, ok: .16, extra: true }
+        };
+
+        /* ===================== ふしから たいこの ふを つくる ===================== */
+        // 小節の あたま や ひくい音は ドン（赤）、たかい音は カッ（青）
+        function buildChart(song, diffKey) {
+            const d = DIFFS[diffKey];
+            const spb = 60 / song.bpm;                  // 1拍の びょう数
+            const pitches = song.notes.filter(n => n[0] !== 'r').map(n => PITCH_ORDER.indexOf(n[0]));
+            const sorted = [...pitches].sort((a, b) => a - b);
+            const mid = sorted[Math.floor(sorted.length / 2)];
+            const chart = [];
+            let beat = 0;
+            const near = (x, m) => Math.abs(x % m) < 1e-6 || Math.abs((x % m) - m) < 1e-6;
+            song.notes.forEach(([pitch, len]) => {
+                if (pitch !== 'r') {
+                    const onBeat = near(beat, 1);
+                    const strong = onBeat && near(beat, 4);
+                    // かんたん：拍の 上の 音だけ、しかも 2拍めごと か ながい音だけ にして 数を へらす
+                    const keep = d.thin ? (onBeat && (near(beat, 2) || len >= 2)) : true;
+                    if (keep) {
+                        const type = strong ? 'don' : (PITCH_ORDER.indexOf(pitch) > mid ? 'ka' : 'don');
+                        chart.push({ t: beat * spb, type, beat, pitch, len });
+                    }
+                    // むずかしい：ながい音の とちゅうにも 1つ たす（連打っぽく)
+                    if (d.extra && len >= 2) {
+                        for (let k = 1; k < Math.floor(len); k++) {
+                            chart.push({ t: (beat + k) * spb, type: 'ka', beat: beat + k, pitch, len: 1 });
+                        }
+                    }
+                }
+                beat += len;
+            });
+            chart.sort((a, b) => a.t - b.t);
+            return { notes: chart, beats: beat, spb, len: beat * spb };
+        }
+        const chartTotalBeats = song => song.notes.reduce((a, n) => a + n[1], 0);
+
+        /* ===================== 音 ===================== */
+        let actx = null;
+        function audio() {
+            if (!state.sound) return null;
+            try {
+                if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+                if (actx.state === 'suspended') actx.resume();
+                return actx;
+            } catch (e) { return null; }
+        }
+        function tone(freq, at, dur, gain = .13, type = 'triangle') {
+            const a = audio(); if (!a) return;
+            try {
+                const o = a.createOscillator(), g = a.createGain();
+                o.type = type; o.frequency.value = freq;
+                g.gain.setValueAtTime(0, at);
+                g.gain.linearRampToValueAtTime(gain, at + .012);
+                g.gain.exponentialRampToValueAtTime(.0001, at + dur);
+                o.connect(g); g.connect(a.destination);
+                o.start(at); o.stop(at + dur + .02);
+            } catch (e) { }
+        }
+        function drum(kind) {
+            const a = audio(); if (!a) return;
+            try {
+                const t = a.currentTime;
+                if (kind === 'don') {
+                    const o = a.createOscillator(), g = a.createGain();
+                    o.type = 'sine'; o.frequency.setValueAtTime(190, t);
+                    o.frequency.exponentialRampToValueAtTime(70, t + .16);
+                    g.gain.setValueAtTime(.32, t);
+                    g.gain.exponentialRampToValueAtTime(.0001, t + .18);
+                    o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + .2);
+                } else {
+                    const n = a.createBufferSource(), buf = a.createBuffer(1, 2048, a.sampleRate);
+                    const ch = buf.getChannelData(0);
+                    for (let i = 0; i < ch.length; i++) ch[i] = (Math.random() * 2 - 1) * (1 - i / ch.length);
+                    n.buffer = buf;
+                    const hp = a.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 1800;
+                    const g = a.createGain(); g.gain.setValueAtTime(.22, t);
+                    g.gain.exponentialRampToValueAtTime(.0001, t + .09);
+                    n.connect(hp); hp.connect(g); g.connect(a.destination); n.start(t);
+                }
+            } catch (e) { }
+        }
+
+        /* ===================== じょうたい ===================== */
+        const state = {
+            view: 'select', diff: 'normal', sound: true, song: null, chart: null,
+            startAt: 0, running: false, idx: 0, melodyIdx: 0,
+            good: 0, ok: 0, bad: 0, combo: 0, maxCombo: 0, score: 0, lastJudge: null, judgeAt: 0
+        };
+
+        const now = () => (state.clock ? state.clock() : performance.now() / 1000);
+
+        /* ===================== 曲えらび ===================== */
+        function renderDiffs() {
+            document.getElementById('diff-buttons').innerHTML = Object.entries(DIFFS).map(([k, d]) => {
+                const on = state.diff === k;
+                return `<button onclick="setDiff('${k}')" data-diff="${k}" class="${on ? 'bg-red-600 text-white' : 'bg-white border-2 border-red-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${d.name}</button>`;
+            }).join('');
+        }
+        function setDiff(k) { state.diff = k; renderDiffs(); renderSongs(); }
+        function renderSongs() {
+            document.getElementById('song-list').innerHTML = SONGS.map(s => {
+                const c = buildChart(s, state.diff);
+                return `<button onclick="startSong('${s.id}')" data-song="${s.id}"
+                    class="flex items-center gap-3 bg-white hover:bg-red-50 border-2 border-red-100 rounded-2xl p-3 text-left bounce-hover shadow-sm">
+                    <span class="text-3xl">${s.emoji}</span>
+                    <span class="flex-1">
+                        <span class="block font-black">${s.name}</span>
+                        <span class="block text-xs font-bold text-slate-400">${s.origin}</span>
+                    </span>
+                    <span class="text-right">
+                        <span class="num block text-xs font-black text-red-600">${c.notes.length}こ</span>
+                        <span class="num block text-[10px] font-bold text-slate-400">${Math.round(c.len)}びょう</span>
+                    </span></button>`;
+            }).join('');
+        }
+
+        function setView(v) {
+            state.view = v;
+            ['select', 'play', 'result'].forEach(k =>
+                document.getElementById('view-' + k).classList.toggle('hidden', k !== v));
+        }
+
+        function toggleSound() {
+            state.sound = !state.sound;
+            document.getElementById('btn-sound').innerText = state.sound ? '🔊 音 ON' : '🔇 音 OFF';
+        }
+
+        /* ===================== プレイ ===================== */
+        function startSong(id) {
+            const song = SONGS.find(s => s.id === id);
+            if (!song) return;
+            state.song = song;
+            state.chart = buildChart(song, state.diff);
+            state.chart.notes.forEach(n => { n.hit = null; });
+            state.idx = 0; state.melodyIdx = 0;
+            state.good = state.ok = state.bad = state.combo = state.maxCombo = state.score = 0;
+            state.lastJudge = null;
+            state.running = true;
+            state.startAt = now() + 2.2;                // 2びょうくらい 待ってから
+            document.getElementById('play-song').innerText = `${song.emoji} ${song.name}`;
+            document.getElementById('play-diff').innerText = DIFFS[state.diff].name;
+            updateHud();
+            setView('play');
+            audio();                                    // ユーザー操作の ついでに 音を 用意
+            scheduleMelody();
+        }
+        function quitPlay() { state.running = false; setView('select'); }
+        function retry() { if (state.song) startSong(state.song.id); }
+        function backToSelect() { setView('select'); }
+
+        // ふしの 音を 少し 先まで よやくして 鳴らす
+        function scheduleMelody() {
+            const a = audio();
+            if (!a || !state.running || !state.song) return;
+            const base = a.currentTime + (state.startAt - now());
+            let beat = 0;
+            state.song.notes.forEach(([pitch, len]) => {
+                if (pitch !== 'r') {
+                    const at = base + beat * state.chart.spb;
+                    if (at > a.currentTime) tone(FREQ[pitch] || 440, at, Math.min(len * state.chart.spb * .9, 1.2));
+                }
+                beat += len;
+            });
+        }
+
+        /* ===================== たたく ===================== */
+        function judge(type) {
+            const t = now() - state.startAt;
+            const d = DIFFS[state.diff];
+            let best = null, bestDt = 1e9;
+            state.chart.notes.forEach(n => {
+                if (n.hit) return;
+                const dt = Math.abs(n.t - t);
+                if (dt < bestDt && dt <= d.ok) { best = n; bestDt = dt; }
+            });
+            if (!best) return { kind: null };
+            if (best.type !== type) {                   // 色が ちがう → 不可
+                best.hit = 'bad';
+                return { kind: 'bad', note: best, dt: bestDt };
+            }
+            const kind = bestDt <= d.good ? 'good' : 'ok';
+            best.hit = kind;
+            return { kind, note: best, dt: bestDt };
+        }
+        function applyJudge(kind) {
+            if (kind === 'good') { state.good++; state.combo++; state.score += 300 + Math.min(state.combo, 50) * 4; }
+            else if (kind === 'ok') { state.ok++; state.combo++; state.score += 100 + Math.min(state.combo, 50) * 2; }
+            else { state.bad++; state.combo = 0; }
+            state.maxCombo = Math.max(state.maxCombo, state.combo);
+            state.lastJudge = kind;
+            state.judgeAt = now();
+            updateHud();
+        }
+        function hit(type, ev) {
+            if (ev) ev.preventDefault();
+            if (!state.running) return;
+            drum(type);
+            const fl = document.getElementById('hitflash');
+            fl.style.background = type === 'don' ? '#ef4444' : '#3b82f6';
+            fl.classList.remove('flash'); void fl.offsetWidth; fl.classList.add('flash');
+            const r = judge(type);
+            if (r.kind) applyJudge(r.kind);
+        }
+        document.addEventListener('keydown', e => {
+            if (state.view !== 'play') return;
+            const k = e.key.toLowerCase();
+            if (k === 'f' || k === 'j' || k === ' ') { e.preventDefault(); hit('don'); }
+            else if (k === 'd' || k === 'k') { e.preventDefault(); hit('ka'); }
+        });
+
+        function updateHud() {
+            document.getElementById('play-score').innerText = state.score.toLocaleString();
+            document.getElementById('cnt-good').innerText = state.good;
+            document.getElementById('cnt-ok').innerText = state.ok;
+            document.getElementById('cnt-bad').innerText = state.bad;
+            document.getElementById('cnt-combo').innerText = state.combo;
+        }
+
+        /* ===================== えがく ===================== */
+        const cv = document.getElementById('stage');
+        const ctx = cv.getContext('2d');
+        const HITX = 110;
+
+        function draw() {
+            const W = cv.width, H = cv.height;
+            ctx.clearRect(0, 0, W, H);
+            // レーン
+            ctx.fillStyle = '#fff7ed'; ctx.fillRect(0, 0, W, H);
+            ctx.fillStyle = '#fde68a'; ctx.fillRect(0, H * 0.3, W, H * 0.4);
+            ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.moveTo(0, H * 0.3); ctx.lineTo(W, H * 0.3);
+            ctx.moveTo(0, H * 0.7); ctx.lineTo(W, H * 0.7); ctx.stroke();
+
+            const laneY = H / 2;
+            if (!state.song) {
+                ctx.fillStyle = '#92400e'; ctx.font = 'bold 22px system-ui';
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText('曲を えらんでね', W / 2, laneY);
+                return;
+            }
+            const t = now() - state.startAt;
+            const d = DIFFS[state.diff];
+            const speed = d.speed;
+
+            // 拍の しるし（音を 消しても リズムが 見える）
+            const spb = state.chart.spb;
+            for (let b = 0; b <= state.chart.beats + 4; b++) {
+                const x = HITX + (b * spb - t) * speed;
+                if (x < -20 || x > W + 20) continue;
+                const strong = b % 4 === 0;
+                ctx.strokeStyle = strong ? '#f59e0b' : '#fcd34d';
+                ctx.lineWidth = strong ? 3 : 1.5;
+                ctx.beginPath(); ctx.moveTo(x, H * 0.3); ctx.lineTo(x, H * 0.7); ctx.stroke();
+            }
+
+            // わく（たたく ばしょ）
+            const beatPhase = t / spb;
+            const pulse = 1 + 0.12 * Math.max(0, Math.cos(Math.PI * 2 * (beatPhase % 1)));
+            ctx.beginPath(); ctx.arc(HITX, laneY, 30 * pulse, 0, 7);
+            ctx.fillStyle = '#fef3c7'; ctx.fill();
+            ctx.strokeStyle = '#b45309'; ctx.lineWidth = 5; ctx.stroke();
+
+            // 音符
+            state.chart.notes.forEach(n => {
+                if (n.hit === 'good' || n.hit === 'ok') return;
+                const x = HITX + (n.t - t) * speed;
+                if (x < -40 || x > W + 40) return;
+                ctx.beginPath(); ctx.arc(x, laneY, n.type === 'don' ? 26 : 22, 0, 7);
+                ctx.fillStyle = n.hit === 'bad' ? '#cbd5e1' : (n.type === 'don' ? '#ef4444' : '#3b82f6');
+                ctx.fill();
+                ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3; ctx.stroke();
+            });
+
+            // はんてい表示
+            if (state.lastJudge && now() - state.judgeAt < .5) {
+                const map = { good: ['良', '#f59e0b'], ok: ['可', '#64748b'], bad: ['不可', '#e11d48'] };
+                const [label, col] = map[state.lastJudge];
+                ctx.fillStyle = col;
+                ctx.font = 'bold 34px system-ui';
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(label, HITX, laneY - 62);
+            }
+            // コンボ
+            if (state.combo >= 5) {
+                ctx.fillStyle = '#065f46';
+                ctx.font = 'bold 30px system-ui';
+                ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+                ctx.fillText(state.combo + ' コンボ！', HITX + 60, H * 0.16);
+            }
+            // カウントダウン
+            if (t < 0) {
+                ctx.fillStyle = '#b45309';
+                ctx.font = 'bold 40px system-ui';
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(Math.ceil(-t) + '', cv.width / 2, H * 0.16);
+            }
+        }
+
+        // すぎた 音符を 不可に する／曲の おわりを みる
+        function updateMisses() {
+            if (!state.running || !state.chart) return;
+            const t = now() - state.startAt;
+            const d = DIFFS[state.diff];
+            state.chart.notes.forEach(n => {
+                if (!n.hit && t - n.t > d.ok) { n.hit = 'bad'; applyJudge('bad'); }
+            });
+            if (t > state.chart.len + 1.6) finish();
+        }
+
+        function finish() {
+            state.running = false;
+            const total = state.chart.notes.length || 1;
+            const rate = (state.good + state.ok * 0.5) / total;
+            const cleared = rate >= 0.8;
+            document.getElementById('res-clear').innerHTML = cleared
+                ? '<span class="text-emerald-600">🎉 クリア！</span>'
+                : '<span class="text-slate-500">もう ちょっと！</span>';
+            document.getElementById('res-song').innerText = `${state.song.emoji} ${state.song.name}（${DIFFS[state.diff].name}）`;
+            document.getElementById('res-score').innerText = state.score.toLocaleString();
+            document.getElementById('res-good').innerText = state.good;
+            document.getElementById('res-ok').innerText = state.ok;
+            document.getElementById('res-bad').innerText = state.bad;
+            document.getElementById('res-combo').innerText = `さいこう ${state.maxCombo} コンボ`;
+            document.getElementById('res-gauge').style.width = Math.round(rate * 100) + '%';
+            setView('result');
+            try {
+                const key = 'kids-taiko-' + state.song.id + '-' + state.diff;
+                const b = +(localStorage.getItem(key) || 0);
+                if (state.score > b) localStorage.setItem(key, String(state.score));
+            } catch (e) { }
+        }
+
+        function loop() {
+            if (state.view === 'play') { updateMisses(); draw(); }
+            requestAnimationFrame(loop);
+        }
+
+        window.addEventListener('load', () => {
+            renderDiffs();
+            renderSongs();
+            draw();
+            requestAnimationFrame(loop);
+        });
+    </script>
+</body>
+</html>
