@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>カフェ注文ラボ</title>
+    <meta name="description" content="スターバックスのメニューと注文のコツを図解。Short/Tall/Grande/Ventiのサイズ比べ、ラテとカプチーノとモカとマキアートのちがいを断面図で、カスタマイズの言い方ビルダー、注文の順番とマナー、クイズ。※非公式の学習ページです。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums }
+        .bounce-hover { transition: transform .12s cubic-bezier(.175,.885,.32,1.275) }
+        .bounce-hover:active { transform: scale(.94) }
+        @keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.1) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275) }
+        @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+        .shake { animation: shake .3s ease-in-out }
+        svg text { font-family: inherit }
+        rt { font-size: .58em; font-weight: 700; color: #047857 }
+        input[type=range] { accent-color: #047857; width: 100% }
+        table { border-collapse: collapse }
+    </style>
+</head>
+<body class="bg-stone-50 min-h-screen text-stone-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-emerald-900 via-emerald-700 to-teal-600 text-white p-3 shadow-lg sticky top-0 z-30">
+        <div class="max-w-4xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">☕</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">カフェ注文ラボ</h1>
+                    <p class="text-xs text-emerald-50 font-bold hidden sm:block">スターバックスの メニューと 注文の コツ</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[64px] z-20 bg-stone-50/95 backdrop-blur border-b border-stone-200">
+        <div class="max-w-4xl mx-auto flex gap-2 p-3 overflow-x-auto" id="tab-nav"></div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto w-full p-3 sm:p-5 flex-grow space-y-4">
+
+        <!-- ===== ① サイズと きほん ===== -->
+        <section id="tab-size" class="space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <h2 class="font-black">📏 まずは サイズを おぼえよう</h2>
+                <p class="text-sm font-bold text-stone-500 mt-1 leading-relaxed">
+                    スターバックスの サイズは <b class="text-emerald-700">4つ</b>。
+                    ふつうの お店{みせ}の「S・M・L」とは 名前{なまえ}が ちがう ので、
+                    ここを 知{し}って いると 注文{ちゅうもん}が ぐっと 楽{らく}に なる。
+                </p>
+                <div id="sz-fig" class="mt-3"></div>
+                <div id="sz-table" class="mt-3 overflow-x-auto"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <h2 class="font-black">🇮🇹 サイズの 名前{なまえ}の いみ</h2>
+                <div id="sz-why" class="space-y-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <h2 class="font-black">🗣️ 注文{ちゅうもん}の 言{い}い方{かた}は この 順番{じゅんばん}</h2>
+                <p class="text-sm font-bold text-stone-500 mt-1">
+                    この 順{じゅん}に 言{い}えば、まず 伝{つた}わる。
+                </p>
+                <div id="sz-order" class="mt-3"></div>
+                <div id="sz-order-why" class="space-y-2 mt-3"></div>
+            </div>
+
+            <div class="bg-stone-100 rounded-3xl p-4 border-2 border-stone-300 text-xs font-bold text-stone-500 leading-relaxed">
+                ⚠️ この ページは <b>学習用{がくしゅうよう}の まとめ</b>で、スターバックス コーヒー ジャパンや
+                その 関係{かんけい}の 会社{かいしゃ}とは <b>関係{かんけい}が ありません</b>。
+                メニュー・ねだん・サイズ・カスタマイズの きまりは <b>変{か}わる ことが ある</b>ので、
+                じっさいに 注文{ちゅうもん}する ときは お店{みせ}の メニューや 公式{こうしき}サイトで たしかめてね。
+                ねだんは ぜんぶ「だいたいの 目安{めやす}」です。
+            </div>
+        </section>
+
+        <!-- ===== ② メニュー図鑑 ===== -->
+        <section id="tab-menu" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <h2 class="font-black">📖 中{なか}に 何{なに}が 入{はい}って いる？</h2>
+                <p class="text-sm font-bold text-stone-500 mt-1 leading-relaxed">
+                    コーヒーの メニューは、<b class="text-emerald-700">エスプレッソ・ミルク・フォーム（あわ）</b>の
+                    組{く}み合{あ}わせで できて いる。だから 中身{なかみ}の 図{ず}を 見{み}ると
+                    名前{なまえ}の ちがいが 一気{いっき}に わかる。
+                </p>
+                <div id="mn-cats" class="flex flex-wrap gap-1.5 mt-3"></div>
+                <div id="mn-chips" class="flex flex-wrap gap-1.5 mt-2"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <h2 id="mn-name" class="font-black text-lg"></h2>
+                <p id="mn-en" class="text-xs font-black text-stone-400"></p>
+                <p id="mn-lead" class="text-sm font-bold text-stone-500 mt-1 leading-relaxed"></p>
+                <div id="mn-fig" class="mt-3"></div>
+                <div id="mn-meter" class="grid grid-cols-3 gap-2 mt-3"></div>
+                <div id="mn-body" class="space-y-2 mt-3"></div>
+                <div id="mn-tip" class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-3 text-sm font-bold mt-3 leading-relaxed"></div>
+                <div class="flex gap-2 mt-3">
+                    <button onclick="mnMove(-1)" class="bg-white border-2 border-emerald-300 text-emerald-700 font-black px-4 py-2 rounded-full text-sm bounce-hover">◀ まえ</button>
+                    <button onclick="mnMove(1)" class="ml-auto bg-emerald-700 text-white font-black px-4 py-2 rounded-full text-sm bounce-hover">つぎ ▶</button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <h2 class="font-black">🔍 まちがえやすい 4つを くらべる</h2>
+                <p class="text-sm font-bold text-stone-500 mt-1">
+                    ラテ・カプチーノ・モカ・マキアート。中身{なかみ}を 並{なら}べると こう なる。
+                </p>
+                <div id="mn-cmp" class="mt-3"></div>
+                <div id="mn-cmp-why" class="space-y-2 mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ③ カスタマイズ ===== -->
+        <section id="tab-custom" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <h2 class="font-black">🎨 じぶんの 1杯{ぱい}を つくって みよう</h2>
+                <p class="text-sm font-bold text-stone-500 mt-1 leading-relaxed">
+                    えらぶと <b class="text-emerald-700">注文{ちゅうもん}の せりふ</b>が できる。
+                    ねだんの 目安{めやす}も 出{で}る。
+                </p>
+                <div id="cu-pick" class="space-y-3 mt-3"></div>
+                <div id="cu-card" class="mt-4"></div>
+                <div id="cu-note" class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-3 text-sm font-bold mt-3 leading-relaxed"></div>
+                <div class="flex gap-2 mt-3">
+                    <button onclick="cuShuffle()" class="bg-emerald-700 text-white font-black px-4 py-2 rounded-full text-sm bounce-hover">🎲 おまかせ</button>
+                    <button onclick="cuReset()" class="bg-white border-2 border-stone-200 text-stone-600 font-black px-4 py-2 rounded-full text-sm bounce-hover">↺ もとに もどす</button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <h2 class="font-black">🆓 お金{かね}が かからない カスタマイズ</h2>
+                <div id="cu-free" class="grid sm:grid-cols-2 gap-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <h2 class="font-black">💰 お金{かね}が かかる カスタマイズ</h2>
+                <div id="cu-paid" class="grid sm:grid-cols-2 gap-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <h2 class="font-black">⭐ 人気{にんき}の 組{く}み合{あ}わせ</h2>
+                <div id="cu-best" class="space-y-2 mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ④ 注文のコツ ===== -->
+        <section id="tab-order" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <h2 class="font-black">🚶 レジでの 流{なが}れ</h2>
+                <div id="or-flow" class="mt-3"></div>
+                <div id="or-flow-why" class="space-y-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <h2 class="font-black">💡 うまく 頼{たの}む 10の コツ</h2>
+                <div id="or-tips" class="space-y-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <h2 class="font-black">🏠 店内{てんない}と 持{も}ち帰{かえ}りで ねだんが ちがう</h2>
+                <p class="text-sm font-bold text-stone-500 mt-1 leading-relaxed">
+                    これは スターバックスだけの 話{はなし}では なく、<b class="text-emerald-700">日本{にほん}の 税金{ぜいきん}の ルール</b>。
+                    レジで「店内{てんない}で お召{め}し上{あ}がりですか？」と 聞{き}かれる のは この ため。
+                </p>
+                <div id="or-tax" class="mt-3"></div>
+                <div id="or-tax-why" class="space-y-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <h2 class="font-black">🙂 お店{みせ}での マナー</h2>
+                <div id="or-manner" class="space-y-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <h2 class="font-black">📱 モバイルオーダーと おトクな しくみ</h2>
+                <div id="or-app" class="space-y-2 mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ⑤ クイズ ===== -->
+        <section id="tab-quiz" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-emerald-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">❓ カフェクイズ</h2>
+                    <span id="qz-score" class="num bg-emerald-100 text-emerald-800 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newQuiz()" class="ml-auto bg-white border-2 border-stone-200 text-stone-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <div id="qz-fields" class="flex flex-wrap gap-2 mt-3"></div>
+                <p id="qz-q" class="font-black text-base sm:text-lg mt-3 leading-relaxed"></p>
+                <div id="qz-choices" class="grid gap-2 mt-3"></div>
+                <div id="qz-res" class="mt-3"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center text-xs text-stone-400 font-bold p-4">カフェ注文ラボ © 2026</footer>
+
+<script>
+    /* ===================== きょうつう ===================== */
+    const rnd = n => Math.floor(Math.random() * n);
+    const pickOne = a => a[rnd(a.length)];
+    function shuffle(a) { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = rnd(i + 1); const t = b[i]; b[i] = b[j]; b[j] = t; } return b; }
+    function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    const plain = t => String(t).replace(/\{[^{}]*\}/g, '');
+    const nf = n => Math.round(n).toLocaleString('ja-JP');
+    const yen = n => nf(n) + '円';
+    const W = 560;
+    function svg(w, h, body) {
+        return `<svg viewBox="0 0 ${w} ${h}" class="w-full h-auto block mx-auto" style="max-width:${w}px" role="img">${body}</svg>`;
+    }
+    function resultBox(ok, title, body) {
+        return `<div class="pop ${ok ? 'bg-green-50 border-green-300' : 'bg-amber-50 border-amber-300'} border-2 rounded-2xl p-3">
+            <p class="font-black ${ok ? 'text-green-700' : 'text-amber-700'}">${title}</p>
+            <div class="font-bold text-sm mt-1 leading-relaxed">${body}</div></div>`;
+    }
+    const S = { quiz: [0, 0] };
+    function scoreBox(id, s) { document.getElementById(id).innerText = `${s[0]} / ${s[1]}`; }
+    function markChoices(sel, isRight, picked, cls) {
+        document.querySelectorAll(sel).forEach((el, j) => {
+            el.className = `${isRight(j) ? 'bg-green-50 border-green-500' : (j === picked ? 'bg-red-50 border-red-400 shake' : 'bg-white border-stone-200 opacity-60')} border-2 ${cls}`;
+        });
+    }
+    const PAL = {
+        emerald: ['bg-emerald-50 border-emerald-200', 'text-emerald-800'],
+        amber: ['bg-amber-50 border-amber-200', 'text-amber-800'],
+        rose: ['bg-rose-50 border-rose-200', 'text-rose-800'],
+        sky: ['bg-sky-50 border-sky-200', 'text-sky-800'],
+        stone: ['bg-stone-100 border-stone-300', 'text-stone-700'],
+        violet: ['bg-violet-50 border-violet-200', 'text-violet-800']
+    };
+    function cards(id, list, col) {
+        const p = PAL[col || 'emerald'];
+        document.getElementById(id).innerHTML = list.map(([t, d]) =>
+            `<div class="${p[0]} border-2 rounded-2xl p-3">
+                <p class="font-black ${p[1]} text-sm">${t}</p>
+                <p class="text-xs font-bold text-stone-600 mt-1 leading-relaxed">${d}</p></div>`).join('');
+    }
+
+    /* 漢字{よみ} を ルビに */
+    const RUBY_RE = /([一-鿿々]+)\{([^{}]+)\}/g;
+    function rubySkip(el) {
+        for (let n = el; n; n = n.parentNode) {
+            const tag = n.nodeType === 1 ? n.tagName.toLowerCase() : '';
+            if (tag === 'script' || tag === 'style' || tag === 'svg' || tag === 'ruby') return true;
+        }
+        return false;
+    }
+    function rubifyText(node) {
+        const t = node.nodeValue;
+        if (t.indexOf('{') < 0 || !node.parentNode || rubySkip(node.parentNode)) return;
+        RUBY_RE.lastIndex = 0;
+        if (!RUBY_RE.test(t)) return;
+        RUBY_RE.lastIndex = 0;
+        const frag = document.createDocumentFragment();
+        let last = 0, m;
+        while ((m = RUBY_RE.exec(t))) {
+            if (m.index > last) frag.appendChild(document.createTextNode(t.slice(last, m.index)));
+            const ruby = document.createElement('ruby');
+            ruby.appendChild(document.createTextNode(m[1]));
+            const rt = document.createElement('rt');
+            rt.textContent = m[2];
+            ruby.appendChild(rt);
+            frag.appendChild(ruby);
+            last = m.index + m[0].length;
+        }
+        if (last < t.length) frag.appendChild(document.createTextNode(t.slice(last)));
+        node.parentNode.replaceChild(frag, node);
+    }
+    function rubify(root) {
+        if (root.nodeType === 3) return rubifyText(root);
+        if (root.nodeType !== 1 || rubySkip(root)) return;
+        const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        const list = [];
+        while (w.nextNode()) if (w.currentNode.nodeValue.indexOf('{') >= 0) list.push(w.currentNode);
+        list.forEach(rubifyText);
+    }
+    new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(rubify)))
+        .observe(document.body, { childList: true, subtree: true });
+
+    const TABS = { size: '📏 サイズ', menu: '📖 メニュー図鑑', custom: '🎨 カスタマイズ', order: '🗣️ 注文の コツ', quiz: '❓ クイズ' };
+    let tab = 'size';
+    const ready = {};
+    function renderNav() {
+        document.getElementById('tab-nav').innerHTML = Object.entries(TABS).map(([k, label]) =>
+            `<button onclick="setTab('${k}')" data-tab="${k}" class="${tab === k ? 'bg-emerald-700 text-white' : 'bg-white border-2 border-emerald-200 text-stone-600'} font-black px-4 py-2 rounded-full text-sm whitespace-nowrap bounce-hover">${label}</button>`).join('');
+    }
+    function setTab(k) {
+        tab = k;
+        Object.keys(TABS).forEach(t => document.getElementById('tab-' + t).classList.toggle('hidden', t !== k));
+        renderNav();
+        if (!ready[k]) { ready[k] = true; if (BUILD[k]) BUILD[k](); }
+    }
+
+    /* ===================== 絵の 部品 ===================== */
+    function bg(h, fill, w) { return `<rect x="0" y="0" width="${w || W}" height="${h}" rx="14" fill="${fill || '#fafaf9'}"/>`; }
+    function tx(x, y, t, size, col, anchor, weight) {
+        t = plain(t);                    /* SVGの 中に <ruby> は 置けない */
+        return `<text x="${x}" y="${y}" text-anchor="${anchor || 'middle'}" font-size="${size || 11}" font-weight="${weight || 900}" fill="${col || '#1c1917'}">${esc(t)}</text>`;
+    }
+    const twid = t => [...plain(t)].reduce((a, ch) => a + (ch.charCodeAt(0) < 128 ? 6 : 10), 0);
+    function arrow(x1, y1, x2, y2, col, w) {
+        const a = Math.atan2(y2 - y1, x2 - x1), L = 9;
+        return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="${w || 3}" stroke-linecap="round"/>
+                <polygon points="${x2},${y2} ${(x2 - Math.cos(a - .45) * L).toFixed(1)},${(y2 - Math.sin(a - .45) * L).toFixed(1)} ${(x2 - Math.cos(a + .45) * L).toFixed(1)},${(y2 - Math.sin(a + .45) * L).toFixed(1)}" fill="${col}"/>`;
+    }
+    function box(x, y, w, h, label, col, fill, size) {
+        const c = col || '#047857';
+        return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8" fill="${fill || '#ffffff'}" stroke="${c}" stroke-width="2.5"/>` +
+               tx(x + w / 2, y + h / 2 + 4, label, size || 11, c);
+    }
+    /* カップの 断面。layers は [名前, 割合(%), 色] を 下から 上へ */
+    let cupSeq = 0;
+    function cupFig(cx, top, bot, wTop, wBot, layers) {
+        const id = 'cup' + (++cupSeq);
+        const path = `M${cx - wTop / 2} ${top} L${cx + wTop / 2} ${top} L${cx + wBot / 2} ${bot} L${cx - wBot / 2} ${bot} Z`;
+        let g = `<defs><clipPath id="${id}"><path d="${path}"/></clipPath></defs>`;
+        g += `<path d="${path}" fill="#fff"/>`;
+        const H = bot - top;
+        let y = bot;
+        const mark = [];
+        layers.forEach(([n, pct, col]) => {
+            const hh = H * pct / 100;
+            g += `<rect x="${(cx - wTop / 2).toFixed(1)}" y="${(y - hh).toFixed(1)}" width="${wTop}" height="${hh.toFixed(1)}" fill="${col}" clip-path="url(#${id})"/>`;
+            if (plain(n).includes('氷')) {                       // 氷は しかくで あらわす
+                for (let i = 0; i < 6; i++) {
+                    const ix = cx - wTop / 2 + 10 + (i % 3) * (wTop / 3.2), iy = y - hh + 8 + Math.floor(i / 3) * 18;
+                    if (iy + 12 < y) g += `<rect x="${ix.toFixed(1)}" y="${iy.toFixed(1)}" width="12" height="12" rx="2" fill="#fff" opacity="0.75" clip-path="url(#${id})" transform="rotate(12 ${ix.toFixed(1)} ${iy.toFixed(1)})"/>`;
+                }
+            }
+            mark.push([n, y - hh / 2, col]);
+            y -= hh;
+        });
+        g += `<path d="${path}" fill="none" stroke="#57534e" stroke-width="2.5"/>`;
+        return { g, mark, path };
+    }
+
+    /* =====================================================================
+       ① サイズと きほん
+       ===================================================================== */
+    const SIZES = [
+        ['Short', 'ショート', 240, null, 44, 68, 'コップ 1杯{ぱい}ちょっと'],
+        ['Tall', 'トール', 350, 350, 50, 88, 'かんジュース 1本{ぽん}ぶん'],
+        ['Grande', 'グランデ', 470, 470, 58, 104, '小{ちい}さめの ペットボトルより 多{おお}い'],
+        ['Venti', 'ベンティ', 590, 710, 66, 120, '500mlの ペットボトルより 多{おお}い']
+    ];
+    function szFig() {
+        const h = 256, base = 176;
+        let g = bg(h, '#f5f5f4');
+        const X = [80, 190, 305, 430];
+        SIZES.forEach(([en, ja, ml, iced, wTop, ch], i) => {
+            const cx = X[i], wBot = wTop - 12, top = base - ch;
+            const c = cupFig(cx, top, base, wTop, wBot, [['コーヒー', 88, '#6f4e37'], ['すきま', 12, '#ffffff']]);
+            g += c.g;
+            g += `<rect x="${cx - wTop / 2 - 3}" y="${top - 8}" width="${wTop + 6}" height="9" rx="3" fill="#e7e5e4" stroke="#57534e" stroke-width="2"/>`;
+            g += tx(cx, top - 16, ml + 'ml', 12, '#1c1917');
+            g += tx(cx, base + 18, en, 12, '#047857');
+            g += tx(cx, base + 34, ja, 11, '#57534e');
+            if (!iced) g += tx(cx, base + 50, 'ホットだけ', 10, '#b45309');
+            else if (iced !== ml) g += tx(cx, base + 50, 'アイスは ' + iced + 'ml', 10, '#0369a1');
+        });
+        g += tx(280, 24, '同じ 4サイズ。左から だんだん 大きく なる', 12, '#1c1917');
+        g += tx(280, 246, '※ アイスは 氷が 入る ので、飲みものの 量は これより 少ない', 10, '#78716c');
+        return svg(W, h, g);
+    }
+    const SZ_WHY = [
+        ['Short（ショート）＝英語{えいご}の「短{みじか}い」',
+         'いちばん 小{ちい}さい 240ml。メニュー表{ひょう}に 書{か}いて いない お店{みせ}も あるけれど、<b>たのめば 作{つく}って くれる</b>（ホットの ドリンクだけ）。少{すこ}しだけ 飲{の}みたい 人{ひと}や、こどもと 分{わ}ける ときに 便利{べんり}。'],
+        ['Tall（トール）＝英語{えいご}の「高{たか}い」',
+         '350ml。他{ほか}の お店{みせ}の「M（ふつう）」に 近{ちか}い 大{おお}きさ。まず これを 頼{たの}んで みて、多{おお}い・少{すこ}ないを おぼえると えらびやすく なる。'],
+        ['Grande（グランデ）＝イタリア語{ご}の「大{おお}きい」',
+         '470ml。日本{にほん}で いちばん 人気{にんき}の サイズ。トールとの 差{さ}は だいたい 120ml（コップ 半分{はんぶん}ぶん）。'],
+        ['Venti（ベンティ）＝イタリア語{ご}の「20」',
+         'ホット 590ml。「20オンス（やく590ml）」から この 名前{なまえ}。アイスは 氷{こおり}が 入{はい}る ぶん 器{うつわ}が 大{おお}きく なり <b>710ml</b>。'],
+        ['サイズを 上{あ}げると エスプレッソも ふえる ことが ある',
+         'カフェラテなどは <b>トールまでは エスプレッソ 1ショット、グランデ以上{いじょう}は 2ショット</b>という 決{き}まりが ある（ドリンクに よって ちがう）。だから 大{おお}きい サイズは 味{あじ}も 少{すこ}し 濃{こ}く なる。'],
+        ['アイスは「飲{の}みものの 量{りょう}」が ちがう',
+         '同{おな}じ グランデでも、アイスは 半分{はんぶん}ちかくが 氷{こおり}。たくさん 飲{の}みたい ときは <b>「氷{こおり}少{すこ}なめ」</b>を たのむと 中身{なかみ}が ふえる（無料{むりょう}）。']
+    ];
+
+    function szOrderFig() {
+        const h = 190;
+        let g = bg(h, '#ecfdf5');
+        const ST = [['① サイズ', 'グランデ', '#047857'], ['② ドリンク', 'カフェラテ', '#0369a1'],
+                    ['③ ホット/アイス', 'アイスで', '#b45309'], ['④ カスタマイズ', 'シロップ半分で', '#7e22ce']];
+        ST.forEach(([n, ex, c], i) => {
+            const x = 14 + i * 136;
+            g += `<rect x="${x}" y="46" width="124" height="60" rx="10" fill="#fff" stroke="${c}" stroke-width="2.5"/>`;
+            g += tx(x + 62, 68, n, 11, c);
+            g += tx(x + 62, 90, ex, 12, '#1c1917');
+            if (i < 3) g += arrow(x + 126, 76, x + 134, 76, '#059669', 2.5);
+        });
+        g += tx(280, 26, 'この 順番で 言えば つうじる', 12, '#065f46');
+        g += `<rect x="60" y="126" width="440" height="34" rx="10" fill="#fff" stroke="#047857" stroke-width="2.5"/>`;
+        g += tx(280, 148, '「グランデの カフェラテを アイスで、シロップ半分で お願いします」', 12, '#065f46');
+        g += tx(280, 180, 'ぜんぶ 言えなくても だいじょうぶ。お店の 人が 聞いて くれる', 10, '#059669');
+        return svg(W, h, g);
+    }
+    const SZ_ORDER = [
+        ['サイズを 先{さき}に 言{い}うと お店{みせ}の 人{ひと}が 楽{らく}',
+         'レジの 画面{がめん}は「ドリンク → サイズ」でも、作{つく}る 人{ひと}は カップの 大{おお}きさから 決{き}める。<b>サイズ → ドリンク</b>の 順{じゅん}が いちばん スムーズ。'],
+        ['決{き}まって いない ときは 聞{き}いて いい',
+         '「あまく ない ものが いいのですが、おすすめ ありますか？」でも 通{つう}じる。<b>好{す}きな 味{あじ}（あまい／さっぱり／ミルク多{おお}め）を 伝{つた}える</b>と えらんで くれる。'],
+        ['カスタマイズは 最後{さいご}に まとめて',
+         '先{さき}に 言{い}うと お店{みせ}の 人{ひと}が メモしにくい。<b>ドリンクが 決{き}まって から</b>「あと、氷{こおり}少{すこ}なめで」の 順{じゅん}で 言{い}う。'],
+        ['英語{えいご}の 名前{なまえ}が むずかしければ 指{ゆび}さしでOK',
+         'メニューを 指{さ}して「これを トールで」で じゅうぶん。カタカナが 長{なが}い ドリンクは みんな 言{い}いづらい。'],
+        ['店内{てんない}か 持{も}ち帰{かえ}りかを 聞{き}かれる',
+         '「店内{てんない}で お召{め}し上{あ}がりですか？」＝<b>ここで 飲{の}むか、外{そと}に 持{も}って 行{い}くか</b>。ねだんが 少{すこ}し 変{か}わる（「🗣️ 注文{ちゅうもん}の コツ」タブで 説明{せつめい}）。']
+    ];
+
+    /* =====================================================================
+       ② メニュー図鑑
+       ===================================================================== */
+    const ESP = '#3b2415', MILK = '#f5ead6', FOAM = '#fffaf0', WHIP = '#fffef9', GAP = '#ffffff';
+    const DRINKS = [
+        { id: 'drip', c: 'coffee', e: '☕', n: 'ドリップコーヒー', en: 'Drip Coffee',
+          lead: '豆{まめ}を あらく ひいて、お湯{ゆ}を ゆっくり 通{とお}して 落{お}とした コーヒー。スターバックスで いちばん シンプルで 安{やす}い。',
+          layers: [['コーヒー', 92, '#5b3a22'], ['すきま', 8, GAP]], m: [0, 0, 4],
+          body: [['どんな 味{あじ}', 'コーヒーの 味{あじ}が そのまま。ミルクや 砂糖{さとう}は <b>自分{じぶん}で 入{い}れる</b>（カウンターに 置{お}いて ある）。'],
+                 ['豆{まめ}が えらべる 日{ひ}も ある', 'お店{みせ}に よって「今日{きょう}の コーヒー」が かわる。聞{き}くと どんな 味{あじ}か 教{おし}えて くれる。']],
+          tip: '☕ おかわりが 安{やす}く なる「ワンモアコーヒー」の しくみが ある（レシートを 見{み}せる）。金額{きんがく}や 条件{じょうけん}は 変{か}わる ので お店{みせ}で たしかめよう。' },
+        { id: 'icecoffee', c: 'coffee', e: '🧊', n: 'アイスコーヒー', en: 'Iced Coffee',
+          lead: '氷{こおり}で 急{きゅう}に 冷{ひ}やして 作{つく}る アイスの コーヒー。さっぱりして いて、あまく ない。',
+          layers: [['氷{こおり}と コーヒー', 92, '#6b4226'], ['すきま', 8, GAP]], m: [0, 0, 4],
+          body: [['氷{こおり}が 半分{はんぶん}ちかく', '同{おな}じ サイズでも 飲{の}みものの 量{りょう}は ホットより 少{すこ}ない。'],
+                 ['ガムシロップが えらべる', 'あまく したい ときは「ガムシロップを 入{い}れて ください」と 言{い}う。']],
+          tip: '🧊 氷{こおり}が とけて うすく なるのが いやな ときは <b>「氷{こおり}多{おお}め」より「氷{こおり}少{すこ}なめ」</b>。早{はや}く 飲{の}むなら 少{すこ}なめが おすすめ。' },
+        { id: 'espresso', c: 'espresso', e: '⚡', n: 'エスプレッソ', en: 'Espresso',
+          lead: '細{こま}かく ひいた 豆{まめ}に <b>強{つよ}い 圧力{あつりょく}</b>を かけて、20〜30秒{びょう}で 一気{いっき}に 出{だ}した コーヒー。1ショットは やく30ml。',
+          layers: [['エスプレッソ', 28, ESP], ['すきま', 72, GAP]], m: [0, 0, 5],
+          body: [['とても 少{すこ}なくて 濃{こ}い', '量{りょう}は 大{おお}さじ 2杯{はい}ぶん くらい。でも 味{あじ}と かおりが ぎゅっと つまって いる。'],
+                 ['ぜんぶの 土台{どだい}', 'ラテも モカも マキアートも、<b>これに ミルクや シロップを 足{た}した もの</b>。だから エスプレッソを 知{し}ると メニューが わかる。']],
+          tip: '⚡ 「ソロ（1ショット）」「ドッピオ（2ショット）」という 言{い}い方{かた}が ある。上{うえ}の 茶色{ちゃいろ}い あわは <b>クレマ</b>と いって、新{あたら}しい 豆{まめ}の しるし。' },
+        { id: 'americano', c: 'espresso', e: '💧', n: 'カフェ アメリカーノ', en: 'Caffè Americano',
+          lead: 'エスプレッソに <b>お湯{ゆ}</b>を 足{た}した もの。ドリップコーヒーより キリッとして いて、あと味{あじ}が すっきり。',
+          layers: [['エスプレッソ', 24, ESP], ['お湯{ゆ}', 68, '#a67c52'], ['すきま', 8, GAP]], m: [0, 0, 4],
+          body: [['アメリカ生{う}まれの 名前{なまえ}', 'エスプレッソが 濃{こ}すぎる と 感{かん}じた 人{ひと}が お湯{ゆ}で うすめた のが 始{はじ}まり、と いわれて いる。'],
+                 ['アイスも 人気{にんき}', 'アイスの ときは お湯{ゆ}では なく 水{みず}と 氷{こおり}。夏{なつ}に さっぱり 飲{の}める。']],
+          tip: '💧 お湯{ゆ}の 量{りょう}を 「少{すこ}なめ」に すると 濃{こ}く なる。ミルクを 少{すこ}し 入{い}れたい ときは <b>「ミルクを 少{すこ}し 足{た}して ください」</b>で OK。' },
+        { id: 'latte', c: 'espresso', e: '🥛', n: 'カフェ ラテ', en: 'Caffè Latte',
+          lead: 'エスプレッソ ＋ <b>あたためた ミルク（スチームミルク）</b>。上{うえ}に うすく あわが のる。いちばん 人気{にんき}の 定番{ていばん}。',
+          layers: [['エスプレッソ', 15, ESP], ['スチームミルク', 73, MILK], ['フォーム（あわ）', 12, FOAM]], m: [1, 5, 2],
+          body: [['ミルクが 主役{しゅやく}', '「ラテ」は イタリア語{ご}で <b>ミルク</b>の こと。だから ミルクの あまみで やさしい 味{あじ}に なる。砂糖{さとう}は 入{はい}って いない。'],
+                 ['ミルクを かえられる', '豆乳{とうにゅう}（ソイ）・アーモンド・オーツに かえると 味{あじ}が がらりと 変{か}わる。ソイは あまく、オーツは まろやか。']],
+          tip: '🥛 あまくしたい ときは <b>「バニラシロップを 足{た}して ください」</b>。エスプレッソを 1つ 足{た}すと（＋50円{えん}ほど）大人{おとな}の 味{あじ}に なる。' },
+        { id: 'cappuccino', c: 'espresso', e: '☁️', n: 'カプチーノ', en: 'Cappuccino',
+          lead: 'ラテと 同{おな}じ 材料{ざいりょう}なのに、<b>あわ（フォーム）が たっぷり</b>。だから 口{くち}に 入{はい}れた ときが ふわふわで、ラテより 軽{かる}い。',
+          layers: [['エスプレッソ', 15, ESP], ['スチームミルク', 40, MILK], ['フォーム（あわ）', 45, '#fffdf7']], m: [1, 3, 3],
+          body: [['ちがいは あわの 量{りょう}', '同{おな}じ サイズなら、あわが 多{おお}い ぶん <b>ミルクの 量{りょう}は ラテより 少{すこ}ない</b>。だから コーヒーを 強{つよ}く 感{かん}じる。'],
+                 ['名前{なまえ}の いみ', '修道士{しゅうどうし}の 服{ふく}（カプチョ）の 色{いろ}に 似{に}て いる から、と いわれる。']],
+          tip: '☁️ 「フォーム多{おお}めで」「ドライで」と たのむと もっと ふわふわ。逆{ぎゃく}に「ウェットで」と 言{い}うと ラテに 近{ちか}く なる。' },
+        { id: 'mocha', c: 'espresso', e: '🍫', n: 'カフェ モカ', en: 'Caffè Mocha',
+          lead: 'ラテに <b>チョコレートシロップ</b>と <b>ホイップクリーム</b>を 足{た}した もの。デザートの ような 1杯{ぱい}。',
+          layers: [['チョコレートシロップ', 12, '#4a2c17'], ['エスプレッソ', 13, ESP], ['スチームミルク', 55, '#f0dcc0'], ['ホイップクリーム', 20, WHIP]], m: [4, 4, 2],
+          body: [['甘{あま}い ものが 好{す}きな 人{ひと}に', 'チョコと ミルクで コーヒーの にがさが かなり かくれる。<b>コーヒーが 苦手{にがて}な 人{ひと}の 入{い}り口{ぐち}</b>に よく えらばれる。'],
+                 ['ホワイトモカも ある', '白{しろ}い チョコの シロップを つかう ホワイトモカは もっと あまい。']],
+          tip: '🍫 あまさを おさえたい ときは <b>「チョコレートシロップを 少{すこ}なめで」</b>。ホイップは「なしで」も できる（その ぶん さっぱり）。' },
+        { id: 'macchiato', c: 'espresso', e: '🍮', n: 'キャラメル マキアート', en: 'Caramel Macchiato',
+          lead: 'バニラシロップ ＋ ミルク の 上{うえ}から <b>エスプレッソを あとで 注{そそ}ぐ</b>。だから 表面{ひょうめん}に 茶色{ちゃいろ}い「しみ」が できる。',
+          layers: [['バニラシロップ', 10, '#f7e8c0'], ['スチームミルク', 55, MILK], ['フォーム（あわ）', 15, FOAM], ['エスプレッソ（上{うえ}から）', 12, ESP], ['キャラメルソース', 8, '#c98a3c']], m: [4, 4, 2],
+          body: [['マキアート＝「しみ」', 'イタリア語{ご}で <b>しみ・点{てん}</b>の いみ。白{しろ}い ミルクの 上{うえ}に コーヒーの しみを つける ので この 名前{なまえ}。'],
+                 ['まぜると 味{あじ}が かわる', '最初{さいしょ}は キャラメルの あまさ、まぜると ラテに 近{ちか}い 味{あじ}。<b>まぜずに 飲{の}む</b>のが おすすめと 言{い}われる。']],
+          tip: '🍮 アイスは 下{した}から ミルク → 氷{こおり} → エスプレッソの 層{そう}に なって、<b>見{み}た目{め}が きれい</b>。あまさを 変{か}えたい ときは「シロップ 半分{はんぶん}で」。' },
+        { id: 'mist', c: 'coffee', e: '🌫️', n: 'カフェ ミスト', en: 'Caffè Misto',
+          lead: '<b>ドリップコーヒー ＋ あたためた ミルク</b>を およそ 半分{はんぶん}ずつ。エスプレッソは つかわない。',
+          layers: [['ドリップコーヒー', 50, '#5b3a22'], ['スチームミルク', 42, MILK], ['フォーム', 8, FOAM]], m: [0, 4, 3],
+          body: [['ラテより さっぱり', 'エスプレッソでは ない ので、ラテより 軽{かる}くて コーヒーの かおりが すっきり。'],
+                 ['ねだんが 安{やす}め', 'エスプレッソを つかわない ので、ラテより 少{すこ}し 安{やす}い ことが 多{おお}い。']],
+          tip: '🌫️ 「コーヒーに ミルクを 入{い}れた やつ」が 好{す}きな 人{ひと}に ぴったり。フランスの カフェオレと ほぼ 同{おな}じ 考{かんが}え方{かた}。' },
+        { id: 'flatwhite', c: 'espresso', e: '⚪', n: 'スターバックス ラテ（フラットホワイト）', en: 'Flat White',
+          lead: '濃{こ}いめに 出{だ}した エスプレッソ（リストレット）＋ ミルク。あわは <b>うすく ぺったり</b>。だから「フラット（平{たい}ら）」。',
+          layers: [['エスプレッソ（リストレット）', 18, '#33200f'], ['スチームミルク', 74, MILK], ['うすい フォーム', 8, FOAM]], m: [1, 4, 4],
+          body: [['ラテより コーヒーが 強{つよ}い', '同{おな}じ 大{おお}きさでも <b>コーヒーの 味{あじ}が はっきり</b>。ミルクは なめらかで つやが ある。'],
+                 ['オーストラリア・ニュージーランド生{う}まれ', '向{む}こうでは とても 定番{ていばん}の 飲{の}みもの。日本{にほん}でも 人気{にんき}に なった。']],
+          tip: '⚪ 「ラテだと ミルクが 多{おお}い」「アメリカーノだと さっぱりすぎ」と 感{かん}じる 人{ひと}に ちょうど いい。メニューに ある かは お店{みせ}と 時期{じき}に よる。' },
+        { id: 'soy', c: 'espresso', e: '🌱', n: 'ソイラテ', en: 'Soy Latte',
+          lead: 'ミルクの かわりに <b>豆乳{とうにゅう}（ソイ）</b>を つかった ラテ。ほんのり あまくて、こうばしい。',
+          layers: [['エスプレッソ', 15, ESP], ['豆乳{とうにゅう}（ソイ）', 73, '#f2e6cf'], ['フォーム', 12, FOAM]], m: [2, 5, 2],
+          body: [['ミルクが だめな 人{ひと}にも', '牛乳{ぎゅうにゅう}が おなかに 合{あ}わない 人{ひと}や、動物{どうぶつ}の ものを とらない 人{ひと}が えらぶ。'],
+                 ['ほかの ミルクも ある', 'アーモンドミルク（かおりが 香{こう}ばしく カロリー低{ひく}め）、オーツミルク（まろやかで コーヒーに 合{あ}う）。']],
+          tip: '🌱 どの ドリンクでも「ミルクを ソイに 変{か}えて ください」で 変{か}えられる（＋50円{えん}ほど）。低脂肪{ていしぼう}・無脂肪{むしぼう}への 変更{へんこう}は <b>無料{むりょう}</b>。' },
+        { id: 'matcha', c: 'tea', e: '🍵', n: '抹茶{まっちゃ} ティーラテ', en: 'Matcha Tea Latte',
+          lead: '<b>抹茶{まっちゃ}の パウダー ＋ ミルク</b>。コーヒーが 入{はい}って いない ので、カフェインが 少{すこ}なめ。こどもにも 人気{にんき}。',
+          layers: [['抹茶{まっちゃ}パウダー', 14, '#6f8f3a'], ['ミルク', 76, '#e8ecd0'], ['フォーム', 10, '#f4f7e6']], m: [3, 5, 0],
+          body: [['あまさが 入{はい}って いる', 'パウダーに 砂糖{さとう}が まざって いる ので、そのままでも あまい。<b>「パウダー少{すこ}なめ」</b>で あまさを へらせる。'],
+                 ['和{わ}の 味{あじ}', 'ほうじ茶{ちゃ}の ティーラテが ある 時期{じき}も。どちらも 日本{にほん}の スターバックスの 人気{にんき}メニュー。']],
+          tip: '🍵 コーヒーが 飲{の}めない 人{ひと}と 行{い}く ときの 第一候補{だいいちこうほ}。ホイップを 足{た}すと デザートっぽく なる。' },
+        { id: 'chai', c: 'tea', e: '🫖', n: 'チャイ ティーラテ', en: 'Chai Tea Latte',
+          lead: '<b>紅茶{こうちゃ} ＋ シナモンなどの スパイス ＋ ミルク</b>。インドの 飲{の}みものが もとに なって いる。',
+          layers: [['チャイ（紅茶{こうちゃ}＋スパイス）', 30, '#a5673f'], ['ミルク', 60, '#eadfc8'], ['フォーム', 10, FOAM]], m: [3, 4, 0],
+          body: [['スパイスの かおり', 'シナモン・カルダモン・ジンジャーなど。体{からだ}が あたたまる 感{かん}じが する。'],
+                 ['コーヒーは 入{はい}って いない', 'ただし 紅茶{こうちゃ}の カフェインは ある。夜{よる}に 飲{の}む なら 少{すこ}なめの サイズで。']],
+          tip: '🫖 「チャイティー（ミルクなし）」も たのめる。あまいのが 苦手{にがて}なら <b>シロップ（チャイの もと）を 少{すこ}なめ</b>に。' },
+        { id: 'tea', c: 'tea', e: '🌿', n: 'ティー（紅茶{こうちゃ}・ハーブ）', en: 'Brewed Tea',
+          lead: '茶葉{ちゃば}を お湯{ゆ}で だした シンプルな お茶{ちゃ}。ミルクを 足{た}すと ティーラテに なる。',
+          layers: [['紅茶{こうちゃ}', 90, '#b5651d'], ['すきま', 10, GAP]], m: [0, 0, 0],
+          body: [['種類{しゅるい}が いろいろ', 'アールグレイ、イングリッシュブレックファスト、カモミール、ミント系{けい}、ゆず系{けい}など。ハーブの ものは <b>カフェインゼロ</b>の ものも ある。'],
+                 ['ミルクティーに できる', '「ミルクを 足{た}して ください」で ティーラテに 近{ちか}く なる。']],
+          tip: '🌿 カフェインが 気{き}に なる ときは <b>カモミールや ミントなどの ハーブティー</b>を えらぶ。夜{よる}でも 安心{あんしん}。' },
+        { id: 'frap', c: 'frap', e: '🥤', n: 'コーヒー フラペチーノ', en: 'Coffee Frappuccino',
+          lead: '氷{こおり}・コーヒー・ミルクを <b>ミキサーで がーっと まぜた</b> 冷{つめ}たい 飲{の}みもの。上{うえ}に ホイップ。',
+          layers: [['氷{こおり}と コーヒーと ミルク', 78, '#b08968'], ['ホイップクリーム', 22, WHIP]], m: [4, 3, 2],
+          body: [['シャーベットの ような 飲{の}みもの', '「フラッペ（氷{こおり}）」＋「カプチーノ」を あわせた 名前{なまえ}で、スターバックスが 商標{しょうひょう}を もって いる。'],
+                 ['季節{きせつ}の 味{あじ}が いろいろ', 'いちご・マンゴー・チョコ・抹茶{まっちゃ}など、期間{きかん}かぎての ものが よく 出{で}る。コーヒーが 入{はい}って いない ものも ある。']],
+          tip: '🥤 <b>ストローが 太{ふと}い</b>のは つぶつぶや ホイップを 吸{す}う ため。「ホイップ多{おお}め」「チョコソース追加{ついか}」など カスタマイズが とくに 楽{たの}しい。' },
+        { id: 'hotchoco', c: 'other', e: '🍩', n: 'ホット チョコレート', en: 'Hot Chocolate',
+          lead: 'チョコレートシロップ ＋ あたためた ミルク ＋ ホイップ。<b>コーヒーは ゼロ</b>。',
+          layers: [['チョコレートシロップ', 18, '#4a2c17'], ['スチームミルク', 62, '#e8d5b8'], ['ホイップクリーム', 20, WHIP]], m: [5, 5, 0],
+          body: [['小{ちい}さい 子{こ}にも', 'カフェインが ほぼ ない ので、こどもと 行{い}く ときに えらばれる。'],
+                 ['ぬるめに できる', '「ぬるめで お願{ねが}いします」と たのむと 温度{おんど}を 下{さ}げて くれる。やけど 防止{ぼうし}に なる。']],
+          tip: '🍩 マシュマロが つく 時期{じき}も ある。あまさが 強{つよ}いので、<b>「シロップ 少{すこ}なめ」</b>に すると 大人{おとな}でも ちょうど いい。' }
+    ];
+    const CATS = [['all', '🗂️', 'ぜんぶ'], ['coffee', '☕', 'コーヒー'], ['espresso', '🥛', 'エスプレッソ系{けい}'],
+                  ['tea', '🍵', 'ティー系{けい}'], ['frap', '🥤', 'フラペチーノ'], ['other', '🍩', 'その他{ほか}']];
+    let mnCat = 'all', mnI = 0;
+    const mnList = () => mnCat === 'all' ? DRINKS : DRINKS.filter(d => d.c === mnCat);
+    function setMnCat(c) {
+        mnCat = c;
+        const list = mnList();
+        mnI = DRINKS.indexOf(list[0]);
+        drawMn();
+    }
+    function setMn(i) { mnI = i; drawMn(); }
+    function mnMove(d) {
+        const list = mnList();
+        const at = list.indexOf(DRINKS[mnI]);
+        mnI = DRINKS.indexOf(list[(at + d + list.length) % list.length]);
+        drawMn();
+    }
+    const METER = [['🍯 あまさ', '#d97706'], ['🥛 ミルク', '#0369a1'], ['☕ コーヒー', '#7c2d12']];
+    function drinkFig(d) {
+        const h = 262;
+        const c = cupFig(140, 30, 232, 112, 88, d.layers);
+        let g = bg(h, '#f5f5f4') + c.g;
+        const ms = c.mark.slice().reverse().filter(([n]) => !plain(n).includes('すきま'));
+        ms.forEach(([n, my, col], i) => {
+            const ly = 54 + i * Math.min(34, 150 / Math.max(1, ms.length - 1));
+            g += `<path d="M196 ${my.toFixed(1)} L232 ${ly.toFixed(1)} L246 ${ly.toFixed(1)}" fill="none" stroke="#a8a29e" stroke-width="1.6"/>`;
+            g += `<rect x="250" y="${(ly - 8).toFixed(1)}" width="15" height="15" rx="3" fill="${col}" stroke="#57534e" stroke-width="1.2"/>`;
+            g += tx(272, ly + 4, n, 11, '#1c1917', 'start');
+        });
+        g += tx(140, 252, '下{した}から 上{うえ}への かさなり方{かた}', 10, '#78716c');
+        return svg(W, h, g);
+    }
+    function drawMn() {
+        const d = DRINKS[mnI], list = mnList();
+        document.getElementById('mn-cats').innerHTML = CATS.map(([k, e, n]) =>
+            `<button onclick="setMnCat('${k}')" class="${mnCat === k ? 'bg-emerald-700 text-white' : 'bg-white border-2 border-emerald-200 text-stone-600'} font-black px-3 py-1.5 rounded-full text-xs whitespace-nowrap bounce-hover">${e} ${n}${k === 'all' ? ' ' + DRINKS.length : ' ' + DRINKS.filter(x => x.c === k).length}</button>`).join('');
+        document.getElementById('mn-chips').innerHTML = list.map(x =>
+            `<button onclick="setMn(${DRINKS.indexOf(x)})" class="${x.id === d.id ? 'bg-emerald-700 text-white' : 'bg-white border-2 border-stone-200 text-stone-600'} font-black px-3 py-1.5 rounded-full text-xs whitespace-nowrap bounce-hover">${x.e} ${esc(plain(x.n))}</button>`).join('');
+        document.getElementById('mn-name').innerHTML = d.e + ' ' + d.n;
+        document.getElementById('mn-en').innerText = d.en;
+        document.getElementById('mn-lead').innerHTML = d.lead;
+        document.getElementById('mn-fig').innerHTML = drinkFig(d);
+        document.getElementById('mn-meter').innerHTML = METER.map(([n, col], k) =>
+            `<div class="bg-stone-100 border-2 border-stone-200 rounded-2xl p-2 text-center">
+                <p class="text-xs font-black text-stone-500">${n}</p>
+                <p class="text-base tracking-tight" style="color:${col}">${'●'.repeat(d.m[k])}${'○'.repeat(5 - d.m[k])}</p></div>`).join('');
+        cards('mn-body', d.body, 'stone');
+        document.getElementById('mn-tip').innerHTML = d.tip;
+    }
+
+    function mnCmpFig() {
+        const h = 250;
+        const C = [
+            ['カフェラテ', [['エスプレッソ', 15, ESP], ['ミルク', 73, MILK], ['あわ', 12, FOAM]]],
+            ['カプチーノ', [['エスプレッソ', 15, ESP], ['ミルク', 40, MILK], ['あわ', 45, '#fffdf7']]],
+            ['カフェモカ', [['チョコ', 12, '#4a2c17'], ['エスプレッソ', 13, ESP], ['ミルク', 55, '#f0dcc0'], ['ホイップ', 20, WHIP]]],
+            ['キャラメル\nマキアート', [['バニラ', 10, '#f7e8c0'], ['ミルク', 55, MILK], ['あわ', 15, FOAM], ['エスプレッソ', 12, ESP], ['キャラメル', 8, '#c98a3c']]]
+        ];
+        let g = bg(h, '#f5f5f4');
+        C.forEach(([n, layers], i) => {
+            const cx = 76 + i * 136;
+            const c = cupFig(cx, 46, 186, 86, 66, layers);
+            g += c.g;
+            n.split('\n').forEach((l, k) => g += tx(cx, 206 + k * 15, l, 11, '#1c1917'));
+        });
+        g += tx(280, 26, '同じ 材料でも 割合と 順番が ちがう', 12, '#065f46');
+        g += tx(280, 242, '■ エスプレッソ　■ ミルク　□ あわ・ホイップ　■ シロップ', 10, '#57534e');
+        return svg(W, h, g);
+    }
+    const MN_CMP = [
+        ['ラテ と カプチーノ',
+         '材料{ざいりょう}は <b>まったく 同{おな}じ</b>。ちがうのは <b>あわの 量{りょう}</b>。カプチーノは あわが たっぷりで ミルクが 少{すこ}ない ので、軽{かる}くて コーヒーを 強{つよ}く 感{かん}じる。'],
+        ['モカ は ラテ＋チョコ',
+         'ラテに チョコレートシロップと ホイップを 足{た}した もの。だから <b>いちばん あまい</b>。コーヒーの にがさが 苦手{にがて}な 人{ひと}向{む}け。'],
+        ['マキアート は「注{そそ}ぐ 順番{じゅんばん}」が ちがう',
+         'シロップ → ミルク → <b>最後{さいご}に エスプレッソ</b>。だから 上{うえ}に コーヒーの「しみ」が できる。まぜずに 飲{の}むと、あまい ところと 苦{にが}い ところが 交{ま}じる。'],
+        ['迷{まよ}ったら この 順{じゅん}に ためす',
+         'コーヒーに なれて いない → <b>モカ</b>。ミルクが 好{す}き → <b>ラテ</b>。軽{かる}いのが 好{す}き → <b>カプチーノ</b>。見{み}た目{め}も 楽{たの}しみたい → <b>マキアート</b>。']
+    ];
+
+    /* =====================================================================
+       ③ カスタマイズ
+       ===================================================================== */
+    const EXTRA = 55;                                   // 追加の 目安（円）
+    const CU = {
+        size: { n: 'サイズ', col: 'emerald', list: [['Short（ショート）', 0], ['Tall（トール）', 0], ['Grande（グランデ）', 0], ['Venti（ベンティ）', 0]] },
+        drink: { n: 'ドリンク', col: 'sky', list: [['ドリップコーヒー', 0], ['カフェラテ', 0], ['カプチーノ', 0], ['カフェモカ', 0], ['キャラメルマキアート', 0], ['抹茶{まっちゃ}ティーラテ', 0], ['コーヒーフラペチーノ', 0]] },
+        temp: { n: 'ホット / アイス', col: 'amber', list: [['ホット', 0], ['アイス', 0]] },
+        milk: { n: 'ミルク', col: 'violet', list: [['そのまま', 0], ['低脂肪{ていしぼう}ミルク', 0], ['無脂肪{むしぼう}ミルク', 0], ['豆乳{とうにゅう}（ソイ）', EXTRA], ['アーモンドミルク', EXTRA], ['オーツミルク', EXTRA]] },
+        syrup: { n: 'あまさ', col: 'rose', list: [['そのまま', 0], ['シロップ 半分{はんぶん}', 0], ['シロップ 多{おお}め', 0], ['バニラシロップ 追加{ついか}', EXTRA], ['キャラメルシロップ 追加{ついか}', EXTRA]] },
+        top: { n: 'そのほか', col: 'stone', list: [['なし', 0], ['ホイップ 追加{ついか}', EXTRA], ['エスプレッソ 追加{ついか}', EXTRA], ['氷{こおり}少{すこ}なめ', 0], ['ぬるめ', 0]] }
+    };
+    const CU_KEYS = Object.keys(CU);
+    let cuSel = { size: 2, drink: 1, temp: 0, milk: 0, syrup: 0, top: 0 };
+    function cuSet(k, i) { cuSel[k] = i; cuDraw(); }
+    function cuReset() { cuSel = { size: 2, drink: 1, temp: 0, milk: 0, syrup: 0, top: 0 }; cuDraw(); }
+    function cuShuffle() {
+        CU_KEYS.forEach(k => cuSel[k] = rnd(CU[k].list.length));
+        cuDraw();
+    }
+    function cuDraw() {
+        document.getElementById('cu-pick').innerHTML = CU_KEYS.map(k => {
+            const g = CU[k], on = ['bg-emerald-700', 'bg-sky-700', 'bg-amber-600', 'bg-violet-700', 'bg-rose-600', 'bg-stone-600'][CU_KEYS.indexOf(k)];
+            return `<div>
+                <p class="font-black text-sm text-stone-500">${g.n}</p>
+                <div class="flex flex-wrap gap-1.5 mt-1.5">
+                ${g.list.map(([t, p], i) =>
+                    `<button onclick="cuSet('${k}',${i})" class="${cuSel[k] === i ? on + ' text-white' : 'bg-white border-2 border-stone-200 text-stone-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${t}${p ? `<span class="text-[10px]"> +${p}円</span>` : ''}</button>`).join('')}
+                </div></div>`;
+        }).join('');
+        const g = k => CU[k].list[cuSel[k]];
+        const size = plain(g('size')[0]).replace(/（.*）/, ''), sizeJa = (plain(g('size')[0]).match(/（(.*)）/) || [, ''])[1];
+        const drink = g('drink')[0], temp = g('temp')[0], milk = g('milk')[0], syrup = g('syrup')[0], top = g('top')[0];
+        const extra = CU_KEYS.reduce((a, k) => a + g(k)[1], 0);
+        // せりふを 組み立てる
+        const parts = [`${sizeJa}の ${plain(drink)}を ${plain(temp)}で`];
+        if (cuSel.milk > 0) parts.push(`ミルクを ${plain(milk)}に`);
+        if (cuSel.syrup > 0) parts.push(plain(syrup).replace('追加', 'を 追加'));
+        if (cuSel.top > 0) parts.push(plain(top).replace('追加', 'を 追加'));
+        const serif = parts.join('、') + ' で お願{ねが}いします';
+        // 気を つける ところ
+        const warn = [];
+        if (cuSel.size === 0 && cuSel.temp === 1) warn.push('❗ <b>ショートは ホットだけ</b>。アイスは トール（350ml）から。');
+        if (plain(drink).includes('フラペチーノ') && cuSel.temp === 0) warn.push('❗ <b>フラペチーノは 冷{つめ}たい ものだけ</b>。ホットには できない。');
+        if (plain(drink).includes('フラペチーノ') && cuSel.size === 0) warn.push('❗ フラペチーノに ショートは ない。トールから。');
+        if (plain(drink) === 'ドリップコーヒー' && cuSel.milk > 0) warn.push('❗ ドリップコーヒーは ミルクを <b>自分{じぶん}で 入{い}れる</b> ので、ミルク変更{へんこう}は できない。ミルク入{い}りが よければ <b>カフェミスト</b>を たのもう。');
+        if (plain(drink) === 'ドリップコーヒー' && cuSel.top === 2) warn.push('❗ ドリップコーヒーに エスプレッソは 足{た}せない。濃{こ}くしたい なら アメリカーノを。');
+        if (plain(drink).includes('抹茶') && cuSel.top === 2) warn.push('💡 抹茶{まっちゃ}に エスプレッソを 足{た}すと「抹茶{まっちゃ}ラテ＋コーヒー」に なる。じつは 人気{にんき}の カスタマイズ。');
+        if (cuSel.top === 4 && cuSel.temp === 1) warn.push('❗ 「ぬるめ」は ホットの ときだけ。アイスなら「氷{こおり}少{すこ}なめ」。');
+        document.getElementById('cu-card').innerHTML =
+            `<div class="pop bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-300 rounded-3xl p-4">
+                <p class="text-xs font-black text-emerald-700">レジで 言{い}う せりふ</p>
+                <p class="font-black text-base sm:text-lg leading-relaxed mt-1">「${serif}」</p>
+                <div class="flex flex-wrap gap-2 mt-3">
+                    <span class="bg-white border-2 border-emerald-200 rounded-2xl px-3 py-1.5 text-xs font-black">サイズ <b class="text-emerald-700">${size}</b></span>
+                    <span class="bg-white border-2 border-emerald-200 rounded-2xl px-3 py-1.5 text-xs font-black">カスタマイズの 追加{ついか} <b class="num text-emerald-700">＋${nf(extra)}円</b></span>
+                </div>
+                ${warn.length ? `<div class="bg-white border-2 border-amber-300 rounded-2xl p-3 mt-3 text-xs font-bold leading-relaxed space-y-1">${warn.map(w => `<p>${w}</p>`).join('')}</div>` : ''}
+            </div>`;
+        document.getElementById('cu-note').innerHTML =
+            `💡 追加{ついか}の ねだんは <b>1つ ${EXTRA}円{えん}くらい</b>（変{か}わる ことが ある）。
+             低脂肪{ていしぼう}・無脂肪{むしぼう}ミルクへの 変更{へんこう}、シロップの 増減{ぞうげん}、氷{こおり}少{すこ}なめ、ぬるめは <b>無料{むりょう}</b>。
+             サイズを 1つ 上{あ}げると だいたい 50〜70円{えん}くらい 上{あ}がる。<br>
+             はじめは <b>カスタマイズ なし</b>で 飲{の}んで みて、「あまい」「ミルクが 多{おお}い」と 感{かん}じた ところだけ 次{つぎ}から 変{か}えるのが かしこい やり方{かた}。`;
+    }
+    const CU_FREE = [
+        ['🧊 氷{こおり}少{すこ}なめ / 多{おお}め', 'アイスの ときだけ。少{すこ}なめに すると <b>飲{の}みものの 量{りょう}が ふえる</b>ので おトク感{かん}が ある。うすまるのも おそく なる。'],
+        ['🍯 シロップ 半分{はんぶん} / 多{おお}め', 'あまさの 調節{ちょうせつ}。「半分{はんぶん}で」「1ポンプで」など。<b>あまさは いちばん 好{す}みが 分{わ}かれる</b>ので、遠慮{えんりょ}せず たのんで よい。'],
+        ['☁️ ホイップ なし / 少{すこ}なめ', 'モカや フラペチーノの ホイップを 外{はず}せる。カロリーを 下{さ}げたい ときにも。'],
+        ['🌡️ ぬるめ / 熱{あつ}め', 'ホットの 温度{おんど}を かえて もらえる。<b>小{ちい}さい 子{こ}と 飲{の}む ときは「ぬるめ」</b>が 安心{あんしん}。'],
+        ['🥛 低脂肪{ていしぼう} / 無脂肪{むしぼう}ミルク', 'ミルクの 種類{しゅるい}を かえても <b>この 2つは 無料{むりょう}</b>。さっぱりした 味{あじ}に なる。'],
+        ['☕ フォーム 多{おお}め / 少{すこ}なめ', 'ラテを カプチーノ寄{よ}りに、カプチーノを ラテ寄{よ}りに できる。「ドライ」「ウェット」と 言{い}う ことも。'],
+        ['🍵 パウダー 少{すこ}なめ', '抹茶{まっちゃ}などの パウダーを へらすと あまさも 味{あじ}も 軽{かる}く なる。'],
+        ['☕ マグカップで（店内{てんない}）', '店内{てんない}で 飲{の}む とき「マグカップで お願{ねが}いします」と 言{い}うと 陶器{とうき}の カップで 出{で}て くる。<b>ゴミが 出{で}ない</b>し、味{あじ}も おちつく。']
+    ];
+    const CU_PAID = [
+        ['🌱 ミルク変更{へんこう}（豆乳{とうにゅう}・アーモンド・オーツ）', `1つ ${EXTRA}円{えん}ほど。味{あじ}が いちばん 大{おお}きく かわる カスタマイズ。<b>オーツミルクは コーヒーと 相性{あいしょう}が よい</b>と 人気{にんき}。`],
+        ['🍯 シロップ 追加{ついか}', `${EXTRA}円{えん}ほど。バニラ・キャラメル・ヘーゼルナッツなど。「ラテに バニラ」で <b>バニララテ</b>に なる。`],
+        ['⚡ エスプレッソ 追加{ついか}（ショット追加{ついか}）', `${EXTRA}円{えん}ほど。コーヒーの 味{あじ}を 強{つよ}く したい とき。眠気{ねむけ}を とばしたい 大人{おとな}が よく たのむ。`],
+        ['☁️ ホイップ 追加{ついか}', `${EXTRA}円{えん}ほど。ラテに のせると デザートみたいに なる。`],
+        ['🍫 ソース・パウダー 追加{ついか}', `チョコレートソースや シナモンパウダーなど。<b>お店{みせ}に よって 無料{むりょう}の ものも ある</b>ので、レジで 聞{き}いて みよう。`],
+        ['📏 サイズアップ', '50〜70円{えん}ほどで 1つ 上{うえ}の サイズに。<b>1mlあたりの ねだんは 安{やす}く なる</b>ので、たくさん 飲{の}む 人{ひと}には おトク。']
+    ];
+    const CU_BEST = [
+        ['🥛 カフェラテ × オーツミルク', 'まろやかで こうばしい。ミルクの 味{あじ}が 苦手{にがて}な 人{ひと}でも 飲{の}みやすい。いま いちばん 人気{にんき}の ミルク変更{へんこう}。'],
+        ['🍫 カフェモカ × ホイップなし', 'あまさは 残{のこ}る のに さっぱり。カロリーも 下{さ}がる。'],
+        ['🍵 抹茶{まっちゃ}ティーラテ × パウダー少{すこ}なめ', 'あまさを おさえると 抹茶{まっちゃ}の かおりが 立{た}つ。大人{おとな}っぽい 味{あじ}に。'],
+        ['💧 アメリカーノ × ミルク少{すこ}し', 'ラテほど ミルクっぽく なく、コーヒーの 味{あじ}が わかる。「軽{かる}い ラテ」が ほしい ときに。'],
+        ['🧊 アイスコーヒー × 氷{こおり}少{すこ}なめ', 'うすく なりにくい。ゆっくり 飲{の}む 人{ひと}に。'],
+        ['🥤 フラペチーノ × コーヒー抜{ぬ}き', 'こどもでも 飲{の}める（カフェインが ほぼ 0）。「ノンコーヒーで」と たのむ。']
+    ];
+
+    /* =====================================================================
+       ④ 注文の コツ
+       ===================================================================== */
+    function orFlowFig() {
+        const h = 210;
+        let g = bg(h, '#ecfdf5');
+        const F = [['①', 'ならぶ', '前{まえ}の 人{ひと}との\nあいだを あける'], ['②', '注文{ちゅうもん}', 'サイズ → ドリンク\n→ ホット/アイス'],
+                   ['③', '店内{てんない}？', '「お召{め}し上{あ}がり\nですか？」に 答{こた}える'], ['④', 'お金{かね}を はらう', 'カード・アプリ\n現金{げんきん}'],
+                   ['⑤', '受{う}け取{と}る', '名前{なまえ}を 呼{よ}ばれる\nか 商品名{しょうひんめい}で']];
+        F.forEach(([num, n, d], i) => {
+            const x = 8 + i * 110;
+            g += `<rect x="${x}" y="44" width="98" height="96" rx="12" fill="#fff" stroke="#047857" stroke-width="2.5"/>`;
+            g += tx(x + 49, 66, num, 14, '#059669');
+            g += tx(x + 49, 88, n, 12, '#065f46');
+            plain(d).split('\n').forEach((l, k) => g += tx(x + 49, 110 + k * 14, l, 9, '#57534e'));
+            if (i < 4) g += arrow(x + 100, 92, x + 106, 92, '#059669', 2.2);
+        });
+        g += tx(280, 26, 'だいたい この 5ステップ', 12, '#065f46');
+        g += tx(280, 166, '混んで いる ときは、ならんで いる あいだに 決めて おくと スムーズ', 11, '#059669');
+        g += tx(280, 188, 'カウンターで 受け取る お店と、席まで 持って きて くれる お店が ある', 10, '#0d9488');
+        return svg(W, h, g);
+    }
+    const OR_FLOW = [
+        ['ならんで いる あいだに 決{き}める',
+         'メニュー表{ひょう}は レジの 上{うえ}と 入口{いりぐち}に ある。<b>サイズ・ドリンク・ホットかアイス</b>の 3つだけ 決{き}めて おけば、あとは 聞{き}かれた ことに 答{こた}えるだけ。'],
+        ['決{き}まらない ときの ひとこと',
+         '「初{はじ}めてなので おすすめを 教{おし}えて ください」「あまく ない ものが いいです」。<b>お店{みせ}の 人{ひと}は 聞{き}かれるのに 慣{な}れて いる</b>ので、遠慮{えんりょ}しなくて よい。'],
+        ['お金{かね}の はらい方{かた}',
+         '現金{げんきん}・クレジットカード・交通系{こうつうけい}ICカード・スターバックス カード・アプリの コードなど。<b>アプリだと スター（ポイント）が たまる</b>。'],
+        ['受{う}け取{と}り',
+         'ドリンクが できると 呼{よ}ばれる。フード（食{た}べもの）は あたためるか 聞{き}かれる ことが ある。<b>受{う}け取{と}った ら フタと ストローを たしかめる</b>。']
+    ];
+    const OR_TIPS = [
+        ['① 3つだけ 決{き}めて おく', '<b>サイズ・ドリンク・ホットかアイス</b>。この 3つが あれば 注文{ちゅうもん}は 成立{せいりつ}する。カスタマイズは できなくても だいじょうぶ。'],
+        ['② 長{なが}い 名前{なまえ}は 指{ゆび}さしで', '「キャラメルマキアート」など 言{い}いにくい ものは メニューを 指{さ}して「これを グランデで」。<b>だれも 気{き}に しない</b>。'],
+        ['③ 「ホットで」「アイスで」を 忘{わす}れない', 'これを 言{い}わないと かならず 聞{き}かれる。先{さき}に 言{い}うと 1往復{おうふく} へる。'],
+        ['④ あまさは その場{ば}で 調節{ちょうせつ}できる', '「シロップ 半分{はんぶん}で」は <b>無料{むりょう}で いちばん 効{き}く</b> カスタマイズ。あまい のが 苦手{にがて}な 人{ひと}は 最初{さいしょ}から たのもう。'],
+        ['⑤ こどもには「ぬるめ」', 'ホットは かなり 熱{あつ}い。<b>「ぬるめで お願{ねが}いします」</b>で やけどを ふせげる。無料{むりょう}。'],
+        ['⑥ 店内{てんない}なら マグカップ', '「マグカップで」と たのむと 陶器{とうき}で 出{で}て くる。ゴミが 出{で}ず、<b>かおりも よく 感{かん}じる</b>。'],
+        ['⑦ タンブラーを 持{も}って いく', '自分{じぶん}の 入{い}れものを 持{も}って いくと 割引{わりびき}が ある（金額{きんがく}は 変{か}わる）。<b>ゴミを へらす</b>ことにも なる。'],
+        ['⑧ 混{こ}んで いる ときは シンプルに', 'カスタマイズを たくさん 頼{たの}むと 時間{じかん}が かかる。<b>うしろに 長{なが}い 列{れつ}が ある ときは ふつうの 注文{ちゅうもん}で</b>。'],
+        ['⑨ 量{りょう}を くらべて えらぶ', 'トール350ml・グランデ470ml。<b>グランデは トールの 1.3倍{ばい}</b>で、ねだんの 差{さ}は 50〜70円{えん}ほど。たくさん 飲{の}む 人{ひと}は グランデが おトク。'],
+        ['⑩ 慣{な}れたら 1つずつ ためす', 'カスタマイズは <b>1回{かい}に 1つだけ</b> 変{か}えると、何{なに}が どう 変{か}わったか わかる。これを くりかえすと「じぶんの 1杯{ぱい}」が 見{み}つかる。']
+    ];
+
+    function orTaxFig() {
+        const h = 240;
+        let g = bg(h, '#f5f5f4');
+        g += tx(280, 26, '日本の ルール：おなじ 飲みものでも 税率が ちがう', 12, '#1c1917');
+        [['🥡 持ち帰り', 8, 540, '#0369a1', 20], ['🏠 店内で 飲む', 10, 550, '#b45309', 300]].forEach(([n, rate, total, c, x]) => {
+            g += `<rect x="${x}" y="48" width="240" height="140" rx="12" fill="#fff" stroke="${c}" stroke-width="2.5"/>`;
+            g += tx(x + 120, 74, n, 13, c);
+            g += tx(x + 120, 100, '消費税 ' + rate + '%', 15, c);
+            g += `<line x1="${x + 24}" y1="116" x2="${x + 216}" y2="116" stroke="#e7e5e4" stroke-width="2"/>`;
+            g += tx(x + 120, 138, 'もとの ねだん 500円 なら', 10, '#57534e');
+            g += tx(x + 120, 164, total + '円', 17, c);
+        });
+        g += tx(280, 208, 'この 差の ぶん、お店は「ねだんを 変える」か「税込みを そろえる」を えらぶ', 11, '#1c1917');
+        g += tx(280, 228, 'スターバックスは 税込みの ねだんを そろえる やり方を 発表して いる（2019年から）', 10, '#78716c');
+        return svg(W, h, g);
+    }
+    const OR_TAX = [
+        ['なぜ 2つの 税率{ぜいりつ}が あるの？',
+         '食{た}べものや 飲{の}みものを <b>持{も}ち帰{かえ}る ときは 8%</b>、<b>お店{みせ}の 席{せき}で 食{た}べる ときは 10%</b>。2019年{ねん}に 消費税{しょうひぜい}が 10%に 上{あ}がる とき、生{い}きるのに 必要{ひつよう}な 食{しょく}べものは 8%の ままに した（軽減税率{けいげんぜいりつ}）。席{せき}で 食{た}べるのは「サービス」も ふくむ ので 10%。'],
+        ['だから レジで 聞{き}かれる',
+         '「店内{てんない}で お召{め}し上{あ}がりですか？」は <b>税率{ぜいりつ}を 決{き}める ための 質問{しつもん}</b>。うそを 言{い}っては いけない（持{も}ち帰{かえ}りと 言{い}って 席{せき}で 飲{の}むのは ルール違反{いはん}）。'],
+        ['お店{みせ}の 決{き}め方{かた}は 2通{とお}り',
+         '① <b>ねだんを 変{か}える</b>：持{も}ち帰{かえ}りが 10円{えん}安{やす}い など。② <b>税込{ぜいこ}みの ねだんを そろえる</b>：どちらでも 支払{しはら}う 金額{きんがく}は 同{おな}じ（お店{みせ}が 受{う}け取{と}る 本体{ほんたい}の ねだんが 変{か}わる）。'],
+        ['スターバックスは ②の やり方{かた}',
+         '2019年{ねん}に「<b>税込{ぜいこ}みの ねだんを 同{おな}じに する</b>」と 発表{はっぴょう}して いる。だから 店内{てんない}でも 持{も}ち帰{かえ}りでも 払{はら}う 金額{きんがく}は 変{か}わらない。ただし やり方{かた}は 変{か}わる ことが ある ので、<b>レシートで たしかめて みよう</b>（いい 自由研究{じゆうけんきゅう}に なる）。']
+    ];
+    const OR_MANNER = [
+        ['🚶 列{れつ}は 1本{ぽん}。割{わ}りこまない',
+         'レジが 2つ でも 列{れつ}は 1本{ぽん}の ことが 多{おお}い。どこに ならぶか わからない ときは <b>お店{みせ}の 人{ひと}に 聞{き}く</b>。'],
+        ['🪑 席{せき}は 注文{ちゅうもん}の あとで',
+         '先{さき}に かばんで 席{せき}を とる のは やめよう（混{こ}んで いる とき とくに）。<b>受{う}け取{と}って から 空{あ}いた 席{せき}に 座{すわ}る</b>。'],
+        ['🗣️ 声{こえ}の 大{おお}きさは まわりに あわせる',
+         'カフェは 勉強{べんきょう}や 仕事{しごと}を して いる 人{ひと}も いる 場所{ばしょ}。<b>ゲームの 音{おと}や 動画{どうが}は イヤホンで</b>。'],
+        ['⏰ 混{こ}んで いたら 長居{ながい}しない',
+         '席{せき}が 少{すこ}ない ときは 30分{ぷん}〜1時間{じかん}を 目安{めやす}に。<b>次{つぎ}の 人{ひと}が 待{ま}って いる</b>と 思{おも}えば わかる。'],
+        ['🗑️ 出{で}る ときに 片{かた}づける',
+         'カップは <b>返却{へんきゃく}の 台{だい}</b>へ。ゴミは 分{わ}けて 入{い}れる（ふた・ストロー・紙{かみ}・氷{こおり}を 捨{す}てる ところが 分{わ}かれて いる）。テーブルの こぼれは 拭{ふ}いて おく。'],
+        ['📸 写真{しゃしん}は 人{ひと}が 写{うつ}らない ように',
+         '新{あたら}しい ドリンクの 写真{しゃしん}を 撮{と}る ときは、<b>ほかの お客{きゃく}さんや 店員{てんいん}さんが 写{うつ}らない</b>ように。SNSに あげる ときは とくに 気{き}を つける。'],
+        ['🙏 「ありがとう」を 言{い}う',
+         '作{つく}って くれた 人{ひと}に ひとこと。<b>いちばん かんたんで、いちばん よい マナー</b>。']
+    ];
+    const OR_APP = [
+        ['📱 モバイルオーダー＆ペイ',
+         'アプリで 先{さき}に 注文{ちゅうもん}と 支払{しはら}いを して、できた ころに 取{と}りに 行{い}く しくみ。<b>列{れつ}に ならばなくて よい</b>。カスタマイズも 画面{がめん}で えらべる ので、言{い}いにくい 人{ひと}には とても 便利{べんり}。'],
+        ['⭐ スター（ポイント）',
+         'アプリや スターバックス カードで はらうと「スター」が たまり、たまると 好{す}きな ドリンクと 交換{こうかん}できる。<b>しくみや 必要{ひつよう}な 数{かず}は 変{か}わる</b>ので アプリで たしかめよう。'],
+        ['🥤 タンブラー持参{じさん}の 割引{わりびき}',
+         '自分{じぶん}の 入{い}れものを 持{も}って いくと 割引{わりびき}が ある。<b>使{つか}い捨{す}ての カップが 1つ へる</b>ので、ゴミも へる。'],
+        ['☕ ワンモアコーヒー',
+         'ドリップコーヒーを 飲{の}んだ あと、レシートを 見{み}せると <b>2杯目{はいめ}が 安{やす}く なる</b> しくみ（同{おな}じ 日{ひ}・条件{じょうけん}あり）。'],
+        ['🎁 eGift（イーギフト）',
+         'LINEや メールで「1杯{ぱい}ぶん」を 友{とも}だちに おくれる。<b>お礼{れい}や おめでとうに ちょうど いい 金額{きんがく}</b>なので 大人{おとな}が よく つかう。']
+    ];
+
+    /* =====================================================================
+       ⑤ クイズ
+       ===================================================================== */
+    const QS = [
+        { f: 'サイズ', q: 'スターバックスの サイズは 大{おお}きい ほうから 並{なら}べると？', a: 'ベンティ → グランデ → トール → ショート', x: ['ラージ → ミディアム → スモール', 'グランデ → ベンティ → トール → ショート', 'ショート → トール → グランデ → ベンティ'], e: 'Venti 590ml → Grande 470ml → Tall 350ml → Short 240ml（ホットの 場合{ばあい}）。' },
+        { f: 'サイズ', q: 'いちばん 小{ちい}さい「ショート」は 何{なん}ml？', a: '240ml', x: ['350ml', '470ml', '180ml'], e: 'コップ 1杯{ぱい}ちょっと。メニューに 書{か}いて いない ことも あるが、ホットなら たのめる。' },
+        { f: 'サイズ', q: '「トール」は 何{なん}ml？', a: '350ml', x: ['240ml', '470ml', '590ml'], e: 'かんジュース 1本{ぽん}ぶん。よその お店{みせ}の「M」に 近{ちか}い 大{おお}きさ。' },
+        { f: 'サイズ', q: '「グランデ」は イタリア語{ご}で どういう いみ？', a: '大{おお}きい', x: ['20', '小{ちい}さい', 'ミルク'], e: 'Grande＝大{おお}きい。470mlで 日本{にほん}で いちばん 人気{にんき}の サイズ。' },
+        { f: 'サイズ', q: '「ベンティ」は イタリア語{ご}で どういう いみ？', a: '20', x: ['特大{とくだい}', 'コーヒー', '風{かぜ}'], e: '20オンス（やく590ml）から この 名前{なまえ}。アイスの ベンティは 710ml。' },
+        { f: 'サイズ', q: 'ショートで たのめない のは？', a: 'アイスの ドリンク', x: ['ホットの コーヒー', 'ホットの ラテ', 'ホットの ココア'], e: 'アイスは トール（350ml）から。ショートは ホット専用{せんよう}。' },
+        { f: 'サイズ', q: '同{おな}じ グランデでも アイスの ほうが 飲{の}みものが 少{すこ}ない のは なぜ？', a: '氷{こおり}が 場所{ばしょ}を とる から', x: ['カップが 小{ちい}さい から', 'ミルクを 入{い}れない から', 'ねだんが 安{やす}い から'], e: 'だから「氷{こおり}少{すこ}なめ」に すると 中身{なかみ}が ふえる（無料{むりょう}）。' },
+        { f: 'サイズ', q: 'カフェラテを グランデに すると、エスプレッソは？', a: '2ショットに ふえる（ドリンクに よる）', x: ['1ショットの まま', '3ショットに なる', '0に なる'], e: 'トールまでは 1ショット、グランデ以上{いじょう}は 2ショットが 基本{きほん}。だから 味{あじ}も 少{すこ}し 濃{こ}く なる。' },
+        { f: 'サイズ', q: 'ベンティの アイスは 何{なん}ml？', a: '710ml', x: ['590ml', '470ml', '1000ml'], e: '氷{こおり}が 入{はい}る ぶん 器{うつわ}が 大{おお}きい。500mlの ペットボトルより 多{おお}い。' },
+        { f: 'サイズ', q: '注文{ちゅうもん}する とき いちばん 先{さき}に 言{い}うと よいのは？', a: 'サイズ', x: ['カスタマイズ', 'お金{かね}の はらい方{かた}', '自分{じぶん}の 名前{なまえ}'], e: 'サイズ → ドリンク → ホット/アイス → カスタマイズ の 順{じゅん}が いちばん スムーズ。' },
+
+        { f: 'メニュー', q: 'エスプレッソ 1ショットは だいたい 何{なん}ml？', a: 'やく30ml', x: ['やく100ml', 'やく240ml', 'やく5ml'], e: '大{おお}さじ 2杯{はい}ぶん くらい。少{すこ}ないけれど とても 濃{こ}い。' },
+        { f: 'メニュー', q: 'カフェラテと カプチーノの ちがいは？', a: 'カプチーノは あわ（フォーム）が 多{おお}い', x: ['カプチーノには チョコが 入{はい}る', 'ラテには コーヒーが 入{はい}らない', 'ねだんだけ ちがう'], e: '材料{ざいりょう}は 同{おな}じ。あわが 多{おお}い ぶん ミルクが 少{すこ}なく、カプチーノの ほうが 軽{かる}くて コーヒーを 強{つよ}く 感{かん}じる。' },
+        { f: 'メニュー', q: 'カフェ アメリカーノの 中身{なかみ}は？', a: 'エスプレッソ ＋ お湯{ゆ}', x: ['エスプレッソ ＋ ミルク', 'コーヒー ＋ チョコ', '紅茶{こうちゃ} ＋ お湯{ゆ}'], e: '濃{こ}い エスプレッソを お湯{ゆ}で のばした もの。すっきりした あと味{あじ}。' },
+        { f: 'メニュー', q: 'カフェ モカに 入{はい}って いて ラテに 入{はい}って いない ものは？', a: 'チョコレートシロップと ホイップ', x: ['ミルク', 'エスプレッソ', 'あわ'], e: 'ラテ＋チョコ＋ホイップ＝モカ。だから いちばん あまい。' },
+        { f: 'メニュー', q: '「マキアート」は イタリア語{ご}で どういう いみ？', a: 'しみ・点{てん}', x: ['あまい', '2つの', '牛乳{ぎゅうにゅう}'], e: '白{しろ}い ミルクの 上{うえ}から エスプレッソを 注{そそ}いで「しみ」を つける ので この 名前{なまえ}。' },
+        { f: 'メニュー', q: 'キャラメルマキアートで エスプレッソを 入{い}れる 順番{じゅんばん}は？', a: 'いちばん あと（上{うえ}から 注{そそ}ぐ）', x: ['いちばん 先{さき}', 'ミルクと 同時{どうじ}', '入{はい}って いない'], e: 'シロップ → ミルク → 最後{さいご}に エスプレッソ。だから 表面{ひょうめん}に 茶色{ちゃいろ}の もようが できる。' },
+        { f: 'メニュー', q: 'カフェ ミストの 中身{なかみ}は？', a: 'ドリップコーヒー ＋ あたためた ミルク', x: ['エスプレッソ ＋ ミルク', 'コーヒー ＋ チョコ', '抹茶{まっちゃ} ＋ ミルク'], e: 'エスプレッソを つかわない ので ラテより 軽{かる}く、ねだんも 少{すこ}し 安{やす}め。カフェオレに 近{ちか}い。' },
+        { f: 'メニュー', q: '「フラペチーノ」とは？', a: '氷{こおり}と 材料{ざいりょう}を ミキサーで まぜた 冷{つめ}たい 飲{の}みもの', x: ['あたたかい コーヒー', 'アイスクリーム', 'イタリアの お茶{ちゃ}'], e: 'スターバックスが 商標{しょうひょう}を もって いる 名前{なまえ}。だから ほかの お店{みせ}では この 名前{なまえ}を つかえない。' },
+        { f: 'メニュー', q: 'コーヒーが 入{はい}って いない メニューは どれ？', a: '抹茶{まっちゃ} ティーラテ', x: ['カフェ ミスト', 'アメリカーノ', 'カフェ モカ'], e: '抹茶{まっちゃ}・チャイ・ホットチョコレートは コーヒー ゼロ。ただし 抹茶{まっちゃ}と チャイには お茶{ちゃ}の カフェインが ある。' },
+        { f: 'メニュー', q: 'ドリップコーヒーの「ワンモアコーヒー」とは？', a: 'レシートを 見{み}せると 2杯目{はいめ}が 安{やす}く なる しくみ', x: ['2杯{はい} 同時{どうじ}に 買{か}う こと', 'おかわり 自由{じゆう}', 'ミルクを 足{た}す こと'], e: '同{おな}じ 日{ひ}など 条件{じょうけん}が ある。しくみは 変{か}わる ことが ある ので お店{みせ}で たしかめよう。' },
+
+        { f: 'カスタマイズ', q: '無料{むりょう}で できる カスタマイズは どれ？', a: 'シロップを 半分{はんぶん}に する', x: ['豆乳{とうにゅう}に 変{か}える', 'エスプレッソを 足{た}す', 'ホイップを 足{た}す'], e: 'シロップの 増減{ぞうげん}・氷{こおり}少{すこ}なめ・ぬるめ・低脂肪{ていしぼう}ミルクへの 変更{へんこう}は 無料{むりょう}。' },
+        { f: 'カスタマイズ', q: '豆乳{とうにゅう}（ソイ）や オーツミルクに 変{か}えると？', a: '50円{えん}ほど かかる', x: ['無料{むりょう}', '半額{はんがく}に なる', 'できない'], e: '低脂肪{ていしぼう}・無脂肪{むしぼう}への 変更{へんこう}は 無料{むりょう}。植物{しょくぶつ}の ミルクは 追加{ついか}料金{りょうきん}に なる ことが 多{おお}い。' },
+        { f: 'カスタマイズ', q: 'アイスドリンクで 中身{なかみ}を ふやす たのみ方{かた}は？', a: '「氷{こおり}少{すこ}なめで」', x: ['「氷{こおり}多{おお}めで」', '「サイズアップで」', '「ホットで」'], e: '無料{むりょう}で 飲{の}みものが ふえ、うすまるのも おそく なる。' },
+        { f: 'カスタマイズ', q: '小{ちい}さい 子{こ}と ホットドリンクを 飲{の}む とき よい たのみ方{かた}は？', a: '「ぬるめで お願{ねが}いします」', x: ['「熱{あつ}めで」', '「氷{こおり}を 入{い}れて」', '「大{おお}きい サイズで」'], e: '無料{むりょう}で 温度{おんど}を 下{さ}げて くれる。やけどを ふせげる。' },
+        { f: 'カスタマイズ', q: 'ラテを もっと ふわふわに したい ときは？', a: '「フォーム多{おお}めで」', x: ['「氷{こおり}多{おお}めで」', '「シロップ多{おお}めで」', '「ぬるめで」'], e: 'あわを ふやすと カプチーノに 近{ちか}づく。逆{ぎゃく}に「ウェットで」と 言{い}うと ミルクが 多{おお}く なる。' },
+        { f: 'カスタマイズ', q: 'ドリップコーヒーで できない カスタマイズは？', a: 'ミルクの 種類{しゅるい}を 変{か}える', x: ['ワンモアコーヒーを つかう', '砂糖{さとう}を 入{い}れる', '持{も}ち帰{かえ}りに する'], e: 'ドリップコーヒーの ミルクは 自分{じぶん}で 入{い}れる。ミルク入{い}りが よければ カフェミストを たのむ。' },
+        { f: 'カスタマイズ', q: '店内{てんない}で ゴミを 出{だ}さない たのみ方{かた}は？', a: '「マグカップで お願{ねが}いします」', x: ['「テイクアウトで」', '「ふた なしで」', '「大{おお}きい サイズで」'], e: '陶器{とうき}の カップで 出{で}て くる。使{つか}い捨{す}てが へり、かおりも よく 感{かん}じる。' },
+        { f: 'カスタマイズ', q: 'カスタマイズを おぼえる いちばん よい やり方{かた}は？', a: '1回{かい}に 1つだけ 変{か}えて みる', x: ['いちどに 5つ 変{か}える', 'メニューを ぜんぶ 覚{おぼ}える', '人{ひと}の まねを する だけ'], e: '1つだけ 変{か}えると、何{なに}が どう 変{か}わったかが わかる。これを くりかえすと「じぶんの 1杯{ぱい}」が 見{み}つかる。' },
+        { f: 'カスタマイズ', q: 'フラペチーノを こどもでも 飲{の}める ように するには？', a: '「ノンコーヒーで」と たのむ', x: ['「ホットで」と たのむ', '「氷{こおり}なしで」と たのむ', 'できない'], e: 'コーヒー抜{ぬ}きに すると カフェインが ほぼ 0に なる。いちごや チョコの ものは もともと コーヒー なしの ことも 多{おお}い。' },
+        { f: 'カスタマイズ', q: '混{こ}んで いる ときの カスタマイズは？', a: 'できるだけ シンプルに する', x: ['いつもより 多{おお}く たのむ', '大{おお}きな 声{こえ}で 言{い}う', 'レジで ゆっくり 考{かんが}える'], e: 'カスタマイズは 作{つく}る 時間{じかん}が ふえる。うしろに 列{れつ}が ある ときは 思{おも}いやりを。' },
+
+        { f: '注文とマナー', q: '「店内{てんない}で お召{め}し上{あ}がりですか？」と 聞{き}かれる いちばんの 理由{りゆう}は？', a: '消費税{しょうひぜい}の 税率{ぜいりつ}が ちがう から', x: ['カップの 色{いろ}を 決{き}める から', '名前{なまえ}を 書{か}く から', 'ミルクの 量{りょう}が 変{か}わる から'], e: '持{も}ち帰{かえ}りは 8%、店内{てんない}は 10%（軽減税率{けいげんぜいりつ}）。だから かならず 聞{き}かれる。' },
+        { f: '注文とマナー', q: '持{も}ち帰{かえ}りの 消費税{しょうひぜい}は 何{なん}%？', a: '8%', x: ['10%', '5%', '0%'], e: '食{た}べもの・飲{の}みものの 持{も}ち帰{かえ}りは 8%。席{せき}で 食{た}べるのは サービスも 入{はい}る ので 10%。' },
+        { f: '注文とマナー', q: '「持{も}ち帰{かえ}り」と 言{い}って 席{せき}で 飲{の}むのは？', a: 'ルール違反{いはん}。正{ただ}しく 答{こた}える', x: ['かしこい やり方{かた}', 'お店{みせ}が とくを する', '問題{もんだい}ない'], e: '税率{ぜいりつ}を ごまかす ことに なる。10円{えん}ほどの 差{さ}の ために うそを つく のは かっこ悪{わる}い。' },
+        { f: '注文とマナー', q: 'スターバックスの 店内{てんない}と 持{も}ち帰{かえ}りの 支払{しはら}い金額{きんがく}は？', a: '税込{ぜいこ}みを そろえて いる ので 同{おな}じ（と 発表{はっぴょう}されて いる）', x: ['店内{てんない}が かならず 100円{えん} 高{たか}い', '持{も}ち帰{かえ}りが 半額{はんがく}', 'お店{みせ}の 人{ひと}が 決{き}める'], e: 'お店{みせ}に よって やり方{かた}が ちがう。スターバックスは 税込{ぜいこ}みを そろえる 方式{ほうしき}。レシートで たしかめて みよう。' },
+        { f: '注文とマナー', q: '混{こ}んで いる とき 席{せき}を とる タイミングは？', a: '注文{ちゅうもん}して 受{う}け取{と}って から', x: ['先{さき}に かばんを 置{お}いて とる', '友{とも}だちに とって もらう', '2つ 席{せき}を とる'], e: 'ものだけ 置{お}いて 席{せき}を 確保{かくほ}するのは まわりに めいわく。とくに 混{こ}んで いる ときは。' },
+        { f: '注文とマナー', q: '飲{の}み終{お}わった カップは？', a: '返却{へんきゃく}の 台{だい}に 分{わ}けて 出{だ}す', x: ['テーブルに 置{お}いて 帰{かえ}る', 'かばんに 入{い}れて 持{も}ち帰{かえ}る', '外{そと}の ゴミ箱{ばこ}に すてる'], e: 'ふた・ストロー・紙{かみ}・氷{こおり}で 分{わ}かれて いる。テーブルの こぼれも 拭{ふ}いて おく。' },
+        { f: '注文とマナー', q: 'モバイルオーダー＆ペイの いちばんの よさは？', a: '列{れつ}に ならばず、カスタマイズも 画面{がめん}で えらべる', x: ['ドリンクが 無料{むりょう}に なる', 'サイズが 大{おお}きく なる', 'お店{みせ}が すいて いる とき だけ つかえる'], e: '言{い}いにくい 注文{ちゅうもん}も 画面{がめん}で 落{お}ちついて えらべる ので、はじめての 人{ひと}に とくに 便利{べんり}。' },
+        { f: '注文とマナー', q: 'タンブラーを 持{も}って いく と どんな よい ことが ある？', a: '割引{わりびき}が あり、ゴミも へる', x: ['サイズが 2倍{ばい}に なる', '席{せき}が とれる', '早{はや}く 出{で}て くる'], e: '使{つか}い捨{す}ての カップが 1つ へる。金額{きんがく}や しくみは 変{か}わる ので お店{みせ}で たしかめよう。' },
+        { f: '注文とマナー', q: 'カフェで やっては いけない ことは？', a: 'イヤホンなしで 動画{どうが}の 音{おと}を 出{だ}す', x: ['本{ほん}を 読{よ}む', '友{とも}だちと 小{ちい}さな 声{こえ}で 話{はな}す', 'ノートに 書{か}く'], e: '勉強{べんきょう}や 仕事{しごと}を して いる 人{ひと}も いる 場所{ばしょ}。音{おと}は イヤホンで。' },
+        { f: '注文とマナー', q: 'はじめてで 何{なに}を 頼{たの}むか 決{き}まらない とき いちばん よいのは？', a: '「初{はじ}めてなので おすすめを 教{おし}えて ください」と 聞{き}く', x: ['だまって 立{た}って いる', 'いちばん 高{たか}い ものを 頼{たの}む', '外{そと}に 出{で}て 調{しら}べる'], e: 'お店{みせ}の 人{ひと}は 聞{き}かれるのに 慣{な}れて いる。好{す}きな 味{あじ}（あまい／さっぱり）を 伝{つた}えると えらんで くれる。' }
+    ];
+    let qz = null, qzField = 'all';
+    function newQuiz() {
+        const pool = qzField === 'all' ? QS : QS.filter(q => q.f === qzField);
+        const q = pool[rnd(pool.length)];
+        qz = { q, choices: shuffle([q.a].concat(q.x)), done: false };
+        const fields = ['all'].concat([...new Set(QS.map(x => x.f))]);
+        document.getElementById('qz-fields').innerHTML = fields.map(f =>
+            `<button onclick="setField('${f}')" class="${qzField === f ? 'bg-emerald-700 text-white' : 'bg-white border-2 border-emerald-200 text-stone-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${f === 'all' ? 'ぜんぶ ' + QS.length : plain(f) + ' ' + QS.filter(x => x.f === f).length}</button>`).join('');
+        document.getElementById('qz-q').innerHTML = `<span class="text-xs font-black text-emerald-700 bg-emerald-100 px-2 py-1 rounded-lg mr-2">${esc(plain(q.f))}</span>${q.q}`;
+        document.getElementById('qz-choices').innerHTML = qz.choices.map((c, i) =>
+            `<button onclick="ansQuiz(${i})" data-qzc="${i}" class="bg-white border-2 border-stone-200 hover:border-emerald-500 font-bold text-left px-4 py-3 rounded-2xl bounce-hover">${c}</button>`).join('');
+        document.getElementById('qz-res').innerHTML = '';
+        scoreBox('qz-score', S.quiz);
+    }
+    function setField(f) { qzField = f; newQuiz(); }
+    function ansQuiz(i) {
+        if (!qz || qz.done) return;
+        qz.done = true;
+        const ok = qz.choices[i] === qz.q.a;
+        S.quiz[1]++; if (ok) S.quiz[0]++;
+        markChoices('[data-qzc]', j => qz.choices[j] === qz.q.a, i, 'font-bold text-left px-4 py-3 rounded-2xl');
+        document.getElementById('qz-res').innerHTML = resultBox(ok, ok ? '⭕ せいかい！' : `❌ こたえは 「${qz.q.a}」`, qz.q.e);
+        scoreBox('qz-score', S.quiz);
+    }
+
+    /* ===================== タブごとの 組み立て ===================== */
+    const BUILD = {
+        size: () => {
+            document.getElementById('sz-fig').innerHTML = szFig();
+            document.getElementById('sz-table').innerHTML =
+                `<table class="w-full text-xs font-bold" style="min-width:440px">
+                    <tr class="bg-emerald-100 text-emerald-800">
+                        <th class="p-2 text-left rounded-l-xl">サイズ</th>
+                        <th class="p-2 text-left">ホット</th>
+                        <th class="p-2 text-left">アイス</th>
+                        <th class="p-2 text-left rounded-r-xl">どれくらい？</th></tr>
+                    ${SIZES.map(([en, ja, ml, iced, w, h, ex], i) =>
+                        `<tr class="${i % 2 ? 'bg-stone-50' : ''}">
+                            <td class="p-2 align-top leading-relaxed"><b>${en}</b><br><span class="text-stone-500">${ja}</span></td>
+                            <td class="p-2 align-top num">${ml} ml</td>
+                            <td class="p-2 align-top num ${iced ? '' : 'text-rose-600'}">${iced ? iced + ' ml' : 'なし'}</td>
+                            <td class="p-2 align-top leading-relaxed">${ex}</td></tr>`).join('')}
+                </table>
+                <p class="text-xs font-bold text-stone-400 mt-2">※ 量{りょう}は 公表{こうひょう}されて いる 目安{めやす}。ドリンクに よって 少{すこ}し ちがう ことも ある。</p>`;
+            cards('sz-why', SZ_WHY, 'emerald');
+            document.getElementById('sz-order').innerHTML = szOrderFig();
+            cards('sz-order-why', SZ_ORDER, 'sky');
+        },
+        menu: () => {
+            drawMn();
+            document.getElementById('mn-cmp').innerHTML = mnCmpFig();
+            cards('mn-cmp-why', MN_CMP, 'amber');
+        },
+        custom: () => {
+            cuDraw();
+            cards('cu-free', CU_FREE, 'emerald');
+            cards('cu-paid', CU_PAID, 'rose');
+            cards('cu-best', CU_BEST, 'violet');
+        },
+        order: () => {
+            document.getElementById('or-flow').innerHTML = orFlowFig();
+            cards('or-flow-why', OR_FLOW, 'emerald');
+            cards('or-tips', OR_TIPS, 'sky');
+            document.getElementById('or-tax').innerHTML = orTaxFig();
+            cards('or-tax-why', OR_TAX, 'amber');
+            cards('or-manner', OR_MANNER, 'stone');
+            cards('or-app', OR_APP, 'violet');
+        },
+        quiz: () => newQuiz()
+    };
+
+    /* ===================== 起動 ===================== */
+    renderNav();
+    ready.size = true;
+    BUILD.size();
+    rubify(document.body);
+</script>
+</body>
+</html>
