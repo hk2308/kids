@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>半導体ラボ</title>
+    <meta name="description" content="すなからチップまで8工程を図解。シリコンインゴットの引き上げ、ウェーハがなぜ丸くチップがなぜ四角いか、取れる数の計算、イメージセンサの画素とベイヤー配列、ナノの大きさ、世界の製造メーカーまとめ、クイズ。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums }
+        .bounce-hover { transition: transform .12s cubic-bezier(.175,.885,.32,1.275) }
+        .bounce-hover:active { transform: scale(.94) }
+        @keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.1) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275) }
+        @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+        .shake { animation: shake .3s ease-in-out }
+        svg text { font-family: inherit }
+        rt { font-size: .55em; font-weight: 700; color: #4338ca }
+        input[type=range] { accent-color: #4338ca; width: 100% }
+        table { border-collapse: collapse }
+    </style>
+</head>
+<body class="bg-indigo-50 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-slate-800 via-indigo-700 to-sky-500 text-white p-3 shadow-lg sticky top-0 z-30">
+        <div class="max-w-4xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">🔲</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">半導体ラボ</h1>
+                    <p class="text-xs text-indigo-50 font-bold hidden sm:block">すな が スマホの 頭のうに なるまで</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[64px] z-20 bg-indigo-50/95 backdrop-blur border-b border-indigo-200">
+        <div class="max-w-4xl mx-auto flex gap-2 p-3 overflow-x-auto" id="tab-nav"></div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto w-full p-3 sm:p-5 flex-grow space-y-4">
+
+        <!-- ===== ① すなから チップ ===== -->
+        <section id="tab-flow" class="space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">🏭 スマホの 中の チップは「すな」から できて いる</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    すなや 石の 中に いちばん 多く ある もの、それが
+                    <b class="text-indigo-700">ケイ素{けいそ}（シリコン・Si）</b>。
+                    これを とんでもなく きれいに して、まっすぐ ならべて、
+                    細い 絵を 何百回も 焼きつける と チップに なる。
+                    ぜんぶで <b>3か月</b>、工程は <b>500〜1000回</b>。
+                </p>
+                <div id="fl-chips" class="flex flex-wrap gap-1.5 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 id="fl-name" class="font-black text-lg"></h2>
+                <p id="fl-lead" class="text-sm font-bold text-slate-500 mt-1"></p>
+                <div id="fl-fig" class="mt-3"></div>
+                <div id="fl-nums" class="flex flex-wrap gap-2 mt-3"></div>
+                <div id="fl-body" class="space-y-2 mt-3"></div>
+                <div id="fl-point" class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-3 text-sm font-bold mt-3 leading-relaxed"></div>
+                <div class="flex gap-2 mt-3">
+                    <button onclick="stepMove(-1)" class="bg-white border-2 border-indigo-300 text-indigo-700 font-black px-4 py-2 rounded-full text-sm bounce-hover">◀ まえの 工程</button>
+                    <button onclick="stepMove(1)" class="ml-auto bg-indigo-700 text-white font-black px-4 py-2 rounded-full text-sm bounce-hover">つぎの 工程 ▶</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== ② 丸い ウェーハ・四角い チップ ===== -->
+        <section id="tab-wafer" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">💿 ウェーハは 丸い。チップは 四角い。</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    半導体{はんどうたい}の 写真を 見ると、土台の ウェーハは いつも
+                    <b class="text-indigo-700">まるい 円ばん</b>で、そこから 取れる チップは いつも
+                    <b class="text-rose-600">四角</b>。これは 「なんとなく」では なく、
+                    <b>作り方から そう なる しか ない</b>。
+                </p>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">⭕ なぜ ウェーハは 丸いの？</h2>
+                <div id="wf-round" class="mt-3"></div>
+                <div id="wf-round-why" class="space-y-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">🔲 なぜ チップは 四角いの？</h2>
+                <div id="wf-square" class="mt-3"></div>
+                <div id="wf-square-why" class="space-y-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">🧮 丸から 四角を 何個 取れる？</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    丸い 板を 縦横に 切って 四角を 取ると、はしに
+                    <b class="text-rose-600">かけた チップ</b>が 出て しまう。
+                    ウェーハの 大きさと チップの 大きさを かえて たしかめよう。
+                </p>
+                <div id="wf-dia" class="flex flex-wrap gap-1.5 mt-3"></div>
+                <div class="flex items-center gap-3 mt-3">
+                    <span class="font-black text-sm whitespace-nowrap">チップの 1辺</span>
+                    <input type="range" id="wf-side" min="5" max="30" step="1" value="10" oninput="wfCalc()">
+                    <span id="wf-side-v" class="num bg-indigo-100 text-indigo-700 font-black px-3 py-1 rounded-full text-xs whitespace-nowrap"></span>
+                </div>
+                <div id="wf-fig" class="mt-3"></div>
+                <div id="wf-stat" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3"></div>
+                <div id="wf-note" class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-3 text-sm font-bold mt-3 leading-relaxed"></div>
+            </div>
+        </section>
+
+        <!-- ===== ③ イメージセンサ ===== -->
+        <section id="tab-sensor" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">📷 カメラの「目」＝イメージセンサ</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    フィルムの かわりに 光を <b class="text-indigo-700">数字</b>に かえる チップ。
+                    これも シリコンウェーハから 作る。中身は
+                    <b>小さな 光の コップ（画素{がそ}）</b>が ずらりと ならんで いる だけ。
+                </p>
+                <div id="sn-pixel" class="mt-3"></div>
+                <div id="sn-layer" class="space-y-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">💡 光が 数字に なる 4ステップ</h2>
+                <div id="sn-step" class="space-y-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">🟥🟩🟦 1つの 画素は 1色しか 見えない</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    画素は 色が わからない。明るさを 数える だけ。
+                    そこで 赤・緑・青の <b class="text-indigo-700">色フィルター</b>を 市松もように のせる。
+                    これを <b>ベイヤー配列{はいれつ}</b>と いう。
+                </p>
+                <div id="sn-bayer" class="mt-3"></div>
+                <div id="sn-bayer-why" class="space-y-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">🔍 画素の 数を かえて みよう</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    画素が 少ないと かくかく。「センサーが 見た まま」に すると、
+                    1画素が 1色だけの へんな 絵に なる。
+                    それを <b class="text-indigo-700">計算で 色を うめた</b>のが 写真。
+                </p>
+                <div class="flex items-center gap-3 mt-3">
+                    <span class="font-black text-sm whitespace-nowrap">画素の 数</span>
+                    <input type="range" id="px-n" min="4" max="40" step="1" value="24" oninput="pxDraw()">
+                    <span id="px-n-v" class="num bg-indigo-100 text-indigo-700 font-black px-3 py-1 rounded-full text-xs whitespace-nowrap"></span>
+                </div>
+                <div id="px-modes" class="flex flex-wrap gap-1.5 mt-3"></div>
+                <div id="px-fig" class="mt-3"></div>
+                <div id="px-desc" class="bg-indigo-50 border-2 border-indigo-200 rounded-2xl p-3 text-sm font-bold mt-3 leading-relaxed"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">🔄 うら から 光を 当てる（裏面照射{りめんしょうしゃ}）</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    ふつうに 作ると、光の 通り道に <b class="text-rose-600">配線{はいせん}</b>が あって じゃまに なる。
+                    そこで ウェーハを <b>ひっくり返して うすく けずり</b>、うら側から 光を 入れる。
+                </p>
+                <div id="sn-bsi" class="mt-3"></div>
+                <div id="sn-bsi-why" class="space-y-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">⚖️ CMOS と CCD</h2>
+                <div id="sn-cmp" class="mt-3 overflow-x-auto"></div>
+                <div id="sn-use" class="flex flex-wrap gap-1.5 mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ④ ナノの 世界 ===== -->
+        <section id="tab-nano" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">🔬 チップの 中には スイッチが 何百億個</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    チップの 部品は <b class="text-indigo-700">トランジスタ</b>＝電気の スイッチ。
+                    ON を 1、OFF を 0 と すれば、数も 文字も 絵も あらわせる。
+                </p>
+                <div id="nn-tr" class="mt-3"></div>
+                <div id="nn-tr-why" class="space-y-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">📏 「2ナノ」って どれくらい？</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    1ナノメートル（nm）は <b class="text-indigo-700">1ミリの 100万分の1</b>。
+                    ほかの ものと 並べて みよう（めもりは 10倍ずつ）。
+                </p>
+                <div id="nn-size" class="mt-3"></div>
+                <div id="nn-size-note" class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-3 text-sm font-bold mt-3 leading-relaxed"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">🖼️ 写真の 原理で 回路を 焼きつける</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    <b class="text-indigo-700">フォトリソグラフィ</b>＝ 光で 形を うつす 技。
+                    細い 線を 引くには <b>波長{はちょう}の 短い 光</b>が いる。
+                </p>
+                <div id="nn-litho" class="mt-3"></div>
+                <div id="nn-litho-why" class="space-y-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">📈 どんどん ふえた トランジスタ（ムーアの法則）</h2>
+                <div id="nn-moore" class="mt-3"></div>
+                <div id="nn-moore-note" class="bg-indigo-50 border-2 border-indigo-200 rounded-2xl p-3 text-sm font-bold mt-3 leading-relaxed"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">🧹 ごみ 1つぶで こわれる</h2>
+                <div id="nn-clean" class="space-y-2 mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ⑤ メーカー ===== -->
+        <section id="tab-maker" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">🏢 1枚の チップは 1社では 作れない</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    材料{ざいりょう}・装置{そうち}・設計・製造・検査{けんさ}…
+                    それぞれに <b class="text-indigo-700">世界一の 会社</b>が いて、
+                    バトンを つないで 1枚の チップに なる。
+                </p>
+                <div id="mk-chain" class="mt-3"></div>
+            </div>
+
+            <div id="mk-list" class="space-y-4"></div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">🗾 日本は どこが 強い？</h2>
+                <div id="mk-jp" class="space-y-2 mt-3"></div>
+            </div>
+
+            <div class="bg-slate-100 rounded-3xl p-4 border-2 border-slate-300 text-xs font-bold text-slate-500 leading-relaxed">
+                ⚠️ 会社の 名前・国・シェア（世界で どれくらいの 割合を 作って いるか）は
+                年に よって かわる。ここに あるのは 2026年ごろの だいたいの すがた。
+                会社が いっしょに なったり、名前が かわったり する ことも ある ので、
+                気に なったら 新しい ニュースで たしかめよう。
+            </div>
+        </section>
+
+        <!-- ===== ⑥ クイズ ===== -->
+        <section id="tab-quiz" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">❓ 半導体クイズ</h2>
+                    <span id="qz-score" class="num bg-indigo-100 text-indigo-700 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newQuiz()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <div id="qz-fields" class="flex flex-wrap gap-2 mt-3"></div>
+                <p id="qz-q" class="font-black text-base sm:text-lg mt-3 leading-relaxed"></p>
+                <div id="qz-choices" class="grid gap-2 mt-3"></div>
+                <div id="qz-res" class="mt-3"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center text-xs text-slate-400 font-bold p-4">半導体ラボ © 2026</footer>
+
+<script>
+    /* ===================== きょうつう ===================== */
+    const rnd = n => Math.floor(Math.random() * n);
+    function shuffle(a) { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = rnd(i + 1); const t = b[i]; b[i] = b[j]; b[j] = t; } return b; }
+    function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    const plain = t => String(t).replace(/\{[^{}]*\}/g, '');
+    const nf = n => n.toLocaleString('ja-JP');
+    const W = 560;
+    function svg(w, h, body) {
+        return `<svg viewBox="0 0 ${w} ${h}" class="w-full h-auto block mx-auto" style="max-width:${w}px" role="img">${body}</svg>`;
+    }
+    function resultBox(ok, title, body) {
+        return `<div class="pop ${ok ? 'bg-green-50 border-green-300' : 'bg-amber-50 border-amber-300'} border-2 rounded-2xl p-3">
+            <p class="font-black ${ok ? 'text-green-700' : 'text-amber-700'}">${title}</p>
+            <div class="font-bold text-sm mt-1 leading-relaxed">${body}</div></div>`;
+    }
+    const S = { quiz: [0, 0] };
+    function scoreBox(id, s) { document.getElementById(id).innerText = `${s[0]} / ${s[1]}`; }
+    function markChoices(sel, isRight, picked, cls) {
+        document.querySelectorAll(sel).forEach((el, j) => {
+            el.className = `${isRight(j) ? 'bg-green-50 border-green-500' : (j === picked ? 'bg-red-50 border-red-400 shake' : 'bg-white border-slate-200 opacity-60')} border-2 ${cls}`;
+        });
+    }
+    /* 「見出し ＋ せつめい」の カードを ならべる
+       （Tailwind に 見つけて もらう ため、クラス名は 書きくずさず ここに 全部 書く） */
+    const PAL = {
+        indigo: ['bg-indigo-50 border-indigo-200', 'text-indigo-800'],
+        emerald: ['bg-emerald-50 border-emerald-200', 'text-emerald-800'],
+        rose: ['bg-rose-50 border-rose-200', 'text-rose-800'],
+        amber: ['bg-amber-50 border-amber-200', 'text-amber-800'],
+        sky: ['bg-sky-50 border-sky-200', 'text-sky-800']
+    };
+    function cards(id, list, col) {
+        const p = PAL[col || 'indigo'];
+        document.getElementById(id).innerHTML = list.map(([t, d]) =>
+            `<div class="${p[0]} border-2 rounded-2xl p-3">
+                <p class="font-black ${p[1]} text-sm">${t}</p>
+                <p class="text-xs font-bold text-slate-600 mt-1 leading-relaxed">${d}</p></div>`).join('');
+    }
+    function numChips(id, list) {
+        document.getElementById(id).innerHTML = list.map(([t, v]) =>
+            `<span class="bg-indigo-50 border-2 border-indigo-200 rounded-2xl px-3 py-1.5 text-xs font-black text-slate-500">${t} <b class="num text-indigo-700 ml-1">${v}</b></span>`).join('');
+    }
+
+    /* 漢字{よみ} を ルビに */
+    const RUBY_RE = /([一-鿿々]+)\{([^{}]+)\}/g;
+    function rubySkip(el) {
+        for (let n = el; n; n = n.parentNode) {
+            const tag = n.nodeType === 1 ? n.tagName.toLowerCase() : '';
+            if (tag === 'script' || tag === 'style' || tag === 'svg' || tag === 'ruby') return true;
+        }
+        return false;
+    }
+    function rubifyText(node) {
+        const t = node.nodeValue;
+        if (t.indexOf('{') < 0 || !node.parentNode || rubySkip(node.parentNode)) return;
+        RUBY_RE.lastIndex = 0;
+        if (!RUBY_RE.test(t)) return;
+        RUBY_RE.lastIndex = 0;
+        const frag = document.createDocumentFragment();
+        let last = 0, m;
+        while ((m = RUBY_RE.exec(t))) {
+            if (m.index > last) frag.appendChild(document.createTextNode(t.slice(last, m.index)));
+            const ruby = document.createElement('ruby');
+            ruby.appendChild(document.createTextNode(m[1]));
+            const rt = document.createElement('rt');
+            rt.textContent = m[2];
+            ruby.appendChild(rt);
+            frag.appendChild(ruby);
+            last = m.index + m[0].length;
+        }
+        if (last < t.length) frag.appendChild(document.createTextNode(t.slice(last)));
+        node.parentNode.replaceChild(frag, node);
+    }
+    function rubify(root) {
+        if (root.nodeType === 3) return rubifyText(root);
+        if (root.nodeType !== 1 || rubySkip(root)) return;
+        const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        const list = [];
+        while (w.nextNode()) if (w.currentNode.nodeValue.indexOf('{') >= 0) list.push(w.currentNode);
+        list.forEach(rubifyText);
+    }
+    new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(rubify)))
+        .observe(document.body, { childList: true, subtree: true });
+
+    const TABS = { flow: '🏭 すな→チップ', wafer: '💿 丸と 四角', sensor: '📷 イメージセンサ', nano: '🔬 ナノの 世界', maker: '🏢 メーカー', quiz: '❓ クイズ' };
+    let tab = 'flow';
+    const ready = {};
+    function renderNav() {
+        document.getElementById('tab-nav').innerHTML = Object.entries(TABS).map(([k, label]) =>
+            `<button onclick="setTab('${k}')" data-tab="${k}" class="${tab === k ? 'bg-indigo-700 text-white' : 'bg-white border-2 border-indigo-200 text-slate-600'} font-black px-4 py-2 rounded-full text-sm whitespace-nowrap bounce-hover">${label}</button>`).join('');
+    }
+    function setTab(k) {
+        tab = k;
+        Object.keys(TABS).forEach(t => document.getElementById('tab-' + t).classList.toggle('hidden', t !== k));
+        renderNav();
+        if (!ready[k]) { ready[k] = true; if (BUILD[k]) BUILD[k](); }
+    }
+
+    /* ===================== 絵の 部品 ===================== */
+    function bg(h, fill, w) { return `<rect x="0" y="0" width="${w || W}" height="${h}" rx="14" fill="${fill || '#eef2ff'}"/>`; }
+    function tx(x, y, t, size, col, anchor, weight) {
+        /* SVGの 中に <ruby> は 置けない ので、漢字{よみ} の かっこは ここで おとす */
+        t = plain(t);
+        return `<text x="${x}" y="${y}" text-anchor="${anchor || 'middle'}" font-size="${size || 11}" font-weight="${weight || 900}" fill="${col || '#3730a3'}">${esc(t)}</text>`;
+    }
+    /* 絵の 中の 文字の 幅を ざっくり 見つもる（半角は 6px、全角は 10px） */
+    const twid = t => [...plain(t)].reduce((a, ch) => a + (ch.charCodeAt(0) < 128 ? 6 : 10), 0);
+    function arrow(x1, y1, x2, y2, col, w) {
+        const a = Math.atan2(y2 - y1, x2 - x1), L = 9;
+        return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="${w || 3}" stroke-linecap="round"/>
+                <polygon points="${x2},${y2} ${(x2 - Math.cos(a - .45) * L).toFixed(1)},${(y2 - Math.sin(a - .45) * L).toFixed(1)} ${(x2 - Math.cos(a + .45) * L).toFixed(1)},${(y2 - Math.sin(a + .45) * L).toFixed(1)}" fill="${col}"/>`;
+    }
+    function box(x, y, w, h, label, col, fill) {
+        const c = col || '#4338ca';
+        return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8" fill="${fill || '#ffffff'}" stroke="${c}" stroke-width="2.5"/>` +
+               tx(x + w / 2, y + h / 2 + 4, label, 11, c);
+    }
+    /* だ円に そって まわる しるし（たて じくの まわりの 回転） */
+    function spinEll(cx, cy, rx, ry, col) {
+        const c = col || '#0ea5e9';
+        return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="none" stroke="${c}" stroke-width="2.2" stroke-dasharray="6 4"/>` +
+               `<polygon points="${cx + rx},${cy + 1} ${cx + rx - 6},${cy - 7} ${cx + rx + 7},${cy - 5}" fill="${c}"/>`;
+    }
+    /* くるくる 回る しるし */
+    function spin(cx, cy, r, col) {
+        const c = col || '#0ea5e9';
+        return `<path d="M ${cx - r} ${cy} a ${r} ${r} 0 1 1 ${r * 1.6} ${-r * 0.6}" fill="none" stroke="${c}" stroke-width="2.5"/>` +
+               `<polygon points="${cx + r * .6},${cy - r * .6} ${cx + r * .6 - 8},${cy - r * .6 - 2} ${cx + r * .6 + 1},${cy - r * .6 + 8}" fill="${c}"/>`;
+    }
+
+    /* =====================================================================
+       ① すな から チップ まで
+       ===================================================================== */
+    function fig1() {
+        let g = bg(212, '#fef3c7');
+        // すな山
+        g += `<path d="M18 150 Q70 96 120 150 Z" fill="#d6b35c"/><path d="M96 150 Q140 108 186 150 Z" fill="#e0c377"/>`;
+        for (let i = 0; i < 26; i++) {
+            const x = 22 + (i * 37) % 160, y = 118 + (i * 23) % 30;
+            g += `<circle cx="${x}" cy="${y + 10}" r="1.6" fill="#a1802f"/>`;
+        }
+        g += `<line x1="18" y1="150" x2="190" y2="150" stroke="#a16207" stroke-width="3"/>`;
+        g += tx(104, 44, 'すな・けい石', 13, '#92400e');
+        g += tx(104, 62, 'かたい 石の つぶ', 10, '#b45309');
+        // 石英の 結晶
+        g += `<polygon points="256,44 296,60 296,126 276,144 256,126" fill="#c7d2fe" stroke="#4338ca" stroke-width="2.5"/>`;
+        g += `<polygon points="256,44 296,60 276,68 240,56" fill="#e0e7ff" stroke="#4338ca" stroke-width="2"/>`;
+        g += `<polygon points="240,56 276,68 276,144 240,126" fill="#a5b4fc" stroke="#4338ca" stroke-width="2"/>`;
+        g += tx(268, 158, '石英（せきえい）', 11, '#3730a3');
+        g += arrow(196, 100, 232, 100, '#92400e', 3);
+        // SiO2 の 原子
+        g += arrow(316, 100, 356, 100, '#4338ca', 3);
+        const OX = [[398, 58], [506, 58], [398, 134], [506, 134]];
+        // ぼうを 先に、玉と 文字を あとに かく（Si の 文字が かくれない ように）
+        OX.forEach(([x, y]) => g += `<line x1="452" y1="94" x2="${x}" y2="${y}" stroke="#334155" stroke-width="3"/>`);
+        OX.forEach(([x, y]) => {
+            g += `<circle cx="${x}" cy="${y}" r="15" fill="#fca5a5" stroke="#b91c1c" stroke-width="2"/>` + tx(x, y + 5, 'O', 12, '#7f1d1d');
+        });
+        g += `<circle cx="452" cy="94" r="24" fill="#94a3b8" stroke="#334155" stroke-width="2.5"/>` + tx(452, 99, 'Si', 15, '#0f172a');
+        // 酸素は となりの ケイ素と 分けあう ので、ぜんたいでは 1:2
+        g += tx(452, 158, 'ケイ素の まわりに 酸素4つ', 10, '#3730a3');
+        g += tx(452, 174, '分けあって ぜんたいで SiO2', 10, '#4338ca');
+        // 地殻の 元素の 割合
+        const EL = [['酸素 46%', 46, '#fca5a5'], ['ケイ素 28%', 28, '#818cf8'], ['アルミ', 8, '#fcd34d'], ['鉄', 5, '#a3a3a3'], ['ほか 13%', 13, '#d4d4d8']];
+        let x0 = 18;
+        EL.forEach(([n, v, c]) => {
+            const w = 524 * v / 100;
+            g += `<rect x="${x0.toFixed(1)}" y="180" width="${w.toFixed(1)}" height="22" rx="4" fill="${c}" stroke="#78350f" stroke-width="1.5"/>`;
+            if (w > twid(n) + 6) g += tx(x0 + w / 2, 195, n, 10, '#451a03');   // 入らない ラベルは 出さない
+            x0 += w;
+        });
+        g += tx(18, 175, '地面（地かく）に ある 元素の 重さの 割合（アルミ 8%・鉄 5%）', 10, '#92400e', 'start');
+        return svg(W, 212, g);
+    }
+
+    function fig2() {
+        let g = bg(218, '#fee2e2');
+        // ホッパー
+        g += `<polygon points="148,22 206,22 196,52 158,52" fill="#fff" stroke="#b91c1c" stroke-width="2.5"/>` + tx(177, 43, 'けい石', 10, '#991b1b');
+        g += `<polygon points="242,22 300,22 290,52 252,52" fill="#fff" stroke="#b91c1c" stroke-width="2.5"/>` + tx(271, 43, '炭（すみ）', 10, '#991b1b');
+        g += arrow(177, 54, 177, 78, '#b91c1c', 2.5) + arrow(271, 54, 271, 78, '#b91c1c', 2.5);
+        // 電気炉
+        g += `<path d="M104 80 L344 80 L322 176 L126 176 Z" fill="#7c2d12" stroke="#431407" stroke-width="3"/>`;
+        g += `<path d="M126 132 L322 132 L312 172 L136 172 Z" fill="#f97316"/>`;
+        g += `<path d="M136 156 L312 156 L306 172 L142 172 Z" fill="#fde047"/>`;
+        // 電極
+        [130, 224, 318].forEach(x => {
+            g += `<rect x="${x - 9}" y="18" width="18" height="118" rx="3" fill="#1f2937" stroke="#0f172a" stroke-width="2"/>`;
+            g += `<path d="M${x - 6} 136 q6 12 12 0" fill="none" stroke="#fef08a" stroke-width="3"/>`;
+        });
+        g += tx(56, 34, '電気の 電極', 9, '#0f172a') + arrow(90, 36, 117, 36, '#0f172a', 2);
+        g += tx(224, 120, '2000℃ くらい', 12, '#fff7ed');
+        // 出口
+        g += `<path d="M322 164 L366 164 L366 172 L322 176 Z" fill="#7c2d12"/>`;
+        g += `<path d="M366 168 q14 22 10 40" fill="none" stroke="#f97316" stroke-width="6"/>`;
+        g += `<path d="M352 208 q26 -16 52 0 l0 6 q-26 14 -52 0 Z" fill="#9a3412"/>`;
+        g += `<ellipse cx="378" cy="208" rx="26" ry="8" fill="#fb923c"/>`;
+        g += tx(452, 150, 'とけた シリコン', 12, '#9a3412');
+        g += tx(452, 168, '（じゅんど やく 98%）', 10, '#b45309');
+        g += tx(452, 196, '「金属シリコン」', 11, '#7f1d1d');
+        g += tx(18, 200, 'SiO2 ＋ 2C → Si ＋ 2CO', 13, '#7f1d1d', 'start');
+        g += tx(18, 214, '炭が 酸素を うばって いく', 10, '#b91c1c', 'start');
+        return svg(W, 218, g);
+    }
+
+    function fig3() {
+        let g = bg(206, '#ecfdf5');
+        // 金属シリコン
+        g += `<rect x="16" y="86" width="64" height="44" rx="6" fill="#94a3b8" stroke="#334155" stroke-width="2.5"/>`;
+        g += tx(48, 112, 'Si', 16, '#0f172a') + tx(48, 148, '98%', 12, '#334155') + tx(48, 76, '金属シリコン', 10, '#334155');
+        g += arrow(84, 108, 116, 108, '#047857', 2.5) + tx(100, 96, '＋HCl', 9, '#047857');
+        // 液体に する
+        g += `<path d="M124 78 l40 0 l0 22 l16 34 l0 20 l-72 0 l0 -20 l16 -34 Z" fill="#fff" stroke="#047857" stroke-width="2.5"/>`;
+        g += `<path d="M118 122 l52 0 l0 12 l-52 0 Z" fill="#6ee7b7"/>`;
+        g += `<path d="M112 134 l64 0 l0 20 l-64 0 Z" fill="#6ee7b7"/>`;
+        g += tx(144, 172, 'SiHCl3 の 液体', 10, '#047857');
+        g += arrow(182, 116, 210, 116, '#047857', 2.5);
+        // 蒸留塔
+        g += `<rect x="216" y="30" width="46" height="130" rx="10" fill="#fff" stroke="#047857" stroke-width="2.5"/>`;
+        for (let i = 0; i < 6; i++) g += `<line x1="218" y1="${48 + i * 19}" x2="260" y2="${48 + i * 19}" stroke="#34d399" stroke-width="2"/>`;
+        g += tx(239, 22, '蒸留（じょうりゅう）', 10, '#047857');
+        g += tx(239, 176, 'ちがう 温度で', 9, '#047857') + tx(239, 188, 'わける', 9, '#047857');
+        g += arrow(266, 92, 296, 92, '#047857', 2.5);
+        // ベルジャーの 中の 芯棒
+        g += `<path d="M304 152 l0 -66 a42 42 0 0 1 84 0 l0 66 Z" fill="#d1fae5" stroke="#047857" stroke-width="2.5" opacity="0.7"/>`;
+        g += `<path d="M330 152 l0 -56 q16 -18 32 0 l0 56" fill="none" stroke="#475569" stroke-width="9"/>`;
+        g += `<path d="M330 152 l0 -56 q16 -18 32 0 l0 56" fill="none" stroke="#fca5a5" stroke-width="3"/>`;
+        g += tx(346, 168, 'あつい 芯棒（しんぼう）に', 10, '#047857');
+        g += tx(346, 180, 'シリコンが つもる', 10, '#047857');
+        g += arrow(394, 100, 424, 100, '#047857', 2.5);
+        // ポリシリコン
+        g += `<rect x="432" y="56" width="34" height="96" rx="6" fill="#cbd5e1" stroke="#334155" stroke-width="2.5"/>`;
+        g += `<rect x="474" y="72" width="26" height="80" rx="6" fill="#e2e8f0" stroke="#334155" stroke-width="2.5"/>`;
+        g += `<path d="M508 152 l0 -30 l30 0 l0 30 Z" fill="#cbd5e1" stroke="#334155" stroke-width="2.5"/>`;
+        g += tx(486, 46, 'ポリシリコン', 11, '#334155');
+        g += tx(486, 168, '99.999999999%', 11, '#047857');
+        g += tx(486, 182, '（イレブンナイン）', 9, '#059669');
+        return svg(W, 206, g);
+    }
+
+    function fig4() {
+        let g = bg(250, '#e0f2fe');
+        // チャンバー（中は 真空）
+        g += `<rect x="108" y="14" width="240" height="228" rx="16" fill="#f8fafc" stroke="#0369a1" stroke-width="3"/>`;
+        // 引き上げの ワイヤ
+        g += `<line x1="228" y1="18" x2="228" y2="56" stroke="#334155" stroke-width="3"/>`;
+        g += `<rect x="214" y="54" width="28" height="14" rx="3" fill="#475569"/>`;
+        // 種結晶
+        g += `<rect x="222" y="68" width="12" height="20" fill="#818cf8" stroke="#3730a3" stroke-width="2"/>`;
+        g += tx(54, 44, '種結晶', 11, '#3730a3');
+        g += arrow(78, 46, 216, 74, '#3730a3', 2);
+        // 首 と 円柱
+        g += `<path d="M222 88 q6 10 -12 22 l0 0 l60 0 q-18 -12 -12 -22 Z" fill="#cbd5e1" stroke="#334155" stroke-width="2"/>`;
+        g += `<rect x="196" y="110" width="64" height="92" fill="#cbd5e1" stroke="#334155" stroke-width="2.5"/>`;
+        g += `<ellipse cx="228" cy="110" rx="32" ry="9" fill="#e2e8f0" stroke="#334155" stroke-width="2"/>`;
+        // 原子の ならび（どこまでも 同じ 向き）
+        for (let i = 0; i < 4; i++) for (let j = 0; j < 6; j++)
+            g += `<circle cx="${204 + i * 16}" cy="${124 + j * 13}" r="2.4" fill="#475569"/>`;
+        // るつぼ
+        g += `<path d="M176 206 l104 0 l-10 30 l-84 0 Z" fill="#a16207" stroke="#713f12" stroke-width="2.5"/>`;
+        g += `<path d="M180 208 l96 0 l-8 24 l-80 0 Z" fill="#fb923c"/>`;
+        g += `<ellipse cx="228" cy="208" rx="48" ry="7" fill="#fdba74"/>`;
+        g += tx(228, 228, '1414℃', 11, '#7c2d12');
+        // ヒーター
+        [162, 294].forEach(x => { for (let i = 0; i < 5; i++) g += `<path d="M${x - 8} ${196 + i * 9} q8 -7 16 0" fill="none" stroke="#dc2626" stroke-width="2.5"/>`; });
+        g += tx(134, 186, 'ヒーター', 9, '#b91c1c');
+        // 回転（結晶と るつぼ、どちらも 回す）
+        g += spinEll(228, 110, 32, 9, '#0ea5e9');
+        g += spinEll(228, 208, 48, 7, '#0ea5e9');
+        // 左：引き上げる 速さ
+        g += tx(54, 112, '1分に 1mm ほど', 11, '#0369a1') + tx(54, 128, 'ゆっくり 引き上げる', 11, '#0369a1');
+        g += arrow(54, 96, 54, 56, '#0369a1', 3);
+        // 右：大きさ と 形の りゆう
+        g += tx(364, 44, '直径 300mm', 11, '#0f172a', 'start');
+        g += tx(364, 62, '長さ 1〜2m', 11, '#0f172a', 'start');
+        g += tx(364, 80, '重さ やく 250kg', 11, '#0f172a', 'start');
+        g += tx(364, 140, '回しながら 引くので', 10, '#0369a1', 'start');
+        g += tx(364, 158, 'かならず 円柱に なる', 10, '#0369a1', 'start');
+        g += tx(364, 176, '→ ウェーハは 丸く なる', 10, '#0284c7', 'start');
+        return svg(W, 250, g);
+    }
+
+    function fig5() {
+        let g = bg(210, '#f1f5f9');
+        // インゴット
+        g += `<rect x="20" y="70" width="120" height="66" fill="#cbd5e1" stroke="#334155" stroke-width="2.5"/>`;
+        g += `<ellipse cx="140" cy="103" rx="11" ry="33" fill="#e2e8f0" stroke="#334155" stroke-width="2.5"/>`;
+        g += `<ellipse cx="20" cy="103" rx="11" ry="33" fill="#94a3b8" stroke="#334155" stroke-width="2.5"/>`;
+        g += tx(76, 46, 'インゴット', 11, '#334155');
+        // ワイヤソー（文字の 下から 引く）
+        for (let i = 0; i < 7; i++) g += `<line x1="${34 + i * 16}" y1="56" x2="${34 + i * 16}" y2="154" stroke="#dc2626" stroke-width="1.6"/>`;
+        g += tx(76, 170, '細い ワイヤで 輪切り', 10, '#b91c1c');
+        g += tx(76, 184, '（1本 0.1mm ほど）', 9, '#dc2626');
+        g += arrow(158, 103, 190, 103, '#334155', 3);
+        // スライスされた 円ばん
+        [0, 1, 2, 3].forEach(i => {
+            g += `<ellipse cx="${210 + i * 22}" cy="103" rx="9" ry="34" fill="#e2e8f0" stroke="#64748b" stroke-width="2"/>`;
+        });
+        g += tx(254, 56, 'ウェーハ（円ばん）', 10, '#334155');
+        g += tx(254, 176, '厚{あつ}さ 0.775mm', 10, '#334155');
+        g += arrow(300, 103, 332, 103, '#334155', 3);
+        // 研磨
+        g += `<circle cx="384" cy="103" r="40" fill="#fff" stroke="#64748b" stroke-width="2.5"/>`;
+        g += `<circle cx="384" cy="103" r="26" fill="#e2e8f0"/>`;
+        g += `<rect x="360" y="60" width="48" height="12" rx="4" fill="#94a3b8" stroke="#475569" stroke-width="2"/>`;
+        g += spin(384, 103, 34, '#0ea5e9');
+        g += tx(384, 158, 'みがく（CMP）', 10, '#334155');
+        g += tx(384, 172, 'かがみのように 平らに', 9, '#64748b');
+        g += arrow(432, 103, 462, 103, '#334155', 3);
+        // できあがりの ウェーハ
+        g += `<circle cx="508" cy="103" r="42" fill="#c7d2fe" stroke="#3730a3" stroke-width="2.5"/>`;
+        g += `<path d="M502 145 l12 0 l-6 -10 Z" fill="#eef2ff" stroke="#3730a3" stroke-width="2"/>`;
+        g += `<path d="M480 78 q20 -10 44 8" fill="none" stroke="#fff" stroke-width="7" opacity="0.8"/>`;
+        g += tx(508, 162, 'ノッチ（向きの しるし）', 9, '#3730a3');
+        g += tx(508, 176, 'ここに 回路を かく', 10, '#3730a3');
+        return svg(W, 210, g);
+    }
+
+    function fig6() {
+        let g = bg(240, '#eef2ff');
+        const STG = [['① 膜を つける', '#0ea5e9'], ['② レジストを ぬる', '#6366f1'], ['③ 光を 当てる', '#f59e0b'],
+                     ['④ 現ぞうする', '#10b981'], ['⑤ けずる', '#ef4444'], ['⑥ あらう', '#8b5cf6']];
+        const cx = 280, cy = 112, R = 76;
+        const at = i => {
+            const a = (-90 + i * 60) * Math.PI / 180;
+            return [cx + Math.cos(a) * R * 1.9, cy + Math.sin(a) * R];
+        };
+        // まず つなぎの 線を 引き、あとから 箱を のせる（文字に 線が かからない ように）
+        STG.forEach((_, i) => {
+            const [x, y] = at(i), [x2, y2] = at(i + 1);
+            const mx = (x + x2) / 2 + (cx - (x + x2) / 2) * 0.10, my = (y + y2) / 2 + (cy - (y + y2) / 2) * 0.10;
+            g += `<path d="M${x.toFixed(1)} ${y.toFixed(1)} Q${mx.toFixed(1)} ${my.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}" fill="none" stroke="#a5b4fc" stroke-width="2.5" stroke-dasharray="5 4"/>`;
+        });
+        STG.forEach(([n, c], i) => {
+            const [x, y] = at(i);
+            g += `<rect x="${(x - 58).toFixed(1)}" y="${(y - 15).toFixed(1)}" width="116" height="30" rx="8" fill="#fff" stroke="${c}" stroke-width="2.5"/>`;
+            g += tx(x, y + 4, n, 11, c);
+        });
+        // 中心：かさなって いく 層
+        ['#94a3b8', '#fca5a5', '#fcd34d', '#86efac', '#93c5fd'].forEach((c, i) => {
+            g += `<rect x="240" y="${160 - i * 11}" width="80" height="10" fill="${c}" stroke="#475569" stroke-width="1.2"/>`;
+        });
+        g += tx(280, 92, 'くりかえし', 13, '#3730a3');
+        g += tx(280, 108, '500〜1000回', 13, '#3730a3');
+        g += tx(280, 228, 'これで やく 3か月。ここが いちばん むずかしく、工場は 数千億〜1兆円', 11, '#3730a3');
+        return svg(W, 240, g);
+    }
+
+    function fig7() {
+        let g = bg(206, '#f0fdf4');
+        // プローブ検査
+        g += `<circle cx="132" cy="112" r="76" fill="#c7d2fe" stroke="#3730a3" stroke-width="2.5"/>`;
+        const ok = [[0, 0, 1], [1, 0, 1], [-1, 0, 1], [0, 1, 1], [0, -1, 1], [1, 1, 0], [-1, 1, 1], [1, -1, 1], [-1, -1, 0], [2, 0, 1], [-2, 0, 1], [0, 2, 0], [0, -2, 1], [2, 1, 1], [-2, -1, 1], [1, 2, 1], [-1, -2, 1], [2, -1, 0], [-2, 1, 1], [1, -2, 1], [-1, 2, 1]];
+        ok.forEach(([i, j, good]) => {
+            const x = 132 + i * 27 - 12, y = 112 + j * 27 - 12;
+            g += `<rect x="${x}" y="${y}" width="24" height="24" rx="2" fill="${good ? '#fff' : '#fecdd3'}" stroke="#3730a3" stroke-width="1.4"/>`;
+            g += tx(x + 12, y + 17, good ? '○' : '×', 12, good ? '#15803d' : '#be123c');
+        });
+        // 針
+        [112, 132, 152].forEach(x => g += `<line x1="${x}" y1="18" x2="${x}" y2="${x === 132 ? 54 : 50}" stroke="#334155" stroke-width="2.5"/>`);
+        g += `<rect x="96" y="10" width="72" height="12" rx="3" fill="#475569"/>`;
+        g += tx(132, 202, '1つずつ 電気を 流して 検査', 10, '#166534');
+        g += arrow(216, 112, 248, 112, '#166534', 3);
+        // ダイシング
+        g += `<circle cx="352" cy="100" r="66" fill="#e0e7ff" stroke="#3730a3" stroke-width="2"/>`;
+        for (let i = -2; i <= 2; i++) {
+            g += `<line x1="${352 + i * 26}" y1="34" x2="${352 + i * 26}" y2="166" stroke="#dc2626" stroke-width="2"/>`;
+            g += `<line x1="286" y1="${100 + i * 26}" x2="418" y2="${100 + i * 26}" stroke="#dc2626" stroke-width="2"/>`;
+        }
+        g += `<circle cx="418" cy="44" r="20" fill="none" stroke="#334155" stroke-width="5"/>`;
+        g += tx(352, 186, 'まっすぐ 縦横に 切る', 10, '#b91c1c');
+        g += tx(352, 200, '（ダイシング）', 9, '#dc2626');
+        g += arrow(432, 100, 460, 100, '#166534', 3);
+        // ばらばらの チップ
+        [[478, 52], [512, 52], [478, 86], [512, 86], [478, 120], [512, 120]].forEach(([x, y], i) => {
+            g += `<rect x="${x}" y="${y}" width="28" height="28" rx="3" fill="${i === 3 ? '#fecdd3' : '#fff'}" stroke="#3730a3" stroke-width="1.8"/>`;
+            g += tx(x + 14, y + 19, i === 3 ? '×' : '○', 11, i === 3 ? '#be123c' : '#15803d');
+        });
+        g += tx(504, 172, '使える チップだけ', 10, '#166534');
+        g += tx(504, 186, 'つぎへ', 10, '#166534');
+        return svg(W, 206, g);
+    }
+
+    function fig8() {
+        let g = bg(212, '#fdf4ff');
+        // ①基板に のせる
+        g += `<rect x="20" y="104" width="120" height="16" rx="3" fill="#166534"/>`;
+        g += `<rect x="58" y="88" width="44" height="16" rx="2" fill="#475569" stroke="#0f172a" stroke-width="1.5"/>`;
+        g += tx(80, 100, 'チップ', 9, '#fff');
+        g += tx(80, 78, '① のせる', 11, '#86198f');
+        // ②ワイヤ
+        [[58, 88, 30, 104], [102, 88, 130, 104], [70, 88, 40, 104], [92, 88, 120, 104]].forEach(([x1, y1, x2, y2]) => {
+            g += `<path d="M${x1} ${y1} Q${(x1 + x2) / 2} ${y1 - 18} ${x2} ${y2}" fill="none" stroke="#eab308" stroke-width="2"/>`;
+        });
+        g += tx(80, 136, '② 金の 細い 線で つなぐ', 9, '#a21caf');
+        g += tx(80, 150, '（太さ 0.02mm）', 9, '#c026d3');
+        g += arrow(152, 108, 184, 108, '#a21caf', 3);
+        // ③封止
+        g += `<rect x="196" y="104" width="120" height="16" rx="3" fill="#166534"/>`;
+        g += `<path d="M212 104 l88 0 l0 -30 q0 -8 -8 -8 l-72 0 q-8 0 -8 8 Z" fill="#1f2937" stroke="#0f172a" stroke-width="2"/>`;
+        g += tx(256, 88, 'じゅし', 10, '#fff');
+        g += tx(256, 52, '③ 樹脂{じゅし}で かためる', 11, '#86198f');
+        [0, 1, 2, 3, 4].forEach(i => g += `<circle cx="${210 + i * 24}" cy="126" r="6" fill="#94a3b8"/>`);
+        g += tx(256, 150, '④ 下に はんだの たま', 9, '#a21caf');
+        g += arrow(330, 108, 360, 108, '#a21caf', 3);
+        // ⑤できあがり（四角い パッケージ）
+        g += `<rect x="382" y="66" width="86" height="86" rx="6" fill="#1f2937" stroke="#0f172a" stroke-width="2.5"/>`;
+        for (let i = 0; i < 6; i++) for (let j = 0; j < 6; j++)
+            g += `<circle cx="${392 + i * 13.2}" cy="${76 + j * 13.2}" r="3.4" fill="#fbbf24" opacity="0.85"/>`;
+        g += tx(415, 58, 'できあがり', 11, '#86198f');
+        g += tx(425, 168, '四角い パッケージ', 10, '#a21caf');
+        g += tx(425, 182, '基板に すきまなく ならべられる', 9, '#c026d3');
+        g += `<rect x="484" y="76" width="60" height="70" rx="8" fill="#fff" stroke="#a21caf" stroke-width="2.5"/>`;
+        g += `<rect x="490" y="84" width="48" height="50" rx="3" fill="#bae6fd"/>`;
+        g += tx(514, 116, '📱', 22, '#000');
+        g += tx(280, 204, 'できた チップは スマホ・車・カメラへ', 10, '#a21caf');
+        return svg(W, 212, g);
+    }
+
+    const STEPS = [
+        {
+            e: '🏖️', n: '① すな・けい石（SiO₂）', fig: fig1,
+            lead: 'はじまりは その辺に ある 石と すな。とくに 白っぽい 石英{せきえい}の つぶを つかう。',
+            nums: [['ケイ素は 地かくの', 'やく 28%'], ['ねだん', '石なので 安い']],
+            body: [['半導体{はんどうたい}の 材料{ざいりょう}が すな な りゆう', 'ケイ素は 地球の 地面に 2ばんめに 多い 元素。いくら つかっても なくならず、安い。'],
+                   ['ケイ素は「どっちつかず」', '電気を よく 通す 金属と、まったく 通さない ガラスの あいだ。この なかまを 半導体{はんどうたい}と いう。'],
+                   ['スイッチに できる', '少し 別の 原子を まぜたり、電気を かけたり すると「通す・通さない」を 切りかえられる。だから スイッチに なる。']],
+            point: 'すなが そのまま チップに なる わけでは ない。すな 1kg から とれる チップ用の シリコンは ほんの 少し。むずかしいのは 「きれいに する」ことと 「ならべる」こと。'
+        },
+        {
+            e: '🔥', n: '② 金属シリコン（99%）', fig: fig2,
+            lead: '大きな 電気炉{でんきろ}で、けい石と 炭{すみ}を いっしょに 2000℃まで 熱する。',
+            nums: [['温度', 'やく 2000℃'], ['じゅんど', 'やく 98〜99%'], ['できる もの', '金属シリコン']],
+            body: [['炭が 酸素を うばう', 'SiO₂ ＋ 2C → Si ＋ 2CO。炭{すみ}は 酸素と くっつきたがる ので、ケイ素から 酸素を 引きはがして くれる。'],
+                   ['まだ ぜんぜん きれいでは ない', '98%と いうと きれいに 聞こえるが、チップには 100万倍 きれいな ものが いる。'],
+                   ['ここまでは べつの 用途{ようと}にも つかう', 'アルミの 材料や シリコーンゴム、太陽電池{たいようでんち}にも つかわれる。']],
+            point: '「きれい さ」の たんいを おぼえよう。99.9999%＝シックスナイン（9が 6こ）。チップには イレブンナイン（9が 11こ）が いる。'
+        },
+        {
+            e: '💎', n: '③ 高純度{こうじゅんど}シリコン（11N）', fig: fig3,
+            lead: 'いちど 気体・液体に して とことん 蒸留{じょうりゅう}し、また シリコンに もどす（シーメンス法）。',
+            nums: [['じゅんど', '99.999999999%'], ['よび名', 'イレブンナイン'], ['よごれ', '1000億分の1 いか']],
+            body: [['なぜ 液体に する？', 'かたまりの ままでは よごれを 取りのぞけない。塩素{えんそ}と くっつけて SiHCl₃ という 液体に すると、沸点{ふってん}の ちがいで きれいに わけられる。'],
+                   ['もどす とき また シリコンに', 'あつく した 細い シリコンの 棒に 気体を 当てると、その 表面に シリコンだけが つもって いく。'],
+                   ['どれくらい きれいか', '25mプール いっぱいの 水（やく450トン）に、塩を 5ミリグラム（塩つぶ 数十こ）入れた くらいの わずかさ。']],
+            point: 'なぜ そこまで きれいに するのか。あとで 「わざと 別の 原子を ほんの 少し まぜて」性質を 決める から。もとが よごれて いると、まぜた 量が わからなく なる。'
+        },
+        {
+            e: '🕯️', n: '④ 単結晶{たんけっしょう}インゴット', fig: fig4,
+            lead: 'とかした シリコンに 小さな 種結晶{たねけっしょう}を つけ、回しながら ゆっくり 引き上げる（チョクラルスキー法）。',
+            nums: [['とける 温度', '1414℃'], ['直径', '300mm（12インチ）'], ['長さ', '1〜2m'], ['重さ', 'やく 250kg']],
+            body: [['原子の ならびを ぜんぶ そろえる', 'ふつうに 固めると 原子の 向きが ばらばら（多結晶）。種結晶に つづけて 固めると、同じ ならびが どこまでも つづく＝単結晶{たんけっしょう}。'],
+                   ['なぜ ならびを そろえる？', '原子の ならびが 途中で 変わる ところ（結晶の さかいめ）が あると、電気の 流れ方が かわって しまい、同じ チップが 作れない。'],
+                   ['回しながら 引くから 円柱に なる', '中心の 軸{じく}の まわりに ぐるぐる 回して 引き上げる ので、どの 向きも 同じに 育つ。だから 断面は かならず 円。'],
+                   ['味つけ（ドーピング）も ここで', 'ホウ素や リンを ほんの 少し まぜて、p型・n型と いう 性質を 決める。']],
+            point: 'この 1本が 250kg。おとな 3人ぶん の 重さの 「ひとつの 結晶」。これが 世界で いちばん 大きな 人工の 単結晶{たんけっしょう}の なかま。'
+        },
+        {
+            e: '💿', n: '⑤ ウェーハ（輪切{わぎ}りと 鏡{かがみ}みがき）', fig: fig5,
+            lead: '円柱を 細い ワイヤで 輪切{わぎ}りに して、鏡{かがみ}のように 平らに みがく。',
+            nums: [['厚{あつ}さ', '0.775mm'], ['1本から', '数百枚'], ['たいらさ', 'ナノの レベル']],
+            body: [['そとを けずって 太さを そろえる', '引き上げた ままでは 太さが でこぼこ。まず 円筒{えんとう}に けずり、向きが わかる ノッチ（切りこみ）を 入れる。'],
+                   ['ワイヤソーで 輪切{わぎ}り', '0.1mm ほどの 細い ワイヤに ダイヤモンドの つぶを つけ、何百本も 同時に 通して 一気に 切る。'],
+                   ['でこぼこは ゆるされない', '300mの 校庭に 広げても でこぼこが 2マイクロメートル（かみの毛の 40分の1）しか 無い、という くらい 平らに する。'],
+                   ['ここまでが「ウェーハメーカー」の 仕事', 'まだ 回路は 何も 無い、まっさらな 円ばん。これを 世界中の チップ工場に 売る。']],
+            point: 'ウェーハは この時点では ただの 鏡。ここから 「丸い 板に 四角い チップを ならべる」という 話に なる。→「💿 丸と 四角」の タブも 見てみよう。'
+        },
+        {
+            e: '🖼️', n: '⑥ 前工程{まえこうてい}（回路を 焼きつける）', fig: fig6,
+            lead: '膜を つける → 光で 形を うつす → けずる、を 何百回も くりかえして 立体的に 積み上げる。',
+            nums: [['くりかえし', '500〜1000回'], ['層の 数', '100層 以上'], ['かかる 時間', 'やく 3か月'], ['工場の ねだん', '数千億〜1兆円']],
+            body: [['写真と 同じ 原理', '光に あたると 性質が かわる 薬（フォトレジスト）を ぬり、回路の 絵（マスク）を 通して 光を 当てる。当たった ところだけ とけて 形が のこる。'],
+                   ['けずる・つける・まぜる', 'できた 形を 型{かた}に して 下の 膜を けずる（エッチング）、金属を つける、不純物{ふじゅんぶつ}を 打ちこむ。これで 1層。'],
+                   ['配線{はいせん}は マンションのように 上へ', 'トランジスタは いちばん 下。その 上に 銅の 配線{はいせん}を 十数階 かさねて つなぐ。'],
+                   ['1回でも しっぱいすると だめ', '3か月 かけた 最後の 1工程で しっぱいすると、ウェーハ 1枚が ぜんぶ むだに なる。']],
+            point: '半導体{はんどうたい}工場が 高いのは、この くりかえしを ナノの 精度{せいど}で、ちり 1つ 無い 部屋で、24時間 止めずに やる から。'
+        },
+        {
+            e: '✂️', n: '⑦ 検査{けんさ}と ダイシング', fig: fig7,
+            lead: '1つずつ 電気を 流して 良品を えらび、それから ばらばらに 切りはなす。',
+            nums: [['検査{けんさ}', '1つずつ 通電'], ['切り方', '縦横 まっすぐ'], ['よび名', '歩留{ぶど}まり']],
+            body: [['先に 検査{けんさ}する りゆう', '切って しまう と どれが 良品か わからなく なる。ウェーハの ままで 細い 針を 当てて 調べ、ダメな ものに しるしを つける。'],
+                   ['歩留{ぶど}まりって なに？', 'できた チップの うち、ちゃんと 動いた ものの 割合。新しい 世代の チップは はじめは 50%ほど、なれると 90%を こえる。'],
+                   ['ダイシング＝縦横に まっすぐ 切る', 'ダイヤモンドの うすい 円ばんや レーザーで、碁盤{ごばん}の 線のように 切る。だから チップは 四角に しか ならない。'],
+                   ['切りしろ（スクライブライン）', 'チップと チップの あいだには 切る ための すきま（0.05mm ほど）を あけて おく。']],
+            point: '「ぜんぶ 同じに 作った のに 動かない ものが ある」——これが 半導体{はんどうたい}の むずかしさ。ごみ 1つぶ、原子 数個の ずれで こわれる。'
+        },
+        {
+            e: '📦', n: '⑧ パッケージ（後工程{あとこうてい}）', fig: fig8,
+            lead: 'はだかの チップを 基板{きばん}に のせ、線を つなぎ、樹脂{じゅし}で かためて 使える 形に する。',
+            nums: [['金線の 太さ', '0.02mm'], ['はんだの たま', '数百〜数千こ'], ['形', '四角']],
+            body: [['はだかでは つかえない', 'チップは 髪{かみ}の毛より うすくて われやすく、水や 光にも 弱い。守る 服を きせる。'],
+                   ['外と つなぐ', '金や 銅の 細い 線、または 下に ならべた はんだの たまで、外の 基板{きばん}と 電気を やりとりする。'],
+                   ['熱を にがす', 'はたらくと 熱く なる ので、金属の ふたや ヒートシンクで 熱を にがす 工夫を する。'],
+                   ['最近は ここが 主役', '1つの パッケージに CPU・メモリ・センサーを 何枚も かさねて 入れる（チップレット・積層{せきそう}）。']],
+            point: 'パッケージが 四角い のも 理由が ある。四角なら すきまなく 基板{きばん}に ならべられ、たんしの 位置も 縦横の ますで 数えられる。'
+        }
+    ];
+    let stepI = 0;
+    function setStep(i) {
+        stepI = (i + STEPS.length) % STEPS.length;
+        const s = STEPS[stepI];
+        document.getElementById('fl-chips').innerHTML = STEPS.map((x, j) =>
+            `<button onclick="setStep(${j})" class="${j === stepI ? 'bg-indigo-700 text-white' : 'bg-white border-2 border-indigo-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs whitespace-nowrap bounce-hover">${x.e} ${esc(plain(x.n).replace(/^[①-⑧]\s*/, ''))}</button>`).join('');
+        document.getElementById('fl-name').innerHTML = s.e + ' ' + s.n;
+        document.getElementById('fl-lead').innerHTML = s.lead;
+        document.getElementById('fl-fig').innerHTML = s.fig();
+        numChips('fl-nums', s.nums);
+        cards('fl-body', s.body);
+        document.getElementById('fl-point').innerHTML = '💡 ' + s.point;
+    }
+    function stepMove(d) { setStep(stepI + d); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+
+    /* =====================================================================
+       ② 丸い ウェーハ・四角い チップ
+       ===================================================================== */
+    function wfRoundFig() {
+        let g = bg(212, '#e0f2fe');
+        // パネル1：回しながら 引き上げる
+        g += `<line x1="186" y1="16" x2="186" y2="196" stroke="#bae6fd" stroke-width="3"/>`;
+        g += `<line x1="372" y1="16" x2="372" y2="196" stroke="#bae6fd" stroke-width="3"/>`;
+        g += `<path d="M46 150 l88 0 l-8 26 l-72 0 Z" fill="#a16207" stroke="#713f12" stroke-width="2"/>`;
+        g += `<path d="M50 152 l80 0 l-6 20 l-68 0 Z" fill="#fb923c"/>`;
+        g += `<ellipse cx="90" cy="152" rx="40" ry="6" fill="#fdba74"/>`;
+        g += `<rect x="74" y="72" width="32" height="80" fill="#cbd5e1" stroke="#334155" stroke-width="2"/>`;
+        g += `<ellipse cx="90" cy="72" rx="16" ry="6" fill="#e2e8f0" stroke="#334155" stroke-width="2"/>`;
+        g += `<line x1="90" y1="34" x2="90" y2="66" stroke="#334155" stroke-width="3"/>`;
+        g += arrow(126, 62, 126, 30, '#0284c7', 2.5);
+        g += spin(90, 58, 30, '#0284c7');
+        g += tx(96, 194, '回しながら ゆっくり 引き上げる', 11, '#075985');
+        // パネル2：だから 円柱
+        g += `<rect x="248" y="58" width="60" height="104" fill="#cbd5e1" stroke="#334155" stroke-width="2.5"/>`;
+        g += `<ellipse cx="278" cy="58" rx="30" ry="10" fill="#e2e8f0" stroke="#334155" stroke-width="2.5"/>`;
+        g += `<ellipse cx="278" cy="162" rx="30" ry="10" fill="#94a3b8" stroke="#334155" stroke-width="2.5"/>`;
+        g += `<line x1="278" y1="30" x2="278" y2="180" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="5 4"/>`;
+        g += `<path d="M248 58 A30 10 0 0 1 308 58" fill="none" stroke="#dc2626" stroke-width="2"/>`;
+        g += tx(278, 26, '中心の じくの まわりは どこも 同じ', 10, '#b91c1c');
+        g += tx(278, 194, 'だから 断面は 円（円柱）', 11, '#075985');
+        // パネル3：輪切り
+        [0, 1, 2, 3].forEach(i => g += `<ellipse cx="${404 + i * 20}" cy="90" rx="8" ry="30" fill="#e2e8f0" stroke="#64748b" stroke-width="2"/>`);
+        for (let i = 0; i < 5; i++) g += `<line x1="${394 + i * 20}" y1="52" x2="${394 + i * 20}" y2="128" stroke="#dc2626" stroke-width="1.4"/>`;
+        g += `<circle cx="504" cy="152" r="34" fill="#c7d2fe" stroke="#3730a3" stroke-width="2.5"/>`;
+        g += `<path d="M499 186 l10 0 l-5 -9 Z" fill="#e0f2fe" stroke="#3730a3" stroke-width="1.6"/>`;
+        g += arrow(470, 100, 492, 122, '#075985', 2.5);
+        g += tx(462, 194, '輪切りだから 円ばん', 11, '#075985');
+        return svg(W, 212, g);
+    }
+
+    function wfSquareFig() {
+        let g = bg(236, '#fff1f2');
+        g += `<line x1="186" y1="16" x2="186" y2="220" stroke="#fecdd3" stroke-width="3"/>`;
+        g += `<line x1="372" y1="16" x2="372" y2="220" stroke="#fecdd3" stroke-width="3"/>`;
+        // パネル1：ダイシングは まっすぐ しか 切れない
+        g += `<circle cx="94" cy="108" r="72" fill="#e0e7ff" stroke="#3730a3" stroke-width="2"/>`;
+        for (let i = -2; i <= 2; i++) {
+            g += `<line x1="${94 + i * 28}" y1="36" x2="${94 + i * 28}" y2="180" stroke="#be123c" stroke-width="2"/>`;
+            g += `<line x1="22" y1="${108 + i * 28}" x2="166" y2="${108 + i * 28}" stroke="#be123c" stroke-width="2"/>`;
+        }
+        g += `<circle cx="150" cy="30" r="16" fill="none" stroke="#334155" stroke-width="5"/>`;
+        g += tx(94, 200, '切る 道具は 円ばんや レーザー。', 10, '#9f1239');
+        g += tx(94, 214, 'まっすぐ 通す しか できない', 10, '#9f1239');
+        g += tx(94, 228, '（丸く 切りぬくと 高くて おそい）', 9, '#be123c');
+        // パネル2：四角は すきまゼロ／丸は すきまが できる
+        [0, 1, 2].forEach(i => [0, 1].forEach(j => {
+            g += `<rect x="${206 + i * 46}" y="${40 + j * 46}" width="46" height="46" fill="#a5b4fc" stroke="#3730a3" stroke-width="1.8"/>`;
+        }));
+        g += tx(278, 106, 'すきま 0', 12, '#312e81');
+        g += tx(278, 30, '四角を ならべる', 10, '#9f1239');
+        g += `<rect x="206" y="146" width="138" height="66" fill="#fecdd3" stroke="#be123c" stroke-width="1.8"/>`;
+        [0, 1, 2].forEach(i => g += `<circle cx="${228 + i * 46}" cy="179" r="22" fill="#a5b4fc" stroke="#3730a3" stroke-width="1.8"/>`);
+        g += tx(278, 138, '丸を ならべる', 10, '#9f1239');
+        g += tx(278, 226, 'ピンクの すきまが むだ', 10, '#be123c');
+        // パネル3：光を 当てる 形も 四角
+        g += `<circle cx="464" cy="112" r="74" fill="#e0e7ff" stroke="#3730a3" stroke-width="2"/>`;
+        for (let i = -2; i <= 1; i++) for (let j = -2; j <= 1; j++) {
+            const x = 464 + i * 36 + 2, y = 112 + j * 36 + 2;
+            if (Math.hypot(Math.max(Math.abs(x - 464), Math.abs(x + 36 - 464)), Math.max(Math.abs(y - 112), Math.abs(y + 36 - 112))) > 74) continue;
+            g += `<rect x="${x}" y="${y}" width="32" height="32" rx="2" fill="#fff" stroke="#4338ca" stroke-width="1.4"/>`;
+        }
+        g += `<rect x="430" y="42" width="32" height="32" rx="2" fill="#fde047" stroke="#b45309" stroke-width="2.5"/>`;
+        g += `<path d="M446 8 l0 30" stroke="#f59e0b" stroke-width="4"/>`;
+        g += `<path d="M430 20 l12 16 M462 20 l-12 16" stroke="#f59e0b" stroke-width="3"/>`;
+        g += tx(464, 202, '露光きが 一度に 焼く 範囲（ショット）', 10, '#9f1239');
+        g += tx(464, 216, 'これも 四角。マスクも 四角', 10, '#9f1239');
+        return svg(W, 236, g);
+    }
+
+    /* 丸い ウェーハから 四角い チップが 何個 取れるか */
+    const EDGE = 3;                                    // はしの 3mm は つかえない
+    function dieCount(dia, side) {
+        const R = dia / 2 - EDGE, cells = [];
+        let full = 0, part = 0;
+        const half = Math.ceil(R / side) + 1;
+        for (let i = -half; i <= half; i++) for (let j = -half; j <= half; j++) {
+            const x0 = i * side, y0 = j * side, x1 = x0 + side, y1 = y0 + side;
+            // 中心から いちばん とおい かど と いちばん 近い ところ
+            const fx = Math.max(Math.abs(x0), Math.abs(x1)), fy = Math.max(Math.abs(y0), Math.abs(y1));
+            const nx = x0 > 0 ? x0 : (x1 < 0 ? -x1 : 0), ny = y0 > 0 ? y0 : (y1 < 0 ? -y1 : 0);
+            if (Math.hypot(fx, fy) <= R) { cells.push([x0, y0, 1]); full++; }
+            else if (Math.hypot(nx, ny) < R) { cells.push([x0, y0, 0]); part++; }
+        }
+        return { full, part, cells, R };
+    }
+    const DIAS = [[100, '4インチ 100mm'], [150, '6インチ 150mm'], [200, '8インチ 200mm'], [300, '12インチ 300mm']];
+    let wfDia = 300;
+    function setDia(d) { wfDia = d; wfCalc(); }
+    function wfCalc() {
+        const side = +document.getElementById('wf-side').value;
+        document.getElementById('wf-side-v').innerText = side + ' mm';
+        document.getElementById('wf-dia').innerHTML = DIAS.map(([d, n]) =>
+            `<button onclick="setDia(${d})" class="${wfDia === d ? 'bg-indigo-700 text-white' : 'bg-white border-2 border-indigo-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs whitespace-nowrap bounce-hover">${n}</button>`).join('');
+        const r = dieCount(wfDia, side), cx = 160, cy = 176, R = wfDia / 2;
+        let g = `<rect x="0" y="0" width="320" height="364" rx="14" fill="#eef2ff"/>`;
+        g += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="#e2e8f0" stroke="#475569" stroke-width="2"/>`;
+        r.cells.forEach(([x, y, f]) => {
+            g += `<rect data-die="${f}" x="${(cx + x).toFixed(1)}" y="${(cy + y).toFixed(1)}" width="${side}" height="${side}" fill="${f ? '#818cf8' : '#fda4af'}" stroke="${f ? '#312e81' : '#be123c'}" stroke-width="0.7"/>`;
+        });
+        g += `<circle cx="${cx}" cy="${cy}" r="${r.R}" fill="none" stroke="#dc2626" stroke-width="1.4" stroke-dasharray="5 4"/>`;
+        g += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#1e293b" stroke-width="2.5"/>`;
+        g += `<path d="M${cx - 7} ${cy + R} l14 0 l-7 -11 Z" fill="#eef2ff" stroke="#1e293b" stroke-width="2"/>`;
+        g += tx(160, 22, `ウェーハ ${wfDia}mm ／ チップ ${side}mm かく`, 12, '#3730a3');
+        g += `<rect x="18" y="330" width="14" height="14" fill="#818cf8" stroke="#312e81" stroke-width="1"/>`;
+        g += tx(38, 342, 'つかえる', 11, '#312e81', 'start');
+        g += `<rect x="112" y="330" width="14" height="14" fill="#fda4af" stroke="#be123c" stroke-width="1"/>`;
+        g += tx(132, 342, 'かけて しまう', 11, '#9f1239', 'start');
+        g += tx(160, 358, `点線の 外（はしの ${EDGE}mm）は つかわない`, 9, '#dc2626');
+        document.getElementById('wf-fig').innerHTML = svg(320, 364, g);
+        const area = Math.PI * R * R, used = r.full * side * side;
+        document.getElementById('wf-stat').innerHTML = [
+            ['取れる チップ', nf(r.full) + ' 個'],
+            ['かけて むだ', nf(r.part) + ' 個ぶん'],
+            ['面積を つかえた 割合', (used / area * 100).toFixed(0) + ' %'],
+            ['チップ 1個の 面積', nf(side * side) + ' mm²']
+        ].map(([t, v]) =>
+            `<div class="bg-indigo-50 border-2 border-indigo-200 rounded-2xl p-2 text-center">
+                <p class="text-xs font-bold text-slate-500">${t}</p>
+                <p class="num font-black text-indigo-700 text-base">${v}</p></div>`).join('');
+        const a = dieCount(200, side).full, b = dieCount(300, side).full;
+        const ratio = a ? (b / a) : 0;
+        const cmp = a === 0
+            ? `このチップは 200mmの ウェーハには 1個も 入らない（チップが 大きすぎる）。だから 大きい チップは 300mmの ウェーハで 作る。`
+            : `同じ ${side}mm かくの チップなら、200mm ウェーハで ${nf(a)}個、300mm ウェーハで ${nf(b)}個。
+               面積は 2.25倍 なのに 取れる 数は ${ratio.toFixed(1)}倍。
+               ${ratio > 2.3 ? 'はしの むだの 割合が 小さく なる ので、面積の 比より たくさん 取れる。' : 'チップが 大きいと はしの むだが きいて くる。'}`;
+        document.getElementById('wf-note').innerHTML =
+            `💡 チップを 大きく すると <b>取れる 数は 一気に へり</b>、はしの かけチップも ふえる。
+             だから 会社は 「性能」と 「ねだん」の あいだで チップの 大きさを 決めて いる。<br>
+             ${cmp}`;
+    }
+
+    const WF_ROUND = [
+        ['① 作り方が そう だから（いちばんの りゆう）',
+         'とけた シリコンから 単結晶{たんけっしょう}を 育てる とき、<b>回しながら 引き上げる</b>。中心の じくの まわりは どこも 同じ 条件に なる ので、育つ 形は かならず 円柱。その 円柱を 輪切{わぎ}りに すれば 円ばんに なる。'],
+        ['② 角{かど}が あると 欠ける・われる',
+         '四角い 板は 角{かど}に 力と 熱が 集まって、かけたり ひびが 入ったり する。円なら どこも 同じで、1000℃ ちかくまで 熱しても われにくい。'],
+        ['③ 回して 薬を ぬる から（スピンコート）',
+         'レジストと いう 薬を 真ん中に たらし、ウェーハを 高速で 回して 遠心力{えんしんりょく}で のばす。円なら どこも 同じ 厚{あつ}さに なるが、四角だと 角{かど}に たまって しまう。'],
+        ['④ 装置{そうち}が 円ばん前提で できて いる',
+         'つかむ・回す・あたためる・液に つける。どれも 円だと 中心 1つで 決まる ので、機械が かんたんで 正かくに なる。'],
+        ['⑤ でも 向きは 知りたい → ノッチ',
+         '完全な 円だと 結晶の 向きが わからない。そこで はしに <b>切りこみ（ノッチ）</b>を 1つ 入れて 目じるしに する。むかしの ウェーハは 直線に けずった「オリフラ」だった。'],
+        ['☀️ おまけ：太陽{たいよう}パネルの セルは 四角い',
+         'あれは 単結晶{たんけっしょう}を 引き上げた あと、あえて 四角く けずって いる（または 四角い 型で 固めた 多結晶）。<b>すきまなく ならべて 光を 受けたい</b>から。目的が ちがうと 形も かわる。']
+    ];
+    const WF_SQUARE = [
+        ['① 切る 道具が まっすぐしか 進めない',
+         'ダイヤモンドの うすい 円ばんや レーザーで、ウェーハを ごばんの 線のように 切りはなす（ダイシング）。まっすぐ 縦横に 通すのが いちばん はやくて 安い。丸や 星型に 切りぬく のは、時間も 材料{ざいりょう}も むだに なる。'],
+        ['② 四角なら すきまが ゼロ',
+         '同じ 大きさの 四角は すきまなく ならべられる。丸を ますに ならべると <b>21%も すきま</b>に なって しまう。せっかくの 高い シリコンを むだに できない。'],
+        ['③ 光を 当てる 形も 四角',
+         '回路の 絵（マスク）は 四角。露光{ろこう}きは その 四角い 絵を 1ショットずつ ずらして 焼きつける。もとの 絵が 四角なら、できる チップも 四角。'],
+        ['④ 中の 配線{はいせん}が 縦横の ごばん',
+         '中の 線は「縦の 層」「横の 層」を かさねて つなぐ。縦横に そろえた ほうが 線が 短く、設計も 計算で できる。だから 部品ぜんたいの 形も 四角に おちつく。'],
+        ['⑤ 外と つなぐ たんしも 縦横の ます',
+         'パッケージの 下の はんだの たまは 縦横に ならぶ（BGA）。基板{きばん}に のせる ときも、四角なら すきまなく ならべられる。'],
+        ['🔎 じつは「正方形」でなくても いい',
+         '大事なのは <b>まっすぐな 4辺</b>。メモリの チップは 細長い 長方形が 多い。だから 正しくは「四角（長方形）」。丸い チップは 作られて いない。']
+    ];
+
+    /* =====================================================================
+       ③ イメージセンサ
+       ===================================================================== */
+    function snPixelFig() {
+        let g = bg(240, '#f5f3ff');
+        const PX = [[100, '#ef4444', 'R'], [240, '#22c55e', 'G'], [380, '#3b82f6', 'B']];
+        // 光
+        PX.forEach(([x, c]) => {
+            g += arrow(x - 26, 14, x - 6, 54, '#f59e0b', 2);
+            g += arrow(x + 26, 14, x + 6, 54, '#f59e0b', 2);
+            g += arrow(x, 14, x, 52, '#f59e0b', 2);
+        });
+        g += tx(64, 12, '光', 12, '#b45309', 'start');
+        PX.forEach(([x, c, n]) => {
+            // マイクロレンズ
+            g += `<path d="M${x - 56} 74 a56 40 0 0 1 112 0 Z" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/>`;
+            // カラーフィルター
+            g += `<rect x="${x - 56}" y="74" width="112" height="26" fill="${c}" opacity="0.75" stroke="#334155" stroke-width="1.5"/>`;
+            g += tx(x, 92, n, 13, '#fff');
+            // しきり（かべ）
+            g += `<rect x="${x - 58}" y="100" width="4" height="70" fill="#475569"/>`;
+            g += `<rect x="${x + 54}" y="100" width="4" height="70" fill="#475569"/>`;
+            // フォトダイオード
+            g += `<rect x="${x - 50}" y="106" width="100" height="58" rx="5" fill="#fef9c3" stroke="#a16207" stroke-width="2"/>`;
+            g += tx(x, 130, 'フォトダイオード', 10, '#713f12');
+            g += tx(x, 150, '⚡ 電子が たまる', 10, '#a16207');
+            // 集まる 光
+            g += `<path d="M${x - 40} 100 L${x} 110 L${x + 40} 100" fill="none" stroke="#f59e0b" stroke-width="2"/>`;
+        });
+        // シリコンと 配線
+        g += `<rect x="20" y="164" width="440" height="22" fill="#cbd5e1" stroke="#475569" stroke-width="2"/>`;
+        g += tx(240, 180, 'シリコン', 11, '#334155');
+        g += `<rect x="20" y="186" width="440" height="30" fill="#e2e8f0" stroke="#475569" stroke-width="2"/>`;
+        [0, 1, 2, 3, 4, 5, 6, 7].forEach(i => g += `<rect x="${34 + i * 54}" y="192" width="38" height="8" rx="2" fill="#ea580c"/>`);
+        [0, 1, 2, 3, 4, 5, 6].forEach(i => g += `<rect x="${58 + i * 54}" y="204" width="30" height="7" rx="2" fill="#a16207"/>`);
+        g += tx(240, 230, '配線{はいせん}と トランジスタ（数字に する 回路）', 11, '#334155');
+        g += tx(504, 60, 'レンズ', 10, '#1d4ed8');
+        g += tx(504, 92, 'フィルター', 10, '#334155');
+        g += tx(504, 134, '光を 電気に', 10, '#a16207');
+        g += tx(504, 200, '読み出し', 10, '#334155');
+        return svg(W, 240, g);
+    }
+    const SN_LAYER = [
+        ['🔍 マイクロレンズ', '画素{がそ} 1つに 1つ、小さな 虫めがね。となりの 画素との すきまに 落ちる 光まで 集めて、フォトダイオードに 送る。'],
+        ['🎨 カラーフィルター', '赤・緑・青の どれか 1色だけ 通す 色セロハン。だから 1つの 画素は 1色ぶんの 明るさしか わからない。'],
+        ['🔋 フォトダイオード', '光が 当たると 電子が 飛び出す シリコンの 部分。電子を ためる コップの 役目。明るい ほど たくさん たまる。'],
+        ['🧱 となりとの かべ', 'ななめから 来た 光が となりの 画素に 入る と 色が にじむ。金属の かべや みぞで さえぎる。'],
+        ['🔌 配線{はいせん}と トランジスタ', 'たまった 電子を 電圧に かえ、増幅{ぞうふく}し、数字に する 回路。ふつうの チップと 同じ 作り方。']
+    ];
+    const SN_STEP = [
+        ['① シャッターが 開く', 'ほんとうの まくでは なく、電気で「今から 数えます」と 決める（電子シャッター）。この あいだに 来た 光を 数える。'],
+        ['② 光が 電子を はじき出す（光電効果{こうでんこうか}）', '光の つぶ（光子{こうし}）が シリコンに 当たると、電子が はじき出されて 動ける ように なる。明るい ほど 電子が ふえる。1つの 画素に たまるのは 数千〜1万個 ほど。'],
+        ['③ 電子の 数を 電圧に かえる', 'たまった 電子を 小さな コンデンサに 移すと 電圧に なる。それを トランジスタで 増幅{ぞうふく}する。'],
+        ['④ 数字に する（AD変換{へんかん}）', '電圧を 0〜1023 や 0〜4095 の 数字に する。この 数字の ならびが 写真の データ。1200万画素 なら 数字が 1200万こ ならぶ。']
+    ];
+
+    function snBayerFig() {
+        let g = bg(212, '#f0fdf4');
+        const CH = (i, j) => (j % 2 === 0 ? (i % 2 === 0 ? 0 : 1) : (i % 2 === 0 ? 1 : 2));
+        const COL = ['#ef4444', '#22c55e', '#3b82f6'], NM = ['R', 'G', 'B'];
+        for (let j = 0; j < 6; j++) for (let i = 0; i < 6; i++) {
+            const k = CH(i, j);
+            g += `<rect x="${24 + i * 26}" y="${26 + j * 26}" width="26" height="26" fill="${COL[k]}" opacity="0.8" stroke="#fff" stroke-width="1.5"/>`;
+            g += tx(37 + i * 26, 44 + j * 26, NM[k], 11, '#fff');
+        }
+        g += tx(102, 18, 'ベイヤー配列（RGGB）', 11, '#166534');
+        g += tx(102, 200, '緑が 赤・青の 2倍 ある', 11, '#166534');
+        // 数え方
+        g += arrow(216, 110, 252, 110, '#166534', 3);
+        g += `<rect x="262" y="60" width="120" height="100" rx="8" fill="#fff" stroke="#166534" stroke-width="2.5"/>`;
+        g += tx(322, 84, '1つの 画素が', 11, '#166534');
+        g += tx(322, 102, 'わかるのは', 11, '#166534');
+        g += tx(322, 128, '明るさ 1色ぶん', 12, '#15803d');
+        g += tx(322, 148, 'だけ', 11, '#166534');
+        g += arrow(392, 110, 428, 110, '#166534', 3);
+        g += `<rect x="438" y="50" width="106" height="120" rx="8" fill="#fff" stroke="#166534" stroke-width="2.5"/>`;
+        g += tx(491, 74, 'まわりの 画素', 10, '#166534');
+        g += tx(491, 90, 'から 計算して', 10, '#166534');
+        g += tx(491, 110, '足りない 色を', 10, '#166534');
+        g += tx(491, 126, 'うめる', 10, '#166534');
+        g += tx(491, 152, 'デモザイク', 11, '#15803d');
+        g += tx(322, 196, 'だから 写真の 色は「計算で 作った 色」でも ある', 10, '#166534');
+        return svg(W, 212, g);
+    }
+    const SN_BAYER = [
+        ['なぜ 緑が 2倍？', '人の 目は 緑の あたりの 明るさに いちばん 敏感{びんかん}。写真の こまかさ（かいぞうど）は ほとんど 明るさで 決まる ので、緑を 多く すると 見た 感じが きれいに なる。'],
+        ['1200万画素 でも 赤は 300万画素ぶん', 'RGGB の うち 赤は 4分の1。足りない ぶんは となりの 画素から 計算で うめて いる。だから 細かい もようで 色が にじむ ことが ある（偽色{ぎしょく}）。'],
+        ['ほかの ならべ方も ある', 'ソニーの クアッドベイヤーは 同じ 色を 4つ まとめ、暗い ところでは 4つ まとめて 1画素として つかう（明るく なる）。スマホの「4800万→1200万で 撮る」は これ。'],
+        ['白黒センサーは 明るい', '色フィルターは 光を 3分の1 ほどに へらす。天体{てんたい}や 科学の カメラで 色が いらない ときは、フィルターを つけない ほうが よく 見える。']
+    ];
+
+    /* 絵を 画素で 見る デモ。scene(u,v) が その 場所の 色を かえす */
+    function scene(u, v) {
+        let c = [130 - 22 * v, 196 - 12 * v, 250];                     // 空
+        if (Math.hypot(u - .80, v - .16) < .10) c = [255, 208, 60];     // たいよう
+        const mTop = .70 - .40 * Math.max(0, 1 - Math.abs(u - .28) / .26);
+        if (v > mTop && v < .72) c = [118, 150, 112];                   // 山
+        if (v >= .72) c = [110, 194, 96];                               // 草
+        if (u > .50 && u < .80 && v > .52 && v < .80) c = [246, 238, 220]; // 家の かべ
+        const rt = .52, rh = .17;
+        if (v > rt - rh && v <= rt && Math.abs(u - .65) < .165 * (v - (rt - rh)) / rh) c = [219, 78, 68]; // やね
+        if (u > .595 && u < .705 && v > .585 && v < .675) c = [86, 148, 212];  // まど
+        return c;
+    }
+    const PXMODES = [['color', '🎨 そのまま（カラー）'], ['raw', '📷 センサーが 見た まま'], ['demo', '🧮 計算で 色を うめた']];
+    let pxMode = 'color';
+    function setPxMode(m) { pxMode = m; pxDraw(); }
+    function pxDraw() {
+        const n = +document.getElementById('px-n').value;
+        document.getElementById('px-n-v').innerText = n + ' × ' + n;
+        document.getElementById('px-modes').innerHTML = PXMODES.map(([k, l]) =>
+            `<button onclick="setPxMode('${k}')" class="${pxMode === k ? 'bg-indigo-700 text-white' : 'bg-white border-2 border-indigo-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs whitespace-nowrap bounce-hover">${l}</button>`).join('');
+        const raw = [], ch = [];
+        for (let j = 0; j < n; j++) {
+            raw.push([]); ch.push([]);
+            for (let i = 0; i < n; i++) {
+                raw[j].push(scene((i + .5) / n, (j + .5) / n));
+                ch[j].push(j % 2 === 0 ? (i % 2 === 0 ? 0 : 1) : (i % 2 === 0 ? 1 : 2));
+            }
+        }
+        const cell = 300 / n;
+        let g = `<rect x="0" y="0" width="300" height="300" fill="#fff"/>`;
+        for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+            let c;
+            if (pxMode === 'color') c = raw[j][i];
+            else if (pxMode === 'raw') { c = [0, 0, 0]; c[ch[j][i]] = raw[j][i][ch[j][i]]; }
+            else {
+                c = [0, 0, 0];
+                for (let k = 0; k < 3; k++) {
+                    let s = 0, m = 0;
+                    for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
+                        const y = j + dj, x = i + di;
+                        if (y < 0 || x < 0 || y >= n || x >= n || ch[y][x] !== k) continue;
+                        s += raw[y][x][k]; m++;
+                    }
+                    c[k] = m ? s / m : 0;
+                }
+            }
+            g += `<rect x="${(i * cell).toFixed(2)}" y="${(j * cell).toFixed(2)}" width="${(cell + .4).toFixed(2)}" height="${(cell + .4).toFixed(2)}" fill="rgb(${c.map(v => Math.round(v)).join(',')})"/>`;
+        }
+        document.getElementById('px-fig').innerHTML = svg(300, 300, g);
+        const D = {
+            color: `1つの 画素が 3色ぜんぶ わかる とした ときの 絵。画素が ${n}×${n}＝${nf(n * n)}個。少ないと かくかくに なる。`,
+            raw: `ほんとうの センサーが 受け取って いる もの。1つの 画素は <b>赤・緑・青の どれか 1色</b>の 明るさ だけ。人の 目には へんな 絵に 見える。`,
+            demo: `まわりの 画素から 足りない 色を 計算で うめた 絵（デモザイク）。カメラは 写真を 撮る たび この 計算を して いる。`
+        };
+        document.getElementById('px-desc').innerHTML = D[pxMode];
+    }
+
+    function snBsiFig() {
+        let g = bg(216, '#fff7ed');
+        g += `<line x1="280" y1="14" x2="280" y2="200" stroke="#fed7aa" stroke-width="3"/>`;
+        [[0, '表面照射（ひょうめん）', '#b45309'], [1, '裏面照射（りめん）BSI', '#15803d']].forEach(([k, name, col]) => {
+            const x = 20 + k * 280, bsi = k === 1;
+            g += tx(x + 120, 30, name, 12, col);
+            // 光
+            [40, 90, 140, 190].forEach(dx => g += arrow(x + dx, 38, x + dx, 66, '#f59e0b', 2));
+            // レンズ と フィルター
+            g += `<path d="M${x + 16} 84 a52 18 0 0 1 104 0 Z" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>`;
+            g += `<path d="M${x + 124} 84 a52 18 0 0 1 104 0 Z" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.6"/>`;
+            g += `<rect x="${x + 16}" y="84" width="212" height="14" fill="#22c55e" opacity="0.6" stroke="#334155" stroke-width="1.2"/>`;
+            if (bsi) {
+                // うすい シリコン → すぐ フォトダイオード
+                g += `<rect x="${x + 16}" y="98" width="212" height="46" rx="4" fill="#fef9c3" stroke="#a16207" stroke-width="2"/>`;
+                g += tx(x + 120, 139, 'フォトダイオード', 11, '#713f12');
+                g += `<rect x="${x + 16}" y="144" width="212" height="34" fill="#e2e8f0" stroke="#475569" stroke-width="2"/>`;
+                [0, 1, 2, 3].forEach(i => g += `<rect x="${x + 28 + i * 52}" y="152" width="38" height="9" rx="2" fill="#ea580c"/>`);
+                g += tx(x + 120, 172, '配線は うしろ', 10, '#334155');
+                [40, 90, 140, 190].forEach(dx => g += arrow(x + dx, 100, x + dx, 130, '#f59e0b', 2));
+                g += tx(x + 120, 196, '光が ぜんぶ とどく → 明るい・ノイズが 少ない', 10, '#15803d');
+                g += tx(x + 120, 210, 'ウェーハを ひっくり返し うすく けずる', 10, '#166534');
+            } else {
+                // 配線が じゃま
+                g += `<rect x="${x + 16}" y="98" width="212" height="34" fill="#e2e8f0" stroke="#475569" stroke-width="2"/>`;
+                // 金ぞくの 配線（上下 2段）。すきまは 20〜60・130〜160 だけ
+                [20, 90, 160].forEach(dx => {
+                    g += `<rect x="${x + dx}" y="104" width="40" height="10" rx="2" fill="#ea580c"/>`;
+                    g += `<rect x="${x + dx + 5}" y="118" width="30" height="9" rx="2" fill="#a16207"/>`;
+                });
+                g += tx(x + 120, 144, '配線が 光を さえぎる', 10, '#b91c1c');
+                g += `<rect x="${x + 16}" y="150" width="212" height="40" rx="4" fill="#fef9c3" stroke="#a16207" stroke-width="2"/>`;
+                g += tx(x + 120, 174, 'フォトダイオード', 11, '#713f12');
+                [75, 145].forEach(dx => g += arrow(x + dx, 100, x + dx, 148, '#f59e0b', 2));   // すきまを 通る 光
+                [40, 110].forEach(dx => {                                                       // 金ぞくに 当たって 止まる 光
+                    g += `<line x1="${x + dx}" y1="92" x2="${x + dx}" y2="100" stroke="#f59e0b" stroke-width="2"/>`;
+                    g += tx(x + dx, 101, '✕', 12, '#dc2626');
+                });
+                g += tx(x + 120, 206, '光の 一部が とどかない', 10, '#b45309');
+            }
+        });
+        return svg(W, 216, g);
+    }
+    const SN_BSI = [
+        ['ふつうに 作ると 配線{はいせん}が 手前に 来る', 'トランジスタと 配線{はいせん}は シリコンの 表面に 作る。すると 光の 通り道に 金属の 線が ならんで しまい、せっかくの 光が さえぎられる。'],
+        ['ひっくり返して うすく けずる', 'ウェーハを 別の 支{ささ}えに はりつけ、うら側を 数マイクロメートルまで けずって うすく する。そこから 光を 入れれば、じゃま者が いない。'],
+        ['どれくらい よく なる？', '同じ 大きさの 画素で 受けられる 光が ふえる ので、暗い ところでも きれいに 写る。スマホの カメラが 夜に 強く なったのは これが 大きい。'],
+        ['さらに 積層{せきそう}型へ', 'センサーの チップと、計算する チップを 2枚・3枚 かさねて 1つに する。上で 光を 受け、下で いっきに 読み出す ので、動く ものの ゆがみ（ローリングシャッター）も へる。']
+    ];
+    const SN_CMP = [
+        ['よみ出し 方', '画素{がそ}ごとに トランジスタで 増幅{ぞうふく}して 読む', '電子を バケツリレーで 順ぐりに 運んで 読む'],
+        ['電気の つかう 量', '少ない', '多い（高い 電圧が いる）'],
+        ['はやさ', 'とても はやい（動画・連写に 強い）', 'おそい'],
+        ['作りやすさ', 'ふつうの チップと 同じ 工場で 作れる', '専用の 作り方が いる'],
+        ['いまの つかいみち', 'スマホ・カメラ・車 など ほぼ すべて', '天体{てんたい}・科学・けんさ など 特別な 用途{ようと}']
+    ];
+    const SN_USE = ['📱 スマホ', '📷 デジカメ', '🚗 車の 目（自動ブレーキ）', '🏥 胃カメラ', '🛒 レジの バーコード', '🖱️ 光学マウス',
+                    '🚁 ドローン', '🔭 宇宙望遠鏡', '🦴 レントゲン（X線用）', '🙂 顔認証', '🤖 そうじロボット', '🚪 QRコード'];
+
+    /* =====================================================================
+       ④ ナノの 世界
+       ===================================================================== */
+    function mosfet(x0, on) {
+        let g = '';
+        // シリコン（p型）
+        g += `<rect x="${x0}" y="86" width="156" height="72" rx="4" fill="#fbcfe8" stroke="#9d174d" stroke-width="2"/>`;
+        g += tx(x0 + 78, 150, 'シリコン（p型）', 9, '#9d174d');
+        // ソース・ドレイン（n型）
+        g += `<rect x="${x0 + 6}" y="86" width="40" height="34" rx="3" fill="#bfdbfe" stroke="#1d4ed8" stroke-width="2"/>`;
+        g += `<rect x="${x0 + 110}" y="86" width="40" height="34" rx="3" fill="#bfdbfe" stroke="#1d4ed8" stroke-width="2"/>`;
+        g += tx(x0 + 26, 78, 'ソース', 9, '#1d4ed8') + tx(x0 + 130, 78, 'ドレイン', 9, '#1d4ed8');
+        // ゲート（ぜつえん膜 ＋ 電極）
+        g += `<rect x="${x0 + 44}" y="80" width="68" height="6" fill="#fde047" stroke="#a16207" stroke-width="1.2"/>`;
+        g += `<rect x="${x0 + 44}" y="62" width="68" height="18" rx="2" fill="${on ? '#4338ca' : '#94a3b8'}" stroke="#1e293b" stroke-width="2"/>`;
+        g += tx(x0 + 78, 75, 'ゲート', 10, '#fff');
+        g += tx(x0 + 78, 52, on ? '＋の 電気を かける' : '電気を かけない', 10, on ? '#4338ca' : '#64748b');
+        // 通り道
+        if (on) {
+            g += `<rect x="${x0 + 46}" y="86" width="64" height="12" fill="#60a5fa"/>`;
+            for (let i = 0; i < 5; i++) g += `<circle cx="${x0 + 52 + i * 14}" cy="92" r="3" fill="#1e3a8a"/>`;
+            g += arrow(x0 + 26, 132, x0 + 130, 132, '#1d4ed8', 3);
+            g += tx(x0 + 78, 108, '電子の 道が できる', 9, '#1e3a8a');
+            g += tx(x0 + 78, 176, 'ON ＝ 電気が 流れる ＝ 1', 12, '#1d4ed8');
+        } else {
+            g += tx(x0 + 78, 106, '道が ない', 10, '#9d174d');
+            g += `<line x1="${x0 + 60}" y1="126" x2="${x0 + 96}" y2="126" stroke="#dc2626" stroke-width="3"/>`;
+            g += `<line x1="${x0 + 68}" y1="118" x2="${x0 + 88}" y2="134" stroke="#dc2626" stroke-width="3"/>`;
+            g += `<line x1="${x0 + 88}" y1="118" x2="${x0 + 68}" y2="134" stroke="#dc2626" stroke-width="3"/>`;
+            g += tx(x0 + 78, 176, 'OFF ＝ 流れない ＝ 0', 12, '#9f1239');
+        }
+        return g;
+    }
+    function nnTrFig() {
+        let g = bg(200, '#fdf2f8');
+        g += mosfet(14, false);
+        g += `<line x1="188" y1="16" x2="188" y2="186" stroke="#fbcfe8" stroke-width="3"/>`;
+        g += mosfet(200, true);
+        g += `<line x1="374" y1="16" x2="374" y2="186" stroke="#fbcfe8" stroke-width="3"/>`;
+        // じゃ口の たとえ
+        g += `<rect x="404" y="40" width="20" height="60" rx="4" fill="#94a3b8"/>`;
+        g += `<rect x="404" y="40" width="96" height="18" rx="6" fill="#94a3b8"/>`;
+        g += `<rect x="484" y="52" width="16" height="26" rx="3" fill="#64748b"/>`;
+        g += `<circle cx="414" cy="34" r="12" fill="#4338ca"/>`;
+        g += `<rect x="406" y="30" width="16" height="5" fill="#fff"/>`;
+        [0, 1, 2].forEach(i => g += `<ellipse cx="492" cy="${88 + i * 16}" rx="4" ry="7" fill="#38bdf8"/>`);
+        g += tx(452, 118, 'ゲートは 水道の ハンドル', 10, '#9d174d');
+        g += tx(452, 134, 'ひねると 水（電気）が 出る', 10, '#9d174d');
+        g += tx(452, 160, '1と 0 が あれば', 11, '#831843');
+        g += tx(452, 176, '数・字・絵・音 ぜんぶ 作れる', 10, '#831843');
+        return svg(W, 200, g);
+    }
+    const NN_TR = [
+        ['トランジスタ＝電気の スイッチ', 'ゲートに 電気を かけると、下の シリコンに 電子の 道が できて 電流が 流れる。やめると 道が 消える。動く 部品は 1つも 無い のに スイッチに なる。'],
+        ['スイッチが あつまると 計算に なる', 'スイッチを つなぐと「両方 ONの ときだけ ON」などの 決まりが 作れる（論理{ろんり}ゲート）。それを かさねると たし算、かけ算、そして コンピュータに なる。'],
+        ['1つの チップに 何百億個', 'スマホの チップには 150億〜200億個、AI用の 大きな チップには 1000億個 ちかい トランジスタが 入って いる。1個の 大きさは ウイルスより 小さい。'],
+        ['なぜ 小さく したい？', '小さい ほど ①たくさん つめられる ②電気が 少なくて すむ ③信号が 近くて はやい。だから みんな 必死に 小さく して きた。']
+    ];
+
+    const SIZES = [
+        ['かみの毛の 太さ', 80000, '#a16207'],
+        ['花ふん', 30000, '#ca8a04'],
+        ['赤血球{せっけっきゅう}', 7000, '#dc2626'],
+        ['大腸{だいちょう}きん', 2000, '#16a34a'],
+        ['ウイルス', 100, '#7c3aed'],
+        ['「2ナノ世代」の チップ', 2, '#4338ca'],
+        ['DNAの ひもの 太さ', 2.5, '#0891b2'],
+        ['シリコン原子 1こ', 0.2, '#334155']
+    ];
+    function nnSizeFig() {
+        const x0 = 158, x1 = 540, dec = 6, h = 44 + SIZES.length * 27 + 26;
+        const px = v => x0 + (Math.log10(v) - (-1)) / dec * (x1 - x0);
+        let g = bg(h, '#eef2ff');
+        for (let i = 0; i <= dec; i++) {
+            const x = x0 + i * (x1 - x0) / dec, v = Math.pow(10, i - 1);
+            g += `<line x1="${x.toFixed(1)}" y1="36" x2="${x.toFixed(1)}" y2="${h - 26}" stroke="#c7d2fe" stroke-width="1.4"/>`;
+            g += tx(x, 30, v < 1 ? '0.1' : nf(v), 9, '#6366f1');
+        }
+        g += tx(x0 - 6, 30, 'nm →', 9, '#4338ca', 'end');
+        SIZES.forEach(([n, v, c], i) => {
+            const y = 44 + i * 27;
+            g += `<rect x="${x0}" y="${y}" width="${(px(v) - x0).toFixed(1)}" height="18" rx="3" fill="${c}" opacity="0.85"/>`;
+            g += tx(x0 - 6, y + 14, n, 10, '#1e293b', 'end');
+            const lab = v >= 1000 ? nf(v) + ' nm' : v + ' nm';
+            const inside = px(v) - x0 > 70;
+            g += tx(inside ? px(v) - 6 : px(v) + 6, y + 14, lab, 10, inside ? '#fff' : c, inside ? 'end' : 'start');
+        });
+        g += tx(x0 + (x1 - x0) / 2, h - 8, 'めもりは 10倍ずつ（対数{たいすう}）。1cm＝1000万nm', 10, '#4338ca');
+        return svg(W, h, g);
+    }
+
+    function nnLithoFig() {
+        let g = bg(228, '#fffbeb');
+        g += `<line x1="272" y1="14" x2="272" y2="214" stroke="#fde68a" stroke-width="3"/>`;
+        // ふつうの 露光
+        g += tx(140, 30, 'ふつうの 露光（うつす しくみ）', 11, '#b45309');
+        g += `<circle cx="140" cy="54" r="14" fill="#fde047" stroke="#b45309" stroke-width="2"/>`;
+        g += tx(140, 59, '光', 10, '#78350f');
+        [-1, 0, 1].forEach(i => g += arrow(140 + i * 20, 70, 140 + i * 20, 90, '#f59e0b', 2));
+        g += `<rect x="72" y="92" width="136" height="12" fill="#1f2937"/>`;
+        [0, 1, 2].forEach(i => g += `<rect x="${92 + i * 40}" y="92" width="14" height="12" fill="#fff7ed"/>`);
+        g += tx(268, 100, 'マスク', 9, '#b45309', 'end');
+        [0, 1, 2].forEach(i => g += arrow(99 + i * 40, 106, 99 + i * 40, 124, '#f59e0b', 2));
+        g += `<path d="M76 126 q64 22 128 0 q-64 -22 -128 0 Z" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/>`;
+        g += tx(268, 137, 'レンズ', 9, '#1d4ed8', 'end');
+        [0, 1, 2].forEach(i => g += arrow(126 + i * 14, 150, 126 + i * 14, 166, '#f59e0b', 2));
+        g += `<rect x="72" y="168" width="136" height="10" fill="#c7d2fe" stroke="#4338ca" stroke-width="1.5"/>`;
+        g += `<rect x="72" y="178" width="136" height="16" fill="#cbd5e1" stroke="#475569" stroke-width="1.5"/>`;
+        g += tx(140, 208, 'レジストの 光が 当たった ところだけ とける', 9, '#b45309');
+        g += tx(140, 222, 'マスクの 4分の1 の 大きさに うつる', 9, '#b45309');
+        // EUV
+        g += tx(416, 30, 'いちばん 細い 線を 引く EUV', 11, '#b45309');
+        g += `<circle cx="318" cy="70" r="9" fill="#e2e8f0" stroke="#475569" stroke-width="1.5"/>`;
+        g += tx(318, 54, 'スズの つぶ', 9, '#475569');
+        g += arrow(360, 70, 330, 70, '#dc2626', 2.5);
+        g += tx(392, 62, 'レーザーで たたく', 9, '#b91c1c', 'start');
+        g += `<circle cx="318" cy="70" r="16" fill="none" stroke="#a855f7" stroke-width="2" stroke-dasharray="3 3"/>`;
+        g += tx(340, 108, '13.5nm の 光', 10, '#7e22ce', 'start');
+        // 鏡
+        [[300, 130], [370, 150], [440, 128]].forEach(([x, y], i) => {
+            g += `<path d="M${x - 24} ${y} q24 -14 48 0 q-24 6 -48 0 Z" fill="#e0e7ff" stroke="#4338ca" stroke-width="2"/>`;
+        });
+        g += `<path d="M318 86 L300 126" stroke="#a855f7" stroke-width="2"/>`;
+        g += `<path d="M304 134 L366 148" stroke="#a855f7" stroke-width="2"/>`;
+        g += `<path d="M374 150 L436 130" stroke="#a855f7" stroke-width="2"/>`;
+        g += `<path d="M440 134 L440 168" stroke="#a855f7" stroke-width="2"/>`;
+        g += `<rect x="396" y="170" width="88" height="12" fill="#c7d2fe" stroke="#4338ca" stroke-width="1.5"/>`;
+        g += tx(440, 196, 'EUVは ガラスを 通れない ので', 9, '#7e22ce');
+        g += tx(440, 210, '鏡{かがみ}で 曲げる。空気にも 吸われる ので 真空{しんくう}の 中', 9, '#7e22ce');
+        g += tx(440, 224, '1台 200〜400億円。作れるのは 世界で ASML 1社だけ', 9, '#b45309');
+        return svg(W, 228, g);
+    }
+    const NN_LITHO = [
+        ['写真の やきましと 同じ', 'マスクという 大きな 回路の 絵に 光を 通し、レンズで 4分の1に 縮めて ウェーハに うつす。だから 同じ 絵を 何枚でも すばやく 作れる。'],
+        ['細い 線には 短い 波長{はちょう}が いる', '光は 波。波が 大きいと 細かい ところが ぼやける。むかしは 紫外線{しがいせん}（248nm→193nm）、いまの 最先端は EUV（13.5nm）。'],
+        ['水を はさむ 作戦（液浸{えきしん}）', 'レンズと ウェーハの あいだに 水を 入れると 光が つまって より 細く 書ける。193nmの 光で 40nm 級まで 書けた。'],
+        ['何回も 重ねて 細く する', '1回で 書けない ときは、少しずらして 2回・4回 書く（マルチパターニング）。回数が ふえると 高く なる ので、EUVで 1回で 書けると うれしい。'],
+        ['「2nm」は 長さでは なく 世代の 名前', 'むかしは ゲートの 長さを さして いたが、いまは そうでは ない。「前の 世代より これくらい すごい」という <b>名前</b>。形も 平ら→立体（FinFET）→まわりを かこむ（GAA）に 進んだ。']
+    ];
+
+    const MOORE = [
+        [1971, 2300, '4004', '2,300'],
+        [1978, 29000, '8086', '2.9万'],
+        [1989, 1200000, '486', '120万'],
+        [1993, 3100000, 'Pentium', '310万'],
+        [2000, 42000000, 'Pentium 4', '4200万'],
+        [2006, 291000000, 'Core 2 Duo', '2.9億'],
+        [2013, 1000000000, 'Apple A7', '10億'],
+        [2020, 16000000000, 'Apple M1', '160億'],
+        [2023, 134000000000, 'Apple M2 Ultra', '1340億']
+    ];
+    function nnMooreFig() {
+        const h = 268, X0 = 52, X1 = 542, Y0 = 210, Y1 = 40;
+        const px = y => X0 + (y - 1970) / 56 * (X1 - X0);
+        const py = v => Y0 - (Math.log10(v) - 3) / 8.2 * (Y0 - Y1);
+        let g = bg(h, '#eef2ff');
+        for (let k = 3; k <= 11; k += 2) {
+            g += `<line x1="${X0}" y1="${py(Math.pow(10, k)).toFixed(1)}" x2="${X1}" y2="${py(Math.pow(10, k)).toFixed(1)}" stroke="#c7d2fe" stroke-width="1.3"/>`;
+            g += tx(X0 - 6, py(Math.pow(10, k)) + 4, k === 3 ? '1000' : (k === 5 ? '10万' : (k === 7 ? '1000万' : (k === 9 ? '10億' : '1000億'))), 9, '#6366f1', 'end');
+        }
+        [1970, 1980, 1990, 2000, 2010, 2020].forEach(y => {
+            g += `<line x1="${px(y).toFixed(1)}" y1="${Y0}" x2="${px(y).toFixed(1)}" y2="${Y1}" stroke="#e0e7ff" stroke-width="1.2"/>`;
+            g += tx(px(y), Y0 + 16, String(y), 9, '#6366f1');
+        });
+        g += `<polyline points="${MOORE.map(([y, v]) => px(y).toFixed(1) + ',' + py(v).toFixed(1)).join(' ')}" fill="none" stroke="#4338ca" stroke-width="2.5"/>`;
+        MOORE.forEach(([y, v, n, lab], i) => {
+            const x = px(y), yy = py(v);
+            g += `<circle cx="${x.toFixed(1)}" cy="${yy.toFixed(1)}" r="4.5" fill="#4338ca"/>`;
+            const up = i % 2 === 0;
+            g += tx(Math.min(Math.max(x, 44), 512), yy + (up ? -10 : 20), n, 9, '#312e81');
+            g += tx(Math.min(Math.max(x, 44), 512), yy + (up ? -21 : 31), lab, 9, '#6366f1');
+        });
+        g += tx(X0 + 4, 26, 'トランジスタの 数（めもりは 100倍ずつ）', 10, '#3730a3', 'start');
+        g += tx(280, 248, '52年で 2300個 → 1340億個。やく 6000万倍', 11, '#3730a3');
+        return svg(W, h, g);
+    }
+    const NN_CLEAN = [
+        ['ちり 1つぶで 1個 だめに なる', '回路の 線は 数十ナノ。0.1マイクロメートルの ちりが 1つ のる だけで 線が つながったり 切れたり する。'],
+        ['クリーンルーム', '工場の 中の 空気は 天井から ずっと 流れて いて、0.1マイクロメートル 以上の ちりが 1リットルに ほぼ 0個。外の 空気には 同じ 大きさの ちりが 1リットルに 数百万個も ある。'],
+        ['人が いちばんの ごみ発生{はっせい}げん', '人は じっと して いても 皮ふや ほこりを 出す。だから 全身を おおう「ムーンスーツ」を 着て、化しょうも できない。'],
+        ['水も とんでもなく きれい', '洗うのは「超純水{ちょうじゅんすい}」。ミネラルも ばいきんも すべて 取った 水。あまりに きれいすぎて 飲むのには 向かない。'],
+        ['ゆれても だめ', 'ナノの 精度{せいど}で 光を 当てる ので、地しんや トラックの ふるえも きらう。工場は 分あつ・防しん構造の 特別な 建物。']
+    ];
+
+    /* =====================================================================
+       ⑤ だれが 作って いる？（メーカー）
+       ===================================================================== */
+    function mkChainFig() {
+        let g = bg(246, '#eef2ff');
+        const CH = [['① 材料', '#0891b2'], ['② ウェーハ', '#4338ca'], ['③ 前工程', '#be123c'], ['④ 後工程', '#a16207'], ['⑤ 製品', '#15803d']];
+        const bw = 96, gap = 14;
+        CH.forEach(([n, c], i) => {
+            const x = 14 + i * (bw + gap);
+            g += box(x, 46, bw, 44, n, c);
+            if (i < CH.length - 1) g += arrow(x + bw + 2, 68, x + bw + gap - 2, 68, '#6366f1', 2.5);
+        });
+        const NOTE = ['すな・薬品\nガス', '円ばんを\n作る', '回路を\n焼きつける', '切って\n箱に 入れる', 'スマホ・車\nカメラ'];
+        NOTE.forEach((t, i) => {
+            const x = 14 + i * (bw + gap) + bw / 2;
+            t.split('\n').forEach((l, j) => g += tx(x, 106 + j * 13, l, 9, '#4338ca'));
+        });
+        // 下から ささえる 2つ
+        g += box(56, 152, 168, 40, '🛠️ 製造装置メーカー', '#7e22ce');
+        g += tx(140, 206, '機械を 作って 売る', 9, '#7e22ce');
+        g += arrow(110, 150, 168, 96, '#7e22ce', 2.5);
+        g += arrow(180, 150, 278, 96, '#7e22ce', 2.5);
+        g += box(300, 152, 168, 40, '🧠 設計（ファブレス）', '#0f766e');
+        g += tx(384, 206, '絵を かいて たのむ', 9, '#0f766e');
+        g += arrow(384, 150, 296, 96, '#0f766e', 2.5);
+        g += tx(280, 234, 'どこか 1つ 止まると、世界中の チップが 作れなく なる', 11, '#3730a3');
+        return svg(W, 246, g);
+    }
+    const MAKERS = [
+        ['🏗️ シリコン材料{ざいりょう}・ウェーハ', 'indigo',
+         'まっさらな 円ばんを 作る 会社。ここは <b>日本が 世界一</b>で、信越化学と SUMCO の 2社だけで 世界の ウェーハの 半分ちかくを 作って いる。',
+         [['信越化学工業', '🇯🇵 日本', 'ウェーハ 世界1位。レジストなどの 材料{ざいりょう}も 強い'],
+          ['SUMCO', '🇯🇵 日本', 'ウェーハ 世界2位。大きな 300mm が とくい'],
+          ['トクヤマ', '🇯🇵 日本', '高純度{こうじゅんど}ポリシリコン（③の 工程）'],
+          ['ワッカー', '🇩🇪 ドイツ', 'ポリシリコンの 大手'],
+          ['グローバルウェーハズ', '🇹🇼 台湾', 'ウェーハ 世界3位']]],
+        ['🛠️ 製造装置{そうち}', 'rose',
+         'チップを 作る 機械。1台 数億〜400億円。<b>アメリカ・オランダ・日本の 会社で ほとんど</b>を 占{し}める。',
+         [['ASML', '🇳🇱 オランダ', '<b>EUV露光{ろこう}きを 作れる 世界で ただ1社</b>。ここが 止まると 最先端が 作れない'],
+          ['アプライドマテリアルズ', '🇺🇸 アメリカ', '膜を つける・けずる 装置{そうち}で 世界最大'],
+          ['東京エレクトロン', '🇯🇵 日本', 'レジストを ぬる・現ぞうする 装置{そうち}は 世界シェア 9割ちかく'],
+          ['ラムリサーチ', '🇺🇸 アメリカ', 'けずる（エッチング）装置{そうち}が とくい'],
+          ['KLA', '🇺🇸 アメリカ', 'ちりや きずを 見つける 検査{けんさ}装置{そうち}'],
+          ['ニコン・キヤノン', '🇯🇵 日本', '露光{ろこう}き。EUVでは ない ぶんやで 活やく'],
+          ['ディスコ', '🇯🇵 日本', '<b>ウェーハを 切る・けずる 装置{そうち}で 世界一</b>。四角い チップに するのは この 機械'],
+          ['SCREEN', '🇯🇵 日本', 'ウェーハを 洗う 装置{そうち}の 大手'],
+          ['アドバンテスト', '🇯🇵 日本', 'できた チップを 検査{けんさ}する 装置{そうち}で 世界トップ']]],
+        ['🧪 材料{ざいりょう}・薬品・ガス', 'emerald',
+         '光に 反応する 薬（レジスト）、けずる 薬、特別な ガス。<b>日本の 会社が とても 強い</b>ぶんや。',
+         [['東京応化工業（TOK）', '🇯🇵 日本', 'フォトレジスト（光で 形を 作る 薬）の 大手'],
+          ['JSR', '🇯🇵 日本', 'EUV用の レジストで 世界トップ級'],
+          ['富士フイルム', '🇯🇵 日本', '写真の 技術を 生かした レジストや 洗う 薬'],
+          ['レゾナック', '🇯🇵 日本', 'パッケージ（後工程{あとこうてい}）の 材料{ざいりょう}'],
+          ['エア・リキード / リンデ', '🇫🇷🇬🇧 ヨーロッパ', '工場で つかう 特別な ガス']]],
+        ['🧠 設計だけ する 会社（ファブレス）', 'sky',
+         '工場を 持たず、回路の 絵だけ かいて 製造を たのむ やり方。もうけの 大きい ところ。',
+         [['NVIDIA', '🇺🇸 アメリカ', 'AI用の GPU。いま 世界で いちばん 注目されて いる'],
+          ['Apple', '🇺🇸 アメリカ', 'iPhone・Macの チップを 自分で 設計し TSMCに たのむ'],
+          ['クアルコム', '🇺🇸 アメリカ', 'スマホの 通信＋計算 チップ'],
+          ['AMD', '🇺🇸 アメリカ', 'パソコン・サーバー用の CPU / GPU'],
+          ['Arm', '🇬🇧 イギリス', 'チップの 設計の「土台」を 世界中に かす。スマホの ほぼ 全部が これ'],
+          ['ソシオネクスト', '🇯🇵 日本', 'たのまれて 専用チップを 設計する']]],
+        ['🏭 受託{じゅたく}製造（ファウンドリ）', 'amber',
+         '設計を あずかって ひたすら 作る 会社。<b>最先端は ほぼ 台湾に 集まって いる</b>のが 世界の 心配ごと。',
+         [['TSMC', '🇹🇼 台湾', '<b>世界最大</b>。最先端チップの 大半を ここが 作る。熊本に 工場（JASM）を 建てた'],
+          ['サムスン電子', '🇰🇷 韓国', '自分でも 設計し、受託{じゅたく}も する。メモリでも 世界一'],
+          ['インテル', '🇺🇸 アメリカ', '自社の CPUが 中心。受託{じゅたく}にも 力を 入れ なおして いる'],
+          ['グローバルファウンドリーズ', '🇺🇸 アメリカ', '最先端では ない、たくさん 使われる チップが とくい'],
+          ['UMC / SMIC', '🇹🇼 台湾 / 🇨🇳 中国', '車や 家電で つかう チップを 大量に 作る'],
+          ['ラピダス（Rapidus）', '🇯🇵 日本', '北海道の 千歳{ちとせ}で <b>2nm世代</b>を めざす 新しい 会社。国も お金を 出して いる']]],
+        ['📷 イメージセンサ', 'rose',
+         'カメラの 目。<b>ここも 日本が 世界一</b>で、世界の スマホの カメラの 半分ちかくが ソニー製。',
+         [['ソニーセミコンダクタソリューションズ', '🇯🇵 日本', '<b>世界シェア やく半分</b>。裏面照射{りめんしょうしゃ}・積層{せきそう}型を 実用化した'],
+          ['サムスン電子', '🇰🇷 韓国', '2位。画素{がそ}の 数が 多い センサーが とくい'],
+          ['オムニビジョン', '🇨🇳 中国', '安い スマホや 車の カメラで よく つかわれる'],
+          ['キヤノン', '🇯🇵 日本', '自社カメラ用の 大きな センサーを 自分で 作る'],
+          ['浜松ホトニクス', '🇯🇵 日本', '科学・医りょう用の 特別な 光センサー']]],
+        ['💾 メモリ（おぼえる チップ）', 'sky',
+         '計算では なく「おぼえる」ための チップ。作り方が 似ていて 大量生産{たいりょうせいさん}なので、ねだんが 大きく 上下する。',
+         [['サムスン電子 / SK hynix', '🇰🇷 韓国', 'DRAM（作業用の メモリ）で 世界の 大半。AI用の HBMでも 先頭'],
+          ['マイクロン', '🇺🇸 アメリカ', 'DRAM 3位。広島に 大きな 工場が ある'],
+          ['キオクシア', '🇯🇵 日本', 'フラッシュメモリ（電気を 切っても 消えない）。もとは 東芝の 部門'],
+          ['ウエスタンデジタル', '🇺🇸 アメリカ', 'キオクシアと 三重県で いっしょに 作って いる']]],
+        ['🚗 くらしを 動かす チップ', 'emerald',
+         '最先端では ないが、車・家電・工場に 山ほど 入って いる チップ。ここは 日本と ヨーロッパが 強い。',
+         [['ルネサスエレクトロニクス', '🇯🇵 日本', '車の マイコン（頭のう）で 世界トップ級'],
+          ['三菱電機 / 富士電機 / ローム / 東芝', '🇯🇵 日本', 'パワー半導体{はんどうたい}（大きな 電気を 切りかえる）'],
+          ['インフィニオン', '🇩🇪 ドイツ', 'パワー半導体{はんどうたい} 世界1位。車に 強い'],
+          ['STマイクロエレクトロニクス', '🇨🇭🇫🇷 ヨーロッパ', '車・家電の チップ'],
+          ['テキサス・インスツルメンツ', '🇺🇸 アメリカ', 'こまごました 便利な チップを 何万種類も 作る']]]
+    ];
+    function mkList() {
+        document.getElementById('mk-list').innerHTML = MAKERS.map(([title, col, lead, rows]) => {
+            const p = PAL[col];
+            return `<div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">${title}</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1 leading-relaxed">${lead}</p>
+                <div class="grid sm:grid-cols-2 gap-2 mt-3">
+                ${rows.map(([n, c, d]) =>
+                    `<div class="${p[0]} border-2 rounded-2xl p-3">
+                        <p class="font-black ${p[1]} text-sm">${n}</p>
+                        <p class="text-xs font-black text-slate-400 mt-0.5">${c}</p>
+                        <p class="text-xs font-bold text-slate-600 mt-1 leading-relaxed">${d}</p></div>`).join('')}
+                </div></div>`;
+        }).join('');
+    }
+    const MK_JP = [
+        ['◎ とても 強い：材料{ざいりょう}と 装置{そうち}', 'ウェーハ（信越化学・SUMCO）、レジスト（JSR・東京応化）、ぬる／現ぞうする 装置{そうち}（東京エレクトロン）、切る 装置{そうち}（ディスコ）、検査{けんさ}装置{そうち}（アドバンテスト）。<b>「作る ための 道具と 材料{ざいりょう}」では 世界の 中心</b>。'],
+        ['◎ 強い：イメージセンサと パワー半導体{はんどうたい}', 'カメラの 目は ソニーが 世界の 半分。車の 電気を あつかう パワー半導体{はんどうたい}も 日本の 会社が ならぶ。'],
+        ['△ 弱い：最先端の 製造', '2〜5nm の チップを 作れる 工場が 無かった。1980年代は 世界シェア 50%だったが、いまは 10%ほど。'],
+        ['🔄 だから いま 作りなおして いる', 'TSMCの 熊本工場（JASM）、ラピダスの 北海道工場、キオクシアの 三重・岩手、マイクロンの 広島。国も お金を 出して 工場を よびもどして いる。'],
+        ['🌏 なぜ 国が お金を 出すの？', 'チップが 無いと 車も 家電も 作れない。2020年ごろ「半導体{はんどうたい}不足」で 車の 工場が 止まった。だから いまは <b>安全ほしょうの 問題</b>として あつかわれて いる。']
+    ];
+
+    /* =====================================================================
+       ⑥ クイズ
+       ===================================================================== */
+    const QS = [
+        { f: 'すな→チップ', q: '半導体{はんどうたい}チップの おおもとの 材料{ざいりょう}は？', a: 'すなや 石に ふくまれる ケイ素', x: ['鉄', 'プラスチック', '金'], e: 'ケイ素（シリコン）は 地面に 2ばんめに 多い 元素。だから 安くて なくならない。' },
+        { f: 'すな→チップ', q: '半導体{はんどうたい}とは どんな もの？', a: '電気を 通す ときと 通さない ときを 作れる もの', x: ['いつも よく 電気を 通す もの', 'まったく 電気を 通さない もの', 'とても かたい もの'], e: '金属（通す）と ガラス（通さない）の 中間。だから スイッチに できる。' },
+        { f: 'すな→チップ', q: 'けい石から 金属シリコンを 作る とき いっしょに 入れる ものは？', a: '炭（コークス）', x: ['水', '塩', 'アルミ'], e: 'SiO₂ ＋ 2C → Si ＋ 2CO。炭が 酸素を うばって くれる。2000℃ ちかくまで 熱する。' },
+        { f: 'すな→チップ', q: 'チップ用の シリコンの きれいさ「イレブンナイン」は？', a: '99.999999999%', x: ['99%', '99.99%', '100%'], e: '9が 11個。よごれは 1000億分の1 いか。25mプールの 水に 塩 5ミリグラム ほど。' },
+        { f: 'すな→チップ', q: 'なぜ そこまで きれいに するの？', a: 'あとで わざと ほんの少し 別の 原子を まぜて 性質を 決める から', x: ['見た目を よく する ため', '軽く する ため', 'においを 消す ため'], e: 'もとが よごれて いると、まぜた 量が わからず 同じ チップが 作れない。' },
+        { f: 'すな→チップ', q: '単結晶{たんけっしょう}インゴットを 作る 方法の 名前は？', a: 'チョクラルスキー法（引き上げ法）', x: ['ヒートポンプ法', 'ダイシング法', 'デモザイク法'], e: 'とけた シリコンに 種結晶{たねけっしょう}を つけ、回しながら 1分に 1mm ほど 引き上げる。' },
+        { f: 'すな→チップ', q: '300mm の インゴット 1本の 重さは およそ？', a: 'やく 250kg', x: ['やく 2kg', 'やく 25kg', 'やく 2500kg'], e: '直径30cm・長さ1.5m の シリコンの かたまり。これが ぜんぶ ひとつの 結晶。' },
+        { f: 'すな→チップ', q: '回路を 焼きつける 工程は 何回 くらい くりかえす？', a: '500〜1000回', x: ['1回', '5回', '100万回'], e: '膜を つける→光を 当てる→けずる、を 何百回。ぜんぶで やく 3か月かかる。' },
+        { f: 'すな→チップ', q: 'できた チップの うち ちゃんと 動いた ものの 割合を 何と いう？', a: '歩留{ぶど}まり', x: ['純度{じゅんど}', '倍率', '露光{ろこう}'], e: '新しい 世代は はじめ 50%ほど。なれると 90%を こえる。' },
+        { f: 'すな→チップ', q: 'ウェーハを 切りはなす 前に 検査{けんさ}する のは なぜ？', a: '切って しまうと どれが 良品か わからなく なる から', x: ['切ると 重く なる から', '切ると 色が 変わる から', '検査{けんさ}は 切った あとに する'], e: 'ウェーハの ままで 細い 針を 当てて 1つずつ 調べ、ダメな ものに しるしを つける。' },
+
+        { f: 'ウェーハ', q: 'シリコンウェーハが 丸い いちばんの りゆうは？', a: '回しながら 引き上げて 育てる ので 円柱に なる から', x: ['丸が きれいだから', '丸だと 軽い から', '昔から 丸と 決まって いる から'], e: '中心の じくの まわりを 回して 育てる ので、どの 向きも 同じに 育ち、円柱に しか ならない。' },
+        { f: 'ウェーハ', q: 'ウェーハが 四角だと こまる ことは？', a: '角{かど}に 力や 熱が 集まって かけやすい／薬が 角{かど}に たまる', x: ['重く なる', '色が つく', '電気を 通さなく なる'], e: 'レジストは 回して のばす（スピンコート）ので、円でないと 厚{あつ}さが そろわない。' },
+        { f: 'ウェーハ', q: 'チップが 四角い いちばんの りゆうは？', a: '縦横に まっすぐ 切りはなす から', x: ['四角が かっこいい から', '丸く 切れない 材料{ざいりょう}だから', '四角だと 電気が はやい から'], e: 'ダイシングは ごばんの 線のように まっすぐ 切る。丸や 星型に 切りぬくのは 高くて おそい。' },
+        { f: 'ウェーハ', q: '同じ 大きさの 丸を ますに ならべると すきまは どれくらい？', a: 'やく 21%', x: ['0%', 'やく 5%', 'やく 50%'], e: '四角なら すきまは 0%。高い シリコンを むだに しない ため チップは 四角。' },
+        { f: 'ウェーハ', q: '丸い ウェーハに 四角い チップを ならべると 出る 問題は？', a: 'はしに かけた チップが できて むだに なる', x: ['チップの 色が 変わる', '真ん中が つかえない', 'ウェーハが われる'], e: 'だから ウェーハを 大きく して（200→300mm）、はしの むだの 割合を へらして いる。' },
+        { f: 'ウェーハ', q: 'チップを 大きく すると どう なる？', a: '1枚から 取れる 数が 一気に へる', x: ['取れる 数が ふえる', '何も 変わらない', '歩留{ぶど}まりが 良く なる'], e: '面積が 4倍に なれば 数は 4分の1 以下。だから 大きい チップは とても 高い。' },
+        { f: 'ウェーハ', q: '300mm ウェーハは 200mm ウェーハの 何倍の 面積？', a: 'やく 2.25倍', x: ['1.5倍', '3倍', '9倍'], e: '半径が 1.5倍 なので 面積は 1.5×1.5＝2.25倍。取れる 数は それより 少し 多く なる。' },
+        { f: 'ウェーハ', q: 'ウェーハの はしの 切りこみ（ノッチ）は 何の ため？', a: '結晶の 向きを そろえる 目じるし', x: ['持ちやすく する ため', 'かざり', '電気を つなぐ ため'], e: '完全な 円だと 向きが わからない。むかしは 直線に けずった「オリフラ」だった。' },
+        { f: 'ウェーハ', q: '太陽{たいよう}パネルの セルが 四角い のは なぜ？', a: 'すきまなく ならべて 光を たくさん 受けたい から', x: ['丸く 作れない から', '安い から', '四角い ほうが 光が 強く なる から'], e: '同じ シリコンでも 目的が ちがえば 形も かわる。あえて 四角く けずって いる。' },
+        { f: 'ウェーハ', q: '300mm ウェーハの 厚{あつ}さは およそ？', a: '0.775mm（1mm いか）', x: ['5mm', '1cm', '0.01mm'], e: 'うすい わりに 大きい ので、たわんだり われたり しない ように 平らさを きびしく 管理する。' },
+
+        { f: 'イメージセンサ', q: 'イメージセンサの 役目は？', a: '光を 数字に かえる', x: ['光を 強く する', '色を ぬる', '音を 記録する'], e: 'フィルムの かわり。光の つぶが はじき出した 電子の 数を 数字に する。' },
+        { f: 'イメージセンサ', q: '1つの 画素{がそ}が わかる ことは？', a: '赤・緑・青の どれか 1色ぶんの 明るさ だけ', x: ['色と 明るさ ぜんぶ', '色だけ', '形'], e: '色フィルターが 1色しか 通さない。足りない 色は 計算で うめる（デモザイク）。' },
+        { f: 'イメージセンサ', q: 'ベイヤー配列{はいれつ}で 緑が 2倍 ある のは なぜ？', a: '人の 目は 緑の 明るさに いちばん 敏感{びんかん}だから', x: ['緑が 安い から', '緑が いちばん 明るい 色だから', '緑の 光が 強い から'], e: '写真の こまかさは ほとんど 明るさで 決まる。だから RGGB で 緑を 多く する。' },
+        { f: 'イメージセンサ', q: '画素{がそ}の 上に ある 小さな レンズ（マイクロレンズ）の 役目は？', a: 'すきまに 落ちる 光まで 集めて 送る', x: ['色を つける', '光を 弱める', 'ごみを ふせぐ'], e: '画素{がそ} 1つに 1つ ついて いる 虫めがね。集める 光が ふえる ぶん 明るく 写る。' },
+        { f: 'イメージセンサ', q: '光が 電子を はじき出す はたらきを 何と いう？', a: '光電効果{こうでんこうか}', x: ['光合成', '反射', '屈折{くっせつ}'], e: 'アインシュタインが 説明して ノーベル賞を とった しくみ。センサーの 土台。' },
+        { f: 'イメージセンサ', q: '裏面照射{りめんしょうしゃ}（BSI）とは？', a: 'ウェーハを ひっくり返して うら側から 光を 入れる', x: ['うしろから ライトを 当てる', '2枚 かさねる', 'レンズを 大きく する'], e: '表面には 配線{はいせん}が あって 光を さえぎる。うすく けずって うらから 入れると 明るく 写る。' },
+        { f: 'イメージセンサ', q: 'いまの スマホや カメラの センサーは ほとんど どっち？', a: 'CMOS', x: ['CCD', 'フィルム', 'ブラウン管'], e: 'CMOSは 電気が 少なく はやく、ふつうの チップ工場で 作れる。CCDは いま 特別な 用途{ようと}だけ。' },
+        { f: 'イメージセンサ', q: '画素{がそ}の 数を 2倍に する と（センサーの 大きさは 同じ）？', a: '1画素が 小さく なって 受けられる 光が へる', x: ['いつでも きれいに なる', '色が ふえる', '何も 変わらない'], e: '画素数だけでは 写真の よさは 決まらない。センサーの 大きさと レンズも 大事。' },
+        { f: 'イメージセンサ', q: 'イメージセンサで 世界シェアが いちばん 大きい 会社は？', a: 'ソニー', x: ['ASML', 'インテル', 'トヨタ'], e: '世界の やく半分。裏面照射{りめんしょうしゃ}型や 積層{せきそう}型を 先に 実用化した。' },
+        { f: 'イメージセンサ', q: 'つぎの うち イメージセンサが 入って いない ものは？', a: 'かい中電灯', x: ['光学マウス', 'レジの バーコードよみとり', '自動ブレーキの 車'], e: 'マウスは 机の もようを 毎秒 何千回も 撮って 動きを 計算して いる。' },
+
+        { f: 'ナノ', q: '1ナノメートルは どれくらい？', a: '1ミリの 100万分の1', x: ['1ミリの 100分の1', '1ミリの 1000分の1', '1メートルの 1000分の1'], e: '1mm＝100万nm。かみの毛の 太さは やく 80000nm。' },
+        { f: 'ナノ', q: 'トランジスタは 何を する 部品？', a: '電気の スイッチ（流す・止める）', x: ['電気を ためる', '光を 出す', '音を 出す'], e: 'ゲートに 電気を かけると 下に 電子の 道が できる。ON＝1、OFF＝0。' },
+        { f: 'ナノ', q: '「2nm世代」の 2nm は 何の 長さ？', a: '実は どこの 長さでも なく、世代の 名前', x: ['トランジスタの ゲートの 長さ', 'ウェーハの 厚{あつ}さ', '配線{はいせん}の 太さ'], e: 'むかしは ゲートの 長さだったが、いまは ちがう。「前の 世代より すごい」の しるし。' },
+        { f: 'ナノ', q: '回路を ウェーハに うつす 技を 何と いう？', a: 'フォトリソグラフィ', x: ['ダイシング', 'デモザイク', 'ドーピング'], e: '写真の やきましと 同じ 原理。マスクの 絵を レンズで 4分の1に 縮めて 焼きつける。' },
+        { f: 'ナノ', q: '細い 線を 引く ために 光に 必要な ことは？', a: '波長{はちょう}が 短い こと', x: ['明るい こと', 'あたたかい こと', '色が 赤い こと'], e: '波が 大きいと 細かい ところが ぼやける。最先端は EUV（13.5nm）を つかう。' },
+        { f: 'ナノ', q: 'EUV露光{ろこう}きの 特ちょうで 正しいのは？', a: 'ガラスを 通れない ので 鏡{かがみ}で 曲げ、真空{しんくう}の 中で つかう', x: ['ふつうの レンズで 集める', '空気中で つかえる', '電気が いらない'], e: 'EUVは 空気にも 吸われる。1台 200〜400億円で、作れるのは ASML 1社だけ。' },
+        { f: 'ナノ', q: 'トランジスタの 数が 2年で 2倍に ふえて きた という 考えは？', a: 'ムーアの法則', x: ['オームの法則', 'ニュートンの法則', 'ベイヤーの法則'], e: '1971年の 2300個から、いまは 1000億個 こえ。52年で やく 6000万倍。' },
+        { f: 'ナノ', q: '半導体{はんどうたい}工場の 空気が とても きれいな りゆうは？', a: 'ちり 1つぶで チップが こわれる から', x: ['はたらく 人が 気もちいい から', '機械が さびる から', 'においが つく から'], e: '線は 数十ナノ。0.1マイクロメートルの ちりで 線が つながったり 切れたり する。' },
+        { f: 'ナノ', q: 'クリーンルームで 人が 全身スーツを 着る のは？', a: '人が いちばん ごみを 出す から', x: ['寒い から', '電気が あぶない から', 'かっこいい から'], e: '皮ふや ほこりが 落ちる。化しょうも できず、走っても いけない。' },
+        { f: 'ナノ', q: 'ウェーハを 洗う 水は？', a: '超純水{ちょうじゅんすい}（ミネラルも ばいきんも ない 水）', x: ['水道水', '海水', 'お湯だけ'], e: 'ミネラルが のこると それが よごれに なる。工場は 大量の 超純水{ちょうじゅんすい}を つかう。' },
+
+        { f: 'メーカー', q: 'シリコンウェーハで 世界シェアが 大きい 国は？', a: '日本（信越化学・SUMCO）', x: ['アメリカ', '中国', 'ドイツ'], e: 'この 2社だけで 世界の ウェーハの 半分ちかく。「作る 前の 土台」で 日本は 強い。' },
+        { f: 'メーカー', q: 'EUV露光{ろこう}きを 作れる 会社は？', a: 'ASML（オランダ）1社だけ', x: ['インテル', 'TSMC', 'ソニー'], e: 'ここが 止まると 世界中で 最先端チップが 作れなく なる。だから とても 注目される。' },
+        { f: 'メーカー', q: '受託{じゅたく}製造（ファウンドリ）で 世界最大の 会社は？', a: 'TSMC（台湾）', x: ['サムスン', 'インテル', 'ラピダス'], e: '設計は Apple や NVIDIA、作るのは TSMC。日本の 熊本にも 工場（JASM）を 建てた。' },
+        { f: 'メーカー', q: '工場を 持たず 設計だけ する 会社の よび名は？', a: 'ファブレス', x: ['ファウンドリ', 'メモリメーカー', 'ウェーハメーカー'], e: 'NVIDIA・Apple・クアルコムなど。fab（工場）が less（ない）という 意味。' },
+        { f: 'メーカー', q: '北海道の 千歳{ちとせ}で 2nm世代を めざす 日本の 新会社は？', a: 'ラピダス（Rapidus）', x: ['キオクシア', 'ルネサス', 'SUMCO'], e: '日本は 最先端の 製造が 弱かった。国も お金を 出して 作りなおして いる。' },
+        { f: 'メーカー', q: 'レジストを ぬる・現ぞうする 装置{そうち}で 世界シェアが とても 高い 会社は？', a: '東京エレクトロン（日本）', x: ['ASML', 'KLA', 'マイクロン'], e: '9割ちかい。日本は「チップを 作る ための 機械と 材料{ざいりょう}」で 世界の 中心。' },
+        { f: 'メーカー', q: 'ウェーハを 四角い チップに 切る 装置{そうち}で 世界一の 会社は？', a: 'ディスコ（日本）', x: ['ニコン', 'アドバンテスト', 'インフィニオン'], e: '切る・けずる・みがく の 専門。チップが 四角に なるのは この 機械の しごと。' },
+        { f: 'メーカー', q: '車の マイコンで 世界トップ級の 日本の 会社は？', a: 'ルネサスエレクトロニクス', x: ['キオクシア', 'SUMCO', 'JSR'], e: '最先端では ないが、車 1台に チップは 1000個以上。ここが 止まると 車が 作れない。' },
+        { f: 'メーカー', q: '日本が いま 弱い と いわれる ぶんやは？', a: '最先端（2〜5nm）の チップを 作る こと', x: ['ウェーハ作り', 'イメージセンサ', '製造装置{そうち}'], e: '1980年代は 世界シェア 50%だったが いまは 10%ほど。だから 工場を よびもどして いる。' },
+        { f: 'メーカー', q: '国が 半導体{はんどうたい}工場に お金を 出す いちばんの りゆうは？', a: 'チップが 無いと 車も 家電も 作れない から', x: ['もうかる から', '会社に たのまれた から', '電気が あまって いる から'], e: '2020年ごろの 半導体{はんどうたい}不足で 車の 工場が 止まった。いまは 安全ほしょうの 問題。' }
+    ];
+    let qz = null, qzField = 'all';
+    function newQuiz() {
+        const pool = qzField === 'all' ? QS : QS.filter(q => q.f === qzField);
+        const q = pool[rnd(pool.length)];
+        qz = { q, choices: shuffle([q.a].concat(q.x)), done: false };
+        const fields = ['all'].concat([...new Set(QS.map(x => x.f))]);
+        document.getElementById('qz-fields').innerHTML = fields.map(f =>
+            `<button onclick="setField('${f}')" class="${qzField === f ? 'bg-indigo-700 text-white' : 'bg-white border-2 border-indigo-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${f === 'all' ? 'ぜんぶ ' + QS.length : plain(f) + ' ' + QS.filter(x => x.f === f).length}</button>`).join('');
+        document.getElementById('qz-q').innerHTML = `<span class="text-xs font-black text-indigo-700 bg-indigo-100 px-2 py-1 rounded-lg mr-2">${esc(plain(q.f))}</span>${q.q}`;
+        document.getElementById('qz-choices').innerHTML = qz.choices.map((c, i) =>
+            `<button onclick="ansQuiz(${i})" data-qzc="${i}" class="bg-white border-2 border-slate-200 hover:border-indigo-500 font-bold text-left px-4 py-3 rounded-2xl bounce-hover">${c}</button>`).join('');
+        document.getElementById('qz-res').innerHTML = '';
+        scoreBox('qz-score', S.quiz);
+    }
+    function setField(f) { qzField = f; newQuiz(); }
+    function ansQuiz(i) {
+        if (!qz || qz.done) return;
+        qz.done = true;
+        const ok = qz.choices[i] === qz.q.a;
+        S.quiz[1]++; if (ok) S.quiz[0]++;
+        markChoices('[data-qzc]', j => qz.choices[j] === qz.q.a, i, 'font-bold text-left px-4 py-3 rounded-2xl');
+        document.getElementById('qz-res').innerHTML = resultBox(ok, ok ? '⭕ せいかい！' : `❌ こたえは 「${qz.q.a}」`, qz.q.e);
+        scoreBox('qz-score', S.quiz);
+    }
+
+    /* ===================== タブごとの 組み立て ===================== */
+    const BUILD = {
+        flow: () => setStep(0),
+        wafer: () => {
+            document.getElementById('wf-round').innerHTML = wfRoundFig();
+            cards('wf-round-why', WF_ROUND, 'sky');
+            document.getElementById('wf-square').innerHTML = wfSquareFig();
+            cards('wf-square-why', WF_SQUARE, 'rose');
+            wfCalc();
+        },
+        sensor: () => {
+            document.getElementById('sn-pixel').innerHTML = snPixelFig();
+            cards('sn-layer', SN_LAYER);
+            cards('sn-step', SN_STEP, 'amber');
+            document.getElementById('sn-bayer').innerHTML = snBayerFig();
+            cards('sn-bayer-why', SN_BAYER, 'emerald');
+            pxDraw();
+            document.getElementById('sn-bsi').innerHTML = snBsiFig();
+            cards('sn-bsi-why', SN_BSI, 'amber');
+            document.getElementById('sn-cmp').innerHTML =
+                `<table class="w-full text-xs font-bold" style="min-width:420px">
+                    <tr class="bg-indigo-100">
+                        <th class="p-2 text-left rounded-l-xl">くらべる ところ</th>
+                        <th class="p-2 text-left text-indigo-800">CMOS（いま の 主役）</th>
+                        <th class="p-2 text-left rounded-r-xl text-slate-500">CCD</th></tr>
+                    ${SN_CMP.map(([a, b, c], i) =>
+                        `<tr class="${i % 2 ? 'bg-slate-50' : ''}">
+                            <td class="p-2 font-black text-slate-500 align-top leading-relaxed">${a}</td>
+                            <td class="p-2 align-top leading-relaxed">${b}</td>
+                            <td class="p-2 align-top text-slate-500 leading-relaxed">${c}</td></tr>`).join('')}
+                </table>
+                <p class="text-xs font-bold text-slate-400 mt-2 leading-relaxed">
+                    ※ CCDを 発明した 2人は 2009年の ノーベル物理学賞。えらい 発明だが、
+                    いまは 電気が 少なく はやい CMOSが ほとんど。</p>`;
+            document.getElementById('sn-use').innerHTML = SN_USE.map(u =>
+                `<span class="bg-indigo-50 border-2 border-indigo-200 rounded-full px-3 py-1.5 text-xs font-black text-indigo-800">${u}</span>`).join('');
+        },
+        nano: () => {
+            document.getElementById('nn-tr').innerHTML = nnTrFig();
+            cards('nn-tr-why', NN_TR, 'rose');
+            document.getElementById('nn-size').innerHTML = nnSizeFig();
+            document.getElementById('nn-size-note').innerHTML =
+                '💡 いまの チップの 部品は <b>ウイルスより ずっと 小さい</b>。' +
+                'シリコン原子 1個が 0.2nm なので、「2nm」は <b>原子 10個ぶん</b>の 世界。' +
+                'これ以上 小さく するのは、原子の 数が 数えられる ほど 少なく なって とても むずかしい。';
+            document.getElementById('nn-litho').innerHTML = nnLithoFig();
+            cards('nn-litho-why', NN_LITHO, 'amber');
+            document.getElementById('nn-moore').innerHTML = nnMooreFig();
+            document.getElementById('nn-moore-note').innerHTML =
+                '💡 数は だいたいの 公表値。ずっと 2年で 2倍の ペースが つづいて きたが、' +
+                'いまは 小さく するのが 苦しく なり、<b>チップを 何枚も かさねる</b>（積層{せきそう}・チップレット）' +
+                'やり方に 変わって きて いる。';
+            cards('nn-clean', NN_CLEAN, 'sky');
+        },
+        maker: () => {
+            document.getElementById('mk-chain').innerHTML = mkChainFig();
+            mkList();
+            cards('mk-jp', MK_JP, 'emerald');
+        },
+        quiz: () => newQuiz()
+    };
+
+    /* ===================== 起動 ===================== */
+    renderNav();
+    ready.flow = true;
+    BUILD.flow();
+    rubify(document.body);
+</script>
+</body>
+</html>
