@@ -71,6 +71,61 @@
             </div>
         </section>
 
+        <!-- ===== ② 製造工程 くわしく ===== -->
+        <section id="tab-make" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">🧪 チップは「1層{そう}ずつ」つくる</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    チップは けずって 形を つくる のでは なく、
+                    <b class="text-indigo-700">うすい 膜{まく}を つける → いらない ところを けずる</b>を
+                    なんども くりかえして、下から 上へ 積{つ}み上げて いく。
+                    この つくり方を <b>前工程{まえこうてい}</b>と いう。
+                </p>
+                <div id="pw-two" class="grid sm:grid-cols-2 gap-3 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">🔁 1層{そう}を つくる 10の ステップ</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    おなじ ウェーハの 断面{だんめん}が、1ステップ ごとに どう かわるかを 見て みよう。
+                    これを <b class="text-indigo-700">100回 以上</b> くりかえすと チップに なる。
+                </p>
+                <div id="ly-chips" class="flex flex-wrap gap-1.5 mt-3"></div>
+                <h3 id="ly-name" class="font-black text-lg mt-3"></h3>
+                <p id="ly-lead" class="text-sm font-bold text-slate-500 mt-1"></p>
+                <div id="ly-fig" class="mt-3"></div>
+                <div id="ly-detail" class="space-y-2 mt-3"></div>
+                <div id="ly-tool" class="bg-sky-50 border-2 border-sky-200 rounded-2xl p-3 text-sm font-bold mt-3 leading-relaxed"></div>
+                <div class="flex gap-2 mt-3">
+                    <button onclick="lyMove(-1)" class="bg-white border-2 border-indigo-300 text-indigo-700 font-black px-4 py-2 rounded-full text-sm bounce-hover">◀ まえ</button>
+                    <button onclick="lyMove(1)" class="ml-auto bg-indigo-700 text-white font-black px-4 py-2 rounded-full text-sm bounce-hover">つぎ ▶</button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">📉 なぜ「歩留{ぶど}まり」が いのち なのか</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    1回 1回は ほとんど 成功{せいこう}して いる のに、
+                    <b class="text-rose-600">何百回も かける</b>と 残{のこ}るのは わずか。
+                    かけ算を して たしかめよう。
+                </p>
+                <div class="space-y-3 mt-3">
+                    <div class="flex items-center gap-3">
+                        <span class="font-black text-sm whitespace-nowrap">1工程の 成功{せいこう}りつ</span>
+                        <input type="range" id="yd-p" min="0" max="40" step="1" value="20" oninput="ydCalc()">
+                        <span id="yd-p-v" class="num bg-indigo-100 text-indigo-700 font-black px-3 py-1 rounded-full text-xs whitespace-nowrap"></span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="font-black text-sm whitespace-nowrap">くりかえす 回数{かいすう}</span>
+                        <input type="range" id="yd-n" min="50" max="1000" step="50" value="500" oninput="ydCalc()">
+                        <span id="yd-n-v" class="num bg-indigo-100 text-indigo-700 font-black px-3 py-1 rounded-full text-xs whitespace-nowrap"></span>
+                    </div>
+                </div>
+                <div id="yd-fig" class="mt-3"></div>
+                <div id="yd-note" class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-3 text-sm font-bold mt-3 leading-relaxed"></div>
+            </div>
+        </section>
+
         <!-- ===== ② 丸い ウェーハ・四角い チップ ===== -->
         <section id="tab-wafer" class="hidden space-y-4">
             <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
@@ -352,7 +407,7 @@
     new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(rubify)))
         .observe(document.body, { childList: true, subtree: true });
 
-    const TABS = { flow: '🏭 すな→チップ', wafer: '💿 丸と 四角', sensor: '📷 イメージセンサ', nano: '🔬 ナノの 世界', maker: '🏢 メーカー', quiz: '❓ クイズ' };
+    const TABS = { flow: '🏭 すな→チップ', make: '🧪 製造工程', wafer: '💿 丸と 四角', sensor: '📷 イメージセンサ', nano: '🔬 ナノの 世界', maker: '🏢 メーカー', quiz: '❓ クイズ' };
     let tab = 'flow';
     const ready = {};
     function renderNav() {
@@ -781,6 +836,209 @@
     }
     function stepMove(d) { setStep(stepI + d); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
+
+    /* =====================================================================
+       ② 製造工程 くわしく（1層を つくる 10ステップ）
+       ===================================================================== */
+    const PW_TWO = [
+        ['🔬 前工程{まえこうてい}（ウェーハプロセス）',
+         'まっさらな ウェーハの 上に、回路を <b>ナノの 細かさ</b>で つくる ところ。' +
+         '膜{まく}を つける・光で 形を うつす・けずる を 500〜1000回 くりかえし、やく 3か月 かかる。' +
+         '工場（ファブ）は 数千億〜1兆円。TSMC や ラピダスが やって いるのは ここ。'],
+        ['📦 後工程{あとこうてい}（組み立てと 検査{けんさ}）',
+         'できた ウェーハを 切って、基板{きばん}に のせ、線を つないで、樹脂{じゅし}で かためる ところ。' +
+         'こちらは <b>ミリの 世界</b>。むかしは 地味{じみ}な 仕事と 思われて いたが、' +
+         'いまは <b>チップを 何枚も 積{つ}み重ねる</b>（積層{せきそう}・チップレット）新しい 技として 主役に なって きた。']
+    ];
+
+    /* 断面{だんめん}の 絵。同じ ウェーハが 1ステップ ごとに どう かわるか */
+    const LX0 = 180, LX1 = 520, WINS = [[260, 320], [400, 460]];
+    const outside = (y, h, fill, stroke) => {           // あなの ところを のぞいて 帯を かく
+        let s = '', x = LX0;
+        WINS.forEach(([a, b]) => {
+            s += `<rect x="${x}" y="${y}" width="${a - x}" height="${h}" fill="${fill}" stroke="${stroke}" stroke-width="1.2"/>`;
+            x = b;
+        });
+        s += `<rect x="${x}" y="${y}" width="${LX1 - x}" height="${h}" fill="${fill}" stroke="${stroke}" stroke-width="1.2"/>`;
+        return s;
+    };
+    function lyFig(k) {
+        let g = bg(230, '#eef2ff');
+        const ox = k >= 1, res = k >= 2 && k <= 6, win = k >= 4, etch = k >= 5,
+              dop = k >= 6, met = k >= 8, cmp = k >= 9, many = k >= 10;
+        // シリコン
+        g += `<rect x="${LX0}" y="150" width="${LX1 - LX0}" height="50" fill="#cbd5e1" stroke="#475569" stroke-width="2"/>`;
+        g += tx(350, 182, 'シリコン', 11, '#334155');
+        g += tx(172, 178, 'シリコン', 10, '#475569', 'end');
+        // 打ちこまれた ところ
+        if (dop) WINS.forEach(([a, b]) => {
+            g += `<rect x="${a}" y="150" width="${b - a}" height="18" fill="#fde047" stroke="#a16207" stroke-width="1.2"/>`;
+            for (let i = 0; i < 5; i++) g += `<circle cx="${a + 8 + i * 11}" cy="159" r="1.8" fill="#a16207"/>`;
+        });
+        // 膜
+        if (ox) {
+            g += etch ? outside(136, 14, '#93c5fd', '#1d4ed8')
+                      : `<rect x="${LX0}" y="136" width="${LX1 - LX0}" height="14" fill="#93c5fd" stroke="#1d4ed8" stroke-width="1.2"/>`;
+            if (!many) g += tx(172, 148, '膜（さんか膜）', 10, '#1d4ed8', 'end');
+        }
+        // レジスト
+        if (res) {
+            g += win ? outside(120, 16, '#f9a8d4', '#be185d')
+                     : `<rect x="${LX0}" y="120" width="${LX1 - LX0}" height="16" fill="#f9a8d4" stroke="#be185d" stroke-width="1.2"/>`;
+            g += tx(172, 133, 'レジスト', 10, '#be185d', 'end');
+        }
+        // 金属
+        if (met) {
+            WINS.forEach(([a, b]) => g += `<rect x="${a}" y="136" width="${b - a}" height="14" fill="#fb923c" stroke="#9a3412" stroke-width="1.2"/>`);
+            if (!cmp) {
+                g += `<rect x="${LX0}" y="118" width="${LX1 - LX0}" height="18" fill="#fb923c" stroke="#9a3412" stroke-width="1.2"/>`;
+                g += tx(172, 131, '金属（どうせん）', 10, '#9a3412', 'end');
+            } else if (!many) {
+                g += tx(172, 164, '金属が あなの 中だけに', 10, '#9a3412', 'end');
+            }
+        }
+        // ステップ ごとの おまけ
+        if (k === 2) {                                   // スピンコート
+            g += `<rect x="342" y="40" width="16" height="30" rx="4" fill="#64748b"/>`;
+            [0, 1, 2].forEach(i => g += `<circle cx="350" cy="${78 + i * 14}" r="4" fill="#f472b6"/>`);
+            g += spinEll(350, 112, 150, 8, '#be185d');
+            g += tx(350, 30, '真ん中に たらして 高速で 回す', 11, '#be185d');
+        }
+        if (k === 3) {                                   // 露光
+            g += `<rect x="${LX0}" y="52" width="${LX1 - LX0}" height="14" fill="#1f2937"/>`;
+            WINS.forEach(([a, b]) => g += `<rect x="${a}" y="52" width="${b - a}" height="14" fill="#fef3c7"/>`);
+            g += tx(172, 64, 'マスク', 10, '#0f172a', 'end');
+            [200, 240, 290, 350, 430, 490].forEach(x => g += arrow(x, 22, x, 48, '#f59e0b', 2));
+            WINS.forEach(([a, b]) => [a + 14, b - 14].forEach(x => g += arrow(x, 70, x, 114, '#f59e0b', 2)));
+            g += tx(350, 16, '光（紫外線）', 11, '#b45309');
+            g += tx(350, 220, '当たった ところの レジストの 性質が かわる', 10, '#be185d');
+        }
+        if (k === 5) {                                   // エッチング
+            WINS.forEach(([a, b]) => [a + 12, (a + b) / 2, b - 12].forEach(x => g += arrow(x, 66, x, 132, '#0891b2', 2)));
+            g += tx(350, 40, 'プラズマに した ガス', 11, '#0e7490');
+            g += tx(350, 56, '（あなの 下だけ けずれる）', 10, '#0e7490');
+        }
+        if (k === 6) {                                   // イオン注入
+            WINS.forEach(([a, b]) => [a + 12, (a + b) / 2, b - 12].forEach(x => g += arrow(x, 66, x, 146, '#a16207', 2)));
+            g += tx(350, 40, 'リンや ホウ素の イオン', 11, '#854d0e');
+            g += tx(350, 56, '電気で 加速して 打ちこむ', 10, '#854d0e');
+        }
+        if (k === 9) {                                   // CMP
+            g += `<rect x="${LX0 - 10}" y="98" width="${LX1 - LX0 + 20}" height="14" rx="4" fill="#94a3b8" stroke="#475569" stroke-width="2"/>`;
+            g += spinEll(350, 105, 150, 7, '#0ea5e9');
+            g += tx(350, 88, 'みがいて 平らに する（CMP）', 11, '#334155');
+        }
+        if (many) {                                      // くりかえし
+            ['#93c5fd', '#fb923c', '#86efac', '#fb923c', '#c4b5fd'].forEach((c, i) => {
+                g += `<rect x="${LX0}" y="${128 - i * 18}" width="${LX1 - LX0}" height="16" fill="${c}" stroke="#475569" stroke-width="1.2"/>`;
+                if (i % 2) WINS.forEach(([a, b]) => g += `<rect x="${a + 10}" y="${128 - i * 18}" width="${b - a - 20}" height="16" fill="#9a3412"/>`);
+            });
+            g += tx(172, 100, '100層 以上', 11, '#4338ca', 'end');
+            g += tx(350, 32, '1〜10を なんども くりかえして 上へ 積む', 11, '#3730a3');
+        }
+        return svg(W, 230, g);
+    }
+    const LAYER = [
+        { e: '💿', n: 'まっさらな ウェーハ',
+          lead: '鏡{かがみ}のように みがいた シリコンの 円ばん。ここには まだ 何も ない。',
+          detail: [['ここから 始まる', 'ウェーハメーカー（信越化学・SUMCOなど）から とどいた ばかりの 状態。1枚に これから 何百個もの チップを つくる。'],
+                   ['手で さわっては いけない', 'あぶらや ちりが つくと それだけで だめに なる。人は さわらず、機械が ロボットの 手で 運ぶ。']],
+          tool: '🏭 つくって いる ところ：信越化学工業・SUMCO（日本）' },
+        { e: '🧱', n: '① 膜{まく}を つける（成膜{せいまく}）',
+          lead: 'シリコンの 上に、とても うすい 膜{まく}を つける。厚{あつ}さは 数ナノ〜数百ナノ。',
+          detail: [['3つの やり方', '① 熱と 酸素で 表面を ガラス（酸化膜{さんかまく}）に かえる ② ガスを 流して 膜を 育てる（CVD） ③ 金属の かたまりを たたいて 飛ばし ふりかける（スパッタ）。'],
+                   ['なぜ 膜が いるの？', '電気を 通す ところ（金属）と 通さない ところ（酸化膜）を つくり分ける ため。トランジスタの ゲートの 下の 膜は、いまや 原子 数個ぶんの 厚{あつ}さ。']],
+          tool: '🛠️ つかう 装置{そうち}：東京エレクトロン・アプライドマテリアルズ（成膜装置{そうち}）' },
+        { e: '🎨', n: '② レジストを ぬる（塗布{とふ}）',
+          lead: '光に 当たると 性質が かわる 薬（フォトレジスト）を、うすく 均等{きんとう}に ぬる。',
+          detail: [['スピンコート', '真ん中に 薬を たらして、ウェーハを 毎分 数千回で 回す。遠心力{えんしんりょく}で うすく のびて、厚{あつ}さは 1マイクロメートルほど（かみの毛の 80分の1）。'],
+                   ['ウェーハが 丸い おかげ', '円なら どこも 同じ 厚{あつ}さに なる。四角だと 角{かど}に たまって しまう。']],
+          tool: '🛠️ つかう 装置{そうち}：東京エレクトロン（コーター）／薬：JSR・東京応化工業' },
+        { e: '💡', n: '③ 光を 当てる（露光{ろこう}）',
+          lead: '回路の 絵（マスク）を 通して 光を 当て、レンズで 4分の1に 縮めて 焼きつける。',
+          detail: [['写真の やきましと 同じ', '当たった ところの レジストだけ 性質が かわる。これを ウェーハ ぜんたいに、四角い 範囲{はんい}ずつ ずらして くりかえす（ステップ＆リピート）。'],
+                   ['いちばん 高い 機械', '最先端では 波長{はちょう}13.5nm の EUV を つかう。1台 200〜400億円。作れるのは オランダの ASML だけ。']],
+          tool: '🛠️ つかう 装置{そうち}：ASML（EUV）／ニコン・キヤノン（そのほかの 露光{ろこう}き）' },
+        { e: '🚿', n: '④ 現{げん}ぞうする',
+          lead: '薬（現ぞう液）に つけると、光が 当たった ところだけ とけて あなが あく。',
+          detail: [['これで 型{かた}が できた', 'レジストの あなが「ここを けずって いいよ」という しるしに なる。これが あとの 工程の 型{かた}。'],
+                   ['ナノの 線が ちゃんと 出たか 見る', '細すぎる 線は くずれたり つながったり する。電子けんび鏡で 出来を たしかめる。']],
+          tool: '🛠️ つかう 装置{そうち}：東京エレクトロン（デベロッパー）／検査{けんさ}：KLA' },
+        { e: '⛏️', n: '⑤ エッチング（けずる）',
+          lead: 'ガスを プラズマに して、レジストの あなの 下の 膜{まく}だけを けずり取る。',
+          detail: [['守られる ところ・けずられる ところ', 'レジストが 残って いる ところは 守られ、あなの ところだけ 下に 穴が ほれる。まっすぐ 深く ほるのが うで の 見せどころ。'],
+                   ['いまは 深く 細く', '最新の メモリでは、直径 100nm ほどの 穴を <b>200層ぶん まっすぐ</b> ほる。東京タワーの 何十倍の 細長さ。']],
+          tool: '🛠️ つかう 装置{そうち}：ラムリサーチ・東京エレクトロン（エッチング装置{そうち}）' },
+        { e: '💉', n: '⑥ イオン注入{ちゅうにゅう}（ドーピング）',
+          lead: 'リンや ホウ素の イオンを 電気で 加速して、シリコンの 中に 打ちこむ。',
+          detail: [['「わざと よごす」工程', 'イレブンナインまで きれいに した シリコンに、ほんの 少しだけ 別の 原子を まぜる。これで n型（電子が 多い）・p型（穴が 多い）に なり、トランジスタが できる。'],
+                   ['打ちこんだ あと 熱を かける', '打ちこんだ ままでは 原子の ならびが こわれて いる ので、いっきに 熱して ならびを 直す（アニール）。']],
+          tool: '🛠️ つかう 装置{そうち}：アプライドマテリアルズ（イオン注入{ちゅうにゅう}装置{そうち}）' },
+        { e: '🧼', n: '⑦ レジストを はがして 洗う',
+          lead: '役目の 終わった レジストを 落とし、超純水{ちょうじゅんすい}で ていねいに 洗う。',
+          detail: [['1つぶの ちりも のこさない', '洗う 工程は ぜんぶで 100回以上 ある。つかうのは ミネラルも ばいきんも 取りのぞいた 超純水{ちょうじゅんすい}。'],
+                   ['ここで 1層が 完成', '膜{まく}に 決めた 形の あなが あき、その 下に 打ちこんだ ところが ある。これが チップの 1層。']],
+          tool: '🛠️ つかう 装置{そうち}：SCREEN・東京エレクトロン（洗浄{せんじょう}装置{そうち}）' },
+        { e: '🔌', n: '⑧ 金属を つける（配線{はいせん}）',
+          lead: '銅{どう}や タングステンで あなを うめ、上から ぜんぶ かぶせる。これが 電気の 通り道。',
+          detail: [['マンションのように 上へ', 'トランジスタは いちばん 下の 階。その 上に 配線{はいせん}の 階を 十数階 かさねて、必要な ところを たてに つなぐ。'],
+                   ['配線{はいせん}を のばすと おそく なる', '信号は 光の はやさに 近い が、線が 細く 長いと おくれる。だから いまは「どう つなぐか」が 性能を 決める。']],
+          tool: '🛠️ つかう 装置{そうち}：アプライドマテリアルズ（めっき・スパッタ）' },
+        { e: '🪞', n: '⑨ CMPで 平らに する',
+          lead: '上に あまった 金属を、みがいて 平らに 取りのぞく。あなの 中だけに 金属が 残る。',
+          detail: [['なぜ 平らに する？', 'でこぼこの ままだと、次の 層の 露光{ろこう}で ピントが 合わない。ナノの 世界では 少しの でこぼこも 山に なる。'],
+                   ['どうやって 平らに する？', '回る パッドに 細かい つぶの 入った 液（スラリー）を 流し、ウェーハを おしつけて みがく。けずるのは 数十ナノ。']],
+          tool: '🛠️ つかう 装置{そうち}：アプライドマテリアルズ・荏原{えばら}製作所（CMP装置{そうち}）' },
+        { e: '🔁', n: '⑩ これを くりかえす',
+          lead: '①〜⑨を 何十回も くりかえして、トランジスタの 層 → 配線{はいせん}の 層 と 上へ 積み上げる。',
+          detail: [['合計 500〜1000工程・3か月', '1枚の ウェーハが 工場の 中を 何キロも 移動する。とちゅうで 何回も 検査{けんさ}して、だめな ところが あれば その 理由を さがす。'],
+                   ['1回でも しっぱいすると だめ', '最後の 工程で しっぱいすると、3か月ぶんの ウェーハが むだに なる。だから 工場は 24時間 止めない。'],
+                   ['それから 後工程{あとこうてい}へ', 'できあがったら 1つずつ 電気を 流して 検査{けんさ}し、切りはなして 箱に 入れる。→「🏭 すな→チップ」の ⑦⑧を 見てみよう。']],
+          tool: '🧮 だから 歩留{ぶど}まり（ちゃんと 動いた 割合）が いのち。下で たしかめよう。' }
+    ];
+    let lyI = 0;
+    function setLy(i) {
+        lyI = (i + LAYER.length) % LAYER.length;
+        const s = LAYER[lyI];
+        document.getElementById('ly-chips').innerHTML = LAYER.map((x, j) =>
+            `<button onclick="setLy(${j})" class="${j === lyI ? 'bg-indigo-700 text-white' : 'bg-white border-2 border-indigo-200 text-slate-600'} font-black px-2.5 py-1.5 rounded-full text-xs whitespace-nowrap bounce-hover">${x.e} ${esc(plain(x.n).replace(/^[①-⑩]\s*/, ''))}</button>`).join('');
+        document.getElementById('ly-name').innerHTML = s.e + ' ' + s.n;
+        document.getElementById('ly-lead').innerHTML = s.lead;
+        document.getElementById('ly-fig').innerHTML = lyFig(lyI);
+        cards('ly-detail', s.detail);
+        document.getElementById('ly-tool').innerHTML = s.tool;
+    }
+    function lyMove(d) { setLy(lyI + d); }
+
+    /* 歩留まり＝1工程の 成功りつ の かけ算 */
+    const YD_P = [99, 99.2, 99.4, 99.5, 99.6, 99.7, 99.8, 99.9, 99.95, 99.99, 99.995, 99.999];
+    function ydCalc() {
+        const pi = Math.min(+document.getElementById('yd-p').value, YD_P.length - 1);
+        const p = YD_P[pi], n = +document.getElementById('yd-n').value;
+        const y = Math.pow(p / 100, n);
+        document.getElementById('yd-p-v').innerText = p + ' %';
+        document.getElementById('yd-n-v').innerText = n + ' 回';
+        const good = Math.round(y * 100);
+        let g = `<rect x="0" y="0" width="320" height="280" rx="14" fill="#eef2ff"/>`;
+        g += tx(160, 28, `100個 つくって ${good}個 が 使える`, 12, '#3730a3');
+        for (let j = 0; j < 10; j++) for (let i = 0; i < 10; i++) {
+            const ok = j * 10 + i < good;
+            g += `<rect x="${37 + i * 25}" y="${44 + j * 20}" width="21" height="16" rx="2" fill="${ok ? '#818cf8' : '#fda4af'}" stroke="${ok ? '#312e81' : '#be123c'}" stroke-width="1"/>`;
+        }
+        g += `<rect x="37" y="254" width="14" height="14" fill="#818cf8" stroke="#312e81" stroke-width="1"/>`;
+        g += tx(57, 266, '動いた', 11, '#312e81', 'start');
+        g += `<rect x="150" y="254" width="14" height="14" fill="#fda4af" stroke="#be123c" stroke-width="1"/>`;
+        g += tx(170, 266, '動かなかった', 11, '#9f1239', 'start');
+        document.getElementById('yd-fig').innerHTML = svg(320, 280, g);
+        const ex = [[99.9, 500], [99, 500], [99.99, 500]].map(([q, m]) =>
+            `1工程 ${q}% × ${m}回 → <b class="num">${(Math.pow(q / 100, m) * 100).toFixed(1)}%</b>`).join(' ／ ');
+        document.getElementById('yd-note').innerHTML =
+            `💡 計算は <b>（成功りつ）の（回数）乗</b>。${p}% を ${nf(n)}回 かけると
+             <b class="num text-rose-600">${(y * 100).toFixed(1)}%</b>。<br>${ex}<br>
+             1回 1回は ほぼ 成功{せいこう}して いる のに、何百回も かけると こんなに へる。
+             だから 半導体{はんどうたい}工場は「1工程 99.99%以上」を めざし、
+             ちり 1つぶ・ゆれ 1つに まで 気を つかって いる。`;
+    }
     /* =====================================================================
        ② 丸い ウェーハ・四角い チップ
        ===================================================================== */
@@ -1540,6 +1798,11 @@
     /* ===================== タブごとの 組み立て ===================== */
     const BUILD = {
         flow: () => setStep(0),
+        make: () => {
+            cards('pw-two', PW_TWO, 'sky');
+            setLy(0);
+            ydCalc();
+        },
         wafer: () => {
             document.getElementById('wf-round').innerHTML = wfRoundFig();
             cards('wf-round-why', WF_ROUND, 'sky');
