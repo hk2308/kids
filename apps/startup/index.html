@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>起業ラボ</title>
+    <meta name="description" content="会社をつくって仕事をはじめるには何がいる？アイデアの見つけ方、7つのじゅんび、個人事業主と株式会社のちがい、原価と利益と損益分岐点の計算、お金のあつめ方、レモネード店長5日間シミュレーション、守るルール、クイズ。ぜんぶ読み仮名つき。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums }
+        .bounce-hover { transition: transform .12s cubic-bezier(.175,.885,.32,1.275) }
+        .bounce-hover:active { transform: scale(.94) }
+        @keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.1) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275) }
+        @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+        .shake { animation: shake .3s ease-in-out }
+        svg text { font-family: inherit }
+        rt { font-size: .58em; font-weight: 700; color: #b45309 }
+        input[type=range] { accent-color: #ea580c; width: 100% }
+        table { border-collapse: collapse }
+    </style>
+</head>
+<body class="bg-amber-50 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white p-3 shadow-lg sticky top-0 z-30">
+        <div class="max-w-4xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">🚀</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">起業ラボ</h1>
+                    <p class="text-xs text-amber-50 font-bold hidden sm:block">じぶんで 仕事を つくる には 何が いる？</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[64px] z-20 bg-amber-50/95 backdrop-blur border-b border-amber-200">
+        <div class="max-w-4xl mx-auto flex gap-2 p-3 overflow-x-auto" id="tab-nav"></div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto w-full p-3 sm:p-5 flex-grow space-y-4">
+
+        <!-- ===== ① アイデア ===== -->
+        <section id="tab-idea" class="space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <h2 class="font-black">🚀 起業{きぎょう}って なに？</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1 leading-relaxed">
+                    <b class="text-orange-700">だれかの こまりごとを 助{たす}けて、そのお礼{れい}に お金を もらう</b>
+                    しくみを、じぶんで つくる こと。これが 起業{きぎょう}。
+                    会社{かいしゃ}に 入って はたらくのは「やる こと」が もう ある。
+                    起業{きぎょう}は「やる こと」を じぶんで 決{き}める。
+                </p>
+                <div id="id-why" class="grid sm:grid-cols-3 gap-3 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <h2 class="font-black">⭕ よい アイデアは 3つの わが かさなる ところ</h2>
+                <div id="id-venn" class="mt-3"></div>
+                <div id="id-venn-why" class="space-y-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <h2 class="font-black">🧩 アイデアカードを つくって みよう</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    <b class="text-orange-700">だれの</b>・<b class="text-rose-600">どんな こまりを</b>・
+                    <b class="text-emerald-700">じぶんの 何{なに}で</b> 助{たす}けるか。
+                    3つ えらぶと アイデアの 文{ぶん}に なる。
+                </p>
+                <p class="font-black text-sm mt-3 text-orange-800">① だれを 助{たす}ける？</p>
+                <div id="id-who" class="flex flex-wrap gap-1.5 mt-1.5"></div>
+                <p class="font-black text-sm mt-3 text-rose-700">② どんな こまりごと？</p>
+                <div id="id-pain" class="flex flex-wrap gap-1.5 mt-1.5"></div>
+                <p class="font-black text-sm mt-3 text-emerald-700">③ じぶんの とくいは？</p>
+                <div id="id-skill" class="flex flex-wrap gap-1.5 mt-1.5"></div>
+                <div id="id-card" class="mt-4"></div>
+                <div class="flex gap-2 mt-3">
+                    <button onclick="idShuffle()" class="bg-orange-600 text-white font-black px-4 py-2 rounded-full text-sm bounce-hover">🎲 シャッフル</button>
+                    <span class="num ml-auto bg-amber-100 text-orange-800 font-black px-3 py-1.5 rounded-full text-xs self-center" id="id-count"></span>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <h2 class="font-black">🔍 アイデアの 見{み}つけ方</h2>
+                <div id="id-find" class="space-y-2 mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ② じゅんび ===== -->
+        <section id="tab-prep" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <h2 class="font-black">🪜 はじめる までの 7ステップ</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    いきなり お店{みせ}を つくっては いけない。
+                    <b class="text-orange-700">小{ちい}さく ためして、たしかめて から 大{おお}きく する</b>。
+                    これが 今{いま}の やり方。
+                </p>
+                <div id="pr-chips" class="flex flex-wrap gap-1.5 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <h2 id="pr-name" class="font-black text-lg"></h2>
+                <p id="pr-lead" class="text-sm font-bold text-slate-500 mt-1"></p>
+                <div id="pr-fig" class="mt-3"></div>
+                <div id="pr-body" class="space-y-2 mt-3"></div>
+                <div id="pr-point" class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-3 text-sm font-bold mt-3 leading-relaxed"></div>
+                <div class="flex gap-2 mt-3">
+                    <button onclick="prMove(-1)" class="bg-white border-2 border-orange-300 text-orange-700 font-black px-4 py-2 rounded-full text-sm bounce-hover">◀ まえ</button>
+                    <button onclick="prMove(1)" class="ml-auto bg-orange-600 text-white font-black px-4 py-2 rounded-full text-sm bounce-hover">つぎ ▶</button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <h2 class="font-black">🏢 ひとりで やる？ 会社{かいしゃ}を つくる？</h2>
+                <div id="pr-cmp" class="mt-3 overflow-x-auto"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <h2 class="font-black">✅ 会社{かいしゃ}を つくる ときの 手{て}つづき</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    タップ すると チェックが つく。ぜんぶで 10こ。
+                </p>
+                <div id="pr-todo" class="space-y-2 mt-3"></div>
+                <div id="pr-todo-c" class="bg-orange-50 border-2 border-orange-200 rounded-2xl p-3 text-sm font-black mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ③ おかねの 計算 ===== -->
+        <section id="tab-money" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <h2 class="font-black">🧮 まず これだけ：売上{うりあげ}・原価{げんか}・利益{りえき}</h2>
+                <div id="mn-basic" class="mt-3"></div>
+                <div id="mn-basic-why" class="space-y-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <h2 class="font-black">📈 何個{なんこ} 売{う}れば とんとん？（損益分岐点{そんえきぶんきてん}）</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    レモネード屋{や}さんで 考{かんが}えよう。
+                    <b class="text-orange-700">売{う}った お金</b>と <b class="text-rose-600">かかった お金</b>が
+                    ちょうど 同{おな}じに なる ところを さがす。
+                </p>
+                <div class="space-y-3 mt-3">
+                    <div class="flex items-center gap-3">
+                        <span class="font-black text-sm whitespace-nowrap">1ぱいの ねだん</span>
+                        <input type="range" id="be-price" min="50" max="300" step="10" value="150" oninput="beCalc()">
+                        <span id="be-price-v" class="num bg-amber-100 text-orange-800 font-black px-3 py-1 rounded-full text-xs whitespace-nowrap"></span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="font-black text-sm whitespace-nowrap">1ぱいの 材料費{ざいりょうひ}</span>
+                        <input type="range" id="be-cost" min="10" max="200" step="10" value="60" oninput="beCalc()">
+                        <span id="be-cost-v" class="num bg-amber-100 text-orange-800 font-black px-3 py-1 rounded-full text-xs whitespace-nowrap"></span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="font-black text-sm whitespace-nowrap">毎日{まいにち} かかる お金</span>
+                        <input type="range" id="be-fix" min="0" max="4000" step="100" value="1500" oninput="beCalc()">
+                        <span id="be-fix-v" class="num bg-amber-100 text-orange-800 font-black px-3 py-1 rounded-full text-xs whitespace-nowrap"></span>
+                    </div>
+                </div>
+                <div id="be-fig" class="mt-3"></div>
+                <div id="be-stat" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3"></div>
+                <div id="be-note" class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-3 text-sm font-bold mt-3 leading-relaxed"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <h2 class="font-black">💰 はじめの お金は どこから？</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    <b class="text-rose-600">借{か}りる</b>と <b class="text-emerald-700">出{だ}して もらう</b>は
+                    まったく ちがう。ここを まちがえる 大人{おとな}も 多{おお}い。
+                </p>
+                <div id="mn-fund" class="grid sm:grid-cols-2 gap-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <h2 class="font-black">📊 株{かぶ}って なに？</h2>
+                <div id="mn-kabu" class="mt-3"></div>
+                <div id="mn-kabu-why" class="space-y-2 mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ④ レモネード店長 ===== -->
+        <section id="tab-game" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <h2 class="font-black">🍋 レモネード店長{てんちょう} 5日間{いつかかん}</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1 leading-relaxed">
+                    元手{もとで} <b class="num">1000円</b>で スタート。毎日{まいにち}
+                    <b class="text-orange-700">ねだん</b>と <b class="text-orange-700">作{つく}る数{かず}</b>を 決{き}める。
+                    天気{てんき}で 売{う}れ方{かた}が かわる。材料費{ざいりょうひ}は 1ぱい 40円。
+                    売{う}れ残{のこ}りは すてる ことに なる。
+                </p>
+                <div id="gm-state" class="grid grid-cols-3 gap-2 mt-3"></div>
+                <div id="gm-fore" class="bg-sky-50 border-2 border-sky-200 rounded-2xl p-3 text-sm font-black mt-3"></div>
+                <div id="gm-pick" class="mt-3"></div>
+                <div id="gm-res" class="mt-3"></div>
+                <div id="gm-log" class="mt-3 overflow-x-auto"></div>
+                <button onclick="gmReset()" class="mt-3 bg-white border-2 border-slate-200 text-slate-600 font-black px-4 py-2 rounded-full text-sm bounce-hover">↺ はじめから</button>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <h2 class="font-black">💡 この ゲームで わかる こと</h2>
+                <div id="gm-learn" class="space-y-2 mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ⑤ なかま・おきゃくさん・ルール ===== -->
+        <section id="tab-team" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <h2 class="font-black">👥 ひとりでは できない：役{やく}わり</h2>
+                <div id="tm-role" class="grid sm:grid-cols-2 gap-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <h2 class="font-black">🎯 お客{きゃく}さんに 届{とど}ける 4つの こと</h2>
+                <div id="tm-4p" class="mt-3"></div>
+                <div id="tm-4p-why" class="space-y-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <h2 class="font-black">🤝 いちばん 大事{だいじ}な もの＝信用{しんよう}</h2>
+                <div id="tm-trust" class="space-y-2 mt-3"></div>
+            </div>
+
+            <div class="bg-rose-50 rounded-3xl p-4 shadow-md border-2 border-rose-300">
+                <h2 class="font-black text-rose-800">⚠️ やっては いけない こと・守{まも}る ルール</h2>
+                <div id="tm-rule" class="space-y-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <h2 class="font-black">🧒 小学生{しょうがくせい}が いま できる こと</h2>
+                <div id="tm-kid" class="space-y-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <h2 class="font-black">🌱 しっぱいは ふつうの こと</h2>
+                <div id="tm-fail" class="space-y-2 mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ⑥ クイズ ===== -->
+        <section id="tab-quiz" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-amber-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">❓ 起業{きぎょう}クイズ</h2>
+                    <span id="qz-score" class="num bg-amber-100 text-orange-800 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newQuiz()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <div id="qz-fields" class="flex flex-wrap gap-2 mt-3"></div>
+                <p id="qz-q" class="font-black text-base sm:text-lg mt-3 leading-relaxed"></p>
+                <div id="qz-choices" class="grid gap-2 mt-3"></div>
+                <div id="qz-res" class="mt-3"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center text-xs text-slate-400 font-bold p-4">起業ラボ © 2026</footer>
+
+<script>
+    /* ===================== きょうつう ===================== */
+    const rnd = n => Math.floor(Math.random() * n);
+    const pickOne = a => a[rnd(a.length)];
+    function shuffle(a) { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = rnd(i + 1); const t = b[i]; b[i] = b[j]; b[j] = t; } return b; }
+    function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    const plain = t => String(t).replace(/\{[^{}]*\}/g, '');
+    const nf = n => Math.round(n).toLocaleString('ja-JP');
+    const yen = n => nf(n) + '円';
+    const W = 560;
+    function svg(w, h, body) {
+        return `<svg viewBox="0 0 ${w} ${h}" class="w-full h-auto block mx-auto" style="max-width:${w}px" role="img">${body}</svg>`;
+    }
+    function resultBox(ok, title, body) {
+        return `<div class="pop ${ok ? 'bg-green-50 border-green-300' : 'bg-amber-50 border-amber-300'} border-2 rounded-2xl p-3">
+            <p class="font-black ${ok ? 'text-green-700' : 'text-amber-700'}">${title}</p>
+            <div class="font-bold text-sm mt-1 leading-relaxed">${body}</div></div>`;
+    }
+    const S = { quiz: [0, 0] };
+    function scoreBox(id, s) { document.getElementById(id).innerText = `${s[0]} / ${s[1]}`; }
+    function markChoices(sel, isRight, picked, cls) {
+        document.querySelectorAll(sel).forEach((el, j) => {
+            el.className = `${isRight(j) ? 'bg-green-50 border-green-500' : (j === picked ? 'bg-red-50 border-red-400 shake' : 'bg-white border-slate-200 opacity-60')} border-2 ${cls}`;
+        });
+    }
+    /* カードの 色。Tailwind に 見つけて もらう ため クラス名は そのまま 書く */
+    const PAL = {
+        amber: ['bg-amber-50 border-amber-200', 'text-amber-800'],
+        orange: ['bg-orange-50 border-orange-200', 'text-orange-800'],
+        emerald: ['bg-emerald-50 border-emerald-200', 'text-emerald-800'],
+        rose: ['bg-rose-50 border-rose-200', 'text-rose-800'],
+        sky: ['bg-sky-50 border-sky-200', 'text-sky-800'],
+        violet: ['bg-violet-50 border-violet-200', 'text-violet-800']
+    };
+    function cards(id, list, col) {
+        const p = PAL[col || 'amber'];
+        document.getElementById(id).innerHTML = list.map(([t, d]) =>
+            `<div class="${p[0]} border-2 rounded-2xl p-3">
+                <p class="font-black ${p[1]} text-sm">${t}</p>
+                <p class="text-xs font-bold text-slate-600 mt-1 leading-relaxed">${d}</p></div>`).join('');
+    }
+    function chipRow(id, list, col) {
+        const p = PAL[col || 'amber'];
+        document.getElementById(id).innerHTML = list.map(t =>
+            `<span class="${p[0]} border-2 rounded-full px-3 py-1.5 text-xs font-black ${p[1]}">${t}</span>`).join('');
+    }
+
+    /* 漢字{よみ} を ルビに */
+    const RUBY_RE = /([一-鿿々]+)\{([^{}]+)\}/g;
+    function rubySkip(el) {
+        for (let n = el; n; n = n.parentNode) {
+            const tag = n.nodeType === 1 ? n.tagName.toLowerCase() : '';
+            if (tag === 'script' || tag === 'style' || tag === 'svg' || tag === 'ruby') return true;
+        }
+        return false;
+    }
+    function rubifyText(node) {
+        const t = node.nodeValue;
+        if (t.indexOf('{') < 0 || !node.parentNode || rubySkip(node.parentNode)) return;
+        RUBY_RE.lastIndex = 0;
+        if (!RUBY_RE.test(t)) return;
+        RUBY_RE.lastIndex = 0;
+        const frag = document.createDocumentFragment();
+        let last = 0, m;
+        while ((m = RUBY_RE.exec(t))) {
+            if (m.index > last) frag.appendChild(document.createTextNode(t.slice(last, m.index)));
+            const ruby = document.createElement('ruby');
+            ruby.appendChild(document.createTextNode(m[1]));
+            const rt = document.createElement('rt');
+            rt.textContent = m[2];
+            ruby.appendChild(rt);
+            frag.appendChild(ruby);
+            last = m.index + m[0].length;
+        }
+        if (last < t.length) frag.appendChild(document.createTextNode(t.slice(last)));
+        node.parentNode.replaceChild(frag, node);
+    }
+    function rubify(root) {
+        if (root.nodeType === 3) return rubifyText(root);
+        if (root.nodeType !== 1 || rubySkip(root)) return;
+        const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        const list = [];
+        while (w.nextNode()) if (w.currentNode.nodeValue.indexOf('{') >= 0) list.push(w.currentNode);
+        list.forEach(rubifyText);
+    }
+    new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(rubify)))
+        .observe(document.body, { childList: true, subtree: true });
+
+    const TABS = { idea: '💡 アイデア', prep: '🪜 じゅんび', money: '💰 おかねの 計算', game: '🍋 店長ゲーム', team: '👥 なかま・ルール', quiz: '❓ クイズ' };
+    let tab = 'idea';
+    const ready = {};
+    function renderNav() {
+        document.getElementById('tab-nav').innerHTML = Object.entries(TABS).map(([k, label]) =>
+            `<button onclick="setTab('${k}')" data-tab="${k}" class="${tab === k ? 'bg-orange-600 text-white' : 'bg-white border-2 border-amber-200 text-slate-600'} font-black px-4 py-2 rounded-full text-sm whitespace-nowrap bounce-hover">${label}</button>`).join('');
+    }
+    function setTab(k) {
+        tab = k;
+        Object.keys(TABS).forEach(t => document.getElementById('tab-' + t).classList.toggle('hidden', t !== k));
+        renderNav();
+        if (!ready[k]) { ready[k] = true; if (BUILD[k]) BUILD[k](); }
+    }
+
+    /* ===================== 絵の 部品 ===================== */
+    function bg(h, fill, w) { return `<rect x="0" y="0" width="${w || W}" height="${h}" rx="14" fill="${fill || '#fffbeb'}"/>`; }
+    function tx(x, y, t, size, col, anchor, weight) {
+        t = plain(t);                    /* SVGの 中に <ruby> は 置けない */
+        return `<text x="${x}" y="${y}" text-anchor="${anchor || 'middle'}" font-size="${size || 11}" font-weight="${weight || 900}" fill="${col || '#9a3412'}">${esc(t)}</text>`;
+    }
+    const twid = t => [...plain(t)].reduce((a, ch) => a + (ch.charCodeAt(0) < 128 ? 6 : 10), 0);
+    function arrow(x1, y1, x2, y2, col, w) {
+        const a = Math.atan2(y2 - y1, x2 - x1), L = 9;
+        return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="${w || 3}" stroke-linecap="round"/>
+                <polygon points="${x2},${y2} ${(x2 - Math.cos(a - .45) * L).toFixed(1)},${(y2 - Math.sin(a - .45) * L).toFixed(1)} ${(x2 - Math.cos(a + .45) * L).toFixed(1)},${(y2 - Math.sin(a + .45) * L).toFixed(1)}" fill="${col}"/>`;
+    }
+    function box(x, y, w, h, label, col, fill, size) {
+        const c = col || '#c2410c';
+        return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8" fill="${fill || '#ffffff'}" stroke="${c}" stroke-width="2.5"/>` +
+               tx(x + w / 2, y + h / 2 + 4, label, size || 11, c);
+    }
+
+    /* =====================================================================
+       ① アイデア
+       ===================================================================== */
+    const ID_WHY = [
+        ['🏪 お店{みせ}も 会社{かいしゃ}も、ぜんぶ だれかが 始{はじ}めた',
+         'コンビニも ゲーム会社{がいしゃ}も 病院{びょういん}も、最初{さいしょ}は 1人か 数人{すうにん}の 「やって みよう」から 始{はじ}まった。いま ある もの ぜんぶが だれかの 起業{きぎょう}の けっか。'],
+        ['🙋 つとめる との ちがい',
+         '会社{かいしゃ}に つとめると、やる ことが もう 決{き}まって いて、決{き}まった お給料{きゅうりょう}が もらえる。起業{きぎょう}すると、やる ことを じぶんで 決{き}められる かわりに、お金{かね}も じぶんで つくる。'],
+        ['⚖️ よい ところと たいへんな ところ',
+         'よい ところ：じぶんで 決{き}められる・うまく いけば 大{おお}きく できる。たいへんな ところ：うまく いかない ときの 責任{せきにん}も じぶん。だから <b>小{ちい}さく ためす</b>ことが 大切{たいせつ}。']
+    ];
+
+    function idVennFig() {
+        const h = 320;
+        let g = bg(h, '#fffbeb');
+        const C = [[220, 118, '#fb923c'], [340, 118, '#34d399'], [280, 218, '#60a5fa']];
+        C.forEach(([x, y, c]) => g += `<circle cx="${x}" cy="${y}" r="92" fill="${c}" opacity="0.30" stroke="${c}" stroke-width="2.5"/>`);
+        g += tx(160, 76, 'すき', 15, '#c2410c');
+        g += tx(160, 94, '（たのしい）', 10, '#c2410c');
+        g += tx(400, 76, 'とくい', 15, '#047857');
+        g += tx(400, 94, '（できる）', 10, '#047857');
+        g += tx(280, 286, 'ほしい 人が いる', 14, '#1d4ed8');
+        g += tx(280, 302, '（お金を はらう）', 10, '#1d4ed8');
+        g += `<rect x="216" y="142" width="128" height="34" rx="10" fill="#fff" stroke="#c2410c" stroke-width="2.5"/>`;
+        g += tx(280, 164, 'よい アイデア', 13, '#c2410c');
+        g += tx(280, 24, '3つ かさなる ところを さがす', 12, '#9a3412');
+        return svg(W, h, g);
+    }
+    const ID_VENN = [
+        ['😀 すき だけ', 'ずっと つづけられる けれど、お金{かね}に ならない。これは <b>趣味{しゅみ}</b>。趣味{しゅみ}は とても よい ものだが、仕事{しごと}とは ちがう。'],
+        ['💪 とくい だけ', 'じょうずに できて お金{かね}に なっても、じぶんが 楽{たの}しくない と つづかない。いつか いやに なって しまう。'],
+        ['🙋 ほしい 人が いる だけ', '売{う}れそう でも、じぶんに できない・好{す}きでも ない と、とちゅうで 止{と}まって しまう。'],
+        ['⭐ 3つ かさなると', 'つづけられて、人{ひと}の やくに 立{た}って、お金{かね}にも なる。これが いちばん 強{つよ}い。まずは この 3つを 紙{かみ}に 書{か}き出{だ}して みよう。']
+    ];
+
+    const ID_WHO = ['小{ちい}さい 子{こ}', 'おじいちゃん・おばあちゃん', 'いそがしい お父{とう}さん・お母{かあ}さん',
+                    'ペットを かって いる 人{ひと}', '同{おな}じ 学校{がっこう}の 友{とも}だち', '近{ちか}くの お店{みせ}の 人{ひと}',
+                    '外国{がいこく}から 来{き}た 人{ひと}', '入院{にゅういん}して いる 人{ひと}'];
+    const ID_PAIN = ['時間{じかん}が ない', 'やり方{かた}が わからない', '遠{とお}くて 行{い}けない', 'ねだんが 高{たか}い',
+                     'すぐ あきる', 'こわい・ふあん', 'ひとりで さびしい', 'かたづけが たいへん'];
+    const ID_SKILL = ['絵{え}を かく こと', '話{はな}す こと', '手{て}で つくる こと', 'パソコン',
+                      '体{からだ}を 動{うご}かす こと', '話{はなし}を 聞{き}く こと', '計算{けいさん}', '集{あつ}める こと'];
+    let idPick = [0, 0, 0];
+    function idSet(kind, i) { idPick[kind] = i; idCard(); }
+    function idShuffle() { idPick = [rnd(ID_WHO.length), rnd(ID_PAIN.length), rnd(ID_SKILL.length)]; idCard(); }
+    function idCard() {
+        [['id-who', ID_WHO, 0, 'orange'], ['id-pain', ID_PAIN, 1, 'rose'], ['id-skill', ID_SKILL, 2, 'emerald']]
+            .forEach(([id, list, kind, col]) => {
+                const on = kind === 0 ? 'bg-orange-600' : kind === 1 ? 'bg-rose-600' : 'bg-emerald-600';
+                document.getElementById(id).innerHTML = list.map((t, i) =>
+                    `<button onclick="idSet(${kind},${i})" class="${idPick[kind] === i ? on + ' text-white' : 'bg-white border-2 border-' + col + '-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${t}</button>`).join('');
+            });
+        const who = ID_WHO[idPick[0]], pain = ID_PAIN[idPick[1]], skill = ID_SKILL[idPick[2]];
+        document.getElementById('id-card').innerHTML =
+            `<div class="pop bg-gradient-to-br from-amber-100 to-orange-100 border-2 border-orange-300 rounded-3xl p-4">
+                <p class="text-xs font-black text-orange-700">わたしの アイデア</p>
+                <p class="font-black text-base sm:text-lg leading-relaxed mt-1">
+                    <b class="text-orange-700">${who}</b>の<br>
+                    「<b class="text-rose-600">${pain}</b>」を<br>
+                    <b class="text-emerald-700">${skill}</b>で 助{たす}ける
+                </p>
+                <p class="text-xs font-black text-slate-500 mt-3">つぎに この 3つを 考{かんが}える</p>
+                <ul class="text-xs font-bold text-slate-600 mt-1 space-y-1 leading-relaxed">
+                    <li>🙋 その 人{ひと}は <b>ほんとうに こまって いる</b>？（聞{き}いて みる）</li>
+                    <li>💰 <b>お金{かね}を はらって も いい</b>と 思{おも}う？ いくら なら？</li>
+                    <li>🔁 じぶんが <b>何回{なんかい}も つづけられる</b>？</li>
+                </ul>
+            </div>`;
+        document.getElementById('id-count').innerText =
+            `${ID_WHO.length}×${ID_PAIN.length}×${ID_SKILL.length}＝${ID_WHO.length * ID_PAIN.length * ID_SKILL.length}通り`;
+    }
+    const ID_FIND = [
+        ['① じぶんが こまった ことを メモする', 'いちばん 強{つよ}い ネタは「じぶんが こまった こと」。1日{いちにち}に 3回 「めんどう」と 思{おも}った ことを 書{か}いて みよう。1週間{いっしゅうかん}で 20個{こ}くらい たまる。'],
+        ['② 「ならんで いる」「高{たか}い」「めんどう」を さがす', '人{ひと}が ならんで いる ところ、高{たか}いのに 買{か}って いる もの、みんなが 面倒{めんどう}が って いる こと。そこに「もっと よく できる」が ある。'],
+        ['③ 5人{ごにん}に 聞{き}いて みる', '「最近{さいきん} こまった こと ある？」と 5人{ごにん}に 聞{き}く。自分{じぶん}の 思{おも}いこみが すぐ こわれる。これが <b>いちばん 大事{だいじ}な 練習{れんしゅう}</b>。'],
+        ['④ まったく 新{あたら}しく なくて いい', 'すでに ある ものに「ちょっと 足{た}す」だけで 十分{じゅうぶん}。カレー屋{や}さんは 何万{なんまん}軒{けん}も ある。それでも 新{あたら}しい お店{みせ}が できる。'],
+        ['⑤ アイデアは ぬすまれない', '「とられる から 話{はな}さない」は もったいない。話{はな}すと 意見{いけん}が もらえて どんどん よく なる。大事{だいじ}なのは アイデアより <b>やり切{き}る こと</b>。'],
+        ['⑥ 1つに 決{き}めて 小{ちい}さく ためす', '10個{こ} 考{かんが}えたら、いちばん 「すぐ ためせる」ものを 1つ えらぶ。次{つぎ}の タブの 7ステップに すすもう。']
+    ];
+
+    /* =====================================================================
+       ② じゅんび（7ステップ・かたち・手つづき）
+       ===================================================================== */
+    function prFig(i) {
+        const H = i === 6 ? 216 : 180;
+        let g = bg(H, '#fffbeb');
+        if (i === 0) {                                   // 10個から 1つ えらぶ
+            for (let k = 0; k < 10; k++) {
+                const x = 60 + (k % 5) * 92, y = 56 + Math.floor(k / 5) * 66, on = k === 6;
+                g += `<circle cx="${x}" cy="${y}" r="${on ? 30 : 22}" fill="${on ? '#fb923c' : '#fff'}" stroke="${on ? '#c2410c' : '#fdba74'}" stroke-width="${on ? 3 : 2}"/>`;
+                g += tx(x, y + 5, on ? 'これ！' : '💡', on ? 11 : 14, on ? '#fff' : '#f59e0b');
+            }
+            g += tx(280, 24, 'たくさん 出して、いちばん すぐ ためせる 1つを えらぶ', 12, '#9a3412');
+            g += tx(280, 168, 'えらばなかった アイデアは メモに 残しておく', 10, '#b45309');
+        }
+        if (i === 1) {                                   // 聞く
+            [[150, '#fb923c', 'じぶん'], [400, '#60a5fa', 'お客さん']].forEach(([x, c, n]) => {
+                g += `<circle cx="${x}" cy="${78}" r="20" fill="${c}"/>`;
+                g += `<path d="M${x - 24} 142 q24 -34 48 0 Z" fill="${c}"/>`;
+                g += tx(x, 166, n, 11, '#9a3412');
+            });
+            g += `<path d="M196 56 h160 v46 h-92 l-14 14 v-14 h-54 Z" fill="#fff" stroke="#c2410c" stroke-width="2.5"/>`;
+            g += tx(276, 74, '最近 こまった こと', 11, '#c2410c');
+            g += tx(276, 92, 'ありますか？', 11, '#c2410c');
+            g += tx(280, 24, '売りこまない。ただ 聞く。5〜10人に。', 12, '#9a3412');
+        }
+        if (i === 2) {                                   // 小さく ためす
+            g += box(30, 60, 130, 56, '紙で かいた 絵', '#f59e0b');
+            g += arrow(168, 88, 202, 88, '#c2410c', 3);
+            g += box(210, 60, 130, 56, '手づくり 1個', '#ea580c');
+            g += arrow(348, 88, 382, 88, '#c2410c', 3);
+            g += box(390, 60, 140, 56, 'お客さんに 見せる', '#dc2626');
+            g += tx(280, 24, 'いきなり お店は つくらない', 12, '#9a3412');
+            g += tx(280, 142, '1週間で できる ところから。だめなら すぐ 直せる', 11, '#b45309');
+            g += tx(280, 162, 'これを「小さく ためす（プロトタイプ）」と いう', 10, '#b45309');
+        }
+        if (i === 3) {                                   // お金の 計算
+            g += `<rect x="150" y="44" width="260" height="96" rx="12" fill="#fff" stroke="#c2410c" stroke-width="2.5"/>`;
+            g += tx(280, 76, '売った お金 － かかった お金', 13, '#c2410c');
+            g += tx(280, 102, '＝ もうけ（利益）', 15, '#047857');
+            g += tx(280, 128, 'マイナスなら 赤字', 10, '#dc2626');
+            g += tx(280, 24, 'ここを 計算しない で 始めると、あとで こまる', 12, '#9a3412');
+            g += tx(280, 164, '「いくらで 売る」「何個 売れば とんとん」を 先に 決める', 11, '#b45309');
+        }
+        if (i === 4) {                                   // 知ってもらう
+            g += `<path d="M40 74 l40 -18 v58 l-40 -18 Z" fill="#f59e0b" stroke="#c2410c" stroke-width="2"/>`;
+            g += `<path d="M80 56 l26 -12 v78 l-26 -12 Z" fill="#fdba74" stroke="#c2410c" stroke-width="2"/>`;
+            [[170, 1], [240, 2], [310, 3], [390, 5], [480, 8]].forEach(([x, n]) => {
+                for (let k = 0; k < n; k++) {
+                    const dx = (k % 3) * 16 - 16, dy = Math.floor(k / 3) * 24;
+                    g += `<circle cx="${x + dx}" cy="${70 + dy}" r="7" fill="#60a5fa"/>`;
+                }
+                g += tx(x, 142, n + '人', 11, '#1d4ed8');
+            });
+            g += tx(280, 24, 'よい ものでも、知られなければ 売れない', 12, '#9a3412');
+            g += tx(280, 166, 'くちコミで だんだん 広がる。最初は 1人から', 11, '#b45309');
+        }
+        if (i === 5) {                                   // 手つづき
+            g += `<rect x="60" y="48" width="96" height="104" rx="6" fill="#fff" stroke="#c2410c" stroke-width="2.5"/>`;
+            [0, 1, 2, 3, 4].forEach(k => g += `<line x1="74" y1="${68 + k * 16}" x2="142" y2="${68 + k * 16}" stroke="#fdba74" stroke-width="3"/>`);
+            g += tx(108, 168, '書類（定款など）', 10, '#b45309');
+            g += `<circle cx="212" cy="100" r="22" fill="#fecaca" stroke="#dc2626" stroke-width="3"/>`;
+            g += tx(212, 105, '印', 16, '#dc2626');
+            g += tx(212, 168, 'はんこ', 10, '#b45309');
+            g += arrow(246, 100, 286, 100, '#c2410c', 3);
+            g += `<rect x="300" y="60" width="190" height="92" fill="#e5e7eb" stroke="#475569" stroke-width="2.5"/>`;
+            g += `<path d="M295 60 L395 24 L495 60 Z" fill="#94a3b8" stroke="#475569" stroke-width="2.5"/>`;
+            [0, 1, 2].forEach(k => g += `<rect x="${322 + k * 58}" y="86" width="34" height="44" fill="#fff" stroke="#475569" stroke-width="2"/>`);
+            g += tx(395, 168, '法務局（ここで 会社が 生まれる）', 10, '#b45309');
+            g += tx(280, 24, '会社を つくるのは「書類を そろえて 登記する」こと', 12, '#9a3412');
+        }
+        if (i === 6) {                                   // つづける
+            const C = [['やって みる', 280, 46, '#f59e0b'], ['数字を 見る', 450, 106, '#0ea5e9'],
+                       ['なぜかを 考える', 280, 166, '#8b5cf6'], ['直す', 110, 106, '#10b981']];
+            C.forEach(([n, x, y, c]) => {
+                g += `<rect x="${x - 62}" y="${y - 16}" width="124" height="32" rx="10" fill="#fff" stroke="${c}" stroke-width="2.5"/>`;
+                g += tx(x, y + 4, n, 11, c);
+            });
+            g += arrow(346, 54, 392, 94, '#c2410c', 2.5);     // やってみる → 数字を見る
+            g += arrow(446, 126, 348, 158, '#c2410c', 2.5);   // 数字 → なぜか
+            g += arrow(214, 170, 166, 126, '#c2410c', 2.5);   // なぜか → 直す
+            g += arrow(114, 86, 212, 54, '#c2410c', 2.5);     // 直す → やってみる
+            g += tx(280, 16, 'これを ぐるぐる まわす', 12, '#9a3412');
+            g += tx(280, 208, '1回で 当たる ことは ほとんど ない', 11, '#b45309');
+        }
+        return svg(W, H, g);
+    }
+    const PREP = [
+        { e: '💡', n: '① アイデアを 1つに 決{き}める',
+          lead: 'たくさん 出{だ}して、その中{なか}から「いちばん すぐ ためせる もの」を 1つ えらぶ。',
+          body: [['多{おお}く 出{だ}して から えらぶ', '最初{さいしょ}から 1つに しぼると、たいてい 思{おも}いこみに なる。まず 10個{こ}くらい 出{だ}す。'],
+                 ['えらぶ 基準{きじゅん}は「早{はや}く ためせる」', 'かっこよさ より、1週間{いっしゅうかん}で ためせる かどうか。ためせば 答{こた}えが わかる。'],
+                 ['1行{ぎょう}で 書{か}けるか', '「だれの・どんな こまりを・どう 助{たす}ける」が 1行{ぎょう}で 書{か}けない アイデアは、まだ ぼんやりして いる。']],
+          point: '「これで 当{あ}たるかな？」と 考{かんが}えこむより、<b>1つ えらんで 次{つぎ}へ</b>。えらばなかった アイデアは メモに 残{のこ}して おけば いい。' },
+        { e: '🙋', n: '② お客{きゃく}さんに 聞{き}く',
+          lead: 'つくる 前{まえ}に、助{たす}けたい 人{ひと}に 5〜10人{にん} 話{はなし}を 聞{き}く。',
+          body: [['売{う}りこまない', '「これ 買{か}って くれますか？」では なく「最近{さいきん} こまった こと ありますか？」と 聞{き}く。売{う}りこむと 本当{ほんとう}の ことを 言{い}って くれない。'],
+                 ['「ほしい」は あてに ならない', '人{ひと}は やさしいので「いいね」と 言{い}って くれる。大事{だいじ}なのは <b>今{いま} どうして いるか</b>。すでに お金{かね}や 時間{じかん}を つかって いる なら 本物{ほんもの}の こまりごと。'],
+                 ['思{おも}いこみが こわれるのが 成功{せいこう}', '「ちがった」と わかるのは 大{おお}せいこう。作{つく}って から 気{き}づくと、時間{じかん}と お金{かね}が むだに なる。']],
+          point: 'プロの 起業家{きぎょうか}も いちばん 時間{じかん}を かけるのが ここ。<b>聞{き}くのは 無料{むりょう}、作{つく}るのは 高{たか}い。</b>' },
+        { e: '🧪', n: '③ 小{ちい}さく ためす',
+          lead: 'いきなり お店{みせ}や アプリを つくらない。紙{かみ}や 手{て}づくりで 1個{こ}だけ ためす。',
+          body: [['まず 紙{かみ}に かいた 絵{え}で いい', '「こんな ものです」と 見{み}せて 反応{はんのう}を 見{み}る。これだけで わかる ことが たくさん ある。'],
+                 ['1人{ひとり}に 売{う}って みる', '無料{むりょう}で あげるのでは なく、<b>1人{ひとり}でも お金{かね}を はらって くれるか</b>。ここが 大{おお}きな 分{わ}かれ目{め}。'],
+                 ['だめなら すぐ 直{なお}す', '小{ちい}さく ためすと、直{なお}すのも 安{やす}くて 早{はや}い。大{おお}きく つくって から だと もう 直{なお}せない。']],
+          point: 'この 小{ちい}さい 試作品{しさくひん}を <b>プロトタイプ</b>（または MVP）と いう。世界{せかい}中{じゅう}の 会社{かいしゃ}が この やり方{かた}を つかって いる。' },
+        { e: '🧮', n: '④ お金{かね}の 計算{けいさん}を する',
+          lead: 'いくらで 売{う}る？ 1個{こ}の もうけは いくら？ 何個{なんこ} 売{う}れば とんとん？',
+          body: [['売{う}った お金{かね} － かかった お金{かね} ＝ もうけ', 'これが すべての 土台{どだい}。売{う}れた 数{かず}が 多{おお}くても、もうけが マイナスなら つづかない。'],
+                 ['ねだんは「安{やす}ければ よい」では ない', '安{やす}くすると たくさん 売{う}れる けれど もうけが 小{ちい}さく なる。高{たか}くすると もうけは 大{おお}きいが 売{う}れる 数{かず}が へる。'],
+                 ['お金{かね}が 尽{つ}きたら 終{お}わり', 'もうけが 出{で}て いても、入{はい}って くる のが おそいと お金{かね}が 足{た}りなく なる。これを <b>資金{しきん}ショート</b>と いう。会社{かいしゃ}が つぶれる 一番{いちばん}の 理由{りゆう}。']],
+          point: '「💰 おかねの 計算{けいさん}」の タブで、何個{なんこ} 売{う}れば とんとんに なるか 動{うご}かして たしかめよう。' },
+        { e: '📣', n: '⑤ 知{し}って もらう',
+          lead: 'どんなに よい ものでも、知{し}られなければ 1つも 売{う}れない。',
+          body: [['名前{なまえ}と ひとことを 決{き}める', '「何{なに}を して くれる ものか」が ひとことで わかる 名前{なまえ}が 強{つよ}い。長{なが}い 説明{せつめい}は 読{よ}まれない。'],
+                 ['まず 目{め}の 前{まえ}の 1人{ひとり}に', 'いきなり 1万人{いちまんにん}に 広{ひろ}げようと しない。1人{ひとり}に 本気{ほんき}で よろこんで もらうと、その 人{ひと}が 次{つぎ}の 人{ひと}を つれて くる。'],
+                 ['くちコミが いちばん 強{つよ}い', '広告{こうこく}は お金{かね}が かかるが、くちコミは ただ で、しかも 信{しん}じて もらえる。そのために <b>期待{きたい}より 少{すこ}し 多{おお}く</b> やる。']],
+          point: 'お客{きゃく}さんが 1人{ひとり} 増{ふ}えるのに いくら かかったか（<b>集客{しゅうきゃく}の コスト</b>）も 数{かぞ}えて おこう。' },
+        { e: '🏢', n: '⑥ かたちを 決{き}めて 手{て}つづき',
+          lead: 'ひとりで やる（個人事業主{こじんじぎょうぬし}）か、会社{かいしゃ}を つくるか を 決{き}める。',
+          body: [['まずは 個人{こじん}で 十分{じゅうぶん}', '税務署{ぜいむしょ}に 紙{かみ} 1枚{まい}（開業届{かいぎょうとどけ}）を 出{だ}すだけ。お金{かね}は かからない。'],
+                 ['会社{かいしゃ}に する と よい とき', '人{ひと}を やとう・大{おお}きな 相手{あいて}と 取引{とりひき}する・お金{かね}を 集{あつ}める とき。信用{しんよう}が つきやすく、責任{せきにん}の 範囲{はんい}も 決{き}まる。'],
+                 ['会社{かいしゃ}は「登記{とうき}」で 生{う}まれる', '法務局{ほうむきょく}という 役所{やくしょ}に 書類{しょるい}を 出{だ}して 登録{とうろく}される と、会社{かいしゃ}が 世{よ}の 中{なか}に できる。']],
+          point: '下{した}の 表{ひょう}と チェックリストを 見{み}て みよう。むずかしい 手{て}つづきは <b>税理士{ぜいりし}や 司法書士{しほうしょし}</b>という 専門{せんもん}の 人{ひと}に たのめる。' },
+        { e: '🔁', n: '⑦ 直{なお}しながら つづける',
+          lead: 'やって みる → 数字{すうじ}を 見{み}る → なぜかを 考{かんが}える → 直{なお}す。これを まわす。',
+          body: [['数{かぞ}えて おく', '何人{なんにん}が 見{み}て、何人{なんにん}が 買{か}って、いくら もうかったか。数字{すうじ}を つけて いないと、よく なって いるか わからない。'],
+                 ['大{おお}きく 変{か}える 勇気{ゆうき}', 'ためして だめ だった とき、やる ことを 大{おお}きく 変{か}える ことを <b>ピボット</b>と いう。有名{ゆうめい}な 会社{かいしゃ}の 多{おお}くが 途中{とちゅう}で 変{か}えて いる。'],
+                 ['やめる のも 大事{だいじ}な 判断{はんだん}', 'つづけるか やめるかを 決{き}める のも 経営{けいえい}。やめて 別{べつ}の ことを する のは 逃{に}げでは ない。']],
+          point: 'いちどに 大{おお}きく 当{あ}てる 人{ひと}は ほとんど いない。<b>小{ちい}さく 直{なお}す 回数{かいすう}</b>が 多{おお}い 人{ひと}が 勝{か}つ。' }
+    ];
+    let prI = 0;
+    function setPr(i) {
+        prI = (i + PREP.length) % PREP.length;
+        const s = PREP[prI];
+        document.getElementById('pr-chips').innerHTML = PREP.map((x, j) =>
+            `<button onclick="setPr(${j})" class="${j === prI ? 'bg-orange-600 text-white' : 'bg-white border-2 border-amber-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs whitespace-nowrap bounce-hover">${x.e} ${esc(plain(x.n).replace(/^[①-⑩]\s*/, ''))}</button>`).join('');
+        document.getElementById('pr-name').innerHTML = s.e + ' ' + s.n;
+        document.getElementById('pr-lead').innerHTML = s.lead;
+        document.getElementById('pr-fig').innerHTML = prFig(prI);
+        cards('pr-body', s.body, 'orange');
+        document.getElementById('pr-point').innerHTML = '💡 ' + s.point;
+    }
+    function prMove(d) { setPr(prI + d); }
+
+    const PR_CMP = [
+        ['はじめ方{かた}', '税務署{ぜいむしょ}に 開業届{かいぎょうとどけ}（紙{かみ} 1枚{まい}）を 出{だ}すだけ', '法務局{ほうむきょく}で 登記{とうき}（書類{しょるい}を そろえて 登録{とうろく}）'],
+        ['はじめの 費用{ひよう}', '0円{えん}', 'やく 20万円{まんえん}（合同会社{ごうどうがいしゃ}なら やく 6万円{まんえん}）'],
+        ['名前{なまえ}', '屋号{やごう}（自由{じゆう}に つけられる）', '「〇〇株式会社{かぶしきがいしゃ}」。同{おな}じ 名前{なまえ}が ないか 調{しら}べる'],
+        ['責任{せきにん}', 'うまく いかない ときの 借金{しゃっきん}は ぜんぶ 自分{じぶん}が かぶる', '出{だ}した お金{かね}の ぶんまで（有限責任{ゆうげんせきにん}）'],
+        ['税金{ぜいきん}', '所得税{しょとくぜい}（もうけが 多{おお}い ほど 高{たか}く なる）', '法人税{ほうじんぜい}（もうけに かかる 割合{わりあい}が ほぼ 一定{いってい}）'],
+        ['信用{しんよう}', '小{ちい}さい。大{おお}きな 会社{かいしゃ}と 取引{とりひき}しにくい ことも', 'つきやすい。お金{かね}も 集{あつ}めやすい'],
+        ['むいて いる 人{ひと}', 'まず 1人{ひとり}で 小{ちい}さく ためしたい 人{ひと}', '人{ひと}を やとう・大{おお}きく する・出資{しゅっし}を 受{う}ける 人{ひと}']
+    ];
+    const PR_TODO = [
+        ['会社{かいしゃ}の 名前{なまえ}を 決{き}める', '同{おな}じ 名前{なまえ}が すでに ないか 調{しら}べる。あとで 変{か}えると お金{かね}が かかる。'],
+        ['やる こと（事業目的{じぎょうもくてき}）を 文{ぶん}に する', 'あとで やりたく なる ことも 書{か}いて おくと あんしん。'],
+        ['場所{ばしょ}（本店{ほんてん}の 住所{じゅうしょ}）を 決{き}める', '家{いえ}でも よい。ただし 大家{おおや}さんの OKが いる ことも。'],
+        ['資本金{しほんきん}を 決{き}める', 'はじめに 入{い}れる お金{かね}。1円{えん}でも できる が、少{すこ}なすぎると 信用{しんよう}されない。'],
+        ['定款{ていかん}（会社{かいしゃ}の ルールブック）を 作{つく}る', '何{なに}を する 会社{かいしゃ}か、だれが 決{き}めるか などの 決{き}まりごと。'],
+        ['法務局{ほうむきょく}で 登記{とうき}する', 'ここで 会社{かいしゃ}が 生{う}まれる。登録免許税{とうろくめんきょぜい}という お金{かね}が かかる。'],
+        ['税務署{ぜいむしょ}・都道府県{とどうふけん}・市町村{しちょうそん}に 届{とど}ける', '「会社{かいしゃ}を つくりました」と 知{し}らせる 紙{かみ}を 出{だ}す。'],
+        ['会社{かいしゃ}の 銀行口座{ぎんこうこうざ}を つくる', '自分{じぶん}の お金{かね}と 会社{かいしゃ}の お金{かね}を <b>ぜったいに 混{ま}ぜない</b>。'],
+        ['年金{ねんきん}・保険{ほけん}の 手{て}つづき', '社長{しゃちょう}1人{ひとり}でも 社会保険{しゃかいほけん}に 入{はい}る。人{ひと}を やとうなら 労働保険{ろうどうほけん}も。'],
+        ['帳簿{ちょうぼ}を つけて 1年{いちねん}に 1回{かい} 申告{しんこく}する', 'お金{かね}の 出入{でい}りを ぜんぶ 記録{きろく}する。レシートは 捨{す}てない。']
+    ];
+    let prDone = [];
+    function prToggle(i) { prDone[i] = !prDone[i]; prTodo(); }
+    function prTodo() {
+        document.getElementById('pr-todo').innerHTML = PR_TODO.map(([t, d], i) =>
+            `<button onclick="prToggle(${i})" class="w-full text-left ${prDone[i] ? 'bg-emerald-50 border-emerald-400' : 'bg-white border-amber-200'} border-2 rounded-2xl p-3 bounce-hover">
+                <p class="font-black text-sm ${prDone[i] ? 'text-emerald-800' : 'text-slate-700'}">${prDone[i] ? '✅' : '⬜'} ${i + 1}. ${t}</p>
+                <p class="text-xs font-bold text-slate-600 mt-1 leading-relaxed">${d}</p></button>`).join('');
+        const n = prDone.filter(Boolean).length;
+        document.getElementById('pr-todo-c').innerHTML =
+            `${n} / ${PR_TODO.length} かくにん した` +
+            (n === PR_TODO.length ? '　🎉 これで 会社{かいしゃ}が スタートできる！' : '');
+    }
+
+    /* =====================================================================
+       ③ おかねの 計算
+       ===================================================================== */
+    function mnBasicFig() {
+        const h = 200;
+        let g = bg(h, '#fffbeb');
+        g += tx(280, 26, 'レモネードを 1ぱい 500円で 売った とき', 12, '#9a3412');
+        const P = [['材料費', 200, '#fca5a5', '#b91c1c'], ['場所・道具', 150, '#93c5fd', '#1d4ed8'], ['もうけ', 150, '#86efac', '#047857']];
+        let x = 30;
+        P.forEach(([n, v, c, s]) => {
+            const w = 500 * v / 500;
+            g += `<rect x="${x}" y="52" width="${w}" height="46" fill="${c}" stroke="${s}" stroke-width="2"/>`;
+            g += tx(x + w / 2, 72, n, 11, s);
+            g += tx(x + w / 2, 90, v + '円', 12, s);
+            x += w;
+        });
+        g += `<line x1="30" y1="40" x2="530" y2="40" stroke="#c2410c" stroke-width="2"/>`;
+        g += `<line x1="30" y1="34" x2="30" y2="46" stroke="#c2410c" stroke-width="2"/>`;
+        g += `<line x1="530" y1="34" x2="530" y2="46" stroke="#c2410c" stroke-width="2"/>`;
+        g += tx(280, 148, '売上 500円 － かかった お金 350円 ＝ もうけ 150円', 13, '#9a3412');
+        g += tx(280, 172, 'お客さんが はらった お金が、ぜんぶ もうけでは ない', 11, '#b45309');
+        g += tx(280, 190, '売上が 大きくても、かかった お金が 多ければ 残らない', 10, '#b45309');
+        return svg(W, h, g);
+    }
+    const MN_BASIC = [
+        ['💵 売上{うりあげ}（うりあげ）', 'お客{きゃく}さんから もらった お金{かね}の 合計{ごうけい}。<b>ねだん × 売{う}れた 数{かず}</b>。ここが 大{おお}きいほど「にぎやかな お店{みせ}」だが、もうけとは 別{べつ}の 話{はなし}。'],
+        ['🧂 原価{げんか}（げんか）', 'その もの を つくる ために かかった お金{かね}。レモン・砂糖{さとう}・カップ など。<b>売{う}れた 数{かず}に あわせて ふえる</b>ので 変動費{へんどうひ}と いう。'],
+        ['🏠 経費{けいひ}（けいひ）', '場所{ばしょ}代{だい}・電気{でんき}代{だい}・道具{どうぐ}・宣伝{せんでん}など。<b>1つも 売{う}れなくても かかる</b>ものは 固定費{こていひ}と いう。'],
+        ['🎁 利益{りえき}（りえき）', '売上{うりあげ} から ぜんぶ の お金{かね}を ひいた 残{のこ}り。これが マイナスだと <b>赤字{あかじ}</b>。プラスだと <b>黒字{くろじ}</b>。'],
+        ['⏰ お金{かね}が 入{はい}る 「タイミング」も 大事{だいじ}', '先{さき}に 材料{ざいりょう}を 買{か}い、お金{かね}が もらえるのは あと。もうけが 出{で}て いても 手元{てもと}の お金{かね}が 尽{つ}きると 止{と}まる。これが <b>資金{しきん}ショート</b>。'],
+        ['🧾 レシートは 宝物{たからもの}', 'かかった お金{かね}を 証明{しょうめい}する 紙{かみ}。これが ないと 経費{けいひ}に できず、税金{ぜいきん}を 多{おお}く はらう ことに なる。']
+    ];
+
+    function beCalc() {
+        const price = +document.getElementById('be-price').value;
+        const cost = +document.getElementById('be-cost').value;
+        const fix = +document.getElementById('be-fix').value;
+        document.getElementById('be-price-v').innerText = yen(price);
+        document.getElementById('be-cost-v').innerText = yen(cost);
+        document.getElementById('be-fix-v').innerText = yen(fix);
+        const per = price - cost;
+        const bep = per > 0 ? Math.ceil(fix / per) : null;
+        // グラフ
+        const h = 260, X0 = 56, X1 = 536, Y0 = 208, Y1 = 40;
+        const qmax = Math.max(20, Math.min(120, bep === null ? 40 : Math.ceil(bep * 2 / 20) * 20));
+        const ymax = Math.max(price * qmax, fix + cost * qmax, 1000);
+        const px = q => X0 + q / qmax * (X1 - X0);
+        const py = v => Y0 - v / ymax * (Y0 - Y1);
+        let g = bg(h, '#fffbeb');
+        for (let k = 0; k <= 4; k++) {
+            const v = ymax * k / 4;
+            g += `<line x1="${X0}" y1="${py(v).toFixed(1)}" x2="${X1}" y2="${py(v).toFixed(1)}" stroke="#fde68a" stroke-width="1.4"/>`;
+            g += tx(X0 - 6, py(v) + 4, nf(v) + '円', 9, '#b45309', 'end');
+        }
+        for (let k = 0; k <= 4; k++) {
+            const q = qmax * k / 4;
+            g += tx(px(q), Y0 + 16, nf(q) + 'ぱい', 9, '#b45309');
+        }
+        // 費用の 線（固定費＋材料費）と 売上の 線
+        g += `<polyline points="${px(0).toFixed(1)},${py(fix).toFixed(1)} ${px(qmax).toFixed(1)},${py(fix + cost * qmax).toFixed(1)}" fill="none" stroke="#2563eb" stroke-width="3"/>`;
+        g += `<polyline points="${px(0).toFixed(1)},${py(0).toFixed(1)} ${px(qmax).toFixed(1)},${py(price * qmax).toFixed(1)}" fill="none" stroke="#ea580c" stroke-width="3"/>`;
+        g += tx(X1 - 4, py(fix + cost * qmax) - 8, 'かかる お金', 10, '#2563eb', 'end');
+        g += tx(X1 - 4, py(price * qmax) + 16, '売上', 10, '#ea580c', 'end');
+        if (bep !== null && bep <= qmax) {
+            const x = px(bep), y = py(price * bep);
+            g += `<line x1="${x.toFixed(1)}" y1="${y.toFixed(1)}" x2="${x.toFixed(1)}" y2="${Y0}" stroke="#059669" stroke-width="1.6" stroke-dasharray="5 4"/>`;
+            g += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="6" fill="#059669"/>`;
+            const lab = `とんとん ${bep}ぱい`;
+            const side = x > (X0 + X1) / 2 ? 'end' : 'start';
+            g += tx(x + (side === 'end' ? -12 : 12), y - 10, lab, 11, '#047857', side);
+        }
+        g += tx(X0 + 4, 26, bep === null ? '⚠️ 1ぱい 売るたびに 赤字が ふえる' : `${bep}ぱいから 上が もうけ`, 12, '#9a3412', 'start');
+        g += tx(280, 250, '2本の 線が 交わる ところが「とんとん（損益分岐点）」', 10, '#b45309');
+        document.getElementById('be-fig').innerHTML = svg(W, h, g);
+        const q30 = 30;
+        document.getElementById('be-stat').innerHTML = [
+            ['1ぱいの もうけ', per > 0 ? yen(per) : '⚠️ ' + yen(per)],
+            ['とんとんの 数', bep === null ? '— ' : bep + ' ぱい'],
+            ['30ぱい 売れたら', yen(price * q30 - cost * q30 - fix)],
+            ['30ぱいの 売上', yen(price * q30)]
+        ].map(([t, v]) =>
+            `<div class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-2 text-center">
+                <p class="text-xs font-bold text-slate-500">${t}</p>
+                <p class="num font-black text-orange-700 text-base">${v}</p></div>`).join('');
+        document.getElementById('be-note').innerHTML = per <= 0
+            ? `⚠️ ねだん（${yen(price)}）が 材料費{ざいりょうひ}（${yen(cost)}）と 同{おな}じか 安{やす}い ので、
+               <b>売{う}れば 売{う}るほど 赤字{あかじ}</b>に なる。この ときは ねだんを 上{あ}げるか、材料費{ざいりょうひ}を 下{さ}げる しか ない。`
+            : `💡 計算{けいさん}は <b>毎日{まいにち} かかる お金{かね} ÷ 1ぱいの もうけ</b>。
+               ${yen(fix)} ÷ ${yen(per)} ＝ <b class="num">${bep}ぱい</b>。
+               ここまでは 「働{はたら}いて いる のに 0円{えん}」。${bep}ぱいを こえた 1ぱいから、
+               まるごと ${yen(per)} が もうけに なる。<br>
+               ねだんを 上{あ}げると とんとんの 数{かず}は へる（でも 売{う}れにくく なる）。
+               材料費{ざいりょうひ}を 下{さ}げても へる。場所{ばしょ}代{だい}を 安{やす}く するのも 効{き}く。
+               <b>どれを 動{うご}かすか を 決{き}めるのが 経営{けいえい}</b>。`;
+    }
+
+    const MN_FUND = [
+        ['🐷 じぶんの 貯金{ちょきん}', '返{かえ}さなくて よい。だれにも 口{くち}を 出{だ}されない いちばん 自由{じゆう}な お金{かね}。ただし 少{すこ}ない。まずは <b>ここで できる 大{おお}きさ</b>から 始{はじ}める。'],
+        ['👨‍👩‍👧 家族{かぞく}・友{とも}だち', '早{はや}く 借{か}りられる が、いちばん 気{き}を つける 相手{あいて}。<b>いつ いくら 返{かえ}すかを 紙{かみ}に 書{か}く</b>。お金{かね}の トラブルで 仲{なか}が こわれる ことが 本当{ほんとう}に 多{おお}い。'],
+        ['🏦 銀行{ぎんこう}から 借{か}りる（融資{ゆうし}）', '返{かえ}す やくそくで お金{かね}を かりる。<b>利子{りし}</b>を つけて 返{かえ}す。会社{かいしゃ}は じぶんの もの の まま。返{かえ}せる 計画{けいかく}を 見{み}せる 必要{ひつよう}が ある。'],
+        ['🧑‍💼 出資{しゅっし}（ベンチャーキャピタルなど）', '返{かえ}さなくて よい。かわりに <b>会社{かいしゃ}の かけら（株{かぶ}）</b>を わたす。会社{かいしゃ}が 大{おお}きく なると 相手{あいて}も もうかる しくみ。決{き}める 力{ちから}も 少{すこ}し 分{わ}ける。'],
+        ['🙌 クラウドファンディング', 'インターネットで たくさんの 人{ひと}から 少{すこ}しずつ 集{あつ}める。「できたら 送{おく}ります」と やくそく する ので、<b>できなかった ときが 大問題{だいもんだい}</b>。'],
+        ['🏛️ 補助金{ほじょきん}・助成金{じょせいきん}', '国{くに}や 市{し}が 応援{おうえん}で くれる お金{かね}。返{かえ}さなくて よい ものも ある。ただし 書類{しょるい}が 多{おお}く、もらえるまで 時間{じかん}が かかる。'],
+        ['💰 売上{うりあげ}（いちばん えらい お金{かね}）', 'お客{きゃく}さんが「ありがとう」と はらって くれた お金{かね}。返{かえ}さなくて よく、株{かぶ}も わたさなくて よい。<b>これで まわる のが いちばん 強{つよ}い 会社{かいしゃ}</b>。'],
+        ['⚖️ 「借{か}りる」と「出{だ}して もらう」の ちがい', '借{か}りる＝返{かえ}す。出{だ}して もらう＝返{かえ}さない かわりに 会社{かいしゃ}の 一部{いちぶ}を わたす。どちらも <b>タダでは ない</b>。ここを わかって いない 大人{おとな}も 多{おお}い。']
+    ];
+
+    function mnKabuFig() {
+        const h = 240;
+        let g = bg(h, '#fffbeb');
+        const SH = [['社長（じぶん）', 60, '#fb923c'], ['いっしょに 始めた 人', 20, '#34d399'], ['お金を 出した 人', 20, '#60a5fa']];
+        const cx = 160, cy = 122, r = 84;
+        let a0 = -Math.PI / 2;
+        SH.forEach(([n, v, c]) => {
+            const a1 = a0 + v / 100 * Math.PI * 2;
+            const big = v > 50 ? 1 : 0;
+            g += `<path d="M${cx} ${cy} L${(cx + Math.cos(a0) * r).toFixed(1)} ${(cy + Math.sin(a0) * r).toFixed(1)} A${r} ${r} 0 ${big} 1 ${(cx + Math.cos(a1) * r).toFixed(1)} ${(cy + Math.sin(a1) * r).toFixed(1)} Z" fill="${c}" stroke="#fff" stroke-width="2.5"/>`;
+            const am = (a0 + a1) / 2;
+            g += tx(cx + Math.cos(am) * r * 0.6, cy + Math.sin(am) * r * 0.6 + 4, v + '%', 13, '#fff');
+            a0 = a1;
+        });
+        g += tx(160, 232, 'これが「株{かぶ}」の わけ方', 11, '#9a3412');
+        SH.forEach(([n, v, c], i) => {
+            g += `<rect x="286" y="${56 + i * 34}" width="16" height="16" rx="3" fill="${c}"/>`;
+            g += tx(310, 69 + i * 34, n, 11, '#9a3412', 'start');
+        });
+        g += `<rect x="286" y="164" width="252" height="52" rx="10" fill="#fff" stroke="#c2410c" stroke-width="2.5"/>`;
+        g += tx(412, 184, '半分より 多く もって いる 人が', 10, '#c2410c');
+        g += tx(412, 202, '大事な ことを 決められる', 11, '#c2410c');
+        g += tx(412, 32, '会社を ケーキのように 分けた かけら', 12, '#9a3412');
+        return svg(W, h, g);
+    }
+    const MN_KABU = [
+        ['🍰 株{かぶ}＝会社{かいしゃ}の かけら', '会社{かいしゃ}を ケーキのように 分{わ}けた 1切{き}れが 株{かぶ}。100切{き}れの うち 60切{き}れを もって いれば、その 人{ひと}が <b>60%の オーナー</b>。'],
+        ['🗳️ たくさん もつ と 決{き}められる', '大事{だいじ}な ことは 株{かぶ}の 数{かず}で 決{き}める。だから 半分{はんぶん}より 多{おお}く もって いると、社長{しゃちょう}を つづけられる。株{かぶ}を わたし すぎると <b>じぶんの 会社{かいしゃ}では なく なる</b>。'],
+        ['📈 会社{かいしゃ}が 育{そだ}つと 株{かぶ}の ねだんも 上{あ}がる', '出{だ}して くれた 人{ひと}は、会社{かいしゃ}が 大{おお}きく なった とき 株{かぶ}を 売{う}って もうける。だから <b>いっしょに 大{おお}きく したい 仲間{なかま}</b>に なる。'],
+        ['🏛️ 上場{じょうじょう}（じょうじょう）とは', '株{かぶ}を だれでも 買{か}える ように 市場{しじょう}（東京証券取引所{とうきょうしょうけんとりひきじょ}など）に ならべる こと。大{おお}きな お金{かね}が 集{あつ}まる かわりに、たくさんの ルールを 守{まも}る 必要{ひつよう}が ある。'],
+        ['⚠️ はじめから 分{わ}けすぎない', '「手{て}つだって くれる から 株{かぶ}を 半分{はんぶん} あげる」は とても 危{あぶ}ない。あとで 仲{なか}が 悪{わる}く なると 何{なに}も 決{き}められなく なる。<b>紙{かみ}に 書{か}いて、少{すこ}しずつ</b>。']
+    ];
+
+    /* =====================================================================
+       ④ レモネード店長 5日間
+       ===================================================================== */
+    const GM_W = [['☀️ はれ', 30], ['⛅ くもり', 20], ['🌧️ あめ', 10]];
+    const GM_COST = 40, GM_DAYS = 5, GM_START = 1000;
+    const GM_PRICE = [50, 100, 150, 200], GM_MAKE = [10, 20, 30];
+    let gm = null, gmSel = { price: 150, make: 10 };
+    function gmReset() {
+        gm = { day: 0, cash: GM_START, log: [], weather: [], fore: [] };
+        for (let d = 0; d < GM_DAYS; d++) gm.weather.push(rnd(3));
+        gm.fore = gm.weather.map(w => Math.random() < 0.7 ? w : rnd(3));
+        gmSel = { price: 150, make: 10 };
+        gmDraw();
+    }
+    function gmSet(k, v) { gmSel[k] = v; gmDraw(); }
+    function gmOpen() {
+        if (!gm || gm.day >= GM_DAYS) return;
+        const make = gmSel.make, price = gmSel.price;
+        if (make * GM_COST > gm.cash) return;
+        const w = gm.weather[gm.day];
+        const pf = price <= 50 ? 1.5 : price <= 100 ? 1.2 : price <= 150 ? 1 : 0.65;
+        const demand = Math.max(0, Math.round(GM_W[w][1] * pf) + rnd(5) - 2);
+        const sold = Math.min(demand, make);
+        const sales = sold * price, cost = make * GM_COST, profit = sales - cost;
+        gm.cash += profit;
+        gm.log.push({ d: gm.day + 1, w, price, make, demand, sold, sales, cost, profit, cash: gm.cash });
+        gm.day++;
+        gmDraw();
+    }
+    function gmDraw() {
+        const done = gm.day >= GM_DAYS;
+        const total = gm.cash - GM_START;
+        document.getElementById('gm-state').innerHTML = [
+            ['何日目{なんにちめ}', `${Math.min(gm.day + 1, GM_DAYS)} / ${GM_DAYS}`],
+            ['手{て}もちの お金{かね}', yen(gm.cash)],
+            ['ここまでの もうけ', (total >= 0 ? '＋' : '−') + yen(Math.abs(total))]
+        ].map(([t, v], i) =>
+            `<div class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-2 text-center">
+                <p class="text-xs font-bold text-slate-500">${t}</p>
+                <p class="num font-black ${i === 2 ? (total >= 0 ? 'text-emerald-700' : 'text-rose-600') : 'text-orange-700'} text-base">${v}</p></div>`).join('');
+        document.getElementById('gm-fore').innerHTML = done
+            ? '🏁 5日間{いつかかん} おわり！'
+            : `🔮 きょうの 天気{てんき}よほう：<b class="text-sky-700">${GM_W[gm.fore[gm.day]][0]}</b>
+               <span class="text-xs text-slate-500">（よほうは 10回{かい}に 3回{かい}くらい はずれる）</span>`;
+        if (done) {
+            const best = gm.log.reduce((a, b) => b.profit > a.profit ? b : a);
+            const waste = gm.log.reduce((a, b) => a + (b.make - b.sold), 0);
+            document.getElementById('gm-pick').innerHTML =
+                `<div class="pop bg-gradient-to-br from-amber-100 to-orange-100 border-2 border-orange-300 rounded-3xl p-4">
+                    <p class="font-black text-lg">${total > 0 ? '🎉 黒字{くろじ}！' : total === 0 ? '😐 とんとん' : '😢 赤字{あかじ}'}
+                       もうけは <span class="num">${(total >= 0 ? '＋' : '−') + yen(Math.abs(total))}</span></p>
+                    <p class="text-sm font-bold text-slate-600 mt-2 leading-relaxed">
+                        いちばん もうかった 日{ひ}：<b>${gm.log.indexOf(best) + 1}日目{にちめ}</b>
+                        （${GM_W[best.w][0]}・${yen(best.price)}・${best.make}ぱい 作{つく}って ${best.sold}ぱい 売{う}れた）<br>
+                        すてた レモネード：<b class="num">${waste}ぱい</b>
+                        ＝ むだに した お金{かね} <b class="num">${yen(waste * GM_COST)}</b><br>
+                        ${total > 0 ? 'ねだんと 作{つく}る数{かず}の バランスが よかった。' : 'つぎは 天気{てんき}よほうと 前{まえ}の 日{ひ}の 売{う}れ方{かた}を 見{み}て 決{き}めて みよう。'}
+                    </p></div>`;
+        } else {
+            const rowP = GM_PRICE.map(p =>
+                `<button onclick="gmSet('price',${p})" class="${gmSel.price === p ? 'bg-orange-600 text-white' : 'bg-white border-2 border-amber-200 text-slate-600'} num font-black px-3 py-2 rounded-full text-sm bounce-hover">${p}円</button>`).join('');
+            const rowM = GM_MAKE.map(m => {
+                const no = m * GM_COST > gm.cash;
+                return `<button onclick="gmSet('make',${m})" ${no ? 'disabled' : ''} class="${no ? 'bg-slate-100 text-slate-300' : gmSel.make === m ? 'bg-orange-600 text-white' : 'bg-white border-2 border-amber-200 text-slate-600'} num font-black px-3 py-2 rounded-full text-sm bounce-hover">${m}ぱい<span class="text-xs">（${yen(m * GM_COST)}）</span></button>`;
+            }).join('');
+            document.getElementById('gm-pick').innerHTML =
+                `<p class="font-black text-sm text-orange-800">① 1ぱいの ねだん</p>
+                 <div class="flex flex-wrap gap-1.5 mt-1.5">${rowP}</div>
+                 <p class="font-black text-sm text-orange-800 mt-3">② 何{なん}ばい 作{つく}る？（材料費{ざいりょうひ} 1ぱい ${GM_COST}円{えん}）</p>
+                 <div class="flex flex-wrap gap-1.5 mt-1.5">${rowM}</div>
+                 <button onclick="gmOpen()" class="w-full mt-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-black px-4 py-3 rounded-2xl text-base bounce-hover shadow">🍋 開店{かいてん}する！</button>
+                 <p class="text-xs font-bold text-slate-400 mt-2">
+                    ※ 作{つく}った ぶんの 材料費{ざいりょうひ}は 売{う}れなくても かかる。手{て}もちの お金{かね}より 多{おお}くは 作{つく}れない。</p>`;
+        }
+        const last = gm.log[gm.log.length - 1];
+        document.getElementById('gm-res').innerHTML = !last ? '' :
+            resultBox(last.profit >= 0,
+                `${last.d}日目{にちめ}：${GM_W[last.w][0]} ／ ${last.sold}ぱい 売{う}れた`,
+                `ほしがった 人{ひと}：<b class="num">${last.demand}人{にん}</b>　作{つく}った：<b class="num">${last.make}ぱい</b>
+                 売{う}れた：<b class="num">${last.sold}ぱい</b>${last.demand > last.make ? '（足{た}りなかった！もっと 作{つく}れば よかった）' : last.make > last.sold ? `（${last.make - last.sold}ぱい すてた）` : '（ぴったり！）'}<br>
+                 売上{うりあげ} <b class="num">${yen(last.sales)}</b> － 材料費{ざいりょうひ} <b class="num">${yen(last.cost)}</b>
+                 ＝ <b class="num ${last.profit >= 0 ? 'text-emerald-700' : 'text-rose-600'}">${(last.profit >= 0 ? '＋' : '−') + yen(Math.abs(last.profit))}</b>`);
+        document.getElementById('gm-log').innerHTML = !gm.log.length ? '' :
+            `<table class="w-full text-xs font-bold num" style="min-width:420px">
+                <tr class="bg-amber-100 text-orange-800">
+                    <th class="p-2 rounded-l-xl">日</th><th class="p-2">天気</th><th class="p-2">ねだん</th>
+                    <th class="p-2">作った</th><th class="p-2">売れた</th><th class="p-2 rounded-r-xl">もうけ</th></tr>
+                ${gm.log.map((l, i) =>
+                    `<tr class="${i % 2 ? 'bg-amber-50' : ''}">
+                        <td class="p-2 text-center">${l.d}</td>
+                        <td class="p-2 text-center">${GM_W[l.w][0].split(' ')[0]}</td>
+                        <td class="p-2 text-center">${l.price}</td>
+                        <td class="p-2 text-center">${l.make}</td>
+                        <td class="p-2 text-center">${l.sold}</td>
+                        <td class="p-2 text-center ${l.profit >= 0 ? 'text-emerald-700' : 'text-rose-600'}">${(l.profit >= 0 ? '+' : '−') + nf(Math.abs(l.profit))}</td></tr>`).join('')}
+            </table>`;
+    }
+    const GM_LEARN = [
+        ['🌦️ 外{そと}の ことは 決{き}められない', '天気{てんき}は じぶんでは どうにも ならない。できるのは <b>よほうを 見{み}て そなえる</b>こと。本当{ほんとう}の 商売{しょうばい}でも、流行{りゅうこう}や 景気{けいき}は 自分{じぶん}では 決{き}められない。'],
+        ['📦 作{つく}りすぎは お金{かね}が 消{き}える', '売{う}れ残{のこ}りを <b>在庫{ざいこ}</b>と いう。レモネードの ように 日{ひ}もちしない ものは そのまま 損{そん}。売{う}れる 数{かず}を 予想{よそう}する 力{ちから}が 大事{だいじ}。'],
+        ['🏷️ 安{やす}くすれば もうかる わけでは ない', '50円{えん}に すると たくさん 売{う}れる けれど、1ぱいの もうけは 10円{えん}だけ。200円{えん}なら もうけは 160円{えん}だが 売{う}れる 数{かず}が へる。<b>ねだん × 数{かず}</b>で 考{かんが}える。'],
+        ['💸 手{て}もちの お金{かね}が かべに なる', '作{つく}りたく ても お金{かね}が 足{た}りないと 作{つく}れない。だから 最初{さいしょ}は 小{ちい}さく、もうけた ぶんで 少{すこ}しずつ 大{おお}きく する。'],
+        ['📊 記録{きろく}が つぎを よく する', '何{なに}を いくらで 何{なん}ばい 売{う}ったか を 残{のこ}すと、「はれの 日{ひ}は 150円{えん}で 20ぱい」など わかって くる。これが <b>データ</b>。']
+    ];
+
+    /* =====================================================================
+       ⑤ なかま・おきゃくさん・ルール
+       ===================================================================== */
+    const TM_ROLE = [
+        ['🛠️ つくる 人{ひと}', '商品{しょうひん}や サービスを つくる 人{ひと}。おいしい レモネード、便利{べんり}な アプリ。ここが よくないと 何{なに}を しても 売{う}れつづけない。'],
+        ['📣 伝{つた}える 人{ひと}・売{う}る 人{ひと}', 'よい ものを 知{し}って もらい、ほしいと 思{おも}って もらう 人{ひと}。「つくる」と 同{おな}じくらい 大事{だいじ}。'],
+        ['🧮 お金{かね}を 見{み}る 人{ひと}', '入{はい}った お金{かね}・出{で}た お金{かね}を 記録{きろく}し、あと 何{なん}か月{げつ} つづけられるかを 見{み}る 人{ひと}。地味{じみ}だが 会社{かいしゃ}の 命{いのち}。'],
+        ['🧭 決{き}める 人{ひと}（社長{しゃちょう}）', 'どこへ 向{む}かうかを 決{き}め、うまく いかない ときに 責任{せきにん}を とる 人{ひと}。決{き}めない のが いちばん 悪{わる}い。'],
+        ['👂 お客{きゃく}さんの 声{こえ}を 聞{き}く 人{ひと}', '「使{つか}って みて どうでした？」を 集{あつ}める 人{ひと}。文句{もんく}を 言{い}って くれる お客{きゃく}さんは <b>宝物{たからもの}</b>。'],
+        ['🙋 はじめは ぜんぶ じぶん', '1人{ひとり}の うちは 5つ ぜんぶ じぶんで やる。だから <b>苦手{にがて}な ことも わかる</b>。それが わかって から 仲間{なかま}を さがすと うまく いく。']
+    ];
+
+    function tm4pFig() {
+        const h = 250;
+        let g = bg(h, '#fffbeb');
+        g += `<circle cx="280" cy="126" r="46" fill="#fed7aa" stroke="#c2410c" stroke-width="3"/>`;
+        g += tx(280, 120, 'お客さん', 12, '#9a3412');
+        g += tx(280, 138, '🙋', 16, '#9a3412');
+        const P = [['だれに', 'ねらう 人を 決める', 20, 40, '#ea580c'],
+                   ['なにを', '商品・サービス', 330, 40, '#059669'],
+                   ['いくらで', 'ねだん', 20, 176, '#2563eb'],
+                   ['どこで', '売る 場所・伝え方', 330, 176, '#7c3aed']];
+        P.forEach(([n, d, x, y, c]) => {
+            g += `<rect x="${x}" y="${y}" width="210" height="52" rx="12" fill="#fff" stroke="${c}" stroke-width="2.5"/>`;
+            g += tx(x + 105, y + 22, n, 13, c);
+            g += tx(x + 105, y + 40, d, 10, c);
+            const fromX = x < 280 ? x + 210 : x, fromY = y < 126 ? y + 52 : y;
+            const toX = 280 + (x < 280 ? -34 : 34), toY = 126 + (y < 126 ? -30 : 30);
+            g += arrow(fromX + (x < 280 ? 4 : -4), fromY + (y < 126 ? 4 : -4), toX, toY, c, 2.2);
+        });
+        g += tx(280, 240, '4つ ぜんぶが そろって はじめて 売れる', 11, '#9a3412');
+        return svg(W, h, g);
+    }
+    const TM_4P = [
+        ['🎯 だれに（ターゲット）', '「みんなに 売{う}りたい」は <b>だれにも 届{とど}かない</b>。「近所{きんじょ}の 小学生{しょうがくせい}」のように しぼる と、何{なに}を すれば よいか が はっきり する。'],
+        ['🎁 なにを（商品{しょうひん}）', 'お客{きゃく}さんが ほしいのは「もの」では なく <b>その あとの うれしい 気持{きも}ち</b>。レモネードでは なく「あつい 日{ひ}の すっきり」を 売{う}って いる。'],
+        ['🏷️ いくらで（ねだん）', '安{やす}すぎると もうからず、続{つづ}けられない。高{たか}すぎると 買{か}って もらえない。<b>ねだんは いちばん むずかしい 決{き}めごと</b>。'],
+        ['📍 どこで（売{う}る 場所{ばしょ}・伝{つた}え方{かた}）', 'どんなに よい ものでも、お客{きゃく}さんが 見{み}つけられない ところに あれば 0個{こ}。人{ひと}が 通{とお}る 場所{ばしょ}、見{み}る 画面{がめん}に 置{お}く。']
+    ];
+    const TM_TRUST = [
+        ['🤝 信用{しんよう}＝また 買{か}って もらえる 力{ちから}', '1回{かい} 売{う}るのは がんばれば できる。2回目{かいめ}も 買{か}って もらえるかは <b>信用{しんよう}</b>で 決{き}まる。長{なが}く つづく 会社{かいしゃ}は ここが 強{つよ}い。'],
+        ['⏰ やくそくの 時間{じかん}と 数{かず}を 守{まも}る', '「明日{あす}までに」と 言{い}ったら 明日{あす}までに。できない と わかった 時点{じてん}で <b>すぐ 連絡{れんらく}</b>する。だまって おくれるのが 最悪{さいあく}。'],
+        ['🙇 まちがえた ときは すぐ あやまって 直{なお}す', 'ごまかす と、あとで 何倍{なんばい}も 大{おお}きな 問題{もんだい}に なる。すぐ 認{みと}めて 直{なお}す 人{ひと}は かえって 信用{しんよう}される。'],
+        ['🏦 信用{しんよう}は 貯金{ちょきん}のように たまる', '少{すこ}しずつ しか たまらない のに、<b>1回{かい}の うそで ぜんぶ なくなる</b>。お金{かね}より 大事{だいじ}な 財産{ざいさん}。'],
+        ['📄 大事{だいじ}な やくそくは 紙{かみ}に 書{か}く', 'これが 契約{けいやく}。仲{なか}が よい 相手{あいて}こそ、紙{かみ}に 書{か}いて おく。あとで もめない ための やさしさ。']
+    ];
+    const TM_RULE = [
+        ['❌ うその 宣伝{せんでん}は 法律違反{ほうりついはん}',
+         '「絶対{ぜったい} やせる」「日本一{にほんいち}」など、本当{ほんとう}より よく 見{み}せて 売{う}るのは <b>景品表示法{けいひんひょうじほう}</b>に 違反{いはん}する。お金{かね}を もらって 書{か}いた 感想{かんそう}を 「ふつうの 感想{かんそう}」の ように 見{み}せる <b>ステマ</b>も 2023年{ねん}から はっきり 禁止{きんし}。'],
+        ['❌ 人{ひと}の 絵{え}・音楽{おんがく}・キャラを かってに つかわない',
+         'アニメの キャラを 描{か}いて 売{う}るのは <b>著作権{ちょさくけん}</b>の 違反{いはん}。有名{ゆうめい}な お店{みせ}の 名前{なまえ}や ロゴを まねるのは <b>商標{しょうひょう}</b>の 違反{いはん}。自分{じぶん}で つくるか、許可{きょか}を もらう。'],
+        ['🔒 名前{なまえ}・住所{じゅうしょ}・写真{しゃしん}は 大切{たいせつ}に あつかう',
+         'お客{きゃく}さんから もらった <b>個人{こじん}情報{じょうほう}</b>は、ほかの ことに つかったり、人{ひと}に 見{み}せたり しては いけない。SNSに 勝手{かって}に 写真{しゃしん}を のせるのも だめ。'],
+        ['🧾 税金{ぜいきん}を はらう',
+         'もうけた お金{かね}の 一部{いちぶ}を 国{くに}や 市{し}に 出{だ}す。道路{どうろ}・学校{がっこう}・消防車{しょうぼうしゃ}の お金{かね}に なる。わざと かくすと <b>脱税{だつぜい}</b>と いって、とても 重{おも}い ばつが ある。'],
+        ['🍱 食{た}べものは とくに きびしい ルール',
+         'つくって 売{う}るには <b>保健所{ほけんじょ}</b>の 許可{きょか}が 必要{ひつよう}。学校{がっこう}の バザーなど 特別{とくべつ}な 場合{ばあい}を のぞいて、勝手{かって}に 売{う}っては いけない。食中毒{しょくちゅうどく}を 出{だ}すと 人{ひと}の 命{いのち}に かかわる。'],
+        ['🚫 人{ひと}の 弱{よわ}みで もうけない',
+         'だます・おどす・不安{ふあん}に させて 買{か}わせる。こういう もうけ方{かた}は 法律{ほうりつ}でも だめ だし、何{なに}より <b>信用{しんよう}を ぜんぶ 失{うしな}う</b>。'],
+        ['📚 わからない ときは 聞{き}く',
+         'ルールは たくさん あって、大人{おとな}でも ぜんぶ 知{し}らない。だから 税理士{ぜいりし}・弁護士{べんごし}・商工会{しょうこうかい}・役所{やくしょ}の 窓口{まどぐち}に <b>先{さき}に 聞{き}く</b>。あとで 気{き}づくと お金{かね}が かかる。']
+    ];
+    const TM_KID = [
+        ['🧑‍🤝‍🧑 まず おうちの 人{ひと}に 相談{そうだん}',
+         '18歳{さい}より 下{した}の 人{ひと}が お金{かね}の やくそく（契約{けいやく}）を する には、おうちの 人{ひと}の OKが 必要{ひつよう}と 法律{ほうりつ}で 決{き}まって いる。これは 子{こ}どもを 守{まも}る ための ルール。'],
+        ['🎪 学校{がっこう}や 地域{ちいき}の イベントで ためす',
+         'バザー・フリーマーケット・地域{ちいき}の お祭{まつ}り・子{こ}ども 起業{きぎょう}体験{たいけん}。こういう 場{ば}なら、大人{おとな}と いっしょに 安全{あんぜん}に ためせる。'],
+        ['👂 いまは「聞{き}く 練習{れんしゅう}」が いちばん 役{やく}に 立{た}つ',
+         '売{う}る 練習{れんしゅう}より、<b>人{ひと}の こまりごとを 聞{き}き出{だ}す 練習{れんしゅう}</b>。家族{かぞく}や 友{とも}だちに 「何{なに}が めんどう？」と 聞{き}いて メモを ためよう。'],
+        ['🛠️ つくる 力{ちから}を ためて おく',
+         '絵{え}・工作{こうさく}・プログラミング・文章{ぶんしょう}・計算{けいさん}。どれも 将来{しょうらい} そのまま 武器{ぶき}に なる。「プログラミング道場{どうじょう}」や「おえかき教室{きょうしつ}」も のぞいて みよう。'],
+        ['📒 小{ちい}さな お金{かね}でも 記録{きろく}を つける',
+         'おこづかい帳{ちょう}を つけるのは、会社{かいしゃ}の 帳簿{ちょうぼ}と まったく 同{おな}じ 練習{れんしゅう}。「おかねラボ」も あわせて 見{み}て みよう。']
+    ];
+    const TM_FAIL = [
+        ['📉 うまく いかない ことの ほうが 多{おお}い',
+         '始{はじ}めた 商売{しょうばい}の 多{おお}くは、思{おも}った ように いかない。これは 能力{のうりょく}の 問題{もんだい}では なく <b>ふつうの こと</b>。だから 大人{おとな}は「小{ちい}さく ためす」を 大事{だいじ}に する。'],
+        ['📝 しっぱいは 記録{きろく}して 宝{たから}に する',
+         '「なぜ 売{う}れなかったか」を 書{か}き残{のこ}すと、次{つぎ}の 挑戦{ちょうせん}で 同{おな}じ 失敗{しっぱい}を しない。うまく いった 人{ひと}は 失敗{しっぱい}の メモを たくさん 持{も}って いる。'],
+        ['🔀 やる ことを 大{おお}きく 変{か}えて いい（ピボット）',
+         'いま 有名{ゆうめい}な 会社{かいしゃ}にも、最初{さいしょ}は まったく ちがう ことを して いた ところが たくさん ある。<b>変{か}えるのは 負{ま}けでは ない</b>。'],
+        ['🛡️ 借金{しゃっきん}を 背負{せお}いすぎない',
+         'うまく いかなかった とき、返{かえ}せない ほど 借{か}りて いると やり直{なお}せない。<b>失{うしな}っても 生活{せいかつ}が こわれない 金額{きんがく}</b>から 始{はじ}める。'],
+        ['🌱 やめても また できる',
+         'やめる 判断{はんだん}も 経営{けいえい}の 力{ちから}。1回{かい} やめても、経験{けいけん}は 消{き}えない。次{つぎ}は もっと 上手{じょうず}に できる。']
+    ];
+
+    /* =====================================================================
+       ⑥ クイズ
+       ===================================================================== */
+    const QS = [
+        { f: 'アイデア', q: '起業{きぎょう}とは どういう こと？', a: 'だれかの こまりごとを 助{たす}けて、お礼{れい}に お金{かね}を もらう しくみを つくる こと', x: ['会社{かいしゃ}に 入{はい}って はたらく こと', 'お金{かね}を たくさん 借{か}りる こと', '有名{ゆうめい}に なる こと'], e: 'まず「だれの どんな こまりを 助{たす}けるか」。ここが ないと 何{なに}も 始{はじ}まらない。' },
+        { f: 'アイデア', q: 'よい アイデアは どの 3つが かさなる ところ？', a: 'すき・とくい・ほしい 人が いる', x: ['お金{かね}・時間{じかん}・運{うん}', '有名{ゆうめい}・かんたん・安{やす}い', '新{あたら}しい・むずかしい・大{おお}きい'], e: 'すき だけでは 趣味{しゅみ}。とくい だけでは つらい。ほしい 人{ひと}だけでは つづかない。' },
+        { f: 'アイデア', q: 'アイデアを 思{おも}いついた あと、まず する ことは？', a: '助{たす}けたい 人{ひと}に 話{はなし}を 聞{き}く', x: ['すぐ お店{みせ}を つくる', '銀行{ぎんこう}で お金{かね}を 借{か}りる', '会社{かいしゃ}の 名前{なまえ}を 決{き}める'], e: '聞{き}くのは 無料{むりょう}、作{つく}るのは 高{たか}い。思{おも}いこみは 聞{き}けば すぐ こわれる。' },
+        { f: 'アイデア', q: 'お客{きゃく}さんに 聞{き}く とき よい 質問{しつもん}は？', a: '「最近{さいきん} こまった こと ありますか？」', x: ['「これ 買{か}って くれますか？」', '「私{わたし}の アイデア すごいでしょ？」', '「いくら なら 買{か}う？ 高{たか}くても いい？」'], e: '売{う}りこむと 本当{ほんとう}の ことを 言{い}って くれない。今{いま} どうして いるかを 聞{き}く。' },
+        { f: 'アイデア', q: '「いいね！」と 言{い}われた。これで 売{う}れる？', a: 'わからない。お金{かね}を はらうか どうかが 本当{ほんとう}の 答{こた}え', x: ['売{う}れる。みんなが ほめた から', '売{う}れない。ほめ言葉{ことば}は うそ', 'すぐ 100個{こ} 作{つく}れば よい'], e: '人{ひと}は やさしいので ほめて くれる。すでに お金{かね}や 時間{じかん}を つかって いる かを 見{み}る。' },
+        { f: 'アイデア', q: 'アイデアを 人{ひと}に 話{はな}すと どう なる？', a: '意見{いけん}が もらえて どんどん よく なる', x: ['すぐ ぬすまれて 終{お}わり', 'だれも 聞{き}いて くれない', '話{はな}すと 売{う}れなく なる'], e: 'ぬすまれる 心配{しんぱい}より、やり切{き}る ほうが むずかしい。話{はな}して 意見{いけん}を もらおう。' },
+        { f: 'アイデア', q: 'アイデアは まったく 新{あたら}しく ないと だめ？', a: 'いいえ。ある ものに「ちょっと 足{た}す」で 十分{じゅうぶん}', x: ['はい。だれも 見{み}た ことが ない もの だけ', 'はい。特許{とっきょ}が ないと だめ', 'いいえ。まったく 同{おな}じで よい'], e: 'カレー屋{や}さんは 何万{なんまん}軒{けん}も ある。それでも 新{あたら}しい お店{みせ}が できる。' },
+        { f: 'アイデア', q: 'アイデアを えらぶ 基準{きじゅん}で いちばん よいのは？', a: '早{はや}く 小{ちい}さく ためせる か', x: ['いちばん かっこいい か', 'いちばん もうかりそう か', 'だれも やって いない か'], e: 'ためせば 答{こた}えが わかる。考{かんが}えこむ より ためす。' },
+        { f: 'アイデア', q: '1行{ぎょう}で 書{か}けない アイデアは？', a: 'まだ ぼんやりして いる。もっと はっきり させる', x: 'すごい アイデア だから そのままで よい,長{なが}い ほど よい,あきらめる'.split(','), e: '「だれの・どんな こまりを・どう 助{たす}ける」が 1行{ぎょう}で 言{い}えるのが 出発点{しゅっぱつてん}。' },
+
+        { f: 'じゅんび', q: 'お店{みせ}や アプリを つくる 前{まえ}に する ことは？', a: '紙{かみ}や 手{て}づくりで 小{ちい}さく ためす', x: ['大{おお}きな 店{みせ}を 借{か}りる', 'たくさん 材料{ざいりょう}を 買{か}う', 'テレビ 広告{こうこく}を 出{だ}す'], e: 'この 小{ちい}さい 試作品{しさくひん}を プロトタイプ（MVP）と いう。だめなら すぐ 直{なお}せる。' },
+        { f: 'じゅんび', q: '「ひとりで 仕事{しごと}を 始{はじ}める」いちばん かんたんな やり方{かた}は？', a: '税務署{ぜいむしょ}に 開業届{かいぎょうとどけ}を 出{だ}す（個人事業主{こじんじぎょうぬし}）', x: ['法務局{ほうむきょく}で 会社{かいしゃ}を つくる', '銀行{ぎんこう}に 会社{かいしゃ}を 登録{とうろく}する', '市役所{しやくしょ}で 許可{きょか}を 買{か}う'], e: '紙{かみ} 1枚{まい}で ほぼ 無料{むりょう}。まずは ここから で 十分{じゅうぶん}。' },
+        { f: 'じゅんび', q: '株式会社{かぶしきがいしゃ}は どこで 生{う}まれる？', a: '法務局{ほうむきょく}で 登記{とうき}した とき', x: ['社長{しゃちょう}が 決{き}めた とき', '銀行{ぎんこう}口座{こうざ}を つくった とき', 'ホームページを つくった とき'], e: '登記{とうき}＝国{くに}の 帳簿{ちょうぼ}に 会社{かいしゃ}を 登録{とうろく}する こと。ここで 会社{かいしゃ}が できる。' },
+        { f: 'じゅんび', q: '株式会社{かぶしきがいしゃ}を つくる お金{かね}は だいたい いくら？', a: 'やく 20万円{まんえん}', x: ['0円{えん}', 'やく 1000円{えん}', 'やく 1000万円{まんえん}'], e: '登録免許税{とうろくめんきょぜい}などで 20万円{まんえん}ほど。合同会社{ごうどうがいしゃ}なら 6万円{まんえん}ほどで できる。' },
+        { f: 'じゅんび', q: '資本金{しほんきん}とは？', a: '会社{かいしゃ}の はじめに 入{い}れる お金{かね}', x: ['毎月{まいつき} もらう お給料{きゅうりょう}', '国{くに}から もらえる お金{かね}', '返{かえ}さなくて よい 借金{しゃっきん}'], e: '今{いま}は 1円{えん}でも つくれる。ただし 少{すこ}なすぎると 相手{あいて}に 信用{しんよう}されない。' },
+        { f: 'じゅんび', q: '定款{ていかん}とは 何{なに}？', a: '会社{かいしゃ}の ルールブック', x: ['会社{かいしゃ}の 通帳{つうちょう}', '社長{しゃちょう}の 名刺{めいし}', '会社{かいしゃ}の 地図{ちず}'], e: '何{なに}を する 会社{かいしゃ}か、だれが どう 決{き}めるか などを 書{か}いた 大事{だいじ}な 書類{しょるい}。' },
+        { f: 'じゅんび', q: '会社{かいしゃ}の お金{かね}と 自分{じぶん}の お金{かね}は？', a: 'ぜったいに 混{ま}ぜない。口座{こうざ}も 分{わ}ける', x: ['同{おな}じ 財布{さいふ}で よい', '足{た}りない ときだけ 混{ま}ぜる', '社長{しゃちょう}なら 自由{じゆう}に つかえる'], e: '混{ま}ぜると もうけが わからなく なり、税金{ぜいきん}の 計算{けいさん}も できなく なる。' },
+        { f: 'じゅんび', q: '個人事業主{こじんじぎょうぬし}で うまく いかなかった ときの 借金{しゃっきん}は？', a: 'ぜんぶ 自分{じぶん}が かぶる', x: ['国{くに}が はらって くれる', '出{だ}した お金{かね}の ぶんだけ', 'はらわなくて よい'], e: '会社{かいしゃ}（株式会社{かぶしきがいしゃ}）なら 出{だ}した お金{かね}の ぶんまで＝有限責任{ゆうげんせきにん}。ここが 大{おお}きな ちがい。' },
+        { f: 'じゅんび', q: 'レシートを 捨{す}てては いけない 理由{りゆう}は？', a: 'かかった お金{かね}の 証明{しょうめい}に なり、税金{ぜいきん}が 安{やす}く なる', x: ['お店{みせ}に 返{かえ}すから', 'お客{きゃく}さんに 見{み}せるから', '集{あつ}めると 景品{けいひん}が もらえるから'], e: '経費{けいひ}に できる と、もうけが その ぶん 小{ちい}さく 計算{けいさん}され 税金{ぜいきん}が へる。' },
+        { f: 'じゅんび', q: '手{て}つづきが むずかしい とき だれに たのめる？', a: '税理士{ぜいりし}や 司法書士{しほうしょし}などの 専門{せんもん}の 人{ひと}', x: ['だれにも たのめない', '友{とも}だち だけ', '銀行{ぎんこう}が ぜんぶ やって くれる'], e: '商工会{しょうこうかい}や 役所{やくしょ}の 窓口{まどぐち}には 無料{むりょう}で 相談{そうだん}できる ところも ある。' },
+
+        { f: 'おかね', q: '売上{うりあげ}とは？', a: 'お客{きゃく}さんから もらった お金{かね}の 合計{ごうけい}', x: ['残{のこ}った もうけ', 'かかった お金{かね}', '銀行{ぎんこう}に ある お金{かね}'], e: 'ねだん × 売{う}れた 数{かず}。売上{うりあげ}が 大{おお}きくても もうけが あるとは かぎらない。' },
+        { f: 'おかね', q: '利益{りえき}（もうけ）の 計算{けいさん}は？', a: '売上{うりあげ} － かかった お金{かね}', x: ['売上{うりあげ} ＋ かかった お金{かね}', '売上{うりあげ} × ねだん', 'かかった お金{かね} － 売上{うりあげ}'], e: 'マイナスなら 赤字{あかじ}、プラスなら 黒字{くろじ}。すべての 土台{どだい}に なる 計算{けいさん}。' },
+        { f: 'おかね', q: '1つも 売{う}れなくても かかる お金{かね}を 何{なに}と いう？', a: '固定費{こていひ}', x: ['変動費{へんどうひ}', '利益{りえき}', '売上{うりあげ}'], e: '場所{ばしょ}代{だい}・電気{でんき}代{だい}など。売{う}れた 数{かず}で ふえる 材料費{ざいりょうひ}は 変動費{へんどうひ}。' },
+        { f: 'おかね', q: '1ぱい 150円{えん}、材料費{ざいりょうひ} 60円{えん}、毎日{まいにち} 1800円{えん} かかる。とんとんは 何{なん}ばい？', a: '20ぱい', x: ['12ぱい', '30ぱい', '120ぱい'], e: '1ぱいの もうけは 150−60＝90円{えん}。1800 ÷ 90 ＝ 20ぱい。' },
+        { f: 'おかね', q: 'ねだんを 材料費{ざいりょうひ}より 安{やす}く すると？', a: '売{う}れば 売{う}るほど 赤字{あかじ}に なる', x: ['たくさん 売{う}れて もうかる', 'とんとんに なる', '固定費{こていひ}が へる'], e: '1個{こ}あたりの もうけが マイナス。数{かず}を ふやしても 追{お}いつかない。' },
+        { f: 'おかね', q: 'もうけが 出{で}て いるのに 会社{かいしゃ}が 止{と}まる ことが ある。なぜ？', a: '入{はい}って くるのが おそくて 手{て}もちの お金{かね}が 尽{つ}きるから', x: ['もうけは 関係{かんけい}ない から', '社長{しゃちょう}が いない から', '税金{ぜいきん}が ない から'], e: 'これを 資金{しきん}ショートと いう。会社{かいしゃ}が つぶれる いちばん 多{おお}い 理由{りゆう}。' },
+        { f: 'おかね', q: '銀行{ぎんこう}から 借{か}りた お金{かね}は？', a: '利子{りし}を つけて 返{かえ}す', x: ['返{かえ}さなくて よい', '株{かぶ}を わたす', 'もらった ことに なる'], e: '借{か}りる＝返{かえ}す。会社{かいしゃ}は じぶんの もの の まま でいられる。' },
+        { f: 'おかね', q: '出資{しゅっし}（お金{かね}を 出{だ}して もらう）を 受{う}けると？', a: '返{かえ}さない かわりに 会社{かいしゃ}の かけら（株{かぶ}）を わたす', x: ['利子{りし}を つけて 返{かえ}す', '何{なに}も わたさなくて よい', '会社{かいしゃ}を 売{う}る こと'], e: 'どちらも タダでは ない。借{か}りるか 株{かぶ}を わたすかの ちがい。' },
+        { f: 'おかね', q: '株{かぶ}を 半分{はんぶん}より たくさん もって いる 人{ひと}は？', a: '大事{だいじ}な ことを 決{き}められる', x: ['お給料{きゅうりょう}が いちばん 高{たか}い', '毎日{まいにち} 会社{かいしゃ}に 行{い}かなくて よい', '税金{ぜいきん}を はらわなくて よい'], e: 'だから 株{かぶ}を わたし すぎると、じぶんの 会社{かいしゃ}では なく なって しまう。' },
+        { f: 'おかね', q: 'いちばん「えらい」お金{かね}は どれ？', a: 'お客{きゃく}さんが はらって くれた 売上{うりあげ}', x: ['銀行{ぎんこう}から 借{か}りた お金{かね}', '出資{しゅっし}して もらった お金{かね}', '補助金{ほじょきん}'], e: '返{かえ}さなくて よく、株{かぶ}も わたさない。売上{うりあげ}で まわる 会社{かいしゃ}が いちばん 強{つよ}い。' },
+        { f: 'おかね', q: '在庫{ざいこ}（売{う}れ残{のこ}り）が 多{おお}いと？', a: 'つかった お金{かね}が もどって こない', x: ['お店{みせ}が にぎやかに 見{み}える から よい', '税金{ぜいきん}が へる', '次{つぎ}の 日{ひ}に 2倍{ばい} 売{う}れる'], e: '日{ひ}もちしない ものは そのまま 損{そん}。売{う}れる 数{かず}の 予想{よそう}が 大事{だいじ}。' },
+
+        { f: 'なかま', q: '会社{かいしゃ}で いちばん 地味{じみ}だけど 命{いのち}に かかわる 役{やく}わりは？', a: 'お金{かね}の 出入{でい}りを 記録{きろく}して 見{み}る 人{ひと}', x: ['広告{こうこく}を つくる 人{ひと}', 'あいさつを する 人{ひと}', 'そうじを する 人{ひと}'], e: 'あと 何{なん}か月{げつ} つづけられるか が わかる。ここを 見{み}ない 会社{かいしゃ}は とつぜん 止{と}まる。' },
+        { f: 'なかま', q: 'お客{きゃく}さんに 届{とど}ける ために 決{き}める 4つは？', a: 'だれに・なにを・いくらで・どこで', x: ['いつ・どこで・だれと・なぜ', '大{おお}きさ・色{いろ}・形{かたち}・重{おも}さ', '朝{あさ}・昼{ひる}・夜{よる}・休{やす}み'], e: 'この 4つが そろって はじめて 売{う}れる。1つでも 抜{ぬ}けると 届{とど}かない。' },
+        { f: 'なかま', q: '「みんなに 売{う}りたい」と 考{かんが}えると？', a: 'だれにも 届{とど}かなく なる', x: ['たくさん 売{う}れる', '広告{こうこく}代{だい}が 安{やす}く なる', 'ねだんを 高{たか}く できる'], e: '「近所{きんじょ}の 小学生{しょうがくせい}」のように しぼる と、何{なに}を すれば よいかが はっきり する。' },
+        { f: 'なかま', q: 'お客{きゃく}さんが ほんとうに ほしい ものは？', a: 'その もの を つかった あとの うれしい 気持{きも}ち', x: ['いちばん 安{やす}い もの', 'いちばん 新{あたら}しい もの', 'いちばん 大{おお}きい もの'], e: 'レモネードでは なく「あつい 日{ひ}の すっきり」を 売{う}って いる。' },
+        { f: 'なかま', q: '文句{もんく}を 言{い}って くれる お客{きゃく}さんは？', a: '宝物{たからもの}。直{なお}す ヒントを くれて いる', x: ['めいわく なので 無視{むし}する', 'お金{かね}を 返{かえ}して 二度{にど}と 相手{あいて}に しない', 'ほかの お客{きゃく}さんに 悪口{わるくち}を 言{い}う'], e: '多{おお}くの 人{ひと}は だまって 去{さ}る。言{い}って くれる 人{ひと}は 直{なお}す チャンスを くれて いる。' },
+        { f: 'なかま', q: '信用{しんよう}は どういう もの？', a: '少{すこ}しずつ たまるが、1回{かい}の うそで なくなる', x: ['お金{かね}で 買{か}える', '1回{かい} つくれば ずっと 消{き}えない', '大{おお}きな 会社{かいしゃ}だけが もてる'], e: '2回目{かいめ}も 買{か}って もらえるか は 信用{しんよう}で 決{き}まる。お金{かね}より 大事{だいじ}な 財産{ざいさん}。' },
+        { f: 'なかま', q: 'やくそくの 期日{きじつ}に 間{ま}に合{あ}わない と わかった とき。', a: 'わかった 時点{じてん}で すぐ 連絡{れんらく}する', x: ['当日{とうじつ}まで だまって おく', 'なかった ことに する', 'べつの 人{ひと}の せいに する'], e: 'だまって おくれるのが 最悪{さいあく}。早{はや}く 言{い}えば 相手{あいて}も 手{て}を 打{う}てる。' },
+        { f: 'なかま', q: '仲{なか}が よい 相手{あいて}との 大事{だいじ}な やくそくは？', a: '紙{かみ}に 書{か}いて おく（契約{けいやく}）', x: ['口{くち}で じゅうぶん', '書{か}くのは 失礼{しつれい}だから しない', 'あとで 思{おも}い出{だ}せば よい'], e: 'もめない ための やさしさ。仲{なか}が よい からこそ 書{か}いて おく。' },
+        { f: 'なかま', q: '1人{ひとり}で 始{はじ}める ときの よい ところは？', a: '5つの 役{やく}わりを ぜんぶ 経験{けいけん}できて、苦手{にがて}が わかる', x: ['ぜんぶ 上手{じょうず}に できる', '責任{せきにん}が なくなる', 'お金{かね}が 自然{しぜん}に ふえる'], e: '苦手{にがて}が わかって から 仲間{なかま}を さがすと、うまく 組{く}める。' },
+
+        { f: 'ルール', q: '「絶対{ぜったい}に やせる！」と 本当{ほんとう}より よく 見{み}せて 売{う}るのは？', a: '法律違反{ほうりついはん}（景品表示法{けいひんひょうじほう}）', x: ['じょうずな 宣伝{せんでん}', '少{すこ}しなら OK', '有名{ゆうめい}な 会社{かいしゃ}だけ だめ'], e: 'うその 宣伝{せんでん}は はっきり 違反{いはん}。信用{しんよう}も いっぺんに 失{うしな}う。' },
+        { f: 'ルール', q: 'お金{かね}を もらって 書{か}いた 感想{かんそう}を、ふつうの 感想{かんそう}の ように 見{み}せるのは？', a: 'ステマ。2023年{ねん}から はっきり 禁止{きんし}', x: ['ふつうの 宣伝{せんでん}', '親切{しんせつ}な 行{おこな}い', 'お店{みせ}が 決{き}めれば よい'], e: '「広告{こうこく}です」と わかる ように 書{か}かなければ ならない。' },
+        { f: 'ルール', q: 'アニメの キャラクターを 描{か}いた グッズを 売{う}るのは？', a: '著作権{ちょさくけん}の 違反{いはん}。許可{きょか}が 必要{ひつよう}', x: ['自分{じぶん}で 描{か}いた から OK', '安{やす}く 売{う}れば OK', '1個{こ}だけなら OK'], e: '有名{ゆうめい}な お店{みせ}の 名前{なまえ}や ロゴを まねるのも 商標{しょうひょう}の 違反{いはん}に なる。' },
+        { f: 'ルール', q: 'お客{きゃく}さんの 名前{なまえ}や 住所{じゅうしょ}は？', a: '個人{こじん}情報{じょうほう}。目的{もくてき}以外{いがい}に つかわず 大切{たいせつ}に 守{まも}る', x: ['自由{じゆう}に つかって よい', '友{とも}だちに 見{み}せて よい', 'SNSに のせて よい'], e: 'もらった ときの 目的{もくてき}以外{いがい}に つかうのは だめ。もれると 大{おお}きな 問題{もんだい}に なる。' },
+        { f: 'ルール', q: '食{た}べものを つくって 売{う}るには？', a: '保健所{ほけんじょ}の 許可{きょか}が 必要{ひつよう}', x: ['だれでも すぐ 売{う}れる', '大人{おとな}なら 自由{じゆう}', '学校{がっこう}の 先生{せんせい}の 許可{きょか}'], e: '食中毒{しょくちゅうどく}は 人{ひと}の 命{いのち}に かかわる。バザーなど 特別{とくべつ}な 場合{ばあい}を のぞいて 勝手{かって}に 売{う}っては いけない。' },
+        { f: 'ルール', q: 'もうけた お金{かね}に かかる 税金{ぜいきん}を わざと かくすと？', a: '脱税{だつぜい}。とても 重{おも}い ばつが ある', x: ['かしこい 節約{せつやく}', 'ばれなければ よい', '会社{かいしゃ}なら 自由{じゆう}'], e: '税金{ぜいきん}は 道路{どうろ}・学校{がっこう}・消防車{しょうぼうしゃ}の お金{かね}に なる。みんなの 会費{かいひ}の ような もの。' },
+        { f: 'ルール', q: '18歳{さい}より 下{した}の 人{ひと}が お金{かね}の やくそくを する ときは？', a: 'おうちの 人{ひと}（親{おや}）の OKが 必要{ひつよう}', x: ['ひとりで 自由{じゆう}に できる', '先生{せんせい}の OKが あれば よい', '13歳{さい}を こえれば 自由{じゆう}'], e: '子{こ}どもが 損{そん}を しない ように 守{まも}る ための ルール（民法{みんぽう}）。' },
+        { f: 'ルール', q: '小学生{しょうがくせい}が 起業{きぎょう}の 練習{れんしゅう}を する なら？', a: 'バザーや フリマ、子{こ}ども 起業{きぎょう}体験{たいけん}などで 大人{おとな}と いっしょに', x: ['こっそり ひとりで お店{みせ}を 開{ひら}く', '18歳{さい}まで 何{なに}も できない', 'まず 借金{しゃっきん}を する'], e: '「聞{き}く 練習{れんしゅう}」と「つくる 力{ちから}」は 今{いま}から できる。いちばん 役{やく}に 立{た}つ。' },
+        { f: 'ルール', q: 'わからない ルールが ある とき いちばん よいのは？', a: '先{さき}に 専門{せんもん}の 人{ひと}や 役所{やくしょ}に 聞{き}く', x: ['とりあえず やって みる', 'ネットの うわさを 信{しん}じる', '気{き}に しない'], e: 'あとで 気{き}づくと お金{かね}も 信用{しんよう}も 失{うしな}う。商工会{しょうこうかい}などに 無料{むりょう}の 相談{そうだん}窓口{まどぐち}も ある。' },
+        { f: 'ルール', q: '始{はじ}めた 商売{しょうばい}が うまく いかなかった とき。', a: 'ふつうの こと。記録{きろく}を 残{のこ}して 次{つぎ}に いかす', x: ['自分{じぶん}に 能力{のうりょく}が ない から もう やらない', 'かくして だまって いる', 'お金{かね}を もっと 借{か}りて つづける'], e: 'うまく いかない ことの ほうが 多{おお}い。だから「小{ちい}さく ためす」「失{うしな}っても 生活{せいかつ}が こわれない 金額{きんがく}で」。' }
+    ];
+    let qz = null, qzField = 'all';
+    function newQuiz() {
+        const pool = qzField === 'all' ? QS : QS.filter(q => q.f === qzField);
+        const q = pool[rnd(pool.length)];
+        qz = { q, choices: shuffle([q.a].concat(q.x)), done: false };
+        const fields = ['all'].concat([...new Set(QS.map(x => x.f))]);
+        document.getElementById('qz-fields').innerHTML = fields.map(f =>
+            `<button onclick="setField('${f}')" class="${qzField === f ? 'bg-orange-600 text-white' : 'bg-white border-2 border-amber-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${f === 'all' ? 'ぜんぶ ' + QS.length : plain(f) + ' ' + QS.filter(x => x.f === f).length}</button>`).join('');
+        document.getElementById('qz-q').innerHTML = `<span class="text-xs font-black text-orange-700 bg-amber-100 px-2 py-1 rounded-lg mr-2">${esc(plain(q.f))}</span>${q.q}`;
+        document.getElementById('qz-choices').innerHTML = qz.choices.map((c, i) =>
+            `<button onclick="ansQuiz(${i})" data-qzc="${i}" class="bg-white border-2 border-slate-200 hover:border-orange-500 font-bold text-left px-4 py-3 rounded-2xl bounce-hover">${c}</button>`).join('');
+        document.getElementById('qz-res').innerHTML = '';
+        scoreBox('qz-score', S.quiz);
+    }
+    function setField(f) { qzField = f; newQuiz(); }
+    function ansQuiz(i) {
+        if (!qz || qz.done) return;
+        qz.done = true;
+        const ok = qz.choices[i] === qz.q.a;
+        S.quiz[1]++; if (ok) S.quiz[0]++;
+        markChoices('[data-qzc]', j => qz.choices[j] === qz.q.a, i, 'font-bold text-left px-4 py-3 rounded-2xl');
+        document.getElementById('qz-res').innerHTML = resultBox(ok, ok ? '⭕ せいかい！' : `❌ こたえは 「${qz.q.a}」`, qz.q.e);
+        scoreBox('qz-score', S.quiz);
+    }
+
+    /* ===================== タブごとの 組み立て ===================== */
+    const BUILD = {
+        idea: () => {
+            cards('id-why', ID_WHY, 'orange');
+            document.getElementById('id-venn').innerHTML = idVennFig();
+            cards('id-venn-why', ID_VENN, 'amber');
+            idCard();
+            cards('id-find', ID_FIND, 'emerald');
+        },
+        prep: () => {
+            setPr(0);
+            document.getElementById('pr-cmp').innerHTML =
+                `<table class="w-full text-xs font-bold" style="min-width:440px">
+                    <tr class="bg-amber-100 text-orange-800">
+                        <th class="p-2 text-left rounded-l-xl">くらべる ところ</th>
+                        <th class="p-2 text-left">個人事業主{こじんじぎょうぬし}</th>
+                        <th class="p-2 text-left rounded-r-xl">株式会社{かぶしきがいしゃ}</th></tr>
+                    ${PR_CMP.map(([a, b, c], i) =>
+                        `<tr class="${i % 2 ? 'bg-amber-50' : ''}">
+                            <td class="p-2 font-black text-slate-500 align-top leading-relaxed">${a}</td>
+                            <td class="p-2 align-top leading-relaxed">${b}</td>
+                            <td class="p-2 align-top leading-relaxed">${c}</td></tr>`).join('')}
+                </table>
+                <p class="text-xs font-bold text-slate-400 mt-2 leading-relaxed">
+                    ※ この 間{あいだ}に <b>合同会社{ごうどうがいしゃ}</b>と いう かたちも ある。
+                    会社{かいしゃ}だが つくる お金{かね}が 安{やす}い（やく6万円{まんえん}）。
+                    費用{ひよう}や ルールは かわる ことが ある ので、決{き}める ときは 役所{やくしょ}や
+                    専門{せんもん}の 人{ひと}に たしかめよう。</p>`;
+            prDone = PR_TODO.map(() => false);
+            prTodo();
+        },
+        money: () => {
+            document.getElementById('mn-basic').innerHTML = mnBasicFig();
+            cards('mn-basic-why', MN_BASIC, 'amber');
+            beCalc();
+            cards('mn-fund', MN_FUND, 'emerald');
+            document.getElementById('mn-kabu').innerHTML = mnKabuFig();
+            cards('mn-kabu-why', MN_KABU, 'violet');
+        },
+        game: () => {
+            gmReset();
+            cards('gm-learn', GM_LEARN, 'sky');
+        },
+        team: () => {
+            cards('tm-role', TM_ROLE, 'orange');
+            document.getElementById('tm-4p').innerHTML = tm4pFig();
+            cards('tm-4p-why', TM_4P, 'amber');
+            cards('tm-trust', TM_TRUST, 'emerald');
+            cards('tm-rule', TM_RULE, 'rose');
+            cards('tm-kid', TM_KID, 'sky');
+            cards('tm-fail', TM_FAIL, 'violet');
+        },
+        quiz: () => newQuiz()
+    };
+
+    /* ===================== 起動 ===================== */
+    renderNav();
+    ready.idea = true;
+    BUILD.idea();
+    rubify(document.body);
+</script>
+</body>
+</html>
