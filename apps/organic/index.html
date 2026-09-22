@@ -150,17 +150,18 @@
 
         <!-- ============ ずかん ============ -->
         <section id="tab-book" class="tab-content hidden space-y-4">
-            <div class="flex gap-2 overflow-x-auto pb-1">
-                <button onclick="filterBook('all', this)" class="filter-btn active bg-emerald-600 text-white font-bold px-3 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap">すべて</button>
-                <button onclick="filterBook('alkane', this)" class="filter-btn bg-white border border-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap">炭化水素</button>
-                <button onclick="filterBook('unsat', this)" class="filter-btn bg-white border border-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap">二重・三重結合</button>
-                <button onclick="filterBook('aromatic', this)" class="filter-btn bg-white border border-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap">芳香族</button>
-                <button onclick="filterBook('alcohol', this)" class="filter-btn bg-white border border-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap">アルコール</button>
-                <button onclick="filterBook('acid', this)" class="filter-btn bg-white border border-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-full text-xs sm:text-sm whitespace-nowrap">酸・その他</button>
+            <div class="bg-white rounded-2xl p-3 border-2 border-slate-200 space-y-2">
+                <input id="book-search" type="search" oninput="onBookSearch()"
+                       placeholder="なまえ・よみ・化学式で さがす（れい: さん / C2H6 / ばなな）"
+                       class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-2.5 font-bold text-sm outline-none focus:border-emerald-400">
+                <div id="book-chips" class="flex flex-wrap gap-1.5"></div>
+                <p class="text-xs font-black text-slate-500"><span id="book-count">0</span>この ゆうき化合物</p>
             </div>
-            <p class="text-xs font-black text-slate-500"><span id="book-count">0</span>この ゆうき化合物</p>
-            <p class="text-[11px] font-bold text-slate-400 -mt-2">※ ベンゼン環の C に ついている H は、図が こまかく なりすぎないよう かいていません（構造式の おやくそく）。</p>
+            <p class="text-[11px] font-bold text-slate-400">※ ベンゼン環の C に ついている H は、図が こまかく なりすぎないよう かいていません（構造式の おやくそく）。
+                CH₃ や OH は 中みを まとめて 1つの 箱で かいて います。</p>
             <div id="book-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+            <p id="book-empty" class="hidden font-black text-slate-400 py-8 text-center">見つからなかったよ。ほかの ことばで さがして みて。</p>
+            <button id="book-more" onclick="showMoreBook()" class="hidden w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 rounded-2xl shadow bounce-hover"></button>
         </section>
     </main>
 
@@ -172,11 +173,26 @@
                 <h2 id="modal-name" class="text-2xl font-black">ベンゼン</h2>
                 <p id="modal-kana" class="text-xs font-bold text-slate-500">べんぜん</p>
                 <p id="modal-formula" class="text-xl font-black text-emerald-600 mt-1"></p>
+                <div id="modal-cats" class="mt-1"></div>
                 <div id="modal-canvas" class="my-3 bg-slate-50 rounded-2xl border-2 border-slate-200 p-2"></div>
                 <div class="text-left space-y-3 text-sm">
+                    <div class="grid grid-cols-2 gap-2 text-center">
+                        <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
+                            <p id="modal-mw-label" class="text-[10px] font-black text-slate-400">分子量</p>
+                            <p id="modal-mw" class="font-black text-lg text-slate-700"></p>
+                        </div>
+                        <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
+                            <p class="text-[10px] font-black text-slate-400">げんしの 数</p>
+                            <p id="modal-atoms" class="font-black text-sm text-slate-700 leading-tight pt-1"></p>
+                        </div>
+                    </div>
                     <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
                         <p class="font-extrabold text-emerald-600 text-xs mb-1">💡 とくちょう</p>
                         <p id="modal-fact" class="font-bold leading-relaxed"></p>
+                    </div>
+                    <div id="modal-repeat-wrap" class="bg-sky-50 p-3 rounded-xl border-2 border-sky-200 hidden">
+                        <p class="font-extrabold text-sky-600 text-xs mb-1">♻️ くりかえしの しくみ</p>
+                        <p id="modal-repeat" class="font-bold leading-relaxed"></p>
                     </div>
                     <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
                         <p class="font-extrabold text-amber-600 text-xs mb-1">🏠 どこで つかう？</p>
@@ -196,22 +212,61 @@
     <script>
         /* ================= えがく どうぐ ================= */
         // げんしの みため
+        // げんしの みため。comp は「この ノードが なんの げんしを いくつ もつか」
         const ATOM = {
-            C:  { fill: '#475569', stroke: '#1e293b', text: '#ffffff', r: 15 },
-            H:  { fill: '#f8fafc', stroke: '#cbd5e1', text: '#334155', r: 11 },
-            O:  { fill: '#ef4444', stroke: '#b91c1c', text: '#ffffff', r: 15 },
-            N:  { fill: '#3b82f6', stroke: '#1d4ed8', text: '#ffffff', r: 15 }
+            C:  { fill: '#475569', stroke: '#1e293b', text: '#ffffff', r: 15, val: 4, comp: { C: 1 } },
+            H:  { fill: '#f8fafc', stroke: '#cbd5e1', text: '#334155', r: 11, val: 1, comp: { H: 1 } },
+            O:  { fill: '#ef4444', stroke: '#b91c1c', text: '#ffffff', r: 15, val: 2, comp: { O: 1 } },
+            N:  { fill: '#3b82f6', stroke: '#1d4ed8', text: '#ffffff', r: 15, val: 3, comp: { N: 1 } },
+            S:  { fill: '#facc15', stroke: '#a16207', text: '#422006', r: 16, val: 2, comp: { S: 1 } },
+            F:  { fill: '#a3e635', stroke: '#4d7c0f', text: '#1a2e05', r: 13, val: 1, comp: { F: 1 } },
+            Cl: { fill: '#22c55e', stroke: '#15803d', text: '#ffffff', r: 17, val: 1, comp: { Cl: 1 } },
+            Br: { fill: '#b45309', stroke: '#78350f', text: '#ffffff', r: 18, val: 1, comp: { Br: 1 } },
+            I:  { fill: '#7c3aed', stroke: '#4c1d95', text: '#ffffff', r: 19, val: 1, comp: { I: 1 } }
         };
-        // まとめて かく グループ（CH3 や OH など）
+        // まとめて かく グループ（CH3 や OH など）。comp は 中みの げんしの 数
         const GROUP = {
-            CH3:  { label: 'CH₃',  fill: '#64748b', text: '#fff', w: 42 },
-            CH2:  { label: 'CH₂',  fill: '#64748b', text: '#fff', w: 42 },
-            C2H5: { label: 'C₂H₅', fill: '#64748b', text: '#fff', w: 50 },
-            OH:   { label: 'OH',   fill: '#ef4444', text: '#fff', w: 36 },
-            NH2:  { label: 'NH₂',  fill: '#3b82f6', text: '#fff', w: 42 },
-            COOH: { label: 'COOH', fill: '#e11d48', text: '#fff', w: 58 },
-            CHO:  { label: 'CHO',  fill: '#f97316', text: '#fff', w: 48 }
+            CH3:  { label: 'CH₃',  fill: '#64748b', text: '#fff', w: 42, comp: { C: 1, H: 3 } },
+            CH2:  { label: 'CH₂',  fill: '#64748b', text: '#fff', w: 42, comp: { C: 1, H: 2 } },
+            CH:   { label: 'CH',   fill: '#64748b', text: '#fff', w: 34, comp: { C: 1, H: 1 } },
+            C2H5: { label: 'C₂H₅', fill: '#64748b', text: '#fff', w: 50, comp: { C: 2, H: 5 } },
+            OH:   { label: 'OH',   fill: '#ef4444', text: '#fff', w: 36, comp: { O: 1, H: 1 } },
+            NH2:  { label: 'NH₂',  fill: '#3b82f6', text: '#fff', w: 42, comp: { N: 1, H: 2 } },
+            NH:   { label: 'NH',   fill: '#3b82f6', text: '#fff', w: 34, comp: { N: 1, H: 1 } },
+            COOH: { label: 'COOH', fill: '#e11d48', text: '#fff', w: 58, comp: { C: 1, O: 2, H: 1 } },
+            CHO:  { label: 'CHO',  fill: '#f97316', text: '#fff', w: 48, comp: { C: 1, H: 1, O: 1 } },
+            NO2:  { label: 'NO₂',  fill: '#6366f1', text: '#fff', w: 42, comp: { N: 1, O: 2 } },
+            OCH3: { label: 'OCH₃', fill: '#f43f5e', text: '#fff', w: 54, comp: { O: 1, C: 1, H: 3 } },
+            SH:   { label: 'SH',   fill: '#eab308', text: '#422006', w: 34, comp: { S: 1, H: 1 } },
+            CN:   { label: 'CN',   fill: '#0ea5e9', text: '#fff', w: 34, comp: { C: 1, N: 1 } },
+            CF3:  { label: 'CF₃',  fill: '#84cc16', text: '#1a2e05', w: 42, comp: { C: 1, F: 3 } },
+            CCl3: { label: 'CCl₃', fill: '#16a34a', text: '#fff', w: 50, comp: { C: 1, Cl: 3 } }
         };
+
+        /* ラベルから 幅を きめて グループを ふやす（(CH₂)₆ のような まとめ書き用）。
+           同じ キーを 2回 とうろくしても じょうぶ。 */
+        function defGroup(key, label, comp, fill = '#64748b', text = '#fff') {
+            GROUP[key] = { label, fill, text, comp, w: Math.max(32, [...label].length * 11 + 14) };
+            return key;
+        }
+        // 長い −CH₂− の れんぞく（オクタンなど）
+        [2, 3, 4, 5, 6, 7, 8, 9].forEach(n =>
+            defGroup('CH2x' + n, `(CH₂)${'₀₁₂₃₄₅₆₇₈₉'[n]}`, { C: n, H: 2 * n }));
+        defGroup('CH2x10', '(CH₂)₁₀', { C: 10, H: 20 });
+        defGroup('CH2x14', '(CH₂)₁₄', { C: 14, H: 28 });
+        defGroup('CH2x16', '(CH₂)₁₆', { C: 16, H: 32 });
+        defGroup('CF2', 'CF₂', { C: 1, F: 2 }, '#84cc16', '#1a2e05');
+        defGroup('CH2OH', 'CH₂OH', { C: 1, H: 3, O: 1 }, '#ef4444');
+        defGroup('OCOCH3', 'OCOCH₃', { O: 2, C: 2, H: 3 }, '#e11d48');
+        // ポリマーの はしに くる 酸素。げんしの 丸に すると「かいて いない 水素」が
+        // 1こ 数えられて しまう ので、グループ（中みが きまった 箱）に して おく。
+        defGroup('Oe', 'O', { O: 1 }, '#ef4444');
+        defGroup('COO', 'COO', { C: 1, O: 2 }, '#e11d48');
+        defGroup('COOCH3', 'COOCH₃', { C: 2, O: 2, H: 3 }, '#e11d48');
+        defGroup('COOC2H5', 'COOC₂H₅', { C: 3, O: 2, H: 5 }, '#e11d48');
+        defGroup('CO', 'CO', { C: 1, O: 1 }, '#f97316');
+        defGroup('C6H5', 'C₆H₅', { C: 6, H: 5 }, '#10b981');
+        defGroup('C6H4', 'C₆H₄', { C: 6, H: 4 }, '#10b981');
 
         function hexVertices(cx, cy, r) {
             // 上下に かどが ある 6角形（よこの へんが たてに なる）
@@ -221,47 +276,50 @@
             });
         }
 
-        function bondLines(A, B, order, color) {
+        function bondLines(A, B, order, color, ns = 1) {
             const dx = B.x - A.x, dy = B.y - A.y;
             const len = Math.hypot(dx, dy) || 1;
             const px = (-dy / len), py = (dx / len);
             const offsets = order === 1 ? [0] : order === 2 ? [-1, 1] : [-1.4, 0, 1.4];
-            const gap = order === 3 ? 4.5 : 5;
-            const width = order === 1 ? 5 : 4;
+            const gap = (order === 3 ? 4.5 : 5) * ns;
+            const width = (order === 1 ? 5 : 4) * ns;
             return offsets.map(s => `<line x1="${A.x + px * gap * s}" y1="${A.y + py * gap * s}" x2="${B.x + px * gap * s}" y2="${B.y + py * gap * s}" stroke="${color}" stroke-width="${width}" stroke-linecap="round" />`).join('');
         }
 
         // mol = { nodes:[{t,x,y}], bonds:[[i,j,order]], ring:{cx,cy,r}|null, view:[w,h] }
         function structureSVG(mol, opts = {}) {
             const view = mol.view || [200, 160];
+            const ns = mol.ns || 1;                 // ノードの 大きさの ばいりつ
             let out = '';
 
             (mol.bonds || []).forEach(([i, j, order]) => {
                 const A = mol.nodes[i], B = mol.nodes[j];
                 if (!A || !B) return;
                 const hidden = A.t === 'slot' || B.t === 'slot';
-                out += bondLines(A, B, order, hidden ? '#cbd5e1' : '#94a3b8');
+                out += bondLines(A, B, order, hidden ? '#cbd5e1' : '#94a3b8', ns);
             });
 
             if (mol.ring) {
-                out += `<circle cx="${mol.ring.cx}" cy="${mol.ring.cy}" r="${mol.ring.r}" fill="none" stroke="#94a3b8" stroke-width="4.5" />`;
+                out += `<circle cx="${mol.ring.cx}" cy="${mol.ring.cy}" r="${mol.ring.r}" fill="none" stroke="#94a3b8" stroke-width="${r1(4.5 * ns)}" />`;
             }
 
             mol.nodes.forEach((n, idx) => {
                 const popped = opts.popIndex === idx ? ' class="pop"' : '';
                 if (n.t === 'slot') {
-                    out += `<g class="slot"><circle cx="${n.x}" cy="${n.y}" r="17" fill="#fff" stroke="#10b981" stroke-width="3" stroke-dasharray="6 5" />
-                        <text x="${n.x}" y="${n.y}" fill="#10b981" font-size="18" font-weight="900" text-anchor="middle" dominant-baseline="central">?</text></g>`;
+                    const r = r1(17 * ns);
+                    out += `<g class="slot"><circle cx="${n.x}" cy="${n.y}" r="${r}" fill="#fff" stroke="#10b981" stroke-width="${r1(3 * ns)}" stroke-dasharray="6 5" />
+                        <text x="${n.x}" y="${n.y}" fill="#10b981" font-size="${r1(18 * ns)}" font-weight="900" text-anchor="middle" dominant-baseline="central">?</text></g>`;
                 } else if (ATOM[n.t]) {
-                    const s = ATOM[n.t];
-                    out += `<g${popped}><circle cx="${n.x}" cy="${n.y}" r="${s.r}" fill="${s.fill}" stroke="${s.stroke}" stroke-width="2.5" />
-                        <text x="${n.x}" y="${n.y}" fill="${s.text}" font-size="${s.r}" font-weight="900" text-anchor="middle" dominant-baseline="central">${n.t}</text></g>`;
+                    const s = ATOM[n.t], r = r1(s.r * ns);
+                    const fs = r1(s.r * ns * (n.t.length > 1 ? 0.78 : 1));
+                    out += `<g${popped}><circle cx="${n.x}" cy="${n.y}" r="${r}" fill="${s.fill}" stroke="${s.stroke}" stroke-width="${r1(2.5 * ns)}" />
+                        <text x="${n.x}" y="${n.y}" fill="${s.text}" font-size="${fs}" font-weight="900" text-anchor="middle" dominant-baseline="central">${n.t}</text></g>`;
                 } else {
                     const g = GROUP[n.t];
                     if (!g) return;
-                    const w = g.w, h = 26;
-                    out += `<g${popped}><rect x="${n.x - w / 2}" y="${n.y - h / 2}" width="${w}" height="${h}" rx="9" fill="${g.fill}" />
-                        <text x="${n.x}" y="${n.y}" fill="${g.text}" font-size="15" font-weight="900" text-anchor="middle" dominant-baseline="central">${g.label}</text></g>`;
+                    const w = r1(g.w * ns), h = r1(26 * ns);
+                    out += `<g${popped}><rect x="${r1(n.x - w / 2)}" y="${r1(n.y - h / 2)}" width="${w}" height="${h}" rx="${r1(9 * ns)}" fill="${g.fill}" />
+                        <text x="${n.x}" y="${n.y}" fill="${g.text}" font-size="${r1(15 * ns)}" font-weight="900" text-anchor="middle" dominant-baseline="central">${g.label}</text></g>`;
                 }
             });
 
@@ -339,6 +397,211 @@
             document.getElementById('benz-anim').innerText = '▶ A と B を 入れかえる';
         }
 
+        /* ================= じどう レイアウト =================
+           まもりたい ことが 3つ ある。
+             ① けつごうの ぼうが 丸や 箱に かくれない
+             ② わく（200x165）から はみ出さない
+             ③ つながって いない ノード どうしが かさならない
+           位置を s倍 に ひろげると ①③は よく なるが ②は わるく なる。
+           そこで「ノードを ns倍 に 小さく して、位置を s倍 に する」くみあわせを さがす。
+           これが ある ので、100この 構造式の 座標を 手で あわせなくて すむ。 */
+        const VIEW_W = 200, VIEW_H = 165, MARGIN = 3, BOND_GAP = 7;
+        const r1 = v => Math.round(v * 10) / 10;
+
+        function nodeHalf(t, ns) {
+            if (ATOM[t]) { const r = ATOM[t].r * ns; return { hw: r, hh: r, circle: true }; }
+            if (GROUP[t]) return { hw: GROUP[t].w / 2 * ns, hh: 13 * ns, circle: false };
+            return { hw: 17 * ns, hh: 17 * ns, circle: true };        // slot（パズルの あな）
+        }
+        // ある むきに 見た ときの ノードの はんぶんの 大きさ
+        function halfAlong(t, ns, ux, uy) {
+            const h = nodeHalf(t, ns);
+            return h.circle ? h.hw : Math.abs(ux) * h.hw + Math.abs(uy) * h.hh;
+        }
+        // 大きさも 考えて、わくの まん中に よせる
+        function recenterMol(mol, ns) {
+            let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+            mol.nodes.forEach(n => {
+                const h = nodeHalf(n.t, ns);
+                x0 = Math.min(x0, n.x - h.hw); x1 = Math.max(x1, n.x + h.hw);
+                y0 = Math.min(y0, n.y - h.hh); y1 = Math.max(y1, n.y + h.hh);
+            });
+            const dx = VIEW_W / 2 - (x0 + x1) / 2, dy = VIEW_H / 2 - (y0 + y1) / 2;
+            mol.nodes.forEach(n => { n.x += dx; n.y += dy; });
+            if (mol.ring) { mol.ring.cx += dx; mol.ring.cy += dy; }
+            return mol;
+        }
+        // いまの ns で 3つを みたす 位置の ばいりつ s（むりなら null）
+        function solveLayout(mol, ns) {
+            const N = mol.nodes, cx = VIEW_W / 2, cy = VIEW_H / 2;
+            const bonded = new Set((mol.bonds || []).map(([a, b]) => `${Math.min(a, b)}-${Math.max(a, b)}`));
+            let low = 0;
+            for (let i = 0; i < N.length; i++) for (let j = i + 1; j < N.length; j++) {
+                const dx = N[j].x - N[i].x, dy = N[j].y - N[i].y, d = Math.hypot(dx, dy);
+                if (d < 0.01) return null;                            // 同じ 場所に 2こ ある
+                if (bonded.has(`${i}-${j}`)) {
+                    const need = halfAlong(N[i].t, ns, dx / d, dy / d)
+                               + halfAlong(N[j].t, ns, dx / d, dy / d) + BOND_GAP;
+                    low = Math.max(low, need / d);
+                } else {
+                    // 箱どうしは よこか たてが はなれて いれば かさならない
+                    const a = nodeHalf(N[i].t, ns), b = nodeHalf(N[j].t, ns);
+                    const nx = Math.abs(dx) > 0.01 ? (a.hw + b.hw) / Math.abs(dx) : Infinity;
+                    const ny = Math.abs(dy) > 0.01 ? (a.hh + b.hh) / Math.abs(dy) : Infinity;
+                    low = Math.max(low, Math.min(nx, ny));
+                }
+            }
+            let high = Infinity;
+            N.forEach(n => {
+                const h = nodeHalf(n.t, ns);
+                if (h.hw + MARGIN > cx || h.hh + MARGIN > cy) { high = -1; return; }
+                const dx = Math.abs(n.x - cx), dy = Math.abs(n.y - cy);
+                if (dx > 0.5) high = Math.min(high, (cx - h.hw - MARGIN) / dx);
+                if (dy > 0.5) high = Math.min(high, (cy - h.hh - MARGIN) / dy);
+            });
+            if (high === -1) return null;                             // ノード 1つが わくより 大きい
+            if (!isFinite(high)) high = 1;                            // ノードが 1つだけ
+            if (low > high) return null;
+            return Math.min(high, Math.max(1, low * 1.04));
+        }
+        // 構造を わくに おさめる。mol を そのまま かきかえて かえす
+        function layoutMol(mol) {
+            let ns = 1, s = null;
+            for (let k = 0; k < 40 && s === null; k++) {
+                recenterMol(mol, ns);
+                s = solveLayout(mol, ns);
+                if (s === null) ns *= 0.95;
+            }
+            if (s === null) { ns = 0.45; s = 1; }
+            const cx = VIEW_W / 2, cy = VIEW_H / 2;
+            mol.nodes.forEach(n => { n.x = r1(cx + (n.x - cx) * s); n.y = r1(cy + (n.y - cy) * s); });
+            if (mol.ring) {
+                mol.ring.cx = r1(cx + (mol.ring.cx - cx) * s);
+                mol.ring.cy = r1(cy + (mol.ring.cy - cy) * s);
+                mol.ring.r = r1(mol.ring.r * s);
+            }
+            mol.ns = Math.round(ns * 1000) / 1000;
+            recenterMol(mol, mol.ns);
+            mol.nodes.forEach(n => { n.x = r1(n.x); n.y = r1(n.y); });
+            mol.view = [VIEW_W, VIEW_H];
+            return mol;
+        }
+
+        /* ================= 構造の 組みたて ================= */
+        // よこに ならべる（ジグザグ）。subs = [ならびの ばんごう, グループ, 角度, けつごう, きょり]
+        // 5つ 以上の ときは 2だんに 折りかえす（よこに 長いままだと 小さく しか かけない）。
+        // 2だんめは ぎゃく向きに ならべる ので、となりどうしは いつも となりに 来る。
+        // ただし えだ（subs）が ある ときは 折りかえさない。
+        // 折りかえすと えだの 向きが となりの だんに ぶつかって しまう ため。
+        function ch(labels, opt = {}) {
+            const canWrap = labels.length >= 5 && !(opt.subs && opt.subs.length);
+            const per = opt.per || (canWrap ? Math.ceil(labels.length / 2) : labels.length);
+            const rows = Math.ceil(labels.length / per);
+            const gap = opt.gap || (rows > 1 ? 50 : 58);
+            const rise = opt.rise == null ? (rows > 1 ? 10 : 13) : opt.rise;
+            const rowGap = opt.rowGap || 58;
+            const nodes = labels.map((t, i) => {
+                const r = Math.floor(i / per);
+                const k = r % 2 === 1 ? per - 1 - (i % per) : i % per;
+                return {
+                    t,
+                    x: 100 + (k - (per - 1) / 2) * gap,
+                    y: 82 + (r - (rows - 1) / 2) * rowGap + (k % 2 ? rise : -rise)
+                };
+            });
+            const bonds = [];
+            for (let i = 1; i < labels.length; i++) bonds.push([i - 1, i, (opt.orders && opt.orders[i - 1]) || 1]);
+            (opt.subs || []).forEach(([i, t, ang = 90, order = 1, dist = 52]) => {
+                const a = ang * Math.PI / 180;
+                nodes.push({ t, x: nodes[i].x + Math.cos(a) * dist, y: nodes[i].y - Math.sin(a) * dist });
+                bonds.push([i, nodes.length - 1, order]);
+            });
+            return { nodes, bonds };
+        }
+        // ベンゼン環 ＋ かどに くっつく グループ。subs = [かどの ばんごう(0〜5), グループ, きょり]
+        function benz(subs = [], opt = {}) {
+            const cx = 100, cy = 82, r = opt.r || 40;
+            const deg = [30, 90, 150, 210, 270, 330];
+            const v = hexVertices(cx, cy, r);
+            const nodes = v.map(p => ({ t: 'C', x: p.x, y: p.y }));
+            const bonds = [];
+            for (let i = 0; i < 6; i++) bonds.push([i, (i + 1) % 6, i % 2 === 0 ? 2 : 1]);
+            subs.forEach(([i, t, dist = 48]) => {
+                const a = deg[i] * Math.PI / 180;
+                nodes.push({ t, x: cx + Math.cos(a) * (r + dist), y: cy - Math.sin(a) * (r + dist) });
+                bonds.push([i, nodes.length - 1, 1]);
+            });
+            return { nodes, bonds, ring: opt.ring ? { cx, cy, r: r * 0.62 } : null };
+        }
+        // わ（リング）。orders は わの けつごう、subs は 外へ のばす もの
+        function ringMol(labels, opt = {}) {
+            const n = labels.length, cx = 100, cy = 82, r = opt.r || 46;
+            const start = opt.start == null ? 90 : opt.start;
+            const ang = i => (start + 360 / n * i) * Math.PI / 180;
+            const nodes = labels.map((t, i) => ({ t, x: cx + Math.cos(ang(i)) * r, y: cy - Math.sin(ang(i)) * r }));
+            const bonds = labels.map((_, i) => [i, (i + 1) % n, (opt.orders && opt.orders[i]) || 1]);
+            (opt.subs || []).forEach(([i, t, dist = 44]) => {
+                nodes.push({ t, x: cx + Math.cos(ang(i)) * (r + dist), y: cy - Math.sin(ang(i)) * (r + dist) });
+                bonds.push([i, nodes.length - 1, 1]);
+            });
+            return { nodes, bonds };
+        }
+        // ちゅうしん 1こ ＋ まわり。arms = [グループ, 角度, けつごう, きょり]
+        function hubMol(center, arms, opt = {}) {
+            const d0 = opt.d || 54;
+            const nodes = [{ t: center, x: 100, y: 82 }];
+            const bonds = [];
+            arms.forEach(([t, deg, order = 1, dist = d0]) => {
+                const a = deg * Math.PI / 180;
+                nodes.push({ t, x: 100 + Math.cos(a) * dist, y: 82 - Math.sin(a) * dist });
+                bonds.push([0, nodes.length - 1, order]);
+            });
+            return { nodes, bonds };
+        }
+
+        /* ================= 化学式の 計算 ================= */
+        const MASS = { C: 12.0, H: 1.0, O: 16.0, N: 14.0, S: 32.1, F: 19.0, Cl: 35.5, Br: 79.9, I: 126.9, P: 31.0 };
+        const SUBD = '₀₁₂₃₄₅₆₇₈₉';
+        const plainFormula = f => String(f).replace(/[₀-₉]/g, d => SUBD.indexOf(d));
+        // 化学式の 文字から げんしの 数を かぞえる（かっこにも たいおう）
+        function countFormula(f) {
+            let s = plainFormula(f);
+            for (let guard = 0; guard < 8; guard++) {
+                const m = s.match(/\(([^()]*)\)(\d*)/);
+                if (!m) break;
+                const k = m[2] ? +m[2] : 1;
+                s = s.replace(m[0], m[1].replace(/([A-Z][a-z]?)(\d*)/g, (_, el, c) => el + ((c ? +c : 1) * k)));
+            }
+            const out = {};
+            s.replace(/([A-Z][a-z]?)(\d*)/g, (_, el, c) => { out[el] = (out[el] || 0) + (c ? +c : 1); return ''; });
+            return out;
+        }
+        // 分子量。しらない 文字が あったら null
+        function formulaWeight(f) {
+            const c = countFormula(f);
+            let w = 0, ok = true;
+            Object.entries(c).forEach(([el, n]) => { if (MASS[el] == null) ok = false; else w += MASS[el] * n; });
+            return ok ? Math.round(w * 10) / 10 : null;
+        }
+        // 絵から 化学式を 計算する。C・N・O は「かいて いない 水素」も 数える
+        // （けつごうの 本数が たりない ぶんだけ Hが ついて いる）
+        function formulaFromStructure(mol) {
+            const out = {};
+            const addComp = c => Object.entries(c).forEach(([el, n]) => { out[el] = (out[el] || 0) + n; });
+            const sum = mol.nodes.map(() => 0);
+            (mol.bonds || []).forEach(([a, b, o]) => { sum[a] += o || 1; sum[b] += o || 1; });
+            mol.nodes.forEach((n, i) => {
+                if (ATOM[n.t]) {
+                    addComp(ATOM[n.t].comp);
+                    const h = ATOM[n.t].val - sum[i];
+                    if (h > 0) addComp({ H: h });
+                } else if (GROUP[n.t]) {
+                    addComp(GROUP[n.t].comp);
+                }
+            });
+            return out;
+        }
+
         /* ================= ずかんの データ ================= */
         // 骨組（ほねぐみ）づくりの ヘルパー
         function chain(labels, y = 82, x0 = null, gap = 54) {
@@ -362,185 +625,439 @@
             return { nodes, bonds, view: [200, 165], popIndexHint: 6, aria: 'ベンゼン環に官能基がついた構造式' };
         }
 
+        /* なかま わけ。ずかんの チップは この じゅんばんで 出る */
+        const CATS = [
+            ['alkane',   '🧱', '炭化水素'],
+            ['unsat',    '🔗', '二重・三重結合'],
+            ['aromatic', '⬡',  '芳香族（ベンゼン環）'],
+            ['alcohol',  '🍶', 'アルコール・エーテル'],
+            ['carbonyl', '🍯', 'アルデヒド・ケトン'],
+            ['acid',     '🍋', 'カルボン酸'],
+            ['ester',    '🍌', 'エステル'],
+            ['amine',    '🐟', 'アミン・アミノ酸'],
+            ['halide',   '🧊', 'ハロゲンを もつ'],
+            ['polymer',  '♻️', 'プラスチック・ゴム'],
+            ['sugar',    '🍬', '糖の なかま']
+        ];
+
+        /* C(id, なまえ, よみ, 化学式, なかま, とくちょう, どこで つかう, かたち, おまけ)
+           かたちは 上の 組みたて関数で 作り、layoutMol が わくに おさめる。 */
+        const C = (id, name, kana, formula, cats, fact, use, mol, extra = {}) =>
+            ({ id, name, kana, formula, cats, fact, use, mol: layoutMol(mol), ...extra });
+
         const COMPOUNDS = [
-            {
-                id: 'methane', name: 'メタン', kana: 'めたん', formula: 'CH₄', cats: ['alkane'],
-                fact: 'いちばん かんたんな 有機化合物。炭素（たんそ）1こに 水素 4こが ついた かたち。',
-                use: 'としガス、うしの げっぷ',
-                mol: {
-                    nodes: [
-                        { t: 'C', x: 100, y: 82 },
-                        { t: 'H', x: 100, y: 30 }, { t: 'H', x: 100, y: 134 },
-                        { t: 'H', x: 48, y: 82 }, { t: 'H', x: 152, y: 82 }
-                    ],
-                    bonds: [[0, 1, 1], [0, 2, 1], [0, 3, 1], [0, 4, 1]], view: [200, 165]
-                }
-            },
-            {
-                id: 'ethane', name: 'エタン', kana: 'えたん', formula: 'C₂H₆', cats: ['alkane'],
-                fact: 'CH₃ が 2つ つながった かたち。炭素が 2こ。',
-                use: 'プラスチックの 材料（ざいりょう）',
-                mol: { nodes: chain(['CH3', 'CH3']), bonds: [[0, 1, 1]], view: [200, 165] }
-            },
-            {
-                id: 'propane', name: 'プロパン', kana: 'ぷろぱん', formula: 'C₃H₈', cats: ['alkane'],
-                fact: '炭素が 3こ ならんだ かたち。ボンベに つめて はこべる 気体（きたい）。',
-                use: 'プロパンガス、カセットコンロ',
-                mol: { nodes: chain(['CH3', 'CH2', 'CH3']), bonds: [[0, 1, 1], [1, 2, 1]], view: [200, 165] }
-            },
-            {
-                id: 'butane', name: 'ブタン', kana: 'ぶたん', formula: 'C₄H₁₀', cats: ['alkane'],
-                fact: '炭素 4こが 1れつ。おなじ C₄H₁₀ でも えだ分かれした イソブタンも あって、これを 異性体（いせいたい）と いうよ。',
-                use: 'ライターの ガス',
-                mol: { nodes: chain(['CH3', 'CH2', 'CH2', 'CH3'], 78, 24, 52), bonds: [[0, 1, 1], [1, 2, 1], [2, 3, 1]], view: [200, 165] }
-            },
-            {
-                id: 'isobutane', name: 'イソブタン', kana: 'いそぶたん', formula: 'C₄H₁₀', cats: ['alkane'],
-                fact: 'ブタンと 同（おな）じ C₄H₁₀ なのに、えだ分かれして いる 別（べつ）の もの。これが 異性体（いせいたい）。',
-                use: 'スプレーの ガス、れいぞうこの れいばい',
-                mol: {
-                    nodes: [
-                        { t: 'C', x: 100, y: 82 },
-                        { t: 'CH3', x: 44, y: 82 }, { t: 'CH3', x: 156, y: 82 }, { t: 'CH3', x: 100, y: 32 },
-                        { t: 'H', x: 100, y: 130 }
-                    ],
-                    bonds: [[0, 1, 1], [0, 2, 1], [0, 3, 1], [0, 4, 1]], view: [200, 165]
-                }
-            },
-            {
-                id: 'cyclohexane', name: 'シクロヘキサン', kana: 'しくろへきさん', formula: 'C₆H₁₂', cats: ['alkane'],
-                fact: '炭素 6こが 輪（わ）に なった かたち。ベンゼンと にているけれど 二重結合が ない。',
-                use: 'ナイロンの 材料',
-                mol: {
-                    nodes: hexVertices(100, 82, 53).map(v => ({ t: 'CH2', x: v.x, y: v.y })),
-                    bonds: [[0, 1, 1], [1, 2, 1], [2, 3, 1], [3, 4, 1], [4, 5, 1], [5, 0, 1]], view: [200, 165]
-                }
-            },
-            {
-                id: 'ethylene', name: 'エチレン', kana: 'えちれん', formula: 'C₂H₄', cats: ['unsat'],
-                fact: '炭素の あいだが 二重結合。くだものを あまく 熟（じゅく）させる 気体でも あるよ。',
-                use: 'ポリエチレン（ふくろ）の 材料',
-                mol: {
-                    nodes: [
-                        { t: 'C', x: 72, y: 82 }, { t: 'C', x: 128, y: 82 },
-                        { t: 'H', x: 36, y: 50 }, { t: 'H', x: 36, y: 114 },
-                        { t: 'H', x: 164, y: 50 }, { t: 'H', x: 164, y: 114 }
-                    ],
-                    bonds: [[0, 1, 2], [0, 2, 1], [0, 3, 1], [1, 4, 1], [1, 5, 1]], view: [200, 165]
-                }
-            },
-            {
-                id: 'acetylene', name: 'アセチレン', kana: 'あせちれん', formula: 'C₂H₂', cats: ['unsat'],
-                fact: '炭素の あいだが 三重結合（さんじゅうけつごう）。もやすと とても 高温（こうおん）に なる。',
-                use: '鉄（てつ）を きる ガスバーナー',
-                mol: {
-                    nodes: [
-                        { t: 'H', x: 34, y: 82 }, { t: 'C', x: 76, y: 82 },
-                        { t: 'C', x: 124, y: 82 }, { t: 'H', x: 166, y: 82 }
-                    ],
-                    bonds: [[0, 1, 1], [1, 2, 3], [2, 3, 1]], view: [200, 165]
-                }
-            },
-            {
-                id: 'benzene', name: 'ベンゼン', kana: 'べんぜん', formula: 'C₆H₆', cats: ['aromatic'],
-                fact: '炭素 6この 輪。二重結合が 輪の中を 回（まわ）っている（共鳴）ため、6本の 結合は ぜんぶ おなじ 長さ。',
-                use: 'プラスチック・薬・せんざいの 出発点（しゅっぱつてん）',
-                mol: benzeneMol('a')
-            },
-            {
-                id: 'toluene', name: 'トルエン', kana: 'とるえん', formula: 'C₇H₈', cats: ['aromatic'],
-                fact: 'ベンゼン環に CH₃（メチル基）が 1こ ついた もの。',
-                use: 'シンナー、せっちゃくざい', group: 'CH₃（メチル基）',
-                mol: phenylWith('CH3')
-            },
-            {
-                id: 'phenol', name: 'フェノール', kana: 'ふぇのーる', formula: 'C₆H₅OH', cats: ['aromatic', 'alcohol'],
-                fact: 'ベンゼン環に OH（ヒドロキシ基）。バイキンを やっつける ちからが ある。',
-                use: 'しょうどく液、プラスチック（ベークライト）', group: 'OH（ヒドロキシ基）',
-                mol: phenylWith('OH')
-            },
-            {
-                id: 'aniline', name: 'アニリン', kana: 'あにりん', formula: 'C₆H₅NH₂', cats: ['aromatic'],
-                fact: 'ベンゼン環に NH₂（アミノ基）。むかしは これから きれいな 色（いろ）を つくった。',
-                use: '染料（せんりょう）、くすり', group: 'NH₂（アミノ基）',
-                mol: phenylWith('NH2')
-            },
-            {
-                id: 'benzoic', name: '安息香酸', kana: 'あんそくこうさん', formula: 'C₆H₅COOH', cats: ['aromatic', 'acid'],
-                fact: 'ベンゼン環に COOH（カルボキシ基）。カビを ふせぐ はたらきが ある。',
-                use: 'しょくひんの ほぞんりょう', group: 'COOH（カルボキシ基）',
-                mol: phenylWith('COOH')
-            },
-            {
-                id: 'naphthalene', name: 'ナフタレン', kana: 'なふたれん', formula: 'C₁₀H₈', cats: ['aromatic'],
-                fact: 'ベンゼン環が 2つ くっついた かたち。かたまりから じわじわ 気体に なる（しょうか）。',
-                use: '虫（むし）よけの しょうのう',
-                mol: (() => {
-                    const r = 34;
-                    const A = hexVertices(70, 82, r);
-                    const B = hexVertices(70 + Math.sqrt(3) * r, 82, r);
-                    // A の 0（30°）と 5（330°）は B の 2（150°）と 3（210°）と 同じ ばしょ
-                    const nodes = A.map(v => ({ t: 'C', x: v.x, y: v.y }))
-                        .concat([B[0], B[1], B[4], B[5]].map(v => ({ t: 'C', x: v.x, y: v.y })));
-                    // A: 0-1-2-3-4-5, B のこり: 6=B0, 7=B1, 8=B4, 9=B5
-                    const bonds = [
-                        [0, 1, 2], [1, 2, 1], [2, 3, 2], [3, 4, 1], [4, 5, 2], [5, 0, 1],
-                        [0, 7, 1], [7, 6, 2], [6, 9, 1], [9, 8, 2], [8, 5, 1]
-                    ];
-                    return { nodes, bonds, view: [200, 165] };
-                })()
-            },
-            {
-                id: 'methanol', name: 'メタノール', kana: 'めたのーる', formula: 'CH₃OH', cats: ['alcohol'],
-                fact: 'CH₃ に OH が ついた いちばん 小（ちい）さな アルコール。のむと とても 危険（きけん）。',
-                use: 'ねんりょう、ほるまりん（ホルマリン）の 原料', group: 'OH（ヒドロキシ基）',
-                mol: { nodes: [{ t: 'CH3', x: 72, y: 82 }, { t: 'OH', x: 140, y: 82 }], bonds: [[0, 1, 1]], view: [200, 165] }
-            },
-            {
-                id: 'ethanol', name: 'エタノール', kana: 'えたのーる', formula: 'C₂H₅OH', cats: ['alcohol'],
-                fact: 'CH₃CH₂ に OH。おさけに はいっている アルコールで、しょうどくにも つかう。',
-                use: 'しょうどく用アルコール、おさけ', group: 'OH（ヒドロキシ基）',
-                mol: {
-                    nodes: [{ t: 'CH3', x: 46, y: 82 }, { t: 'CH2', x: 100, y: 82 }, { t: 'OH', x: 154, y: 82 }],
-                    bonds: [[0, 1, 1], [1, 2, 1]], view: [200, 165]
-                }
-            },
-            {
-                id: 'acetic', name: '酢酸', kana: 'さくさん', formula: 'CH₃COOH', cats: ['acid'],
-                fact: 'COOH（カルボキシ基）を もつ 酸（さん）。すっぱい においの もと。',
-                use: 'おすの せいぶん', group: 'COOH（カルボキシ基）',
-                mol: {
-                    nodes: [
-                        { t: 'CH3', x: 48, y: 90 }, { t: 'C', x: 106, y: 90 },
-                        { t: 'O', x: 106, y: 38 }, { t: 'OH', x: 162, y: 90 }
-                    ],
-                    bonds: [[0, 1, 1], [1, 2, 2], [1, 3, 1]], view: [200, 165]
-                }
-            },
-            {
-                id: 'acetaldehyde', name: 'アセトアルデヒド', kana: 'あせとあるでひど', formula: 'CH₃CHO', cats: ['acid'],
-                fact: 'CHO（アルデヒド基）を もつ。おさけを のんだ からだの 中で できて、二日酔（ふつかよ）いの もとに なる。',
-                use: 'こうぎょうの 原料', group: 'CHO（アルデヒド基）',
-                mol: { nodes: [{ t: 'CH3', x: 66, y: 82 }, { t: 'CHO', x: 140, y: 82 }], bonds: [[0, 1, 1]], view: [200, 165] }
-            },
-            {
-                id: 'acetone', name: 'アセトン', kana: 'あせとん', formula: 'C₃H₆O', cats: ['acid'],
-                fact: '真ん中（まんなか）の 炭素に O が 二重結合。いろいろな ものを よく とかす。',
-                use: 'マニキュアの じょこうえき',
-                mol: {
-                    nodes: [
-                        { t: 'CH3', x: 44, y: 96 }, { t: 'C', x: 100, y: 96 },
-                        { t: 'CH3', x: 156, y: 96 }, { t: 'O', x: 100, y: 42 }
-                    ],
-                    bonds: [[0, 1, 1], [1, 2, 1], [1, 3, 2]], view: [200, 165]
-                }
-            },
-            {
-                id: 'methylamine', name: 'メチルアミン', kana: 'めちるあみん', formula: 'CH₃NH₂', cats: ['acid'],
-                fact: 'NH₂（アミノ基）を もつ。さかなが ふるく なった ときの においの なかま。',
-                use: 'くすり・農薬（のうやく）の 原料', group: 'NH₂（アミノ基）',
-                mol: { nodes: [{ t: 'CH3', x: 70, y: 82 }, { t: 'NH2', x: 140, y: 82 }], bonds: [[0, 1, 1]], view: [200, 165] }
-            }
+            /* ===== 🧱 炭化水素（単結合だけ） ===== */
+            C('methane', 'メタン', 'めたん', 'CH₄', ['alkane'],
+              'いちばん かんたんな 有機化合物。炭素（たんそ）1こに 水素 4こ。炭素の 手は いつも 4本。',
+              'としガス、うしの げっぷ',
+              hubMol('C', [['H', 90], ['H', 180], ['H', 270], ['H', 0]])),
+            C('ethane', 'エタン', 'えたん', 'C₂H₆', ['alkane'],
+              'CH₃ が 2つ つながった かたち。炭素が 2こ。',
+              'てんねんガス、プラスチックの 原料', ch(['CH3', 'CH3'])),
+            C('propane', 'プロパン', 'ぷろぱん', 'C₃H₈', ['alkane'],
+              '炭素が 3こ ならんだ かたち。ボンベに つめて はこべる 気体（きたい）。',
+              'プロパンガス、カセットコンロ', ch(['CH3', 'CH2', 'CH3'])),
+            C('butane', 'ブタン', 'ぶたん', 'C₄H₁₀', ['alkane'],
+              '炭素 4こが 1れつ。おなじ C₄H₁₀ でも えだ分かれした イソブタンが あり、これを 異性体（いせいたい）と いう。',
+              'ライターの ガス、カセットこんろ', ch(['CH3', 'CH2', 'CH2', 'CH3'])),
+            C('isobutane', 'イソブタン', 'いそぶたん', 'C₄H₁₀', ['alkane'],
+              'ブタンと 同じ C₄H₁₀ なのに えだ分かれして いる 別（べつ）の もの。これが 異性体。',
+              'スプレーの ガス、れいぞうこの れいばい',
+              hubMol('CH', [['CH3', 180], ['CH3', 0], ['CH3', 90]])),
+            C('pentane', 'ペンタン', 'ぺんたん', 'C₅H₁₂', ['alkane'],
+              '炭素 5こ。ここから 先は 常温（じょうおん）で 液体（えきたい）に なる。',
+              'はっぽうスチロールを ふくらませる ガス', ch(['CH3', 'CH2', 'CH2', 'CH2', 'CH3'])),
+            C('neopentane', 'ネオペンタン', 'ねおぺんたん', 'C₅H₁₂', ['alkane'],
+              'まん中の 炭素に CH₃ が 4つ。ペンタンと 同じ C₅H₁₂ の 異性体で、まるい かたち。',
+              'けんきゅうで つかう ひょうじゅんの ガス',
+              hubMol('C', [['CH3', 90], ['CH3', 180], ['CH3', 270], ['CH3', 0]])),
+            C('hexane', 'ヘキサン', 'へきさん', 'C₆H₁₄', ['alkane'],
+              '炭素 6こ。まん中の CH₂ は (CH₂)₄ と まとめて かける。',
+              'あぶらを とり出す ようざい、せっちゃくざい', ch(['CH3', 'CH2x4', 'CH3'])),
+            C('octane', 'オクタン', 'おくたん', 'C₈H₁₈', ['alkane'],
+              '炭素 8こ。ガソリンの しゅせいぶん。「オクタン価（か）」の なまえの もと。',
+              'ガソリン、ライターの ねんりょう', ch(['CH3', 'CH2x6', 'CH3'])),
+            C('cyclopropane', 'シクロプロパン', 'しくろぷろぱん', 'C₃H₆', ['alkane'],
+              '炭素 3この 三角の 輪（わ）。むりな かたちなので こわれやすい。',
+              'むかしの ますいガス',
+              ringMol(['CH2', 'CH2', 'CH2'], { r: 42 })),
+            C('cyclopentane', 'シクロペンタン', 'しくろぺんたん', 'C₅H₁₀', ['alkane'],
+              '炭素 5この 五角形の 輪。シクロプロパンより かたちに むりが なく、あんていして いる。',
+              'はっぽうプラスチックの ガス', ringMol(['CH2', 'CH2', 'CH2', 'CH2', 'CH2'], { r: 46 })),
+            C('cyclohexane', 'シクロヘキサン', 'しくろへきさん', 'C₆H₁₂', ['alkane'],
+              '炭素 6こが 輪に なった かたち。ベンゼンと にて いるけれど 二重結合が ない。',
+              'ナイロンの 原料', ringMol(['CH2', 'CH2', 'CH2', 'CH2', 'CH2', 'CH2'], { r: 50 })),
+            C('methylcyclohexane', 'メチルシクロヘキサン', 'めちるしくろへきさん', 'C₇H₁₄', ['alkane'],
+              'シクロヘキサンの 手 1本を CH₃ に かえた もの。輪に えだが ついた かたち。',
+              'ようざい、水素を はこぶ 研究（けんきゅう）',
+              ringMol(['CH', 'CH2', 'CH2', 'CH2', 'CH2', 'CH2'], { r: 48, subs: [[0, 'CH3']] })),
+
+            /* ===== 🔗 二重・三重結合 ===== */
+            C('ethylene', 'エチレン', 'えちれん', 'C₂H₄', ['unsat'],
+              '炭素の あいだが 二重結合。くだものを あまく 熟（じゅく）させる 気体でも ある。',
+              'ポリエチレン（ふくろ）の 原料',
+              ch(['C', 'C'], { orders: [2], subs: [[0, 'H', 150], [0, 'H', 210], [1, 'H', 30], [1, 'H', 330]] })),
+            C('acetylene', 'アセチレン', 'あせちれん', 'C₂H₂', ['unsat'],
+              '炭素の あいだが 三重結合（さんじゅうけつごう）。まっすぐな かたちで、もやすと とても 高温に なる。',
+              '鉄（てつ）を きる ガスバーナー',
+              ch(['H', 'C', 'C', 'H'], { orders: [1, 3, 1], rise: 0 })),
+            C('propene', 'プロピレン', 'ぷろぴれん', 'C₃H₆', ['unsat'],
+              '炭素 3この うち 1くみが 二重結合。',
+              'ポリプロピレン（おべんとうばこ・キャップ）の 原料',
+              ch(['CH3', 'CH', 'CH2'], { orders: [1, 2] })),
+            C('propyne', 'プロピン', 'ぷろぴん', 'C₃H₄', ['unsat'],
+              '三重結合を もつ 炭素 3この なかま。',
+              'ようせつの ガス、こうぎょうの 原料', ch(['CH3', 'C', 'CH'], { orders: [1, 3] })),
+            C('butadiene', 'ブタジエン', 'ぶたじえん', 'C₄H₆', ['unsat'],
+              '二重結合が 2つ、1つおきに ならぶ。つなげると ゴムに なる。',
+              'ごうせいゴム（タイヤ）の 原料',
+              ch(['CH2', 'CH', 'CH', 'CH2'], { orders: [2, 1, 2] })),
+            C('isoprene', 'イソプレン', 'いそぷれん', 'C₅H₈', ['unsat'],
+              'ブタジエンに CH₃ が ついた かたち。これが つながると 天然（てんねん）ゴムに なる。',
+              '天然ゴム（ゴムの木の じゅえき）',
+              ch(['CH2', 'C', 'CH', 'CH2'], { orders: [2, 1, 2], subs: [[1, 'CH3', 90]] })),
+            C('cyclohexene', 'シクロヘキセン', 'しくろへきせん', 'C₆H₁₀', ['unsat'],
+              'シクロヘキサンの 1くみだけが 二重結合に なった もの。',
+              'ナイロンや ようざいの 原料',
+              ringMol(['CH', 'CH', 'CH2', 'CH2', 'CH2', 'CH2'], { r: 50, orders: [2, 1, 1, 1, 1, 1] })),
+            C('acrylic', 'アクリル酸', 'あくりるさん', 'C₃H₄O₂', ['unsat', 'acid'],
+              '二重結合と COOH の 両方を もつ。つなげると 水を すう プラスチックに なる。',
+              'かみおむつの きゅうすいざい、せっちゃくざい',
+              ch(['CH2', 'CH', 'COOH'], { orders: [2, 1] })),
+
+            /* ===== ⬡ 芳香族（ベンゼン環） ===== */
+            C('benzene', 'ベンゼン', 'べんぜん', 'C₆H₆', ['aromatic'],
+              '炭素 6この 輪。二重結合が 輪の中を 回（まわ）って いる（共鳴）ため、6本の 結合は ぜんぶ おなじ 長さ。',
+              'プラスチック・薬・せんざいの 出発点', benz()),
+            C('toluene', 'トルエン', 'とるえん', 'C₇H₈', ['aromatic'],
+              'ベンゼン環に CH₃（メチル基）が 1こ ついた もの。',
+              'シンナー、せっちゃくざい, 薬の 原料', benz([[0, 'CH3']]), { group: 'CH₃（メチル基）' }),
+            C('xylene', 'キシレン', 'きしれん', 'C₈H₁₀', ['aromatic'],
+              'CH₃ が 2こ ついた もの。つく 場所が ちがう 3しゅるいの 異性体が ある。',
+              'ペットボトルの 原料、インキ', benz([[0, 'CH3'], [1, 'CH3']])),
+            C('ethylbenzene', 'エチルベンゼン', 'えちるべんぜん', 'C₈H₁₀', ['aromatic'],
+              'C₂H₅（エチル基）が ついた もの。キシレンと 同じ C₈H₁₀ の 異性体。',
+              'スチレン（はっぽうスチロールの 原料）を つくる', benz([[0, 'C2H5']])),
+            C('styrene', 'スチレン', 'すちれん', 'C₈H₈', ['aromatic', 'unsat'],
+              'ベンゼン環に 二重結合の えだが ついた もの。つなげると はっぽうスチロールに なる。',
+              'はっぽうスチロール、プラモデル',
+              (() => { const m = benz([[0, 'CH']]); m.nodes.push({ t: 'CH2', x: m.nodes[6].x + 50, y: m.nodes[6].y - 18 }); m.bonds.push([6, 7, 2]); return m; })()),
+            C('phenol', 'フェノール', 'ふぇのーる', 'C₆H₅OH', ['aromatic', 'alcohol'],
+              'ベンゼン環に OH（ヒドロキシ基）。バイキンを やっつける ちからが ある。',
+              'しょうどく液、プラスチック（ベークライト）', benz([[0, 'OH']]), { group: 'OH（ヒドロキシ基）' }),
+            C('cresol', 'クレゾール', 'くれぞーる', 'C₇H₈O', ['aromatic', 'alcohol'],
+              'フェノールに CH₃ が ついた もの。フェノールより しょうどくの ちからが つよい。',
+              'しょうどく液（クレゾールせっけん）', benz([[0, 'OH'], [3, 'CH3']])),
+            C('aniline', 'アニリン', 'あにりん', 'C₆H₅NH₂', ['aromatic', 'amine'],
+              'ベンゼン環に NH₂（アミノ基）。むかしは これから きれいな 色（いろ）を つくった。',
+              '染料（せんりょう）、くすり', benz([[0, 'NH2']]), { group: 'NH₂（アミノ基）' }),
+            C('nitrobenzene', 'ニトロベンゼン', 'にとろべんぜん', 'C₆H₅NO₂', ['aromatic'],
+              'ベンゼン環に NO₂（ニトロ基）。ここから アニリンが つくれる。',
+              '染料や くすりの 原料', benz([[0, 'NO2']]), { group: 'NO₂（ニトロ基）' }),
+            C('chlorobenzene', 'クロロベンゼン', 'くろろべんぜん', 'C₆H₅Cl', ['aromatic', 'halide'],
+              'ベンゼン環に 塩素（えんそ）が 1こ。',
+              'くすりや 染料の 原料', benz([[0, 'Cl']])),
+            C('benzoic', '安息香酸', 'あんそくこうさん', 'C₆H₅COOH', ['aromatic', 'acid'],
+              'ベンゼン環に COOH（カルボキシ基）。カビを ふせぐ はたらきが ある。',
+              'しょくひんの ほぞんりょう', benz([[0, 'COOH']]), { group: 'COOH（カルボキシ基）' }),
+            C('benzaldehyde', 'ベンズアルデヒド', 'べんずあるでひど', 'C₆H₅CHO', ['aromatic', 'carbonyl'],
+              'ベンゼン環に CHO（アルデヒド基）。アーモンドのような あまい かおり。',
+              'アーモンドの かおりづけ、さくらんぼの かおり', benz([[0, 'CHO']]), { group: 'CHO（アルデヒド基）' }),
+            C('salicylic', 'サリチル酸', 'さりちるさん', 'C₇H₆O₃', ['aromatic', 'acid'],
+              'COOH と OH が となりどうしに ついた もの。いたみを おさえる くすりの もと。',
+              'いぼ・かかとの くすり、にきびの 薬', benz([[0, 'COOH'], [1, 'OH']])),
+            C('aspirin', 'アセチルサリチル酸', 'あせちるさりちるさん', 'C₉H₈O₄', ['aromatic', 'ester'],
+              'サリチル酸の OH を かえて、いに やさしく した もの。アスピリンの なまえで 有名。',
+              'ねつさまし・いたみどめの くすり', benz([[0, 'COOH'], [1, 'OCOCH3']])),
+            C('methylsalicylate', 'サリチル酸メチル', 'さりちるさんめちる', 'C₈H₈O₃', ['aromatic', 'ester'],
+              'サリチル酸の COOH を エステルに した もの。シップの あの におい。',
+              'シップ・ぬりぐすり', benz([[0, 'COOCH3'], [1, 'OH']])),
+            C('terephthalic', 'テレフタル酸', 'てれふたるさん', 'C₈H₆O₄', ['aromatic', 'acid'],
+              'COOH が 輪の 反対（はんたい）がわに 2こ。まっすぐな かたちなので じょうぶな せんいに なる。',
+              'ペットボトル・ポリエステルの 原料', benz([[0, 'COOH'], [3, 'COOH']])),
+            C('vanillin', 'バニリン', 'ばにりん', 'C₈H₈O₃', ['aromatic', 'carbonyl'],
+              'ベンゼン環に CHO・OCH₃・OH の 3つが ついた もの。バニラの かおりの 本たい。',
+              'アイスや おかしの バニラの かおり', benz([[0, 'CHO'], [1, 'OCH3'], [2, 'OH']])),
+            C('cinnamaldehyde', 'シンナムアルデヒド', 'しんなむあるでひど', 'C₉H₈O', ['aromatic', 'carbonyl'],
+              'ベンゼン環 ＋ 二重結合 ＋ CHO。シナモンの かおりの 本たい。',
+              'シナモン（にっけい）の かおり',
+              (() => {
+                  const m = benz([[0, 'CH']]);
+                  m.nodes.push({ t: 'CH', x: m.nodes[6].x + 48, y: m.nodes[6].y - 20 });
+                  m.nodes.push({ t: 'CHO', x: m.nodes[6].x + 96, y: m.nodes[6].y - 4 });
+                  m.bonds.push([6, 7, 2], [7, 8, 1]);
+                  return m;
+              })()),
+            C('pyridine', 'ピリジン', 'ぴりじん', 'C₅H₅N', ['aromatic', 'amine'],
+              'ベンゼン環の 炭素 1こが 窒素（ちっそ）に かわった 輪。くさい においが する。',
+              'くすり・ビタミンの 原料', ringMol(['N', 'C', 'C', 'C', 'C', 'C'], { r: 44, orders: [2, 1, 2, 1, 2, 1] })),
+            C('naphthalene', 'ナフタレン', 'なふたれん', 'C₁₀H₈', ['aromatic'],
+              'ベンゼン環が 2つ くっついた かたち。かたまりから じわじわ 気体に なる（しょうか）。',
+              '虫（むし）よけの しょうのう',
+              (() => {
+                  const r = 36;
+                  const A = hexVertices(70, 82, r);
+                  const B = hexVertices(70 + Math.sqrt(3) * r, 82, r);
+                  const nodes = A.map(v => ({ t: 'C', x: v.x, y: v.y }))
+                      .concat([B[0], B[1], B[4], B[5]].map(v => ({ t: 'C', x: v.x, y: v.y })));
+                  const bonds = [
+                      [0, 1, 2], [1, 2, 1], [2, 3, 2], [3, 4, 1], [4, 5, 2], [5, 0, 1],
+                      [0, 7, 1], [7, 6, 2], [6, 9, 1], [9, 8, 2], [8, 5, 1]
+                  ];
+                  return { nodes, bonds };
+              })()),
+
+            /* ===== 🍶 アルコール・エーテル ===== */
+            C('methanol', 'メタノール', 'めたのーる', 'CH₃OH', ['alcohol'],
+              'CH₃ に OH が ついた いちばん 小さな アルコール。のむと とても 危険（きけん）。',
+              'ねんりょう、ホルマリンの 原料', ch(['CH3', 'OH']), { group: 'OH（ヒドロキシ基）' }),
+            C('ethanol', 'エタノール', 'えたのーる', 'C₂H₅OH', ['alcohol'],
+              'CH₃CH₂ に OH。おさけに 入って いる アルコールで、しょうどくにも つかう。',
+              'しょうどく用アルコール、おさけ', ch(['CH3', 'CH2', 'OH']), { group: 'OH（ヒドロキシ基）' }),
+            C('propanol', '1-プロパノール', 'ぷろぱのーる', 'C₃H₈O', ['alcohol'],
+              '炭素 3この はしに OH が ついた アルコール。OHが まん中に つくと べつの ものに なる。',
+              'インキ、ようざい', ch(['CH3', 'CH2', 'CH2', 'OH'])),
+            C('isopropanol', 'イソプロパノール', 'いそぷろぱのーる', 'C₃H₈O', ['alcohol'],
+              'まん中の 炭素に OH が ついた もの。1-プロパノールと 同じ C₃H₈O の 異性体。',
+              'しょうどくシート、まどふき', hubMol('CH', [['CH3', 180], ['CH3', 0], ['OH', 90]])),
+            C('butanol', '1-ブタノール', 'ぶたのーる', 'C₄H₁₀O', ['alcohol'],
+              '炭素 4この さきに OH。バナナのような においが する。',
+              'ようざい、こうりょうの 原料', ch(['CH3', 'CH2', 'CH2', 'CH2', 'OH'])),
+            C('glycol', 'エチレングリコール', 'えちれんぐりこーる', 'C₂H₆O₂', ['alcohol'],
+              '両はしに OH が 2こ。水と まぜると こおりにくく なる。',
+              '車の ふとうえき、ペットボトルの 原料', ch(['OH', 'CH2', 'CH2', 'OH'])),
+            C('glycerin', 'グリセリン', 'ぐりせりん', 'C₃H₈O₃', ['alcohol', 'sugar'],
+              'OH が 3こ。水を すいこんで しっとり させる。あぶらを 分解すると これが 出てくる。',
+              'ほしつクリーム、シロップ、せっけんづくり',
+              ch(['CH2', 'CH', 'CH2'], { subs: [[0, 'OH', 150], [1, 'OH', 270], [2, 'OH', 30]] })),
+            C('dimethylether', 'ジメチルエーテル', 'じめちるえーてる', 'C₂H₆O', ['alcohol'],
+              '酸素の 両がわに CH₃。エタノールと 同じ C₂H₆O だけれど、エーテルは べつの なかま（異性体）。',
+              'スプレーの ガス、ねんりょう', ch(['CH3', 'O', 'CH3'])),
+            C('diethylether', 'ジエチルエーテル', 'じえちるえーてる', 'C₄H₁₀O', ['alcohol'],
+              '酸素の 両がわに C₂H₅。すぐ 気体に なり、よく 火が つく。',
+              'むかしの ますい、ようざい', ch(['C2H5', 'O', 'C2H5'])),
+
+            /* ===== 🍯 アルデヒド・ケトン ===== */
+            C('formaldehyde', 'ホルムアルデヒド', 'ほるむあるでひど', 'CH₂O', ['carbonyl'],
+              '炭素に 酸素が 二重結合、水素が 2こ。いちばん 小さな アルデヒド。',
+              'ひょうほんの ほぞん液（ホルマリン）、せっちゃくざい',
+              hubMol('C', [['O', 90, 2], ['H', 210], ['H', 330]])),
+            C('acetaldehyde', 'アセトアルデヒド', 'あせとあるでひど', 'CH₃CHO', ['carbonyl'],
+              'CHO（アルデヒド基）を もつ。おさけを のんだ からだの 中で できて、二日酔（ふつかよ）いの もとに なる。',
+              'こうぎょうの 原料、くだものの かおり', ch(['CH3', 'CHO']), { group: 'CHO（アルデヒド基）' }),
+            C('acetone', 'アセトン', 'あせとん', 'C₃H₆O', ['carbonyl'],
+              '真ん中（まんなか）の 炭素に O が 二重結合。いろいろな ものを よく とかす。',
+              'マニキュアの じょこうえき、プラモデルの せっちゃく',
+              ch(['CH3', 'C', 'CH3'], { subs: [[1, 'O', 90, 2]] })),
+            C('mek', 'メチルエチルケトン', 'めちるえちるけとん', 'C₄H₈O', ['carbonyl'],
+              'アセトンの かた方を C₂H₅ に かえた もの。アセトンより ゆっくり かわく。',
+              'プラモデルの せっちゃくざい、とりょう',
+              ch(['CH3', 'C', 'C2H5'], { subs: [[1, 'O', 90, 2]] })),
+            C('pyruvic', 'ピルビン酸', 'ぴるびんさん', 'C₃H₄O₃', ['carbonyl', 'acid'],
+              'CO と COOH が となりあった もの。からだが 糖（とう）を エネルギーに かえる みちすじの まん中に ある。',
+              'からだの 中の エネルギーづくり', ch(['CH3', 'CO', 'COOH'])),
+
+            /* ===== 🍋 カルボン酸 ===== */
+            C('formic', 'ギ酸', 'ぎさん', 'HCOOH', ['acid'],
+              'いちばん かんたんな カルボン酸。アリが おしりから 出す ので この なまえ。',
+              'アリの こうげき、ハチに さされた いたみ', ch(['H', 'COOH'])),
+            C('acetic', '酢酸', 'さくさん', 'CH₃COOH', ['acid'],
+              'COOH（カルボキシ基）を もつ 酸（さん）。すっぱい においの もと。',
+              'おすの せいぶん（3〜5%）', ch(['CH3', 'COOH']), { group: 'COOH（カルボキシ基）' }),
+            C('propionic', 'プロピオン酸', 'ぷろぴおんさん', 'C₃H₆O₂', ['acid'],
+              '酢酸より 炭素が 1こ 多い。カビを ふせぐ ちからが ある。',
+              'パンの ほぞんりょう、チーズの かおり', ch(['CH3', 'CH2', 'COOH'])),
+            C('butyric', '酪酸', 'らくさん', 'C₄H₈O₂', ['acid'],
+              '炭素 4この カルボン酸。あしの うらや ふるい バターの においの もと。',
+              'バターの かおり、ぎんなんの におい', ch(['CH3', 'CH2', 'CH2', 'COOH'])),
+            C('lactic', '乳酸', 'にゅうさん', 'C₃H₆O₃', ['acid'],
+              'OH と COOH を もつ。はげしく 運動すると きんにくに たまる。',
+              'ヨーグルト・つけものの すっぱさ', ch(['CH3', 'CH', 'COOH'], { subs: [[1, 'OH', 270]] })),
+            C('glycolic', 'グリコール酸', 'ぐりこーるさん', 'C₂H₄O₃', ['acid'],
+              'いちばん 小さな ヒドロキシ酸（OHを もつ 酸）。',
+              'ピーリング化しょうひん、さとうきび', ch(['CH2', 'COOH'], { subs: [[0, 'OH', 150]] })),
+            C('oxalic', 'シュウ酸', 'しゅうさん', 'C₂H₂O₄', ['acid'],
+              'COOH が 2つ ならんだ かたち。カルシウムと くっつきやすい。',
+              'ほうれんそうの えぐみ、さび おとし', ch(['COOH', 'COOH'])),
+            C('malic', 'リンゴ酸', 'りんごさん', 'C₄H₆O₅', ['acid'],
+              'COOH が 2つと OH が 1つ。りんごの すっぱさの もと。',
+              'りんご・ぶどうの すっぱさ、キャンディ',
+              ch(['COOH', 'CH', 'CH2', 'COOH'], { subs: [[1, 'OH', 90]] })),
+            C('tartaric', '酒石酸', 'しゅせきさん', 'C₄H₆O₆', ['acid'],
+              'リンゴ酸に OH が もう 1こ。ぶどうや ワインに 入って いる。',
+              'ぶどう・ワイン、ベーキングパウダー',
+              ch(['COOH', 'CH', 'CH', 'COOH'], { subs: [[1, 'OH', 90], [2, 'OH', 270]] })),
+            C('citric', 'クエン酸', 'くえんさん', 'C₆H₈O₇', ['acid'],
+              'COOH が 3つ ついた 酸。レモンの すっぱさの もと。',
+              'レモン・うめぼし、そうじ、しょくひんの さんみ',
+              (() => ({
+                  nodes: [
+                      { t: 'C', x: 100, y: 82 }, { t: 'OH', x: 100, y: 28 },
+                      { t: 'COOH', x: 34, y: 82 },
+                      { t: 'CH2', x: 78, y: 138 }, { t: 'COOH', x: 30, y: 176 },
+                      { t: 'CH2', x: 140, y: 120 }, { t: 'COOH', x: 178, y: 168 }
+                  ],
+                  bonds: [[0, 1, 1], [0, 2, 1], [0, 3, 1], [3, 4, 1], [0, 5, 1], [5, 6, 1]]
+              }))()),
+            C('stearic', 'ステアリン酸', 'すてありんさん', 'C₁₈H₃₆O₂', ['acid'],
+              '炭素 18この 長い しっぽを もつ 酸。あぶらの なかま。',
+              'ろうそく、せっけん、クリーム', ch(['CH3', 'CH2x16', 'COOH'])),
+            C('oleic', 'オレイン酸', 'おれいんさん', 'C₁₈H₃₄O₂', ['acid', 'unsat'],
+              'ステアリン酸に 二重結合が 1つ。二重結合が あると 常温で 液体に なる。',
+              'オリーブ油、なたね油',
+              ch(['CH3', 'CH2x7', 'CH', 'CH', 'CH2x7', 'COOH'], { orders: [1, 1, 2, 1, 1], gap: 44 })),
+
+            /* ===== 🍌 エステル ===== */
+            C('methylacetate', '酢酸メチル', 'さくさんめちる', 'C₃H₆O₂', ['ester'],
+              '酢酸と メタノールから できる エステル。酸と アルコールが くっつくと エステルに なる。',
+              'せっちゃくざい、マニキュアの じょこうえき', ch(['CH3', 'COO', 'CH3'])),
+            C('ethylacetate', '酢酸エチル', 'さくさんえちる', 'C₄H₈O₂', ['ester'],
+              '酢酸と エタノールから できる エステル。くだもののような あまい かおり。',
+              'マニキュア、せっちゃくざい、おかしの かおり', ch(['CH3', 'COO', 'C2H5'])),
+            C('ethylformate', 'ギ酸エチル', 'ぎさんえちる', 'C₃H₆O₂', ['ester'],
+              'ギ酸と エタノールの エステル。ラム酒のような かおり。酢酸メチルと 同じ C₃H₆O₂ の 異性体。',
+              'おかしの かおりづけ', ch(['H', 'COO', 'C2H5'])),
+            C('methylbutyrate', '酪酸メチル', 'らくさんめちる', 'C₅H₁₀O₂', ['ester'],
+              '酪酸（あしの におい）が エステルに なると、りんごの ような よい かおりに なる。',
+              'りんごの かおりづけ', ch(['CH3', 'CH2', 'CH2', 'COO', 'CH3'])),
+            C('isoamylacetate', '酢酸イソアミル', 'さくさんいそあみる', 'C₇H₁₄O₂', ['ester'],
+              'バナナの かおりの 本たい。エステルは かおりの もとが とても 多い。',
+              'バナナの かおりづけ、なしの かおり',
+              ch(['CH3', 'COO', 'CH2', 'CH2', 'CH'], { gap: 48, subs: [[4, 'CH3', 30], [4, 'CH3', 330]] })),
+
+            /* ===== 🐟 アミン・アミノ酸 ===== */
+            C('methylamine', 'メチルアミン', 'めちるあみん', 'CH₃NH₂', ['amine'],
+              'NH₂（アミノ基）を もつ。さかなが ふるく なった ときの においの なかま。',
+              'くすり・農薬（のうやく）の 原料', ch(['CH3', 'NH2']), { group: 'NH₂（アミノ基）' }),
+            C('ethylamine', 'エチルアミン', 'えちるあみん', 'C₂H₇N', ['amine'],
+              'メチルアミンより 炭素が 1こ 多い アミン。',
+              '染料や くすりの 原料', ch(['C2H5', 'NH2'])),
+            C('trimethylamine', 'トリメチルアミン', 'とりめちるあみん', 'C₃H₉N', ['amine'],
+              '窒素に CH₃ が 3つ。「さかなの におい」の 正体（しょうたい）。',
+              'ふるい さかなの におい',
+              hubMol('N', [['CH3', 90], ['CH3', 210], ['CH3', 330]])),
+            C('urea', '尿素', 'にょうそ', 'CH₄N₂O', ['amine'],
+              '炭素に O が 二重結合、NH₂ が 2つ。からだが 窒素を すてる ための かたち。',
+              'おしっこ、ひりょう、ほしつクリーム',
+              hubMol('C', [['O', 90, 2], ['NH2', 210], ['NH2', 330]])),
+            C('glycine', 'グリシン', 'ぐりしん', 'C₂H₅NO₂', ['amine'],
+              'いちばん かんたんな アミノ酸。NH₂ と COOH を 1つの ぶんしに もつ。',
+              'たんぱくしつの 材料、あまみの ある ちょうみりょう', ch(['NH2', 'CH2', 'COOH'])),
+            C('alanine', 'アラニン', 'あらにん', 'C₃H₇NO₂', ['amine'],
+              'グリシンの 水素 1こが CH₃ に かわった アミノ酸。',
+              'にく・さかな・だいずの たんぱくしつ',
+              ch(['CH3', 'CH', 'COOH'], { subs: [[1, 'NH2', 270]] })),
+            C('glutamic', 'グルタミン酸', 'ぐるたみんさん', 'C₅H₉NO₄', ['amine', 'acid'],
+              'COOH を 2つ もつ アミノ酸。「うま味」の もとに なる。',
+              'こんぶの うま味、うま味ちょうみりょう',
+              ch(['COOH', 'CH', 'CH2', 'CH2', 'COOH'], { gap: 48, subs: [[1, 'NH2', 90]] })),
+
+            /* ===== 🧊 ハロゲンを もつ ===== */
+            C('chloromethane', 'クロロメタン', 'くろろめたん', 'CH₃Cl', ['halide'],
+              'メタンの 水素 1こが 塩素（えんそ）に かわった かたち。',
+              'シリコーンや プラスチックの 原料',
+              hubMol('C', [['Cl', 90], ['H', 180], ['H', 270], ['H', 0]])),
+            C('dichloromethane', 'ジクロロメタン', 'じくろろめたん', 'CH₂Cl₂', ['halide'],
+              '塩素が 2こ。ものを よく とかすが、もえない。',
+              'ぬりぐすりの じょきょ、コーヒーの カフェインぬき',
+              hubMol('C', [['Cl', 60], ['Cl', 120], ['H', 240], ['H', 300]])),
+            C('chloroform', 'クロロホルム', 'くろろほるむ', 'CHCl₃', ['halide'],
+              '塩素が 3こ。あまい においの 液体。',
+              'むかしの ますい、じっけんしつの ようざい',
+              hubMol('C', [['Cl', 90], ['Cl', 210], ['Cl', 330], ['H', 30]])),
+            C('ccl4', '四塩化炭素', 'しえんかたんそ', 'CCl₄', ['halide'],
+              'メタンの 水素が ぜんぶ 塩素に かわった かたち。まったく もえない。',
+              'むかしの しょうかき。いまは オゾン層を こわす ので つかわない',
+              hubMol('C', [['Cl', 45], ['Cl', 135], ['Cl', 225], ['Cl', 315]])),
+            C('freon12', 'フロン12', 'ふろんじゅうに', 'CCl₂F₂', ['halide'],
+              '塩素 2こと フッ素 2こ。むかしの れいぞうこの れいばい。',
+              'オゾン層を こわす ので つかうのを やめた',
+              hubMol('C', [['Cl', 60], ['Cl', 120], ['F', 240], ['F', 300]])),
+            C('vinylchloride', '塩化ビニル', 'えんかびにる', 'C₂H₃Cl', ['halide', 'unsat'],
+              '二重結合に 塩素が 1こ。つなげると 水どうかんの プラスチックに なる。',
+              '塩化ビニル管、レインコートの 原料',
+              ch(['CH2', 'CH'], { orders: [2], subs: [[1, 'Cl', 300]] })),
+            C('tfe', 'テトラフルオロエチレン', 'てとらふるおろえちれん', 'C₂F₄', ['halide', 'unsat'],
+              'エチレンの 水素が ぜんぶ フッ素に かわった もの。つなげると テフロンに なる。',
+              'こげない フライパン（テフロン）の 原料', ch(['CF2', 'CF2'], { orders: [2] })),
+            C('bromoethane', 'ブロモエタン', 'ぶろもえたん', 'C₂H₅Br', ['halide'],
+              'エタンの 水素 1こが 臭素（しゅうそ）に かわった もの。',
+              'くすりを つくる ときの 原料', ch(['CH3', 'CH2', 'Br'])),
+
+            /* ===== ♻️ プラスチック・ゴム（くりかえし 1こぶん） ===== */
+            C('polyethylene', 'ポリエチレン', 'ぽりえちれん', 'C₂H₄', ['polymer'],
+              'エチレンが 何万こも つながった もの。この 図は くりかえしの 1こぶん。',
+              'レジぶくろ、ラップ、バケツ', ch(['CH2', 'CH2']), { repeat: 'エチレン' }),
+            C('polypropylene', 'ポリプロピレン', 'ぽりぷろぴれん', 'C₃H₆', ['polymer'],
+              'プロピレンが つながった もの。ポリエチレンより かたくて 熱に つよい。',
+              'おべんとうばこ、ペットボトルの キャップ、ふしょくふ',
+              ch(['CH2', 'CH'], { subs: [[1, 'CH3', 300]] }), { repeat: 'プロピレン' }),
+            C('polystyrene', 'ポリスチレン', 'ぽりすちれん', 'C₈H₈', ['polymer'],
+              'スチレンが つながった もの。ガスを まぜて ふくらませると はっぽうスチロール。',
+              'プラモデル、CDケース、はっぽうスチロール',
+              ch(['CH2', 'CH'], { subs: [[1, 'C6H5', 300]] }), { repeat: 'スチレン' }),
+            C('pvc', 'ポリ塩化ビニル', 'ぽりえんかびにる', 'C₂H₃Cl', ['polymer', 'halide'],
+              '塩化ビニルが つながった もの。じょうぶで 水に つよい。',
+              '水どうかん、ホース、レインコート',
+              ch(['CH2', 'CH'], { subs: [[1, 'Cl', 300]] }), { repeat: '塩化ビニル' }),
+            C('teflon', 'テフロン', 'てふろん', 'C₂F₄', ['polymer', 'halide'],
+              'テトラフルオロエチレンが つながった もの。なにも くっつかず、熱にも つよい。',
+              'こげない フライパン、しずまない テープ',
+              ch(['CF2', 'CF2']), { repeat: 'テトラフルオロエチレン' }),
+            C('pet', 'ポリエチレンテレフタラート', 'ぽりえちれんてれふたらーと', 'C₁₀H₈O₄', ['polymer', 'ester'],
+              'テレフタル酸と エチレングリコールが エステルで つながった もの。透明（とうめい）で じょうぶ。',
+              'ペットボトル、シャツの ポリエステル',
+              ch(['Oe', 'CH2', 'CH2', 'Oe', 'CO', 'C6H4', 'CO'], { gap: 44 }), { repeat: 'エステル' }),
+            C('nylon66', 'ナイロン66', 'ないろんろくろく', 'C₁₂H₂₂N₂O₂', ['polymer', 'amine'],
+              'NH と CO が つながる「アミド結合」で できた せんい。くもの糸を まねて 作られた。',
+              'ストッキング、かさ、つりいと、ロープ',
+              ch(['NH', 'CH2x6', 'NH', 'CO', 'CH2x4', 'CO'], { gap: 44 }), { repeat: 'アミド' }),
+            C('rubber', '天然ゴム', 'てんねんごむ', 'C₅H₈', ['polymer', 'unsat'],
+              'イソプレンが つながった もの。二重結合が のこって いる ので よく のびる。',
+              'タイヤ、ゴム手ぶくろ、けしゴム',
+              ch(['CH2', 'C', 'CH', 'CH2'], { orders: [1, 2, 1], subs: [[1, 'CH3', 90]] }), { repeat: 'イソプレン' }),
+
+            /* ===== 🍬 糖の なかま ===== */
+            C('glucose', 'ブドウ糖', 'ぶどうとう', 'C₆H₁₂O₆', ['sugar'],
+              '炭素 5こと 酸素 1この 六角形の 輪に、OH が たくさん ついた かたち。からだの エネルギーの もと。',
+              'くだもの、はちみつ、点滴（てんてき）',
+              ringMol(['O', 'CH', 'CH', 'CH', 'CH', 'CH'], {
+                  r: 46, subs: [[1, 'CH2OH'], [2, 'OH'], [3, 'OH'], [4, 'OH'], [5, 'OH']]
+              })),
+            C('ascorbic', 'ビタミンC', 'びたみんしー', 'C₆H₈O₆', ['sugar', 'acid'],
+              '五角形の 輪に OH が たくさん。すっぱくて、鉄の さびと 同じ「さんか」から からだを まもる。',
+              'レモン・アセロラ、さんかぼうしの ざいりょう',
+              (() => {
+                  const m = ringMol(['O', 'CO', 'C', 'C', 'CH'], {
+                      r: 42, orders: [1, 1, 2, 1, 1], subs: [[2, 'OH'], [3, 'OH']]
+                  });
+                  const base = m.nodes[4];
+                  m.nodes.push({ t: 'CH', x: base.x + 46, y: base.y + 26 });
+                  m.nodes.push({ t: 'OH', x: base.x + 40, y: base.y + 76 });
+                  m.nodes.push({ t: 'CH2OH', x: base.x + 100, y: base.y + 12 });
+                  m.bonds.push([4, 7, 1], [7, 8, 1], [7, 9, 1]);
+                  return m;
+              })()),
+            C('methanethiol', 'メタンチオール', 'めたんちおーる', 'CH₄S', ['alcohol'],
+              'OH の 酸素が いおう（S）に かわった かたち。いおうが 入ると とても くさく なる。',
+              'たくあん・アスパラガスの におい、都市ガスの においづけ', ch(['CH3', 'SH'])),
+            C('phenylalanine', 'フェニルアラニン', 'ふぇにるあらにん', 'C₉H₁₁NO₂', ['amine', 'aromatic'],
+              'ベンゼン環を もつ アミノ酸。からだでは 作れない ので 食べものから とる（必須アミノ酸）。',
+              'にく・たまご・だいずの たんぱくしつ、あまみりょうの 原料',
+              (() => {
+                  const m = benz([[0, 'CH2']]);
+                  m.nodes.push({ t: 'CH', x: m.nodes[6].x + 48, y: m.nodes[6].y + 20 });
+                  m.nodes.push({ t: 'COOH', x: m.nodes[6].x + 100, y: m.nodes[6].y + 4 });
+                  m.nodes.push({ t: 'NH2', x: m.nodes[6].x + 42, y: m.nodes[6].y + 76 });
+                  m.bonds.push([6, 7, 1], [7, 8, 1], [7, 9, 1]);
+                  return m;
+              })()),
+            C('ribose', 'リボース', 'りぼーす', 'C₅H₁₀O₅', ['sugar'],
+              '炭素 4こと 酸素 1この 五角形の 輪。DNA や RNA の ほねぐみに なる 糖。',
+              'RNA（いでんしの コピー）の 材料',
+              ringMol(['O', 'CH', 'CH', 'CH', 'CH'], {
+                  r: 44, subs: [[1, 'CH2OH'], [2, 'OH'], [3, 'OH'], [4, 'OH']]
+              }))
         ];
 
         /* ================= 官能基パズル ================= */
@@ -674,26 +1191,53 @@
         }
 
         /* ================= ずかん ================= */
-        function renderBook(filter = 'all') {
-            const list = filter === 'all' ? COMPOUNDS : COMPOUNDS.filter(c => c.cats.includes(filter));
-            document.getElementById('book-count').innerText = list.length;
-            document.getElementById('book-grid').innerHTML = list.map(c => `
-                <div onclick="openModal('${c.id}')" class="bg-white rounded-2xl p-3 border-2 border-slate-200 shadow-sm hover:shadow-md cursor-pointer bounce-hover text-center group">
-                    <div class="bg-slate-50 rounded-xl border border-slate-100">${structureSVG(c.mol)}</div>
-                    <h4 class="text-base font-black text-slate-800 mt-2">${c.name}</h4>
-                    <p class="text-sm font-black text-emerald-600">${c.formula}</p>
-                    <span class="mt-2 inline-block text-[10px] bg-slate-100 text-slate-500 font-bold px-2 py-0.5 rounded-full group-hover:bg-emerald-100 group-hover:text-emerald-700">くわしく →</span>
-                </div>`).join('');
+        // 100こを いちどに 出すと スマホで とても 長い ページに なる ので、
+        // 21こずつ 出して「もっと 見る」で つづきを 出す。
+        const BOOK_PAGE = 21;
+        let bookCat = 'all', bookLimit = BOOK_PAGE;
+        // カタカナ→ひらがな、下つき数字→ふつうの数字 に そろえて さがす
+        const NORM = t => String(t).toLowerCase()
+            .replace(/[₀-₉]/g, d => SUBD.indexOf(d))
+            .replace(/[ァ-ヶ]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60));
+
+        function setBookCat(c) { bookCat = c; bookLimit = BOOK_PAGE; renderBook(); }
+        function showMoreBook() { bookLimit += BOOK_PAGE; renderBook(); }
+        function onBookSearch() { bookLimit = BOOK_PAGE; renderBook(); }
+
+        function bookMatches(c, q) {
+            if (bookCat !== 'all' && !c.cats.includes(bookCat)) return false;
+            if (!q) return true;
+            return NORM(c.name + c.kana + c.formula + c.use + (c.group || '')).includes(q);
         }
 
-        function filterBook(cat, btn) {
-            document.querySelectorAll('.filter-btn').forEach(b => {
-                b.classList.remove('active', 'bg-emerald-600', 'text-white');
-                b.classList.add('bg-white', 'text-slate-700', 'border', 'border-slate-200');
-            });
-            btn.classList.remove('bg-white', 'text-slate-700', 'border', 'border-slate-200');
-            btn.classList.add('active', 'bg-emerald-600', 'text-white');
-            renderBook(cat);
+        function renderBook() {
+            const el = document.getElementById('book-search');
+            const q = NORM((el && el.value || '').trim());
+            const chip = (on, label, fn) =>
+                `<button onclick="${fn}" data-cat="${label}" class="${on ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-600 border-slate-200'} border-2 font-black px-3 py-1.5 rounded-full text-xs bounce-hover whitespace-nowrap">${label}</button>`;
+            document.getElementById('book-chips').innerHTML =
+                chip(bookCat === 'all', `すべて ${COMPOUNDS.length}`, `setBookCat('all')`) +
+                CATS.map(([id, e, label]) => {
+                    const n = COMPOUNDS.filter(c => c.cats.includes(id)).length;
+                    return chip(bookCat === id, `${e} ${label} ${n}`, `setBookCat('${id}')`);
+                }).join('');
+
+            const all = COMPOUNDS.filter(c => bookMatches(c, q));
+            const list = all.slice(0, bookLimit);
+            document.getElementById('book-count').innerText =
+                all.length > list.length ? `${all.length}こ 中 ${list.length}` : all.length;
+            document.getElementById('book-empty').classList.toggle('hidden', all.length > 0);
+            const more = document.getElementById('book-more');
+            more.classList.toggle('hidden', all.length <= list.length);
+            more.innerText = `もっと 見る（のこり ${all.length - list.length}こ）`;
+            document.getElementById('book-grid').innerHTML = list.map(c => `
+                <div onclick="openModal('${c.id}')" data-cmp="${c.id}" class="bg-white rounded-2xl p-3 border-2 border-slate-200 shadow-sm hover:shadow-md cursor-pointer bounce-hover text-center group">
+                    <div class="bg-slate-50 rounded-xl border border-slate-100">${structureSVG(c.mol)}</div>
+                    <h4 class="text-base font-black text-slate-800 mt-2 leading-tight">${c.name}</h4>
+                    <p class="text-sm font-black text-emerald-600">${c.formula}</p>
+                    <p class="text-[10px] font-bold text-slate-400 mt-0.5">分子量 ${formulaWeight(c.formula)}${c.repeat ? '（くりかえし 1こ）' : ''}</p>
+                    <span class="mt-1 inline-block text-[10px] bg-slate-100 text-slate-500 font-bold px-2 py-0.5 rounded-full group-hover:bg-emerald-100 group-hover:text-emerald-700">くわしく →</span>
+                </div>`).join('');
         }
 
         function openModal(id) {
@@ -705,6 +1249,21 @@
             document.getElementById('modal-canvas').innerHTML = structureSVG(c.mol);
             document.getElementById('modal-fact').innerText = c.fact;
             document.getElementById('modal-use').innerText = c.use;
+
+            // なかまと 化学式の じょうほう
+            const counts = countFormula(c.formula);
+            document.getElementById('modal-cats').innerHTML = c.cats
+                .map(k => { const t = CATS.find(x => x[0] === k); return t ? `<span class="inline-block bg-emerald-100 text-emerald-700 font-black text-[11px] px-2 py-0.5 rounded-full mr-1">${t[1]} ${t[2]}</span>` : ''; })
+                .join('');
+            document.getElementById('modal-mw').innerText = formulaWeight(c.formula);
+            document.getElementById('modal-mw-label').innerText = c.repeat ? 'くりかえし 1この 分子量' : '分子量';
+            document.getElementById('modal-atoms').innerText =
+                ['C', 'H', 'O', 'N', 'S', 'F', 'Cl', 'Br'].filter(e => counts[e])
+                    .map(e => `${e} ${counts[e]}`).join(' ・ ');
+            const rep = document.getElementById('modal-repeat-wrap');
+            rep.classList.toggle('hidden', !c.repeat);
+            if (c.repeat) document.getElementById('modal-repeat').innerText =
+                `${c.repeat}が 何万こも つながって できて いる。この 図は くりかえしの 1こぶんで、りょうはしは つぎの くりかえしに つながる。`;
             const wrap = document.getElementById('modal-group-wrap');
             if (c.group) {
                 wrap.classList.remove('hidden');
@@ -732,12 +1291,12 @@
                 btn.classList.toggle('text-slate-600', !on);
             });
             if (name !== 'benzene') stopBenzeneAnim();
-            if (name === 'book') renderBook('all');
+            if (name === 'book') renderBook();
         }
 
         window.addEventListener('load', () => {
             renderBenzene();
-            renderBook('all');
+            renderBook();
         });
     </script>
 </body>
