@@ -45,6 +45,8 @@
         }
         .shake { animation: shake .3s ease-in-out; }
 
+        rt { font-size: .55em; font-weight: 700; color: #7c3aed; }
+
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -113,9 +115,22 @@
                     <div class="absolute -right-4 -bottom-4 text-8xl opacity-20 group-hover:scale-110 transition-transform">📖</div>
                     <div class="bg-white/20 rounded-2xl w-14 h-14 flex items-center justify-center text-3xl mb-4">🧪</div>
                     <h3 class="text-2xl font-black mb-2">ぶんしずかん</h3>
-                    <p class="text-teal-100 font-bold text-sm mb-4">ぶんしの かたちと ひみつを しらべよう！</p>
+                    <p class="text-teal-100 font-bold text-sm mb-4"><span id="menu-mol-count">100</span>この ぶんしの かたちと ひみつを しらべよう！</p>
                     <span class="inline-flex items-center gap-2 bg-white text-teal-600 font-black px-4 py-2 rounded-full text-sm shadow">
                         ひらく <i class="fas fa-book-open text-xs"></i>
+                    </span>
+                </div>
+
+                <div onclick="showTab('bond')" class="md:col-span-3 bg-gradient-to-br from-amber-400 to-orange-500 rounded-3xl p-6 text-white shadow-xl hover:shadow-2xl transition-all cursor-pointer bounce-hover relative overflow-hidden group border-4 border-white">
+                    <div class="absolute -right-4 -bottom-6 text-8xl opacity-20 group-hover:scale-110 transition-transform">⚡</div>
+                    <div class="bg-white/20 rounded-2xl w-14 h-14 flex items-center justify-center text-3xl mb-4">🔌</div>
+                    <h3 class="text-2xl font-black mb-2">でんしと けつごう</h3>
+                    <p class="text-amber-50 font-bold text-sm mb-4">
+                        どうして げんしは くっつくの？ 「電子{でんし}」を 見ると わかるよ。
+                        きょうゆうけつごう・イオンけつごう・化学式の 読みかたも。
+                    </p>
+                    <span class="inline-flex items-center gap-2 bg-white text-orange-600 font-black px-4 py-2 rounded-full text-sm shadow">
+                        しらべる <i class="fas fa-bolt text-xs"></i>
                     </span>
                 </div>
             </div>
@@ -139,16 +154,21 @@
             <div id="build-level-select" class="w-full max-w-2xl bg-white rounded-3xl p-6 sm:p-8 shadow-xl border-4 border-violet-200 text-center">
                 <h3 class="text-2xl sm:text-3xl font-black text-slate-800 mb-1">むずかしさを えらんでね！</h3>
                 <p class="text-slate-500 font-bold text-sm mb-5">げんしを タップすると くっつくよ</p>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <button onclick="startBuildGame('easy')" class="p-5 bg-emerald-100 hover:bg-emerald-200 border-2 border-emerald-400 rounded-2xl text-emerald-800 font-extrabold text-lg bounce-hover flex flex-col items-center">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <button onclick="startBuildGame('easy')" data-level="easy" class="p-5 bg-emerald-100 hover:bg-emerald-200 border-2 border-emerald-400 rounded-2xl text-emerald-800 font-extrabold text-lg bounce-hover flex flex-col items-center">
                         <span class="text-3xl mb-1">🌱</span>
                         かんたん
-                        <span class="text-xs font-normal text-emerald-700 mt-1">げんしが すくない ぶんし</span>
+                        <span class="text-xs font-normal text-emerald-700 mt-1">げんしが 1〜3こ</span>
                     </button>
-                    <button onclick="startBuildGame('hard')" class="p-5 bg-purple-100 hover:bg-purple-200 border-2 border-purple-400 rounded-2xl text-purple-800 font-extrabold text-lg bounce-hover flex flex-col items-center">
+                    <button onclick="startBuildGame('normal')" data-level="normal" class="p-5 bg-sky-100 hover:bg-sky-200 border-2 border-sky-400 rounded-2xl text-sky-800 font-extrabold text-lg bounce-hover flex flex-col items-center">
+                        <span class="text-3xl mb-1">🌿</span>
+                        ふつう
+                        <span class="text-xs font-normal text-sky-700 mt-1">げんしが 4〜6こ</span>
+                    </button>
+                    <button onclick="startBuildGame('hard')" data-level="hard" class="p-5 bg-purple-100 hover:bg-purple-200 border-2 border-purple-400 rounded-2xl text-purple-800 font-extrabold text-lg bounce-hover flex flex-col items-center">
                         <span class="text-3xl mb-1">👑</span>
                         むずかしい
-                        <span class="text-xs font-normal text-purple-700 mt-1">ぜんぶの ぶんしが でるよ</span>
+                        <span class="text-xs font-normal text-purple-700 mt-1">げんしが 7こ いじょう</span>
                     </button>
                 </div>
             </div>
@@ -211,14 +231,135 @@
             </div>
         </section>
 
-        <!-- BOOK -->
-        <section id="tab-book" class="tab-content hidden flex flex-col items-center">
-            <div class="w-full flex justify-start mb-6">
+        <!-- BOND（でんしと けつごう） -->
+        <section id="tab-bond" class="tab-content hidden flex flex-col items-center">
+            <div class="w-full flex justify-start mb-4">
                 <button onclick="showTab('menu')" class="bg-white border-2 border-slate-200 text-slate-700 font-bold px-4 py-2 rounded-full hover:bg-slate-50 transition-all flex items-center gap-2">
                     <i class="fas fa-arrow-left"></i> もどる
                 </button>
             </div>
+
+            <div class="w-full max-w-3xl space-y-4">
+
+                <!-- ① げんしの なかみ -->
+                <div class="bg-white rounded-3xl p-5 sm:p-6 shadow-lg border-4 border-amber-200">
+                    <h3 class="text-xl sm:text-2xl font-black text-slate-800 mb-1">① げんしの なかみ</h3>
+                    <p class="text-sm font-bold text-slate-600 leading-relaxed">
+                        げんしの まん中に <b class="text-rose-500">原子核{げんしかく}</b>（＋の でんき）が あって、
+                        そのまわりを <b class="text-sky-600">電子{でんし}</b>（−の でんき）が とんで いる。
+                        電子は「<b>でんしかく</b>」という 階{かい}に 分かれて 入り、
+                        <b>内がわから 2こ・8こ・8こ…</b> と うまって いく。
+                    </p>
+                    <div id="shell-chips" class="flex flex-wrap gap-1.5 mt-3"></div>
+                    <div id="shell-fig" class="mt-3 bg-slate-50 rounded-2xl border-2 border-slate-200 p-2"></div>
+                    <div id="shell-info" class="mt-2 bg-amber-50 border-2 border-amber-200 rounded-2xl p-3 text-sm font-bold leading-relaxed text-slate-700"></div>
+                </div>
+
+                <!-- ② なぜ くっつく -->
+                <div class="bg-white rounded-3xl p-5 sm:p-6 shadow-lg border-4 border-amber-200">
+                    <h3 class="text-xl sm:text-2xl font-black text-slate-800 mb-1">② なぜ くっつくの？</h3>
+                    <p class="text-sm font-bold text-slate-600 leading-relaxed">
+                        いちばん 外がわの 電子を <b class="text-violet-600">価電子{かでんし}</b>と いう。
+                        げんしは 外がわを <b>8こで いっぱい</b>に したい（すいそと ヘリウムだけは <b>2こ</b>）。
+                        いっぱいに なると とても あんていする ので、
+                        <b>足りない ぶんを おたがいで やりくり</b>する。それが「けつごう」。
+                    </p>
+                    <div class="grid sm:grid-cols-3 gap-3 mt-3">
+                        <div class="bg-violet-50 border-2 border-violet-200 rounded-2xl p-3">
+                            <p class="font-black text-violet-700 text-sm">🤝 きょうゆうけつごう</p>
+                            <p class="text-xs font-bold text-slate-600 mt-1 leading-relaxed">
+                                おたがいに 電子を <b>出しあって わけあう</b>。
+                                わけあった 2この 電子が「ぼう1本」に なる。</p>
+                        </div>
+                        <div class="bg-rose-50 border-2 border-rose-200 rounded-2xl p-3">
+                            <p class="font-black text-rose-700 text-sm">🧲 イオンけつごう</p>
+                            <p class="text-xs font-bold text-slate-600 mt-1 leading-relaxed">
+                                かた方が 電子を <b>わたして</b> ＋に、もらった ほうが −に なり、
+                                ＋と −で ひきあう。</p>
+                        </div>
+                        <div class="bg-cyan-50 border-2 border-cyan-200 rounded-2xl p-3">
+                            <p class="font-black text-cyan-700 text-sm">🔵 くっつかない</p>
+                            <p class="text-xs font-bold text-slate-600 mt-1 leading-relaxed">
+                                ヘリウムや ネオンは <b>もう いっぱい</b>。
+                                やりくりする ひつようが ないので 1こで いる。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ③ 電子を わけあう ようす -->
+                <div class="bg-white rounded-3xl p-5 sm:p-6 shadow-lg border-4 border-violet-200">
+                    <h3 class="text-xl sm:text-2xl font-black text-slate-800 mb-1">③ 電子を わけあう ところを 見る</h3>
+                    <p class="text-sm font-bold text-slate-600 leading-relaxed">
+                        点（・）1つが 電子 1こ。<b class="text-violet-600">まん中に あつまった 点</b>が
+                        わけあって いる 電子で、これが けつごうの ぼうに なる。
+                    </p>
+                    <div id="dot-chips" class="flex flex-wrap gap-1.5 mt-3"></div>
+                    <div id="dot-fig" class="mt-3 bg-slate-50 rounded-2xl border-2 border-slate-200 p-2"></div>
+                    <div id="dot-info" class="mt-2 bg-violet-50 border-2 border-violet-200 rounded-2xl p-3 text-sm font-bold leading-relaxed text-slate-700"></div>
+                </div>
+
+                <!-- ④ イオンけつごう -->
+                <div class="bg-white rounded-3xl p-5 sm:p-6 shadow-lg border-4 border-rose-200">
+                    <h3 class="text-xl sm:text-2xl font-black text-slate-800 mb-1">④ 電子を わたす（イオンけつごう）</h3>
+                    <p class="text-sm font-bold text-slate-600 leading-relaxed">
+                        ナトリウムは 外がわの 電子が <b>1こだけ</b>。すてた ほうが 8こに なって らく。
+                        えんそは <b>あと 1こで</b> 8こに なる。だから ナトリウムが 1こ わたす。
+                    </p>
+                    <button onclick="playIonic()" class="mt-3 bg-rose-500 hover:bg-rose-600 text-white font-black px-5 py-2.5 rounded-full text-sm shadow bounce-hover">
+                        ▶ 電子を わたす ところを 見る
+                    </button>
+                    <div id="ionic-fig" class="mt-3 bg-slate-50 rounded-2xl border-2 border-slate-200 p-2"></div>
+                    <div id="ionic-info" class="mt-2 bg-rose-50 border-2 border-rose-200 rounded-2xl p-3 text-sm font-bold leading-relaxed text-slate-700"></div>
+                </div>
+
+                <!-- ⑤ 化学式の 読みかた -->
+                <div class="bg-white rounded-3xl p-5 sm:p-6 shadow-lg border-4 border-teal-200">
+                    <h3 class="text-xl sm:text-2xl font-black text-slate-800 mb-1">⑤ 化学式{かがくしき}の 読みかた</h3>
+                    <div id="formula-fig" class="mt-3 bg-slate-50 rounded-2xl border-2 border-slate-200 p-2"></div>
+                    <div class="mt-3 space-y-2 text-sm font-bold text-slate-700">
+                        <div class="bg-teal-50 border-2 border-teal-200 rounded-2xl p-3 leading-relaxed">
+                            <p class="font-black text-teal-700 text-xs mb-1">🔢 小さい 数字（右下）＝ げんしの 数</p>
+                            <p>H<sub>2</sub>O なら「すいそ 2こ ＋ さんそ 1こ」。
+                            1このときは 数字を 書かない。</p>
+                        </div>
+                        <div class="bg-teal-50 border-2 border-teal-200 rounded-2xl p-3 leading-relaxed">
+                            <p class="font-black text-teal-700 text-xs mb-1">📦 大きい 数字（左）＝ ぶんしの 数</p>
+                            <p>2H<sub>2</sub>O は「水の ぶんしが 2こ」。
+                            H<sub>2</sub>O<sub>2</sub>（過酸化水素）とは <b>まったく べつの もの</b>なので 気をつけて。</p>
+                        </div>
+                        <div class="bg-teal-50 border-2 border-teal-200 rounded-2xl p-3 leading-relaxed">
+                            <p class="font-black text-teal-700 text-xs mb-1">🧮 分子量{ぶんしりょう}</p>
+                            <p>中の げんしの おもさを ぜんぶ たした 数。
+                            水なら 1＋1＋16 ＝ <b>18</b>。ずかんの どの ぶんしにも 出て いるよ。</p>
+                        </div>
+                        <div class="bg-teal-50 border-2 border-teal-200 rounded-2xl p-3 leading-relaxed">
+                            <p class="font-black text-teal-700 text-xs mb-1">🧂 イオンで できて いる ものは「組成式{そせいしき}」</p>
+                            <p>NaCl は ナトリウムと えんそが <b>1:1で どこまでも ならんだ けっしょう</b>。
+                            「2こで 1つの ぶんし」では なく、<b>わりあい</b>を しめして いる。</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- BOOK -->
+        <section id="tab-book" class="tab-content hidden flex flex-col items-center">
+            <div class="w-full flex justify-start mb-4">
+                <button onclick="showTab('menu')" class="bg-white border-2 border-slate-200 text-slate-700 font-bold px-4 py-2 rounded-full hover:bg-slate-50 transition-all flex items-center gap-2">
+                    <i class="fas fa-arrow-left"></i> もどる
+                </button>
+            </div>
+            <div class="w-full bg-white rounded-3xl p-4 shadow-md border-2 border-slate-200 mb-4">
+                <input id="book-search" type="search" oninput="onBookSearch()" placeholder="なまえ・よみ・化学式で さがす（れい: すい / H2O / さん）"
+                       class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-4 py-2.5 font-bold text-sm outline-none focus:border-teal-400">
+                <div id="book-chips" class="flex flex-wrap gap-1.5 mt-3"></div>
+                <div id="book-bondchips" class="flex flex-wrap gap-1.5 mt-2"></div>
+                <p id="book-count" class="text-xs font-black text-slate-400 mt-2"></p>
+            </div>
             <div id="book-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 w-full"></div>
+            <p id="book-empty" class="hidden font-black text-slate-400 py-10">見つからなかったよ。ほかの ことばで さがして みて。</p>
+            <button id="book-more" onclick="showMoreBook()" class="hidden mt-5 bg-teal-600 hover:bg-teal-700 text-white font-black px-6 py-3 rounded-full shadow-lg bounce-hover"></button>
         </section>
 
     </main>
@@ -235,6 +376,29 @@
                 <div id="modal-canvas" class="my-3 bg-slate-50 rounded-2xl border-2 border-slate-200 p-2"></div>
 
                 <div class="text-left space-y-3 text-slate-700 text-sm">
+                    <div id="modal-bond" class="p-3 rounded-xl border-2"></div>
+                    <div class="grid grid-cols-3 gap-2 text-center">
+                        <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
+                            <p class="text-[10px] font-black text-slate-400">げんしの 数</p>
+                            <p id="modal-natoms" class="font-black text-lg text-slate-700"></p>
+                        </div>
+                        <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
+                            <p id="modal-mw-label" class="text-[10px] font-black text-slate-400">分子量{ぶんしりょう}</p>
+                            <p id="modal-mw" class="font-black text-lg text-slate-700"></p>
+                        </div>
+                        <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
+                            <p class="text-[10px] font-black text-slate-400">けつごうの ぼう</p>
+                            <p id="modal-bars" class="font-black text-lg text-slate-700"></p>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                        <p class="font-extrabold text-sky-600 text-xs mb-1">⚡ 電子の ようす</p>
+                        <p id="modal-electrons" class="font-bold leading-relaxed"></p>
+                    </div>
+                    <div id="modal-odd" class="hidden bg-amber-50 p-3 rounded-xl border-2 border-amber-200">
+                        <p class="font-extrabold text-amber-700 text-xs mb-1">🤔 ふつうの 本数に ならない わけ</p>
+                        <p id="modal-odd-text" class="font-bold leading-relaxed"></p>
+                    </div>
                     <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
                         <p class="font-extrabold text-teal-600 text-xs mb-1">🧩 なにが いくつ？</p>
                         <p id="modal-parts" class="font-bold leading-relaxed"></p>
@@ -280,88 +444,765 @@
     </footer>
 
     <script>
-        /* --- げんしの みため --- */
+        /* --- げんしの データ ---
+           z    : 原子番号（＝ようし の 数 ＝ 電子の 数）
+           mass : 原子量（げんしの おもさ。分子量を 計算するのに つかう）
+           ve   : 価電子{かでんし}の 数（いちばん 外がわの 電子。けつごうに つかわれる）
+           want : 外がわを いっぱいに するのに ほしい 電子の 数（Hと Heは 2、ほかは 8）
+           common: true は「つくるモード」で ダミーとして 出す げんし */
         const ATOMS = {
-            H:  { fill: '#f8fafc', stroke: '#cbd5e1', text: '#334155', r: 17, name: 'すいそ' },
-            O:  { fill: '#ef4444', stroke: '#b91c1c', text: '#ffffff', r: 23, name: 'さんそ' },
-            C:  { fill: '#475569', stroke: '#1e293b', text: '#ffffff', r: 23, name: 'たんそ' },
-            N:  { fill: '#3b82f6', stroke: '#1d4ed8', text: '#ffffff', r: 23, name: 'ちっそ' },
-            Cl: { fill: '#22c55e', stroke: '#15803d', text: '#ffffff', r: 25, name: 'えんそ' }
+            H:  { fill: '#f8fafc', stroke: '#cbd5e1', text: '#334155', r: 17, name: 'すいそ',       z: 1,  mass: 1.0,   ve: 1, want: 2, common: true },
+            He: { fill: '#cffafe', stroke: '#0891b2', text: '#083344', r: 20, name: 'ヘリウム',     z: 2,  mass: 4.0,   ve: 2, want: 2 },
+            Li: { fill: '#f0abfc', stroke: '#a21caf', text: '#4a044e', r: 24, name: 'リチウム',     z: 3,  mass: 6.9,   ve: 1, want: 8 },
+            C:  { fill: '#475569', stroke: '#1e293b', text: '#ffffff', r: 23, name: 'たんそ',       z: 6,  mass: 12.0,  ve: 4, want: 8, common: true },
+            N:  { fill: '#3b82f6', stroke: '#1d4ed8', text: '#ffffff', r: 23, name: 'ちっそ',       z: 7,  mass: 14.0,  ve: 5, want: 8, common: true },
+            O:  { fill: '#ef4444', stroke: '#b91c1c', text: '#ffffff', r: 23, name: 'さんそ',       z: 8,  mass: 16.0,  ve: 6, want: 8, common: true },
+            F:  { fill: '#a3e635', stroke: '#4d7c0f', text: '#1a2e05', r: 18, name: 'ふっそ',       z: 9,  mass: 19.0,  ve: 7, want: 8 },
+            Ne: { fill: '#bae6fd', stroke: '#0284c7', text: '#082f49', r: 21, name: 'ネオン',       z: 10, mass: 20.2,  ve: 8, want: 8 },
+            Na: { fill: '#c084fc', stroke: '#7e22ce', text: '#ffffff', r: 27, name: 'ナトリウム',   z: 11, mass: 23.0,  ve: 1, want: 8, common: true },
+            Mg: { fill: '#86efac', stroke: '#15803d', text: '#14532d', r: 26, name: 'マグネシウム', z: 12, mass: 24.3,  ve: 2, want: 8 },
+            Al: { fill: '#cbd5e1', stroke: '#64748b', text: '#1e293b', r: 25, name: 'アルミニウム', z: 13, mass: 27.0,  ve: 3, want: 8 },
+            Si: { fill: '#fcd34d', stroke: '#b45309', text: '#451a03', r: 25, name: 'けいそ',       z: 14, mass: 28.1,  ve: 4, want: 8 },
+            P:  { fill: '#fb923c', stroke: '#c2410c', text: '#ffffff', r: 25, name: 'りん',         z: 15, mass: 31.0,  ve: 5, want: 8 },
+            S:  { fill: '#facc15', stroke: '#a16207', text: '#422006', r: 25, name: 'いおう',       z: 16, mass: 32.1,  ve: 6, want: 8, common: true },
+            Cl: { fill: '#22c55e', stroke: '#15803d', text: '#ffffff', r: 25, name: 'えんそ',       z: 17, mass: 35.5,  ve: 7, want: 8, common: true },
+            Ar: { fill: '#a5f3fc', stroke: '#0e7490', text: '#083344', r: 23, name: 'アルゴン',     z: 18, mass: 39.9,  ve: 8, want: 8 },
+            K:  { fill: '#a78bfa', stroke: '#6d28d9', text: '#ffffff', r: 28, name: 'カリウム',     z: 19, mass: 39.1,  ve: 1, want: 8 },
+            Ca: { fill: '#67e8f9', stroke: '#0e7490', text: '#083344', r: 27, name: 'カルシウム',   z: 20, mass: 40.1,  ve: 2, want: 8 },
+            Ti: { fill: '#e2e8f0', stroke: '#64748b', text: '#334155', r: 26, name: 'チタン',       z: 22, mass: 47.9,  ve: 4, want: 8 },
+            Mn: { fill: '#a855f7', stroke: '#6b21a8', text: '#ffffff', r: 26, name: 'マンガン',     z: 25, mass: 54.9,  ve: 2, want: 8 },
+            Fe: { fill: '#d97706', stroke: '#7c2d12', text: '#ffffff', r: 26, name: 'てつ',         z: 26, mass: 55.8,  ve: 2, want: 8 },
+            Cu: { fill: '#f97316', stroke: '#9a3412', text: '#ffffff', r: 26, name: 'どう',         z: 29, mass: 63.5,  ve: 2, want: 8 },
+            Zn: { fill: '#94a3b8', stroke: '#475569', text: '#ffffff', r: 26, name: 'あえん',       z: 30, mass: 65.4,  ve: 2, want: 8 },
+            Br: { fill: '#b45309', stroke: '#78350f', text: '#ffffff', r: 26, name: 'しゅうそ',     z: 35, mass: 79.9,  ve: 7, want: 8 },
+            Kr: { fill: '#99f6e4', stroke: '#0d9488', text: '#042f2e', r: 24, name: 'クリプトン',   z: 36, mass: 83.8,  ve: 8, want: 8 },
+            Ag: { fill: '#e5e7eb', stroke: '#6b7280', text: '#374151', r: 27, name: 'ぎん',         z: 47, mass: 107.9, ve: 1, want: 8 },
+            I:  { fill: '#7c3aed', stroke: '#4c1d95', text: '#ffffff', r: 27, name: 'ようそ',       z: 53, mass: 126.9, ve: 7, want: 8 },
+            Ba: { fill: '#5eead4', stroke: '#0f766e', text: '#042f2e', r: 28, name: 'バリウム',     z: 56, mass: 137.3, ve: 2, want: 8 },
+            Pb: { fill: '#64748b', stroke: '#334155', text: '#ffffff', r: 28, name: 'なまり',       z: 82, mass: 207.2, ve: 4, want: 8 }
+        };
+
+        /* --- かたちを 計算で つくる ---
+           キャンバスは 200x180。まん中 (100,88) からの「角度」と「きょり」で げんしを おく。
+           こうすると 100この ぶんしの 座標を 手で 書かずに すみ、ずれも おきない。 */
+        const CX = 100, CY = 88;
+        const rnd1 = v => Math.round(v * 10) / 10;
+        const P = (ang, dist) => [
+            rnd1(CX + Math.cos(ang * Math.PI / 180) * dist),
+            rnd1(CY - Math.sin(ang * Math.PI / 180) * dist)
+        ];
+
+        // キャンバス（200x180）に おさまる ように、まん中を 中心に して ぜんたいを 縮める。
+        // これが ある ので、上の 関数で 少し 大きめに おいても はみ出さない。
+        function fit(geo) {
+            let s = 1;
+            geo.atoms.forEach(a => {
+                const r = ATOMS[a.el].r + 1;
+                const dx = Math.abs(a.x - CX), dy = a.y - CY;
+                if (dx > 0.5) s = Math.min(s, (CX - r) / dx);
+                if (dy < -0.5) s = Math.min(s, (CY - r) / -dy);
+                if (dy > 0.5) s = Math.min(s, (180 - CY - r) / dy);
+            });
+            if (s < 1) geo.atoms.forEach(a => {
+                a.x = rnd1(CX + (a.x - CX) * s);
+                a.y = rnd1(CY + (a.y - CY) * s);
+            });
+            return geo;
+        }
+
+        // できた かたちに げんしを 1こ たす（−OHの Hなど、えだの さきの さきに つく もの）
+        function add(geo, parent, el, ang, dist, order = 1) {
+            const p = geo.atoms[parent];
+            const r = ang * Math.PI / 180;
+            geo.atoms.push({ el, x: rnd1(p.x + Math.cos(r) * dist), y: rnd1(p.y - Math.sin(r) * dist) });
+            geo.bonds.push([parent, geo.atoms.length - 1, order]);
+            return fit(geo);
+        }
+
+        // 1こだけ（ヘリウムなどの 単原子分子{たんげんしぶんし}）
+        function solo(el) {
+            return { atoms: [{ el, x: CX, y: CY, fixed: true }], bonds: [] };
+        }
+
+        // 2こ。order は けつごうの かず（1〜3）
+        function pair(a, b, order = 1, d = 64) {
+            return fit({
+                atoms: [{ el: a, x: CX - d / 2, y: CY, fixed: true }, { el: b, x: CX + d / 2, y: CY }],
+                bonds: [[0, 1, order]]
+            });
+        }
+
+        // ちゅうしん 1こ ＋ まわりの げんし。lig = [el, 角度, けつごうの かず, きょり]
+        function hub(el, lig, d = 58) {
+            const atoms = [{ el, x: CX, y: CY, fixed: true }];
+            const bonds = [];
+            lig.forEach(([e, ang, order = 1, dist = d]) => {
+                const [x, y] = P(ang, dist);
+                atoms.push({ el: e, x, y });
+                bonds.push([0, atoms.length - 1, order]);
+            });
+            return fit({ atoms, bonds });
+        }
+
+        // 角度と きょりを ぜんぶ 自分で しめす（ふくざつな かたち用）
+        // list = [el, 角度, きょり] （きょり 0 は まん中）/ bonds = [a, b, order]
+        function polar(list, bonds) {
+            return fit({
+                atoms: list.map(([el, ang, dist], i) => {
+                    const [x, y] = dist ? P(ang, dist) : [CX, CY];
+                    return i === 0 ? { el, x, y, fixed: true } : { el, x, y };
+                }),
+                bonds
+            });
+        }
+
+        // ジグザグの こつぐみ。nodes = { el, prev（前との けつごう）, sub: [[el, 角度, order, きょり]] }
+        function chain(nodes, step = 48, rise = 17) {
+            const atoms = [], bonds = [], back = [];
+            const x0 = CX - (nodes.length - 1) * step / 2;
+            nodes.forEach((n, i) => {
+                const bx = x0 + i * step, by = CY + (i % 2 ? rise : -rise);
+                back.push(atoms.length);
+                atoms.push(i === 0 ? { el: n.el, x: bx, y: by, fixed: true } : { el: n.el, x: bx, y: by });
+                if (i > 0) bonds.push([back[i - 1], back[i], n.prev || 1]);
+                (n.sub || []).forEach(([e, ang, order = 1, dist = 46]) => {
+                    const r = ang * Math.PI / 180;
+                    atoms.push({ el: e, x: rnd1(bx + Math.cos(r) * dist), y: rnd1(by - Math.sin(r) * dist) });
+                    bonds.push([back[i], atoms.length - 1, order]);
+                });
+            });
+            return fit({ atoms, bonds });
+        }
+
+        // リング。opt.orders = リングの けつごう / opt.subs = [[リングの番号, el, order, そとへの きょり]]
+        function ring(els, opt = {}) {
+            const R = opt.R || 40, start = opt.start == null ? 90 : opt.start;
+            const atoms = [], bonds = [], idx = [];
+            els.forEach((el, i) => {
+                const [x, y] = P(start + (360 / els.length) * i, R);
+                idx.push(atoms.length);
+                atoms.push(i === 0 ? { el, x, y, fixed: true } : { el, x, y });
+            });
+            els.forEach((_, i) => {
+                bonds.push([idx[i], idx[(i + 1) % els.length], opt.orders ? opt.orders[i] : 1]);
+            });
+            (opt.subs || []).forEach(([i, el, order = 1, extra = 28]) => {
+                const [x, y] = P(start + (360 / els.length) * i, R + extra);
+                atoms.push({ el, x, y });
+                bonds.push([idx[i], atoms.length - 1, order]);
+            });
+            return fit({ atoms, bonds });
+        }
+
+        /* --- けつごうの しゅるい ---
+           cov : 共有結合{きょうゆうけつごう}（電子を 出しあって わけあう）
+           ion : イオン結合（電子を わたして ＋と − に なって ひきあう）
+           none: けつごう なし（1こで あんてい している 単原子分子） */
+        const BOND_KINDS = {
+            cov:  { label: '共有結合', kana: 'きょうゆうけつごう', icon: '🤝', color: 'violet',
+                    short: '電子を 出しあって わけあう' },
+            ion:  { label: 'イオン結合', kana: 'いおんけつごう', icon: '🧲', color: 'rose',
+                    short: '電子を わたして ＋と −に なって ひきあう' },
+            none: { label: 'けつごう なし', kana: '', icon: '🔵', color: 'cyan',
+                    short: '1こで もう あんてい（けつごう しなくて よい）' }
+        };
+
+        const CATS = [
+            ['air',     '🌬️', 'くうきの なかま'],
+            ['water',   '💧', 'みずの なかま'],
+            ['salt',    '🧂', 'しお・こうぶつ'],
+            ['acid',    '🧪', 'さんと アルカリ'],
+            ['organic', '🔥', 'たんその なかま'],
+            ['body',    '💪', 'からだ・たべもの']
+        ];
+
+        /* --- 丸の 大きさと ひろげかたを 自動で きめる ---
+           まもりたい ことが 2つ ある。
+             ①「けつごうの ぼう」が 丸に かくれない（つながる 2つの あいだに すきまが ある）
+             ② キャンバス（200x180）から はみ出さない
+           位置を s倍 に ひろげると ①は よく なるが ②は わるく なる。
+           そこで「丸を rs倍 に 小さく して、位置を s倍 に ひろげる」の くみあわせを さがす。 */
+        const NEED_GAP = 3;          // ぼうが 見える ための すきま
+
+        // いまの rs で 両方を みたす 位置の ばいりつ s を かえす（むりなら null）
+        function solveScale(geo, rs) {
+            const R = el => ATOMS[el].r * rs;
+            const bonded = new Set(geo.bonds.map(([a, b]) => `${Math.min(a, b)}-${Math.max(a, b)}`));
+            let low = 0;             // これ 以上 ひろげないと 丸が かさなる
+            for (let i = 0; i < geo.atoms.length; i++) {
+                for (let j = i + 1; j < geo.atoms.length; j++) {
+                    const a = geo.atoms[i], b = geo.atoms[j];
+                    const d = Math.hypot(a.x - b.x, a.y - b.y);
+                    if (d < 0.01) return null;                       // 同じ 場所に 2こ ある
+                    const sum = R(a.el) + R(b.el);
+                    const need = bonded.has(`${i}-${j}`) ? sum + NEED_GAP : sum;
+                    low = Math.max(low, need / d);
+                }
+            }
+            let high = Infinity;     // これ 以上 ひろげると はみ出す
+            geo.atoms.forEach(a => {
+                const r = R(a.el) + 1;
+                const dx = Math.abs(a.x - CX), dy = a.y - CY;
+                if (dx > 0.5) high = Math.min(high, (CX - r) / dx);
+                if (dy < -0.5) high = Math.min(high, (CY - r) / -dy);
+                if (dy > 0.5) high = Math.min(high, (180 - CY - r) / dy);
+            });
+            if (!isFinite(high)) high = 1;                            // 1こだけの ぶんし
+            if (low > high) return null;                              // この 大きさでは むり
+            return Math.min(high, Math.max(1, low * 1.06));
+        }
+
+        /* ぶんし 1つぶん。かたちは 上の 関数で 作る */
+        const M = (id, name, kana, formula, emoji, cat, bond, fact, use, geo) => {
+            let rs = 1, s = null;
+            // 丸を 少しずつ 小さく しながら、うまく おさまる くみあわせを さがす
+            for (let k = 0; k < 30 && s === null; k++) {
+                s = solveScale(geo, rs);
+                if (s === null) rs *= 0.95;
+            }
+            if (s === null) { rs = 0.5; s = 1; }                      // ここには 来ない はず
+            geo.atoms.forEach(a => {
+                a.x = rnd1(CX + (a.x - CX) * s);
+                a.y = rnd1(CY + (a.y - CY) * s);
+            });
+            return { id, name, kana, formula, emoji, cat, bond, fact, use,
+                     rs: Math.round(rs * 1000) / 1000, atoms: geo.atoms, bonds: geo.bonds };
         };
 
         /* --- ぶんしデータ ---
-           atoms: fixed:true は さいしょから おいてある げんし。それいがいは プレイヤーが くっつける。
-           bonds: [げんしA, げんしB, けつごうの かず] */
+           M(id, なまえ, よみ, 化学式, 絵文字, なかま, けつごうの しゅるい, せつめい, どこにある, かたち)
+           atoms の fixed:true は さいしょから おいてある げんし。それいがいを プレイヤーが くっつける。 */
         const MOLECULES = [
-            {
-                id: 'h2', name: '水素', kana: 'すいそ', formula: 'H₂', emoji: '🎈',
-                fact: 'すいそ げんしが 2こ ならんだ、うちゅうで いちばん かるい ぶんし。',
-                use: 'ロケットの ねんりょう、ねんりょうでんち',
-                atoms: [ { el: 'H', x: 72, y: 90, fixed: true }, { el: 'H', x: 128, y: 90 } ],
-                bonds: [ [0, 1, 1] ]
-            },
-            {
-                id: 'o2', name: '酸素', kana: 'さんそ', formula: 'O₂', emoji: '🫁',
-                fact: 'さんそ げんしが 2こ。ぼうが 2ほんの「にじゅうけつごう」で くっついているよ。',
-                use: 'みんなが すっている くうきの なか',
-                atoms: [ { el: 'O', x: 68, y: 90, fixed: true }, { el: 'O', x: 132, y: 90 } ],
-                bonds: [ [0, 1, 2] ]
-            },
-            {
-                id: 'hcl', name: '塩化水素', kana: 'えんかすいそ', formula: 'HCl', emoji: '🧴',
-                fact: 'すいそと えんそが 1こずつ。お水に とかすと「えんさん」に なるよ。',
-                use: 'いの なかの いえき（しょうかえき）',
-                atoms: [ { el: 'Cl', x: 130, y: 90, fixed: true }, { el: 'H', x: 65, y: 90 } ],
-                bonds: [ [0, 1, 1] ]
-            },
-            {
-                id: 'h2o', name: '水', kana: 'みず', formula: 'H₂O', emoji: '💧',
-                fact: 'さんそ 1こに すいそが 2こ。まっすぐじゃなくて「く」の字に まがっているよ。',
-                use: 'うみ、かわ、みんなの からだの 60%',
-                atoms: [
-                    { el: 'O', x: 100, y: 105, fixed: true },
-                    { el: 'H', x: 48, y: 58 },
-                    { el: 'H', x: 152, y: 58 }
-                ],
-                bonds: [ [0, 1, 1], [0, 2, 1] ]
-            },
-            {
-                id: 'co2', name: '二酸化炭素', kana: 'にさんかたんそ', formula: 'CO₂', emoji: '🫧',
-                fact: 'たんそ 1こを さんそ 2こが はさんだ、まっすぐな かたちの ぶんし。',
-                use: 'はきだす いき、しゅわしゅわの ソーダ',
-                atoms: [
-                    { el: 'C', x: 100, y: 90, fixed: true },
-                    { el: 'O', x: 38, y: 90 },
-                    { el: 'O', x: 162, y: 90 }
-                ],
-                bonds: [ [0, 1, 2], [0, 2, 2] ]
-            },
-            {
-                id: 'nh3', name: 'アンモニア', kana: 'あんもにあ', formula: 'NH₃', emoji: '🧼',
-                fact: 'ちっそ 1こに すいそが 3こ。ツンとした においが するよ。',
-                use: 'おそうじの せんざい、ひりょう',
-                atoms: [
-                    { el: 'N', x: 100, y: 88, fixed: true },
-                    { el: 'H', x: 45, y: 55 },
-                    { el: 'H', x: 155, y: 55 },
-                    { el: 'H', x: 100, y: 148 }
-                ],
-                bonds: [ [0, 1, 1], [0, 2, 1], [0, 3, 1] ]
-            },
-            {
-                id: 'ch4', name: 'メタン', kana: 'めたん', formula: 'CH₄', emoji: '🔥',
-                fact: 'たんそ 1この まわりに すいそが 4こ。ガスコンロの ほのおの もと！',
-                use: 'としガス、うしの げっぷ',
-                atoms: [
-                    { el: 'C', x: 100, y: 90, fixed: true },
-                    { el: 'H', x: 100, y: 32 },
-                    { el: 'H', x: 100, y: 148 },
-                    { el: 'H', x: 38, y: 90 },
-                    { el: 'H', x: 162, y: 90 }
-                ],
-                bonds: [ [0, 1, 1], [0, 2, 1], [0, 3, 1], [0, 4, 1] ]
-            }
+            /* ===== 🌬️ くうきの なかま ===== */
+            M('h2', '水素', 'すいそ', 'H₂', '🎈', 'air', 'cov',
+              'すいそ げんしが 2こ。おたがいに 電子を 1こずつ 出しあって、2この 電子を わけあって いる。うちゅうで いちばん かるい ぶんし。',
+              'ロケットの ねんりょう、ねんりょうでんち（水しか 出ない）',
+              pair('H', 'H', 1, 54)),
+            M('o2', '酸素', 'さんそ', 'O₂', '🫁', 'air', 'cov',
+              '電子を 2こずつ 出しあう「にじゅうけつごう」。ぼうが 2ほんに なって いる。',
+              'くうきの やく21%。いきを する ために なくては ならない',
+              pair('O', 'O', 2, 66)),
+            M('n2', '窒素', 'ちっそ', 'N₂', '💨', 'air', 'cov',
+              '電子を 3こずつ 出しあう「さんじゅうけつごう」。とても じょうぶで、なかなか 切れない。',
+              'くうきの やく78%。ポテトチップスの ふくろの 中',
+              pair('N', 'N', 3, 66)),
+            M('o3', 'オゾン', 'おぞん', 'O₃', '☀️', 'air', 'cov',
+              'さんそが 3こ。まがった かたち。けつごうは じつは 1ほんと 2ほんの ちゅうかん（きょうめい）。',
+              'そらの 上の オゾン層。たいようの つよい 光を さえぎって くれる',
+              hub('O', [['O', 205, 2], ['O', 335, 1]], 62)),
+            M('co2', '二酸化炭素', 'にさんかたんそ', 'CO₂', '🫧', 'air', 'cov',
+              'たんそ 1こを さんそ 2こが はさんだ まっすぐな かたち。りょうがわ とも にじゅうけつごう。',
+              'はきだす いき、ソーダの あわ、ドライアイス',
+              hub('C', [['O', 180, 2], ['O', 0, 2]], 62)),
+            M('co', '一酸化炭素', 'いっさんかたんそ', 'CO', '⚠️', 'air', 'cov',
+              'さんじゅうけつごう。さんそが 足りない ところで ものが もえると できる。',
+              '⚠️ とても きけんな ガス。ストーブは かならず かんきを する',
+              pair('C', 'O', 3, 66)),
+            M('n2o', '一酸化二窒素', 'いっさんかにちっそ', 'N₂O', '🎈', 'air', 'cov',
+              'ちっそ 2こと さんそ 1こが まっすぐ ならぶ。「しょうきガス」とも よばれる。',
+              'はいしゃさんの ますい、ホイップクリームの ガス',
+              hub('N', [['N', 180, 2], ['O', 0, 2]], 62)),
+            M('no', '一酸化窒素', 'いっさんかちっそ', 'NO', '🫀', 'air', 'cov',
+              '電子が 1こ あまって いる、めずらしい ぶんし。からだの 中でも 作られる。',
+              'けっかんを ひろげる 合図として からだの 中で つかわれる',
+              pair('N', 'O', 2, 64)),
+            M('no2', '二酸化窒素', 'にさんかちっそ', 'NO₂', '🚗', 'air', 'cov',
+              'まがった かたちで、赤茶色。オゾンや 酸性雨の もとに なる。',
+              '車の はいきガス。大気おせんの げんいんの ひとつ',
+              hub('N', [['O', 205, 2], ['O', 335, 1]], 58)),
+            M('so2', '二酸化硫黄', 'にさんかいおう', 'SO₂', '🌋', 'air', 'cov',
+              'いおう 1こに さんそ 2こ。まがった かたちで、ツンと した においが する。',
+              'かざんの けむり、ドライフルーツの ほぞん（さんかぼうし）',
+              hub('S', [['O', 205, 2], ['O', 335, 2]], 60)),
+            M('so3', '三酸化硫黄', 'さんさんかいおう', 'SO₃', '☁️', 'air', 'cov',
+              'いおうの まわりに さんそが 3こ、きれいな 三角に ならぶ（平ら）。',
+              '水に とけると 硫酸に なる。酸性雨の げんいん',
+              hub('S', [['O', 90, 2], ['O', 210, 2], ['O', 330, 2]], 58)),
+            M('he', 'ヘリウム', 'へりうむ', 'He', '🎈', 'air', 'none',
+              '外がわの 電子が 2こで もう いっぱい。だから ほかと くっつかず、1こで ういて いる。',
+              'ふうせん、こえが 高く なる ガス、MRIの ちょうでんどう',
+              solo('He')),
+            M('ne', 'ネオン', 'ねおん', 'Ne', '💡', 'air', 'none',
+              '外がわの 電子が 8こで いっぱい。だから なにとも くっつかない。',
+              'ネオンかんばんの 赤オレンジの 光',
+              solo('Ne')),
+            M('ar', 'アルゴン', 'あるごん', 'Ar', '🔆', 'air', 'none',
+              'くうきに 1%ほど 入って いる。くっつかない ので「まもる ガス」に なる。',
+              'でんきゅうの 中、ようせつ（金ぞくを もえさせない ため）',
+              solo('Ar')),
+            M('kr', 'クリプトン', 'くりぷとん', 'Kr', '🔦', 'air', 'none',
+              'アルゴンより おもい なかま。やっぱり くっつかない。',
+              'あかるい かいちゅうでんとう、くうこうの すべりろの ライト',
+              solo('Kr')),
+            M('cl2', '塩素', 'えんそ', 'Cl₂', '🏊', 'air', 'cov',
+              'えんそ 2こが 電子を 1こずつ 出しあって くっつく。きみどり色の ガス。',
+              'プールや 水どうの しょうどく。⚠️ まぜると きけんな せんざい',
+              pair('Cl', 'Cl', 1, 70)),
+            M('f2', 'フッ素', 'ふっそ', 'F₂', '🦷', 'air', 'cov',
+              'いちばん 電子を ほしがる げんし どうしの くみ。とても はんのうしやすい。',
+              'はみがきの フッ素（じつは フッ化ナトリウムの かたちで 入って いる）',
+              pair('F', 'F', 1, 60)),
+            M('br2', '臭素', 'しゅうそ', 'Br₂', '🟤', 'air', 'cov',
+              'ふつうの 温度で えきたいの めずらしい なかま。赤茶色。',
+              'しゃしんの フィルム、なんねんざい',
+              pair('Br', 'Br', 1, 74)),
+            M('i2', 'ヨウ素', 'ようそ', 'I₂', '🟣', 'air', 'cov',
+              'むらさき色の つぶ。デンプンに つけると 青むらさきに なる（ヨウ素デンプン反応）。',
+              'うがいぐすり、デンプンを しらべる じっけん、こんぶ',
+              pair('I', 'I', 1, 78)),
+            M('sf6', '六フッ化硫黄', 'ろくふっかいおう', 'SF₆', '🎤', 'air', 'cov',
+              'いおうの まわりに フッ素が 6こ。とても おもい ガスで、すうと こえが 低く なる。',
+              'でんきを とおさない ガスとして へんでんしょで つかわれる',
+              hub('S', [['F', 90], ['F', 150], ['F', 210], ['F', 270], ['F', 330], ['F', 30]], 58)),
+
+            /* ===== 💧 みずの なかま ===== */
+            M('h2o', '水', 'みず', 'H₂O', '💧', 'water', 'cov',
+              'さんそ 1こに すいそが 2こ。まっすぐでは なく「く」の字に まがって いる。まがって いる おかげで、水は ものを よく とかす。',
+              'うみ、かわ、みんなの からだの やく60%',
+              hub('O', [['H', 215], ['H', 325]], 56)),
+            M('h2o2', '過酸化水素', 'かさんかすいそ', 'H₂O₂', '🩹', 'water', 'cov',
+              '水に さんそが 1こ よけいに ついた かたち。こわれやすく、さんそを 出す。',
+              'キズぐすりの オキシドール、かみの だっしょく',
+              chain([{ el: 'O', sub: [['H', 125]] }, { el: 'O', prev: 1, sub: [['H', 305]] }], 52)),
+            M('h2s', '硫化水素', 'りゅうかすいそ', 'H₂S', '♨️', 'water', 'cov',
+              '水の さんそが いおうに かわった かたち。たまごが くさった ような におい。',
+              'おんせんの におい、かざんの ガス。⚠️ こい ものは きけん',
+              hub('S', [['H', 205], ['H', 335]], 58)),
+            M('hcl', '塩化水素', 'えんかすいそ', 'HCl', '🧴', 'water', 'cov',
+              'すいそと えんその 1くみ。水に とかすと「塩酸」に なって、つよい 酸に なる。',
+              'いの 中の いえき（しょうかえき）、じっけんしつの 塩酸',
+              pair('Cl', 'H', 1, 62)),
+            M('hf', 'フッ化水素', 'ふっかすいそ', 'HF', '🧪', 'water', 'cov',
+              'すいそと フッ素。ガラスを とかす ことが できる、めずらしい さん。',
+              'ガラスに もようを つける（つや消しガラス）',
+              pair('F', 'H', 1, 56)),
+            M('hbr', '臭化水素', 'しゅうかすいそ', 'HBr', '🧪', 'water', 'cov',
+              '塩化水素の なかま。水に とかすと つよい 酸に なる。',
+              'くすりや プラスチックを 作る ざいりょう',
+              pair('Br', 'H', 1, 64)),
+            M('hi', 'ヨウ化水素', 'ようかすいそ', 'HI', '🧪', 'water', 'cov',
+              'ハロゲンの 酸の 中で いちばん つよい。げんしが 大きいほど すいそが はなれやすい。',
+              'くすりを 作る ときの ざいりょう',
+              pair('I', 'H', 1, 66)),
+            M('nh3', 'アンモニア', 'あんもにあ', 'NH₃', '🧼', 'water', 'cov',
+              'ちっそ 1こに すいそが 3こ。かさを ひらいた ような 形（三角すい）。電子が 2こ あまって いて、それで すいそイオンを うけとる。',
+              'おそうじの せんざい、ひりょう、しっぷの におい',
+              hub('N', [['H', 90], ['H', 210], ['H', 330]], 56)),
+            M('n2h4', 'ヒドラジン', 'ひどらじん', 'N₂H₄', '🚀', 'water', 'cov',
+              'アンモニアが 2つ つながった ような かたち。もえると 大きな 力を 出す。',
+              'じんこうえいせいや たんさきの ねんりょう',
+              chain([{ el: 'N', sub: [['H', 130], ['H', 218]] }, { el: 'N', prev: 1, sub: [['H', 50], ['H', 322]] }], 52)),
+            M('cs2', '二硫化炭素', 'にりゅうかたんそ', 'CS₂', '🧪', 'water', 'cov',
+              '二酸化炭素の さんそが いおうに かわった かたち。まっすぐ。',
+              'レーヨン（人工の きぬ）を 作る',
+              hub('C', [['S', 180, 2], ['S', 0, 2]], 64)),
+            M('s8', '硫黄', 'いおう', 'S₈', '🟡', 'water', 'cov',
+              'いおうは 8こが 手を つないで 王かんの ような リングに なる。きれいな きいろ。',
+              'おんせんの ゆのはな、マッチ、ゴムを かたく する',
+              ring(['S', 'S', 'S', 'S', 'S', 'S', 'S', 'S'], { R: 52 })),
+
+            /* ===== 🧂 しお・こうぶつ ===== */
+            M('nacl', '塩化ナトリウム', 'えんかなとりうむ', 'NaCl', '🧂', 'salt', 'ion',
+              'ナトリウムが 電子を 1こ わたし、えんそが うけとる。＋と −に なって ひきあう。じつは たくさん ならんだ サイコロ型の けっしょう。',
+              'しおそのもの。りょうりの あじつけ、からだの 水分の ちょうせつ',
+              pair('Na', 'Cl', 1, 70)),
+            M('kcl', '塩化カリウム', 'えんかかりうむ', 'KCl', '🧂', 'salt', 'ion',
+              'しおの なかま。しおけは あるが ナトリウムが 入って いない。',
+              'げんえんの しお、ひりょう',
+              pair('K', 'Cl', 1, 72)),
+            M('cacl2', '塩化カルシウム', 'えんかかるしうむ', 'CaCl₂', '❄️', 'salt', 'ion',
+              'カルシウムは 電子を 2こ わたす ので、えんそが 2こ ひつよう。水を すごく すいこむ。',
+              'ゆきを とかす ざい、しつけとりざい、とうふの にがり',
+              hub('Ca', [['Cl', 180], ['Cl', 0]], 64)),
+            M('mgcl2', '塩化マグネシウム', 'えんかまぐねしうむ', 'MgCl₂', '🥛', 'salt', 'ion',
+              'マグネシウムも 電子を 2こ わたす。にがい あじが する。',
+              'とうふを かためる「にがり」の しゅせいぶん',
+              hub('Mg', [['Cl', 180], ['Cl', 0]], 64)),
+            M('naf', 'フッ化ナトリウム', 'ふっかなとりうむ', 'NaF', '🦷', 'salt', 'ion',
+              'はの ひょうめんを かたく して、むしばを ふせぐ。',
+              'はみがきこの「フッ素」、フッ素とふ',
+              pair('Na', 'F', 1, 66)),
+            M('ki', 'ヨウ化カリウム', 'ようかかりうむ', 'KI', '🧪', 'salt', 'ion',
+              'ヨウ素を 水に とかす ために つかう。デンプンの じっけんの ヨウ素えきの もと。',
+              'ヨウ素デンプン反応の じっけん、こうじょうせんの くすり',
+              pair('K', 'I', 1, 74)),
+            M('agcl', '塩化銀', 'えんかぎん', 'AgCl', '📷', 'salt', 'ion',
+              '水に とけない 白い こな。光が あたると 黒く かわる。',
+              'むかしの しゃしんの フィルム。光で 色が かわる めがね',
+              pair('Ag', 'Cl', 1, 70)),
+            M('mgo', '酸化マグネシウム', 'さんかまぐねしうむ', 'MgO', '🤸', 'salt', 'ion',
+              'マグネシウムが もえて さんそと くっついた もの。まぶしい 白い 光を 出して できる。',
+              'たいそうの すべりどめ、いぐすり、もえにくく する ざい',
+              pair('Mg', 'O', 2, 62)),
+            M('cao', '酸化カルシウム', 'さんかかるしうむ', 'CaO', '🔥', 'salt', 'ion',
+              '「生石灰{せいせっかい}」。水を かけると あつく なって 水酸化カルシウムに かわる。',
+              'おべんとうの はつねつざい、かんそうざい',
+              pair('Ca', 'O', 2, 62)),
+            M('cuo', '酸化銅', 'さんかどう', 'CuO', '⚫', 'salt', 'ion',
+              '赤い どうを もやすと できる 黒い こな。すいそを かけると また どうに もどる。',
+              'りかの じっけん（かんげん反応）、ガラスの 色づけ',
+              pair('Cu', 'O', 2, 62)),
+            M('zno', '酸化亜鉛', 'さんかあえん', 'ZnO', '🧴', 'salt', 'ion',
+              '白い こな。むらさきの 光（しがいせん）を はねかえす。',
+              '日やけどめ、ベビーパウダー、あせしらず',
+              pair('Zn', 'O', 2, 62)),
+            M('fes', '硫化鉄', 'りゅうかてつ', 'FeS', '🧪', 'salt', 'ion',
+              'てつと いおうを まぜて 熱すると できる 黒い もの。てつとは まったく べつの せいしつ。',
+              'りかの じっけん（げんそと かごうぶつの ちがいを しらべる）',
+              pair('Fe', 'S', 2, 64)),
+            M('zns', '硫化亜鉛', 'りゅうかあえん', 'ZnS', '✨', 'salt', 'ion',
+              '光を あてた あと、しばらく 自分で 光る（ちくこうせい）。',
+              'あんしょで 光る ほしの シール、けいこう塗料',
+              pair('Zn', 'S', 2, 64)),
+            M('pbs', '硫化鉛', 'りゅうかなまり', 'PbS', '🪨', 'salt', 'ion',
+              '「方鉛鉱{ほうえんこう}」と よばれる 銀色の こうぶつ。なまりの もと。',
+              'なまりを とり出す こうせき。むかしの ラジオの けんしゅつき',
+              pair('Pb', 'S', 2, 66)),
+            M('sio2', '二酸化ケイ素', 'にさんかけいそ', 'SiO₂', '🏖️', 'salt', 'cov',
+              'けいそと さんそが どこまでも つながった あみの かたち。ここでは 1くみだけ かいて いる。',
+              'すな、ガラス、水しょう、シリカゲル（かんそうざい）',
+              hub('Si', [['O', 180, 2], ['O', 0, 2]], 62)),
+            M('tio2', '二酸化チタン', 'にさんかちたん', 'TiO₂', '🎨', 'salt', 'ion',
+              'いちばん 白い こなの ひとつ。光が あたると よごれを 分解する ちからも ある。',
+              '白い えのぐ、日やけどめ、よごれない かべ',
+              hub('Ti', [['O', 180, 2], ['O', 0, 2]], 62)),
+            M('mno2', '二酸化マンガン', 'にさんかまんがん', 'MnO₂', '🔋', 'salt', 'ion',
+              '黒い こな。さんそを 出す 手つだいを する（しょくばい）。',
+              'かんでんちの 中み、さんそを 作る じっけん',
+              hub('Mn', [['O', 180, 2], ['O', 0, 2]], 62)),
+            M('fe2o3', '酸化鉄', 'さんかてつ', 'Fe₂O₃', '🟥', 'salt', 'ion',
+              'てつが さびて できる 赤茶色の もの。てつ 2こと さんそ 3こが くみに なる。',
+              '赤さび、赤い えのぐ（べんがら）、かいろの 中み',
+              polar([['Fe', 160, 58], ['O', 205, 22], ['Fe', 350, 58], ['O', 25, 22], ['O', 270, 50]],
+                    [[0, 1, 1], [1, 2, 1], [2, 3, 1], [3, 0, 1], [0, 4, 1], [2, 4, 1]])),
+            M('al2o3', '酸化アルミニウム', 'さんかあるみにうむ', 'Al₂O₃', '💎', 'salt', 'ion',
+              'とても かたい もの。ごくわずかな ふじゅんぶつで ルビーや サファイアに なる。',
+              'ルビー・サファイア、サンドペーパー、アルミの ひょうめんの まく',
+              polar([['Al', 160, 58], ['O', 205, 22], ['Al', 350, 58], ['O', 25, 22], ['O', 270, 50]],
+                    [[0, 1, 1], [1, 2, 1], [2, 3, 1], [3, 0, 1], [0, 4, 1], [2, 4, 1]])),
+            M('caf2', 'フッ化カルシウム', 'ふっかかるしうむ', 'CaF₂', '💡', 'salt', 'ion',
+              '「ホタル石」と よばれる こうぶつ。熱すると 光る ことが ある。',
+              'レンズ、フッ素の げんりょう、こうぶつ ひょうほん',
+              hub('Ca', [['F', 180], ['F', 0]], 62)),
+            M('caco3', '炭酸カルシウム', 'たんさんかるしうむ', 'CaCO₃', '🐚', 'salt', 'ion',
+              'カルシウムイオンと 炭酸イオン（CO₃）の くみ。酸を かけると 二酸化炭素の あわが 出る。',
+              '貝がら、たまごの から、チョーク、大理石、サンゴ',
+              polar([['Ca', 180, 62], ['O', 180, 24], ['C', 0, 10], ['O', 62, 58], ['O', 298, 58]],
+                    [[0, 1, 1], [1, 2, 1], [2, 3, 2], [2, 4, 1]])),
+            M('mgco3', '炭酸マグネシウム', 'たんさんまぐねしうむ', 'MgCO₃', '🧗', 'salt', 'ion',
+              '白い こなで、手が すべらなく なる。炭酸カルシウムの マグネシウム ばん。',
+              'たいそう・クライミングの すべりどめ、いぐすり',
+              polar([['Mg', 180, 60], ['O', 180, 24], ['C', 0, 10], ['O', 62, 58], ['O', 298, 58]],
+                    [[0, 1, 1], [1, 2, 1], [2, 3, 2], [2, 4, 1]])),
+            M('nahco3', '炭酸水素ナトリウム', 'たんさんすいそなとりうむ', 'NaHCO₃', '🧁', 'salt', 'ion',
+              '「重そう」。熱したり 酸に あうと 二酸化炭素を 出す ので、生地が ふくらむ。',
+              'ベーキングパウダー、そうじ、いぐすり、入よくざい',
+              polar([['Na', 176, 64], ['O', 176, 26], ['C', 6, 12], ['O', 68, 56], ['O', 300, 52], ['H', 300, 84]],
+                    [[0, 1, 1], [1, 2, 1], [2, 3, 2], [2, 4, 1], [4, 5, 1]])),
+            M('na2co3', '炭酸ナトリウム', 'たんさんなとりうむ', 'Na₂CO₃', '🫧', 'salt', 'ion',
+              'ナトリウムが 2こ。重そうより つよい アルカリで、あぶら汚れを よく おとす。',
+              'ガラスの げんりょう、そうじ（セスキの なかま）',
+              polar([['Na', 200, 70], ['O', 215, 34], ['C', 0, 0], ['O', 90, 52], ['O', 340, 34], ['Na', 330, 70]],
+                    [[0, 1, 1], [1, 2, 1], [2, 3, 2], [2, 4, 1], [4, 5, 1]])),
+            M('caso4', '硫酸カルシウム', 'りゅうさんかるしうむ', 'CaSO₄', '🗿', 'salt', 'ion',
+              'カルシウムと 硫酸イオン（SO₄）の くみ。水と まぜると かたまる。',
+              'せっこう（ちょうこく・かべ・ギプス）、とうふの ぎょうこざい',
+              polar([['Ca', 180, 62], ['O', 180, 26], ['S', 0, 12], ['O', 90, 52], ['O', 270, 52], ['O', 0, 54]],
+                    [[0, 1, 1], [1, 2, 1], [2, 3, 2], [2, 4, 2], [2, 5, 1]])),
+            M('cuso4', '硫酸銅', 'りゅうさんどう', 'CuSO₄', '🔵', 'salt', 'ion',
+              '水を すうと きれいな 青に なる。水を とばすと 白く なる ので、水の けんさに つかえる。',
+              'りかの じっけん、プールの そうるいたいじ',
+              polar([['Cu', 180, 62], ['O', 180, 26], ['S', 0, 12], ['O', 90, 52], ['O', 270, 52], ['O', 0, 54]],
+                    [[0, 1, 1], [1, 2, 1], [2, 3, 2], [2, 4, 2], [2, 5, 1]])),
+            M('mgso4', '硫酸マグネシウム', 'りゅうさんまぐねしうむ', 'MgSO₄', '🛀', 'salt', 'ion',
+              '「エプソムソルト」。しおでは ないが 水に よく とける。',
+              '入よくざい、ひりょう、いぐすり',
+              polar([['Mg', 180, 66], ['O', 180, 26], ['S', 0, 12], ['O', 90, 52], ['O', 270, 52], ['O', 0, 54]],
+                    [[0, 1, 1], [1, 2, 1], [2, 3, 2], [2, 4, 2], [2, 5, 1]])),
+            M('baso4', '硫酸バリウム', 'りゅうさんばりうむ', 'BaSO₄', '🩻', 'salt', 'ion',
+              '水にも 酸にも とけない ので、のんでも からだに きゅうしゅうされない。X線を とおさない。',
+              'いの レントゲンで のむ 白い えき（バリウム）',
+              polar([['Ba', 180, 70], ['O', 180, 26], ['S', 0, 12], ['O', 90, 52], ['O', 270, 52], ['O', 0, 54]],
+                    [[0, 1, 1], [1, 2, 1], [2, 3, 2], [2, 4, 2], [2, 5, 1]])),
+            M('kno3', '硝酸カリウム', 'しょうさんかりうむ', 'KNO₃', '🎆', 'salt', 'ion',
+              'カリウムと 硝酸イオン（NO₃）の くみ。さんそを 出す ので ものが よく もえる。',
+              'くろいろ火やく（はなび）、ひりょう、ハムの はっしょくざい',
+              polar([['K', 180, 70], ['O', 180, 26], ['N', 0, 12], ['O', 72, 54], ['O', 300, 54]],
+                    [[0, 1, 1], [1, 2, 1], [2, 3, 2], [2, 4, 1]])),
+            M('nano3', '硝酸ナトリウム', 'しょうさんなとりうむ', 'NaNO₃', '🌱', 'salt', 'ion',
+              'チリの さばくで とれた ので「チリしょうせき」と よばれた。',
+              'ひりょう、ガラス、しょくひんの ほぞん',
+              polar([['Na', 180, 62], ['O', 180, 26], ['N', 0, 12], ['O', 72, 54], ['O', 300, 54]],
+                    [[0, 1, 1], [1, 2, 1], [2, 3, 2], [2, 4, 1]])),
+            M('agno3', '硝酸銀', 'しょうさんぎん', 'AgNO₃', '📷', 'salt', 'ion',
+              '水に とける ぎんの しお。えんそに あうと すぐ 白い 塩化銀が できる。',
+              'しゃしん、えんそイオンの けんさ、しょうどく',
+              polar([['Ag', 180, 62], ['O', 180, 26], ['N', 0, 12], ['O', 72, 54], ['O', 300, 54]],
+                    [[0, 1, 1], [1, 2, 1], [2, 3, 2], [2, 4, 1]])),
+            M('kmno4', '過マンガン酸カリウム', 'かまんがんさんかりうむ', 'KMnO₄', '🟣', 'salt', 'ion',
+              'こい むらさき色。ほかの ものから 電子を うばう ちからが とても つよい。',
+              'しょうどく、水の きれいさを しらべる じっけん',
+              polar([['K', 180, 70], ['O', 180, 26], ['Mn', 0, 12], ['O', 90, 52], ['O', 270, 52], ['O', 0, 54]],
+                    [[0, 1, 1], [1, 2, 1], [2, 3, 2], [2, 4, 2], [2, 5, 2]])),
+            M('licl', '塩化リチウム', 'えんかりちうむ', 'LiCl', '🔥', 'salt', 'ion',
+              'いちばん かるい 金ぞく リチウムと えんその くみ。ほのおに 入れると あかい 色に なる（えんしょく反応）。',
+              'じょしつざい、ほのおの 色の じっけん、リチウム電池の なかま',
+              pair('Li', 'Cl', 1, 68)),
+
+            /* ===== 🧪 さんと アルカリ ===== */
+            M('h2so4', '硫酸', 'りゅうさん', 'H₂SO₄', '🔋', 'acid', 'cov',
+              'いおうの まわりに さんそが 4こ。その うち 2こに すいそが ついて いる。とても つよい 酸。',
+              '車の バッテリー、ひりょうや せんざいの ざいりょう',
+              polar([['S', 0, 0], ['O', 90, 52], ['O', 270, 52], ['O', 170, 50], ['H', 170, 80], ['O', 10, 50], ['H', 10, 80]],
+                    [[0, 1, 2], [0, 2, 2], [0, 3, 1], [3, 4, 1], [0, 5, 1], [5, 6, 1]])),
+            M('hno3', '硝酸', 'しょうさん', 'HNO₃', '🧪', 'acid', 'cov',
+              'ちっその まわりに さんそが 3こ。その 1こに すいそが つく。金ぞくも とかす つよい 酸。',
+              'ひりょう、かやく、金ぞくの ひょうめんしょり',
+              polar([['N', 0, 0], ['O', 95, 52], ['O', 205, 50], ['O', 340, 48], ['H', 340, 78]],
+                    [[0, 1, 2], [0, 2, 1], [0, 3, 1], [3, 4, 1]])),
+            M('h2co3', '炭酸', 'たんさん', 'H₂CO₃', '🥤', 'acid', 'cov',
+              '二酸化炭素が 水に とけると できる よわい 酸。すぐ CO₂に もどって あわに なる。',
+              'たんさん水、サイダー、あめの こうぞう（かざあな）',
+              polar([['C', 0, 0], ['O', 90, 52], ['O', 200, 48], ['H', 200, 78], ['O', 340, 48], ['H', 340, 78]],
+                    [[0, 1, 2], [0, 2, 1], [2, 3, 1], [0, 4, 1], [4, 5, 1]])),
+            M('h3po4', 'リン酸', 'りんさん', 'H₃PO₄', '🥤', 'acid', 'cov',
+              'りんの まわりに さんそが 4こ。3こに すいそが つく。ほねや DNAにも 入って いる なかま。',
+              'コーラの すっぱさ、ひりょう、さび止め',
+              polar([['P', 0, 0], ['O', 90, 52], ['O', 180, 48], ['H', 180, 78], ['O', 300, 48], ['H', 300, 78], ['O', 20, 48], ['H', 20, 78]],
+                    [[0, 1, 2], [0, 2, 1], [2, 3, 1], [0, 4, 1], [4, 5, 1], [0, 6, 1], [6, 7, 1]])),
+            M('h2so3', '亜硫酸', 'ありゅうさん', 'H₂SO₃', '🍇', 'acid', 'cov',
+              '二酸化硫黄が 水に とけて できる よわい 酸。さんそが 硫酸より 1こ 少ない。',
+              'ワインや ドライフルーツの さんかぼうし',
+              polar([['S', 0, 0], ['O', 90, 52], ['O', 190, 48], ['H', 190, 78], ['O', 340, 48], ['H', 340, 78]],
+                    [[0, 1, 2], [0, 2, 1], [2, 3, 1], [0, 4, 1], [4, 5, 1]])),
+            M('naoh', '水酸化ナトリウム', 'すいさんかなとりうむ', 'NaOH', '🧽', 'acid', 'ion',
+              'ナトリウムイオンと 水酸化イオン（OH）の くみ。とても つよい アルカリ。',
+              'せっけんを 作る、はいかんの つまりとり。⚠️ 手に つくと きけん',
+              chain([{ el: 'Na' }, { el: 'O', prev: 1, sub: [['H', 65]] }], 58)),
+            M('koh', '水酸化カリウム', 'すいさんかかりうむ', 'KOH', '🧽', 'acid', 'ion',
+              '水酸化ナトリウムの カリウム ばん。やはり つよい アルカリ。',
+              'えきたいせっけん、アルカリでんち',
+              chain([{ el: 'K' }, { el: 'O', prev: 1, sub: [['H', 65]] }], 58)),
+            M('caoh2', '水酸化カルシウム', 'すいさんかかるしうむ', 'Ca(OH)₂', '🧱', 'acid', 'ion',
+              'カルシウムは 電子を 2こ わたす ので、OHが 2こ つく。水に とかすと「石灰水」。',
+              '石灰水（CO₂の けんさで 白く にごる）、こんにゃく、しっくい',
+              polar([['Ca', 0, 0], ['O', 160, 52], ['H', 160, 82], ['O', 20, 52], ['H', 20, 82]],
+                    [[0, 1, 1], [1, 2, 1], [0, 3, 1], [3, 4, 1]])),
+            M('mgoh2', '水酸化マグネシウム', 'すいさんかまぐねしうむ', 'Mg(OH)₂', '💊', 'acid', 'ion',
+              'よわい アルカリ。いの 中の さんを ちょうどよく 中和して くれる。',
+              'いぐすり（せいさんざい）、もえにくく する ざい',
+              polar([['Mg', 0, 0], ['O', 160, 52], ['H', 160, 82], ['O', 20, 52], ['H', 20, 82]],
+                    [[0, 1, 1], [1, 2, 1], [0, 3, 1], [3, 4, 1]])),
+            M('aloh3', '水酸化アルミニウム', 'すいさんかあるみにうむ', 'Al(OH)₃', '💊', 'acid', 'ion',
+              'アルミニウムは 電子を 3こ わたす ので、OHが 3こ つく。酸にも アルカリにも とける。',
+              'いぐすり、水を きれいに する ぎょうしゅうざい',
+              polar([['Al', 0, 0], ['O', 60, 48], ['H', 60, 78], ['O', 180, 48], ['H', 180, 78], ['O', 300, 48], ['H', 300, 78]],
+                    [[0, 1, 1], [1, 2, 1], [0, 3, 1], [3, 4, 1], [0, 5, 1], [5, 6, 1]])),
+            M('naclo', '次亜塩素酸ナトリウム', 'じあえんそさんなとりうむ', 'NaClO', '🫧', 'acid', 'ion',
+              'ナトリウム・さんそ・えんそが 1れつ。ものの 色を きえさせ、きんを ころす。',
+              'キッチンハイター、しょうどく。⚠️ 酸と まぜると きけんな ガス',
+              chain([{ el: 'Na' }, { el: 'O', prev: 1 }, { el: 'Cl', prev: 1 }], 56)),
+            M('hclo', '次亜塩素酸', 'じあえんそさん', 'HClO', '🏊', 'acid', 'cov',
+              'えんそを 水に とかすと できる。きんを ころす はたらきの 本たい。',
+              'プールの しょうどく、じょきょくうかん',
+              chain([{ el: 'Cl' }, { el: 'O', prev: 1, sub: [['H', 65]] }], 56)),
+
+            /* ===== 🔥 たんその なかま（ゆうきぶつ） ===== */
+            M('ch4', 'メタン', 'めたん', 'CH₄', '🔥', 'organic', 'cov',
+              'たんそ 1この まわりに すいそが 4こ。たんそは 電子を 4こ 出せる ので、手が 4ほん ある。',
+              'としガス、うしの げっぷ、ちきゅうおんだんかガス',
+              hub('C', [['H', 90], ['H', 180], ['H', 270], ['H', 0]], 56)),
+            M('c2h6', 'エタン', 'えたん', 'C₂H₆', '🔥', 'organic', 'cov',
+              'たんそが 2こ つながり、あいた 手に すいそが 6こ つく。',
+              'てんねんガスの なかま、プラスチックの ざいりょう',
+              chain([{ el: 'C', sub: [['H', 145], ['H', 215], ['H', 90]] },
+                     { el: 'C', prev: 1, sub: [['H', 35], ['H', 325], ['H', 270]] }], 54)),
+            M('c2h4', 'エチレン', 'えちれん', 'C₂H₄', '🍌', 'organic', 'cov',
+              'たんそ どうしが にじゅうけつごう。だから すいそは 4こ。ぜんぶ 同じ 平めんに ある。',
+              'くだものを じゅくさせる ガス、ポリエチレンの ざいりょう',
+              chain([{ el: 'C', sub: [['H', 135], ['H', 225]] },
+                     { el: 'C', prev: 2, sub: [['H', 45], ['H', 315]] }], 56)),
+            M('c2h2', 'アセチレン', 'あせちれん', 'C₂H₂', '🔧', 'organic', 'cov',
+              'たんそ どうしが さんじゅうけつごう。まっすぐな かたちで、もえると とても 高温に なる。',
+              '金ぞくを 切る・くっつける バーナー（3000℃ちかく）',
+              polar([['C', 180, 28], ['C', 0, 28], ['H', 180, 76], ['H', 0, 76]],
+                    [[0, 1, 3], [0, 2, 1], [1, 3, 1]])),
+            M('c3h8', 'プロパン', 'ぷろぱん', 'C₃H₈', '🍳', 'organic', 'cov',
+              'たんそが 3こ つながった ジグザグ。すいそは 8こ。',
+              'プロパンガス（カセットこんろ・ガスボンベ）',
+              chain([{ el: 'C', sub: [['H', 150], ['H', 210], ['H', 90]] },
+                     { el: 'C', prev: 1, sub: [['H', 300], ['H', 240]] },
+                     { el: 'C', prev: 1, sub: [['H', 30], ['H', 330], ['H', 90]] }], 50)),
+            M('c3h6', 'プロピレン', 'ぷろぴれん', 'C₃H₆', '🧴', 'organic', 'cov',
+              'たんそ 3この うち 1くみが にじゅうけつごう。',
+              'ポリプロピレン（おべんとうばこ・キャップ・ふしょくふ）',
+              chain([{ el: 'C', sub: [['H', 150], ['H', 210], ['H', 90]] },
+                     { el: 'C', prev: 1, sub: [['H', 270]] },
+                     { el: 'C', prev: 2, sub: [['H', 30], ['H', 330]] }], 50)),
+            M('c6h6', 'ベンゼン', 'べんぜん', 'C₆H₆', '⭕', 'organic', 'cov',
+              'たんそ 6こが きれいな 六角形。にじゅうけつごうが 1つおきに ならぶ（じつは 6こで わけあって いる）。',
+              'プラスチック・くすり・せんりょうの もと。⚠️ からだに わるい',
+              ring(['C', 'C', 'C', 'C', 'C', 'C'],
+                   { R: 38, orders: [2, 1, 2, 1, 2, 1],
+                     subs: [[0, 'H', 1, 31], [1, 'H', 1, 31], [2, 'H', 1, 31],
+                            [3, 'H', 1, 31], [4, 'H', 1, 31], [5, 'H', 1, 31]] })),
+            M('ch3cl', 'クロロメタン', 'くろろめたん', 'CH₃Cl', '🧪', 'organic', 'cov',
+              'メタンの すいそ 1こが えんそに かわった かたち。',
+              'シリコーンや プラスチックを 作る ざいりょう',
+              hub('C', [['Cl', 90], ['H', 180], ['H', 270], ['H', 0]], 58)),
+            M('ccl4', '四塩化炭素', 'しえんかたんそ', 'CCl₄', '🧪', 'organic', 'cov',
+              'メタンの すいそ ぜんぶが えんそに かわった かたち。もえない。',
+              'むかしの しょうかき・ドライクリーニング。いまは つかわない',
+              hub('C', [['Cl', 90], ['Cl', 180], ['Cl', 270], ['Cl', 0]], 60)),
+            M('chcl3', 'クロロホルム', 'くろろほるむ', 'CHCl₃', '😴', 'organic', 'cov',
+              'えんそが 3こ。あまい においの えきたい。',
+              'むかしの ますい、じっけんしつの ようざい',
+              hub('C', [['H', 90], ['Cl', 180], ['Cl', 270], ['Cl', 0]], 58)),
+            M('ch3oh', 'メタノール', 'めたのーる', 'CH₃OH', '🏎️', 'organic', 'cov',
+              'メタンの すいそ 1こが「OH（水酸基）」に かわった かたち。アルコールの いちばん かんたんな なかま。',
+              'レーシングカーの ねんりょう、ようざい。⚠️ のむと きけん',
+              chain([{ el: 'C', sub: [['H', 150], ['H', 215], ['H', 90]] },
+                     { el: 'O', prev: 1, sub: [['H', 330]] }], 56)),
+            M('c2h5oh', 'エタノール', 'えたのーる', 'C₂H₅OH', '🍺', 'organic', 'cov',
+              'たんそ 2こに OHが ついた アルコール。さとうを こうぼが 分解して できる。',
+              'しょうどくアルコール、おさけ、りかの じっけん',
+              chain([{ el: 'C', sub: [['H', 150], ['H', 215], ['H', 90]] },
+                     { el: 'C', prev: 1, sub: [['H', 250], ['H', 315]] },
+                     { el: 'O', prev: 1, sub: [['H', 60]] }], 50)),
+            M('ch3cooh', '酢酸', 'さくさん', 'CH₃COOH', '🍶', 'organic', 'cov',
+              'かた方の たんそに さんそが 2こ（＝Oと −OH）ついた「カルボキシ基」が ある。これが すっぱさの もと。',
+              'お酢（3〜5%が これ）、そうじ、しょくひんの ほぞん',
+              chain([{ el: 'C', sub: [['H', 150], ['H', 215], ['H', 90]] },
+                     { el: 'C', prev: 1, sub: [['O', 280, 2]] },
+                     { el: 'O', prev: 1, sub: [['H', 60]] }], 50)),
+            M('hcooh', 'ギ酸', 'ぎさん', 'HCOOH', '🐜', 'organic', 'cov',
+              'いちばん かんたんな カルボン酸。アリが おしりから 出す ので この なまえ。',
+              'アリの こうげき、ハチに さされた いたみ、ゴムの かためざい',
+              polar([['C', 0, 0], ['H', 180, 52], ['O', 80, 52], ['O', 315, 48], ['H', 315, 78]],
+                    [[0, 1, 1], [0, 2, 2], [0, 3, 1], [3, 4, 1]])),
+            M('ch2o', 'ホルムアルデヒド', 'ほるむあるでひど', 'CH₂O', '🪵', 'organic', 'cov',
+              'たんそに さんそが にじゅうけつごう、すいそが 2こ。平らな かたち。',
+              'ひょうほんの ほぞんえき、せっちゃくざい。⚠️ シックハウスの げんいん',
+              hub('C', [['O', 90, 2], ['H', 210], ['H', 330]], 56)),
+            M('ch3cho', 'アセトアルデヒド', 'あせとあるでひど', 'CH₃CHO', '😵', 'organic', 'cov',
+              'エタノールが からだの 中で 分解されて できる。これが のこると 気分が わるく なる。',
+              'おさけの あとの 二日よいの げんいん、くだものの かおり',
+              chain([{ el: 'C', sub: [['H', 150], ['H', 215], ['H', 90]] },
+                     { el: 'C', prev: 1, sub: [['O', 300, 2], ['H', 20]] }], 54)),
+            M('acetone', 'アセトン', 'あせとん', 'C₃H₆O', '💅', 'organic', 'cov',
+              'まん中の たんそに さんそが にじゅうけつごう。すぐ とぶ ので、においが つよい。',
+              'マニキュアの じょこうえき、プラモデルの せっちゃく',
+              chain([{ el: 'C', sub: [['H', 150], ['H', 210], ['H', 90]] },
+                     { el: 'C', prev: 1, sub: [['O', 270, 2]] },
+                     { el: 'C', prev: 1, sub: [['H', 30], ['H', 330], ['H', 90]] }], 50)),
+            M('ch3nh2', 'メチルアミン', 'めちるあみん', 'CH₃NH₂', '🐟', 'organic', 'cov',
+              'メタンの すいそ 1こが「NH₂（アミノ基）」に かわった かたち。さかなの ような におい。',
+              'さかなが 古く なった ときの におい、くすりの ざいりょう',
+              chain([{ el: 'C', sub: [['H', 150], ['H', 215], ['H', 90]] },
+                     { el: 'N', prev: 1, sub: [['H', 20], ['H', 300]] }], 54)),
+            M('c2h6o2', 'エチレングリコール', 'えちれんぐりこーる', 'C₂H₆O₂', '🧊', 'organic', 'cov',
+              'たんそ 2この 両はしに OHが ついた かたち。水と まぜると こおりにくく なる。',
+              '車の ふとうえき、ペットボトルの ざいりょう',
+              add(add(chain([{ el: 'O' },
+                             { el: 'C', prev: 1, sub: [['H', 240], ['H', 300]] },
+                             { el: 'C', prev: 1, sub: [['H', 60], ['H', 120]] },
+                             { el: 'O', prev: 1 }], 44), 0, 'H', 160, 40), 7, 'H', 20, 40)),
+            M('c2h5cl', 'クロロエタン', 'くろろえたん', 'C₂H₅Cl', '❄️', 'organic', 'cov',
+              'エタンの すいそ 1こが えんそに かわった かたち。ふきかけると つめたく なる。',
+              'スポーツの れいきゃくスプレー、むかしの ますい',
+              chain([{ el: 'C', sub: [['H', 150], ['H', 215], ['H', 90]] },
+                     { el: 'C', prev: 1, sub: [['H', 250], ['H', 315]] },
+                     { el: 'Cl', prev: 1 }], 50)),
+
+            /* ===== 💪 からだ・たべもの ===== */
+            M('urea', '尿素', 'にょうそ', 'CO(NH₂)₂', '🚻', 'body', 'cov',
+              'たんそに さんそ（にじゅうけつごう）と NH₂が 2こ。からだが ちっそを すてる ための かたち。',
+              'おしっこ、ひりょう、ほしつクリーム',
+              polar([['C', 0, 0], ['O', 90, 52], ['N', 200, 48], ['H', 160, 80], ['H', 240, 80], ['N', 340, 48], ['H', 300, 80], ['H', 20, 80]],
+                    [[0, 1, 2], [0, 2, 1], [2, 3, 1], [2, 4, 1], [0, 5, 1], [5, 6, 1], [5, 7, 1]])),
+            M('glycine', 'グリシン', 'ぐりしん', 'C₂H₅NO₂', '🍜', 'body', 'cov',
+              'いちばん かんたんな アミノ酸。アミノ基（NH₂）と カルボキシ基（COOH）が 1つの ぶんしに ある。',
+              'からだの たんぱくしつの ざいりょう、あまみの ある ちょうみりょう',
+              add(chain([{ el: 'N', sub: [['H', 150], ['H', 215]] },
+                         { el: 'C', prev: 1, sub: [['H', 250], ['H', 300]] },
+                         { el: 'C', prev: 1, sub: [['O', 95, 2], ['O', 335]] }], 48), 8, 'H', 300, 38)),
+            M('alanine', 'アラニン', 'あらにん', 'C₃H₇NO₂', '🥩', 'body', 'cov',
+              'グリシンの すいそ 1こが CH₃に かわった アミノ酸。にくや たまごに 多い。',
+              'にく・さかな・だいずの たんぱくしつ、うまみ',
+              add(add(add(chain([{ el: 'C', sub: [['H', 150], ['H', 210], ['H', 95]] },
+                                 { el: 'C', prev: 1, sub: [['N', 265], ['H', 330]] },
+                                 { el: 'C', prev: 1, sub: [['O', 95, 2], ['O', 335]] }], 46),
+                      5, 'H', 215, 36), 5, 'H', 305, 36), 9, 'H', 300, 36)),
+            M('lactic', '乳酸', 'にゅうさん', 'C₃H₆O₃', '🏃', 'body', 'cov',
+              'たんそ 3こ。OHと COOHを もつ。はげしく 運動すると きんにくに たまる。',
+              'ヨーグルト・つけものの すっぱさ、うんどうごの きんにく',
+              add(add(chain([{ el: 'C', sub: [['H', 150], ['H', 210], ['H', 95]] },
+                             { el: 'C', prev: 1, sub: [['O', 265], ['H', 330]] },
+                             { el: 'C', prev: 1, sub: [['O', 95, 2], ['O', 335]] }], 46),
+                  5, 'H', 250, 36), 9, 'H', 300, 36)),
+            M('oxalic', 'シュウ酸', 'しゅうさん', 'C₂H₂O₄', '🥬', 'body', 'cov',
+              'カルボキシ基（COOH）が 2つ つながった かたち。カルシウムと くっつきやすい。',
+              'ほうれんそうの えぐみ、たけのこの あく、さび おとし',
+              add(add(chain([{ el: 'C', sub: [['O', 150, 2], ['O', 225]] },
+                             { el: 'C', prev: 1, sub: [['O', 30, 2], ['O', 315]] }], 54),
+                  2, 'H', 250, 36), 5, 'H', 290, 36)),
+            M('en', 'エチレンジアミン', 'えちれんじあみん', 'C₂H₈N₂', '🧪', 'body', 'cov',
+              'たんそ 2この 両はしに NH₂が ついた かたち。金ぞくイオンを はさみこむ のが 得意。',
+              'くすりの ざいりょう、金ぞくを とりのぞく やくひん',
+              chain([{ el: 'N', sub: [['H', 155], ['H', 215]] },
+                     { el: 'C', prev: 1, sub: [['H', 240], ['H', 300]] },
+                     { el: 'C', prev: 1, sub: [['H', 60], ['H', 120]] },
+                     { el: 'N', prev: 1, sub: [['H', 25], ['H', 330]] }], 44)),
+            M('ch3sh', 'メタンチオール', 'めたんちおーる', 'CH₄S', '🧄', 'body', 'cov',
+              'メタンの すいそ 1こが「−SH」に かわった かたち。いおうが 入ると、とても くさく なる。',
+              'アスパラガスを 食べた あとの におい、口の におい、たくあん',
+              add(chain([{ el: 'C', sub: [['H', 150], ['H', 215], ['H', 95]] },
+                         { el: 'S', prev: 1 }], 56), 4, 'H', 320, 40)),
+            M('glycolic', 'グリコール酸', 'ぐりこーるさん', 'C₂H₄O₃', '🍇', 'body', 'cov',
+              'OHと COOHを もつ、いちばん 小さな ヒドロキシ酸。',
+              'ピーリング化しょうひん、さとうきびや ぶどうに 少し 入って いる',
+              add(add(chain([{ el: 'C', sub: [['O', 150], ['H', 215], ['H', 95]] },
+                             { el: 'C', prev: 1, sub: [['O', 300, 2], ['O', 20]] }], 54),
+                  1, 'H', 185, 36), 6, 'H', 60, 36))
         ];
+
+        /* --- ふつうの「けつごうの 本数」では 説明できない ぶんし ---
+           きょうめい（電子を みんなで わけあう）や ラジカル（電子が 1こ あまる）が
+           おきて いる もの。ずかんで この 理由を 出す。 */
+        const ODD_VALENCE = {
+            o3:   'まん中の さんそから 見て、2本の けつごうは じつは どちらも「1本と 2本の ちゅうかん」。こういう じょうたいを <b>きょうめい</b>と いう。',
+            co:   'たんそが さんそから 電子を かりて 3本で つながって いる（<b>はいい けつごう</b>）。だから たんその 手が 4本に 見えない。',
+            n2o:  'まん中の ちっそが ＋、はしの さんそが − の でんきを もつ。だから 手の 数が ふつうと ちがう。',
+            no:   '電子が 1こ あまって いる <b>ラジカル</b>。あまった 電子が ある ので、ほかと すぐ はんのうする。',
+            no2:  '電子が 1こ あまった <b>ラジカル</b>で、しかも きょうめいも して いる。',
+            hno3: '3この さんそが 同じ たちばで 電子を わけあって いる（<b>きょうめい</b>）。絵では 1本と 2本に わけて かいて いる。'
+        };
+
+        /* --- 化学式・分子量を 計算する --- */
+        const SUB = '₀₁₂₃₄₅₆₇₈₉';
+        // げんしの 数を かぞえる（多い じゅんばん では なく C→H→ほか の じゅんで ならべる）
+        function atomCounts(mol) {
+            const c = {};
+            mol.atoms.forEach(a => { c[a.el] = (c[a.el] || 0) + 1; });
+            return c;
+        }
+        // 分子量（ぶんしりょう）＝ なかの げんしの おもさの ごうけい
+        function molecularWeight(mol) {
+            return Math.round(mol.atoms.reduce((s, a) => s + ATOMS[a.el].mass, 0) * 10) / 10;
+        }
+        // 価電子の ごうけい（けつごうに つかえる 電子の 数）
+        function valenceElectrons(mol) {
+            return mol.atoms.reduce((s, a) => s + ATOMS[a.el].ve, 0);
+        }
+        // わけあって いる 電子の 数（けつごう 1ぽん＝2こ）
+        function sharedElectrons(mol) {
+            return mol.bonds.reduce((s, b) => s + b[2], 0) * 2;
+        }
+        function bondCounts(mol) {
+            const c = { 1: 0, 2: 0, 3: 0 };
+            mol.bonds.forEach(b => { c[b[2]]++; });
+            return c;
+        }
 
         const BADGES = [
             { id: 'first_build', name: 'ぶんしビルダー', icon: '🛠️', desc: 'つくるモードを クリアした' },
@@ -378,6 +1219,48 @@
             build: { queue: [], index: 0, filled: [], palette: [], mistakes: 0, locked: false },
             quiz: { questions: [], index: 0, score: 0, locked: false }
         };
+
+        /* --- 漢字{よみ} を ルビに する（ほかの アプリと 同じ しくみ）---
+           SVGの 中には ルビを 作れない ので、SVGは とばす。 */
+        const RUBY_RE = /([一-鿿々]+)\{([^{}]+)\}/g;
+        function rubySkip(el) {
+            for (let n = el; n; n = n.parentNode) {
+                const t = n.nodeType === 1 ? n.tagName.toLowerCase() : '';
+                if (t === 'script' || t === 'style' || t === 'svg' || t === 'ruby') return true;
+            }
+            return false;
+        }
+        function rubifyText(node) {
+            const t = node.nodeValue;
+            if (t.indexOf('{') < 0 || !node.parentNode || rubySkip(node.parentNode)) return;
+            RUBY_RE.lastIndex = 0;
+            if (!RUBY_RE.test(t)) return;
+            RUBY_RE.lastIndex = 0;
+            const frag = document.createDocumentFragment();
+            let last = 0, m;
+            while ((m = RUBY_RE.exec(t))) {
+                if (m.index > last) frag.appendChild(document.createTextNode(t.slice(last, m.index)));
+                const ruby = document.createElement('ruby');
+                ruby.appendChild(document.createTextNode(m[1]));
+                const rt = document.createElement('rt');
+                rt.textContent = m[2];
+                ruby.appendChild(rt);
+                frag.appendChild(ruby);
+                last = m.index + m[0].length;
+            }
+            if (last < t.length) frag.appendChild(document.createTextNode(t.slice(last)));
+            node.parentNode.replaceChild(frag, node);
+        }
+        function rubify(root) {
+            if (root.nodeType === 3) return rubifyText(root);
+            if (root.nodeType !== 1 || rubySkip(root)) return;
+            const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+            const list = [];
+            while (w.nextNode()) if (w.currentNode.nodeValue.indexOf('{') >= 0) list.push(w.currentNode);
+            list.forEach(rubifyText);
+        }
+        new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(rubify)))
+            .observe(document.body, { childList: true, subtree: true });
 
         /* --- おと（Web Audio） --- */
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -458,6 +1341,7 @@
         function moleculeSVG(mol, filled, options = {}) {
             const shown = filled || mol.atoms.map(() => true);
             const nextSlot = shown.indexOf(false);
+            const rs = mol.rs || 1;                 // 丸の 大きさの ばいりつ
             let parts = '';
 
             // けつごう（ぼう）を さきに かく
@@ -470,10 +1354,12 @@
                 const dy = B.y - A.y;
                 const len = Math.hypot(dx, dy) || 1;
                 // ぼうを よこに ずらすための ほうこう（にじゅうけつごうは 2ほんに わける）
-                const px = (-dy / len) * 7;
-                const py = (dx / len) * 7;
-                const offsets = order === 2 ? [-1, 1] : [0];
-                const width = order === 2 ? 5 : 6;
+                const gap = (order === 3 ? 7.5 : 7) * rs;
+                const px = (-dy / len) * gap;
+                const py = (dx / len) * gap;
+                // 1ぽん / 2ほん（にじゅう）/ 3ぼん（さんじゅう）で かきわける
+                const offsets = order === 3 ? [-1, 0, 1] : order === 2 ? [-1, 1] : [0];
+                const width = (order === 3 ? 4 : order === 2 ? 5 : 6) * rs;
                 offsets.forEach(sign => {
                     parts += `<line x1="${A.x + px * sign}" y1="${A.y + py * sign}" x2="${B.x + px * sign}" y2="${B.y + py * sign}" stroke="${color}" stroke-width="${width}" stroke-linecap="round" />`;
                 });
@@ -482,17 +1368,20 @@
             // げんし
             mol.atoms.forEach((atom, i) => {
                 const style = ATOMS[atom.el];
+                const r = rnd1(style.r * rs);
+                const fs = rnd1(style.r * rs * (atom.el.length > 1 ? 0.8 : 1));
+                const sw = rnd1(3 * rs);
                 if (shown[i]) {
                     const pop = options.popIndex === i ? ' atom-pop' : '';
                     parts += `<g class="${pop.trim()}">
-                        <circle cx="${atom.x}" cy="${atom.y}" r="${style.r}" fill="${style.fill}" stroke="${style.stroke}" stroke-width="3" />
-                        <text x="${atom.x}" y="${atom.y}" fill="${style.text}" font-size="${style.r}" font-weight="900" text-anchor="middle" dominant-baseline="central" font-family="inherit">${atom.el}</text>
+                        <circle cx="${atom.x}" cy="${atom.y}" r="${r}" fill="${style.fill}" stroke="${style.stroke}" stroke-width="${sw}" />
+                        <text x="${atom.x}" y="${atom.y}" fill="${style.text}" font-size="${fs}" font-weight="900" text-anchor="middle" dominant-baseline="central" font-family="inherit">${atom.el}</text>
                     </g>`;
                 } else {
                     const pulse = i === nextSlot ? ' class="slot-pulse"' : '';
                     parts += `<g${pulse}>
-                        <circle cx="${atom.x}" cy="${atom.y}" r="${style.r}" fill="#ffffff" stroke="#a78bfa" stroke-width="3" stroke-dasharray="6 5" />
-                        <text x="${atom.x}" y="${atom.y}" fill="#a78bfa" font-size="${style.r}" font-weight="900" text-anchor="middle" dominant-baseline="central" font-family="inherit">?</text>
+                        <circle cx="${atom.x}" cy="${atom.y}" r="${r}" fill="#ffffff" stroke="#a78bfa" stroke-width="${sw}" stroke-dasharray="6 5" />
+                        <text x="${atom.x}" y="${atom.y}" fill="#a78bfa" font-size="${fs}" font-weight="900" text-anchor="middle" dominant-baseline="central" font-family="inherit">?</text>
                     </g>`;
                 }
             });
@@ -507,6 +1396,7 @@
             document.getElementById(`tab-${tabName}`).classList.remove('hidden');
             if (tabName === 'menu') renderBadges();
             else if (tabName === 'book') renderBook();
+            else if (tabName === 'bond') renderBondTab();
         }
 
         function updateStars(count) {
@@ -550,7 +1440,9 @@
 
         function startBuildGame(level) {
             playSound('click');
-            const pool = level === 'easy' ? MOLECULES.filter(m => m.atoms.length <= 3) : MOLECULES;
+            const pool = level === 'easy' ? MOLECULES.filter(m => m.atoms.length <= 3)
+                       : level === 'normal' ? MOLECULES.filter(m => m.atoms.length >= 4 && m.atoms.length <= 6)
+                       : MOLECULES.filter(m => m.atoms.length >= 7);
             state.build.queue = shuffle(pool).slice(0, 5);
             state.build.index = 0;
             state.build.mistakes = 0;
@@ -573,8 +1465,11 @@
 
             // パレット: ひつような げんし + にせもの で 4つ
             const needed = [...new Set(mol.atoms.filter((a, i) => !state.build.filled[i]).map(a => a.el))];
-            const decoys = Object.keys(ATOMS).filter(el => !needed.includes(el));
-            state.build.palette = shuffle([...needed, ...shuffle(decoys).slice(0, Math.max(0, 4 - needed.length))]);
+            // ダミーは「よく つかう げんし」から えらぶ（29しゅるい から ランダムだと
+            // 見たことの ない げんしばかりに なって しまう ため）
+            const decoys = Object.keys(ATOMS).filter(el => ATOMS[el].common && !needed.includes(el));
+            const slots = Math.max(0, Math.max(4, needed.length) - needed.length);
+            state.build.palette = shuffle([...needed, ...shuffle(decoys).slice(0, slots)]);
 
             document.getElementById('build-progress').style.width = `${(state.build.index / total) * 100}%`;
             document.getElementById('build-progress-label').innerText = `${state.build.index + 1} / ${total}`;
@@ -702,7 +1597,11 @@
             document.getElementById('quiz-q-num').innerText = `だい ${state.quiz.index + 1} / ${total} もん`;
             document.getElementById('quiz-canvas').innerHTML = moleculeSVG(mol);
 
-            const wrong = shuffle(MOLECULES.filter(m => m.id !== mol.id)).slice(0, 3);
+            // まちがいの せんたくしは「おなじ なかま」から えらぶ（にた もので なやませる）。
+            // 足りない ときだけ ほかの なかまから おぎなう。
+            const sameCat = shuffle(MOLECULES.filter(m => m.id !== mol.id && m.cat === mol.cat));
+            const others = shuffle(MOLECULES.filter(m => m.id !== mol.id && m.cat !== mol.cat));
+            const wrong = [...sameCat, ...others].slice(0, 3);
             const options = shuffle([...wrong, mol]);
 
             document.getElementById('quiz-options').innerHTML = options.map(opt => `
@@ -756,16 +1655,250 @@
                 .join(' ＋ ');
         }
 
+        /* --- ずかんの しぼりこみ --- */
+        // 104まいを いちどに 出すと スマホで とても 長い ページに なる ので、
+        // 24まいずつ 出して「もっと 見る」で つづきを 出す。
+        const BOOK_PAGE = 24;
+        let bookCat = 'all', bookBond = 'all', bookLimit = BOOK_PAGE;
+        const NORM = s => String(s).toLowerCase()
+            .replace(/[₀-₉]/g, d => '₀₁₂₃₄₅₆₇₈₉'.indexOf(d))
+            .replace(/[ァ-ヶ]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60));
+
+        // しぼりこみを 変えたら さいしょの 24まいに もどす
+        function setBookCat(c) { bookCat = c; bookLimit = BOOK_PAGE; playSound('click'); renderBook(); }
+        function setBookBond(b) { bookBond = b; bookLimit = BOOK_PAGE; playSound('click'); renderBook(); }
+        function showMoreBook() { bookLimit += BOOK_PAGE; playSound('click'); renderBook(); }
+        function onBookSearch() { bookLimit = BOOK_PAGE; renderBook(); }
+
+        function bookMatches(mol, q) {
+            if (bookCat !== 'all' && mol.cat !== bookCat) return false;
+            if (bookBond !== 'all' && mol.bond !== bookBond) return false;
+            if (!q) return true;
+            return NORM(mol.name + mol.kana + mol.formula + mol.use).includes(q);
+        }
+
         function renderBook() {
-            document.getElementById('book-grid').innerHTML = MOLECULES.map(mol => `
-                <div onclick="openModal('${mol.id}')" class="bg-white rounded-2xl p-3 border-2 border-slate-200 shadow-sm hover:shadow-md cursor-pointer bounce-hover flex flex-col items-center text-center group">
+            const q = NORM((document.getElementById('book-search').value || '').trim());
+            const chip = (on, label, fn) =>
+                `<button onclick="${fn}" class="${on ? 'bg-teal-600 text-white border-teal-600' : 'bg-white text-slate-600 border-slate-200'} border-2 font-black px-3 py-1.5 rounded-full text-xs bounce-hover whitespace-nowrap">${label}</button>`;
+
+            document.getElementById('book-chips').innerHTML =
+                chip(bookCat === 'all', `ぜんぶ ${MOLECULES.length}`, `setBookCat('all')`) +
+                CATS.map(([id, e, label]) => {
+                    const n = MOLECULES.filter(m => m.cat === id).length;
+                    return chip(bookCat === id, `${e} ${label} ${n}`, `setBookCat('${id}')`);
+                }).join('');
+
+            document.getElementById('book-bondchips').innerHTML =
+                chip(bookBond === 'all', 'けつごう ぜんぶ', `setBookBond('all')`) +
+                Object.entries(BOND_KINDS).map(([id, b]) => {
+                    const n = MOLECULES.filter(m => m.bond === id).length;
+                    return chip(bookBond === id, `${b.icon} ${b.label} ${n}`, `setBookBond('${id}')`);
+                }).join('');
+
+            const all = MOLECULES.filter(m => bookMatches(m, q));
+            const list = all.slice(0, bookLimit);
+            document.getElementById('book-count').innerText =
+                all.length > list.length ? `${all.length}こ 中 ${list.length}こ を ひょうじちゅう` : `${all.length}こ ひょうじちゅう`;
+            document.getElementById('book-empty').classList.toggle('hidden', all.length > 0);
+            const more = document.getElementById('book-more');
+            more.classList.toggle('hidden', all.length <= list.length);
+            more.innerText = `もっと 見る（のこり ${all.length - list.length}こ）`;
+            document.getElementById('book-grid').innerHTML = list.map(mol => `
+                <div onclick="openModal('${mol.id}')" data-mol="${mol.id}" class="bg-white rounded-2xl p-3 border-2 border-slate-200 shadow-sm hover:shadow-md cursor-pointer bounce-hover flex flex-col items-center text-center group">
                     <div class="w-full">${moleculeSVG(mol)}</div>
-                    <h4 class="text-base font-black text-slate-800 mt-1">${mol.name}</h4>
+                    <h4 class="text-sm sm:text-base font-black text-slate-800 mt-1 leading-tight">${mol.name}</h4>
                     <p class="text-sm font-black text-teal-600 tracking-wider">${mol.formula}</p>
-                    <span class="mt-2 text-[10px] bg-slate-100 text-slate-500 font-bold px-2 py-0.5 rounded-full group-hover:bg-teal-100 group-hover:text-teal-700 transition-colors">
-                        くわしく <i class="fas fa-chevron-right text-[8px]"></i>
+                    <span class="mt-1 text-[10px] font-bold text-slate-400">分子量 ${molecularWeight(mol)}</span>
+                    <span class="mt-1 text-[10px] bg-slate-100 text-slate-500 font-bold px-2 py-0.5 rounded-full group-hover:bg-teal-100 group-hover:text-teal-700 transition-colors">
+                        ${BOND_KINDS[mol.bond].icon} ${BOND_KINDS[mol.bond].label}
                     </span>
                 </div>`).join('');
+        }
+
+        /* =====================================================================
+           でんしと けつごう
+           ===================================================================== */
+        // 電子が 入る かずを 内がわから 出す（2, 8, 8, 2…）。小学生向けに かんたんな ルール
+        function shells(z) {
+            const cap = [2, 8, 8, 2];
+            const out = [];
+            let left = z;
+            for (const c of cap) {
+                if (left <= 0) break;
+                out.push(Math.min(c, left));
+                left -= Math.min(c, left);
+            }
+            return out;
+        }
+
+        const SHELL_ELS = ['H', 'He', 'C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', 'S', 'Cl', 'Ar'];
+        let shellEl = 'O';
+
+        function setShellEl(el) { shellEl = el; playSound('click'); renderShell(); }
+
+        function renderShell() {
+            document.getElementById('shell-chips').innerHTML = SHELL_ELS.map(el => {
+                const on = el === shellEl, st = ATOMS[el];
+                return `<button onclick="setShellEl('${el}')" data-shell="${el}" class="${on ? 'ring-4 ring-amber-300' : ''} rounded-xl border-2 border-slate-200 bg-white px-2 py-1 flex items-center gap-1 bounce-hover">
+                    <span class="w-7 h-7 rounded-full flex items-center justify-center font-black text-xs" style="background:${st.fill};color:${st.text};border:2px solid ${st.stroke}">${el}</span>
+                    <span class="text-[10px] font-bold text-slate-500">${st.name}</span></button>`;
+            }).join('');
+
+            const st = ATOMS[shellEl], sh = shells(st.z);
+            const W = 320, H = 260, cx = W / 2, cy = H / 2;
+            let g = '';
+            // 原子核
+            g += `<circle cx="${cx}" cy="${cy}" r="26" fill="#fb7185" stroke="#be123c" stroke-width="3"/>`;
+            g += `<text x="${cx}" y="${cy - 4}" text-anchor="middle" font-size="13" font-weight="900" fill="#ffffff" font-family="inherit">＋${st.z}</text>`;
+            g += `<text x="${cx}" y="${cy + 10}" text-anchor="middle" font-size="9" font-weight="900" fill="#ffe4e6" font-family="inherit">げんしかく</text>`;
+            // でんしかく
+            sh.forEach((n, i) => {
+                const r = 46 + i * 33;
+                const outer = i === sh.length - 1;
+                g += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${outer ? '#8b5cf6' : '#cbd5e1'}" stroke-width="${outer ? 2.5 : 1.5}" stroke-dasharray="${outer ? '' : '4 4'}"/>`;
+                for (let k = 0; k < n; k++) {
+                    const a = (360 / n) * k - 90;
+                    const x = cx + Math.cos(a * Math.PI / 180) * r;
+                    const y = cy + Math.sin(a * Math.PI / 180) * r;
+                    g += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="7" fill="${outer ? '#8b5cf6' : '#94a3b8'}" stroke="#ffffff" stroke-width="2"/>`;
+                }
+                g += `<text x="${cx + r + 4}" y="${cy - 6}" font-size="10" font-weight="900" fill="${outer ? '#7c3aed' : '#94a3b8'}" font-family="inherit">${n}こ</text>`;
+            });
+            document.getElementById('shell-fig').innerHTML =
+                `<svg viewBox="0 0 ${W} ${H}" class="w-full h-auto block mx-auto" style="max-width:${W}px" role="img" aria-label="${st.name} の 電子の ならび">${g}</svg>`;
+
+            const ve = st.ve, need = st.want - ve;
+            document.getElementById('shell-info').innerHTML =
+                `<b>${st.name}（${shellEl}）</b>は 電子が ぜんぶで <b>${st.z}こ</b>。
+                 内がわから ${sh.join('こ・')}こ と 入る。<br>
+                 いちばん 外がわ（<span class="text-violet-600">むらさきの 電子</span>）＝ <b>価電子 ${ve}こ</b>。` +
+                (st.want === ve
+                    ? ` もう <b>${st.want}こで いっぱい</b>！ だから ほかと くっつかない。`
+                    : ` あと <b>${need}こ</b>で ${st.want}こに なる ので、${need}本の 手で ほかと くっつく。`);
+        }
+
+        /* --- 電子式（点で かく 図） --- */
+        const DOT_DEMOS = [
+            { id: 'h2',  label: 'H₂（すいそ）',   a: 'H', b: 'H', share: 1,
+              note: 'すいそは 価電子 1こ。1こずつ 出して <b>2こを わけあう</b>と、どちらも 2こに なって あんてい。ぼうは 1本。' },
+            { id: 'hcl', label: 'HCl（塩化水素）', a: 'Cl', b: 'H', share: 1,
+              note: 'えんそは 価電子 7こで あと 1こ、すいそは あと 1こ。1こずつ 出しあって ちょうど おたがい いっぱいに なる。' },
+            { id: 'o2',  label: 'O₂（さんそ）',   a: 'O', b: 'O', share: 2,
+              note: 'さんそは 価電子 6こで あと 2こ ほしい。<b>2こずつ 出しあう</b>ので、わけあう 電子は 4こ＝ぼう 2本（にじゅうけつごう）。' },
+            { id: 'n2',  label: 'N₂（ちっそ）',   a: 'N', b: 'N', share: 3,
+              note: 'ちっそは 価電子 5こで あと 3こ。<b>3こずつ 出しあう</b>ので ぼうは 3本。とても じょうぶで、なかなか 切れない。' }
+        ];
+        let dotIdx = 0;
+        function setDot(i) { dotIdx = i; playSound('click'); renderDot(); }
+
+        function renderDot() {
+            document.getElementById('dot-chips').innerHTML = DOT_DEMOS.map((d, i) =>
+                `<button onclick="setDot(${i})" data-dot="${d.id}" class="${i === dotIdx ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-600 border-slate-200'} border-2 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${d.label}</button>`).join('');
+
+            const d = DOT_DEMOS[dotIdx];
+            const A = ATOMS[d.a], B = ATOMS[d.b];
+            const W = 340, H = 190, ax = 108, bx = 232, y = 92;
+            let g = '';
+            // けつごうの ぼう
+            for (let k = 0; k < d.share; k++) {
+                const off = (k - (d.share - 1) / 2) * 11;
+                g += `<line x1="${ax + A.r}" y1="${y + off}" x2="${bx - B.r}" y2="${y + off}" stroke="#a78bfa" stroke-width="4" stroke-linecap="round"/>`;
+            }
+            // げんし
+            [[ax, d.a, A], [bx, d.b, B]].forEach(([x, el, st]) => {
+                g += `<circle cx="${x}" cy="${y}" r="${st.r}" fill="${st.fill}" stroke="${st.stroke}" stroke-width="3"/>`;
+                g += `<text x="${x}" y="${y}" fill="${st.text}" font-size="${st.r}" font-weight="900" text-anchor="middle" dominant-baseline="central" font-family="inherit">${el}</text>`;
+            });
+            // わけあって いる 電子（まん中）
+            const mid = (ax + bx) / 2;
+            for (let k = 0; k < d.share; k++) {
+                const off = (k - (d.share - 1) / 2) * 11;
+                g += `<circle data-shared cx="${mid - 8}" cy="${y + off}" r="4.5" fill="#6d28d9"/>`;
+                g += `<circle data-shared cx="${mid + 8}" cy="${y + off}" r="4.5" fill="#6d28d9"/>`;
+            }
+            // わけあって いない 電子（そとがわに 点で）
+            const lone = (st, side) => {
+                const rest = st.ve - d.share;
+                let s = '';
+                for (let k = 0; k < rest; k++) {
+                    const a = 90 + side * (40 + Math.floor(k / 2) * 38) + (k % 2 ? 14 : -14);
+                    const rr = st.r + 13;
+                    const px = (side > 0 ? bx : ax) + Math.cos(a * Math.PI / 180) * rr * side * (side > 0 ? 1 : -1);
+                    const py = y + Math.sin(a * Math.PI / 180) * rr;
+                    s += `<circle data-lone cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="4" fill="#94a3b8"/>`;
+                }
+                return s;
+            };
+            g += lone(A, -1) + lone(B, 1);
+            g += `<text x="${mid}" y="${y + 52}" text-anchor="middle" font-size="11" font-weight="900" fill="#6d28d9" font-family="inherit">わけあった 電子 ${d.share * 2}こ ＝ ぼう ${d.share}本</text>`;
+            g += `<text x="${mid}" y="${H - 14}" text-anchor="middle" font-size="10" font-weight="800" fill="#94a3b8" font-family="inherit">● むらさき＝わけあう 電子　● はいいろ＝わけあわない 電子</text>`;
+            document.getElementById('dot-fig').innerHTML =
+                `<svg viewBox="0 0 ${W} ${H}" class="w-full h-auto block mx-auto" style="max-width:${W}px" role="img" aria-label="${d.label} の 電子式">${g}</svg>`;
+            document.getElementById('dot-info').innerHTML = d.note;
+        }
+
+        /* --- イオンけつごうの アニメ --- */
+        let ionicStep = 0;
+        function playIonic() {
+            playSound('click');
+            ionicStep = (ionicStep + 1) % 3;
+            renderIonic();
+        }
+        function renderIonic() {
+            const W = 340, H = 180, nax = 100, clx = 240, y = 86;
+            const Na = ATOMS.Na, Cl = ATOMS.Cl;
+            const moved = ionicStep >= 1;
+            let g = '';
+            if (ionicStep === 2) {
+                g += `<path d="M${nax + Na.r + 6} ${y} L${clx - Cl.r - 6} ${y}" stroke="#f43f5e" stroke-width="3" stroke-dasharray="7 5"/>`;
+                g += `<text x="${(nax + clx) / 2}" y="${y - 12}" text-anchor="middle" font-size="11" font-weight="900" fill="#be123c" font-family="inherit">＋と − で ひきあう</text>`;
+            }
+            [[nax, 'Na', Na], [clx, 'Cl', Cl]].forEach(([x, el, st]) => {
+                g += `<circle cx="${x}" cy="${y}" r="${st.r}" fill="${st.fill}" stroke="${st.stroke}" stroke-width="3"/>`;
+                g += `<text x="${x}" y="${y}" fill="${st.text}" font-size="${st.r}" font-weight="900" text-anchor="middle" dominant-baseline="central" font-family="inherit">${el}</text>`;
+            });
+            // うごく 電子 1こ
+            const ex = moved ? clx - Cl.r - 14 : nax + Na.r + 14;
+            g += `<circle data-ion-e cx="${ex}" cy="${y - 34}" r="7" fill="#8b5cf6" stroke="#ffffff" stroke-width="2"/>`;
+            g += `<text x="${ex}" y="${y - 50}" text-anchor="middle" font-size="9" font-weight="900" fill="#6d28d9" font-family="inherit">電子1こ</text>`;
+            if (ionicStep >= 1) {
+                g += `<text x="${nax}" y="${y + Na.r + 20}" text-anchor="middle" font-size="14" font-weight="900" fill="#be123c" font-family="inherit">Na⁺</text>`;
+                g += `<text x="${clx}" y="${y + Cl.r + 20}" text-anchor="middle" font-size="14" font-weight="900" fill="#1d4ed8" font-family="inherit">Cl⁻</text>`;
+            }
+            g += `<text x="${W / 2}" y="${H - 12}" text-anchor="middle" font-size="10" font-weight="800" fill="#94a3b8" font-family="inherit">ボタンを おすと つづきが 見られるよ（${ionicStep + 1}/3）</text>`;
+            document.getElementById('ionic-fig').innerHTML =
+                `<svg viewBox="0 0 ${W} ${H}" class="w-full h-auto block mx-auto" style="max-width:${W}px" role="img" aria-label="イオンけつごうの できかた">${g}</svg>`;
+            const texts = [
+                'ナトリウムは 外がわの 電子が <b>1こだけ</b>。えんそは <b>あと 1こ</b>で 8こに なる。この 1こが うごく。',
+                'ナトリウムが 電子を <b>1こ わたした</b>。ナトリウムは ＋（<b>Na⁺</b>）に、えんそは −（<b>Cl⁻</b>）に なった。どちらも 外がわが 8こで あんてい。',
+                '＋と − は ひきあう。これが <b>イオンけつごう</b>。じっさいには これが たくさん ならんで、サイコロ型の <b>しおの けっしょう</b>に なる。'
+            ];
+            document.getElementById('ionic-info').innerHTML = texts[ionicStep];
+        }
+
+        /* --- 化学式の 読みかたの 図 --- */
+        function renderFormulaFig() {
+            const W = 340, H = 150;
+            let g = '';
+            g += `<text x="76" y="78" font-size="44" font-weight="900" fill="#0f766e" font-family="inherit">2</text>`;
+            g += `<text x="106" y="78" font-size="44" font-weight="900" fill="#334155" font-family="inherit">H</text>`;
+            g += `<text x="142" y="90" font-size="28" font-weight="900" fill="#0f766e" font-family="inherit">2</text>`;
+            g += `<text x="164" y="78" font-size="44" font-weight="900" fill="#334155" font-family="inherit">O</text>`;
+            g += `<path d="M84 34 L84 20 L150 20" fill="none" stroke="#0d9488" stroke-width="2"/>`;
+            g += `<text x="154" y="24" font-size="11" font-weight="900" fill="#0d9488" font-family="inherit">ぶんしの 数（2こぶん）</text>`;
+            g += `<path d="M148 104 L148 124 L60 124" fill="none" stroke="#0d9488" stroke-width="2"/>`;
+            g += `<text x="56" y="128" text-anchor="end" font-size="11" font-weight="900" fill="#0d9488" font-family="inherit">げんしの 数</text>`;
+            g += `<text x="200" y="78" font-size="13" font-weight="900" fill="#475569" font-family="inherit">＝ 水が 2こ</text>`;
+            document.getElementById('formula-fig').innerHTML =
+                `<svg viewBox="0 0 ${W} ${H}" class="w-full h-auto block mx-auto" style="max-width:${W}px" role="img" aria-label="2H2O の 読みかた">${g}</svg>`;
+        }
+
+        function renderBondTab() {
+            renderShell();
+            renderDot();
+            renderIonic();
+            renderFormulaFig();
         }
 
         /* --- モーダル --- */
@@ -782,8 +1915,48 @@
             document.getElementById('modal-formula').innerText = mol.formula;
             document.getElementById('modal-canvas').innerHTML = moleculeSVG(mol);
             document.getElementById('modal-parts').innerText = describeParts(mol);
-            document.getElementById('modal-fact').innerText = mol.fact;
+            document.getElementById('modal-fact').innerHTML = mol.fact;
             document.getElementById('modal-use').innerText = mol.use;
+
+            // けつごうの しゅるい
+            const bk = BOND_KINDS[mol.bond];
+            const tone = { violet: ['bg-violet-50', 'border-violet-200', 'text-violet-700'],
+                           rose:   ['bg-rose-50', 'border-rose-200', 'text-rose-700'],
+                           cyan:   ['bg-cyan-50', 'border-cyan-200', 'text-cyan-700'] }[bk.color];
+            const bondBox = document.getElementById('modal-bond');
+            bondBox.className = `p-3 rounded-xl border-2 ${tone[0]} ${tone[1]}`;
+            bondBox.innerHTML =
+                `<p class="font-extrabold ${tone[2]} text-xs mb-1">${bk.icon} けつごうの しゅるい</p>
+                 <p class="font-black text-base ${tone[2]}">${bk.label}${bk.kana ? `<span class="text-[10px] font-bold ml-1">${bk.kana}</span>` : ''}</p>
+                 <p class="font-bold text-xs text-slate-600 mt-0.5">${bk.short}</p>` +
+                (mol.bond === 'ion'
+                    ? `<p class="font-bold text-xs text-slate-500 mt-1">※ じつは たくさん ならんだ <b>けっしょう</b>。
+                         化学式は「1くみの わりあい」を しめして いる（組成式{そせいしき}）。</p>` : '');
+
+            // 数の じょうほう
+            const bc = bondCounts(mol);
+            document.getElementById('modal-natoms').innerText = `${mol.atoms.length}こ`;
+            // イオンで できて いる ものは「ぶんし」では ないので、正しくは 式量{しきりょう}と よぶ
+            document.getElementById('modal-mw-label').innerHTML = mol.bond === 'ion'
+                ? '式量{しきりょう}' : '分子量{ぶんしりょう}';
+            document.getElementById('modal-mw').innerText = molecularWeight(mol);
+            document.getElementById('modal-bars').innerText = mol.bonds.length
+                ? `${mol.bonds.length}本` : 'なし';
+
+            // 電子の ようす
+            const bars = [bc[1] && `1本が ${bc[1]}`, bc[2] && `2本が ${bc[2]}`, bc[3] && `3本が ${bc[3]}`]
+                .filter(Boolean).join('・');
+            document.getElementById('modal-electrons').innerHTML = mol.bonds.length === 0
+                ? `外がわの 電子が <b>${ATOMS[mol.atoms[0].el].ve}こ</b>で もう いっぱい。だから けつごうを しなくて よい。`
+                : `中の 価電子は ぜんぶで <b>${valenceElectrons(mol)}こ</b>。
+                   その うち <b>${sharedElectrons(mol)}こ</b>が けつごうに つかわれて いる
+                   （けつごう 1本＝電子 2こ）。<br>ぼうの 数：${bars}。`;
+
+            const oddBox = document.getElementById('modal-odd');
+            const odd = ODD_VALENCE[mol.id];
+            oddBox.classList.toggle('hidden', !odd);
+            if (odd) document.getElementById('modal-odd-text').innerHTML = odd;
+
             document.getElementById('molecule-modal').classList.remove('hidden');
         }
 
@@ -813,7 +1986,9 @@
         /* --- スタート --- */
         window.onload = function () {
             document.getElementById('global-stars').innerText = state.stars;
+            document.getElementById('menu-mol-count').innerText = MOLECULES.length;
             renderBadges();
+            rubify(document.body);
         };
     </script>
 </body>
