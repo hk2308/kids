@@ -258,6 +258,11 @@
         defGroup('CF2', 'CF₂', { C: 1, F: 2 }, '#84cc16', '#1a2e05');
         defGroup('CH2OH', 'CH₂OH', { C: 1, H: 3, O: 1 }, '#ef4444');
         defGroup('OCOCH3', 'OCOCH₃', { O: 2, C: 2, H: 3 }, '#e11d48');
+        defGroup('NHCOCH3', 'NHCOCH₃', { N: 1, C: 2, H: 4, O: 1 }, '#3b82f6');
+        defGroup('ONO2', 'ONO₂', { O: 3, N: 1 }, '#6366f1');      // 硝酸エステル
+        defGroup('C3H7', 'C₃H₇', { C: 3, H: 7 });                 // イソプロピル基
+        defGroup('C3H5', 'C₃H₅', { C: 3, H: 5 });                 // イソプロペニル基
+        defGroup('COONa', 'COONa', { C: 1, O: 2, Na: 1 }, '#a855f7');
         // ポリマーの はしに くる 酸素。げんしの 丸に すると「かいて いない 水素」が
         // 1こ 数えられて しまう ので、グループ（中みが きまった 箱）に して おく。
         defGroup('Oe', 'O', { O: 1 }, '#ef4444');
@@ -540,8 +545,10 @@
             const ang = i => (start + 360 / n * i) * Math.PI / 180;
             const nodes = labels.map((t, i) => ({ t, x: cx + Math.cos(ang(i)) * r, y: cy - Math.sin(ang(i)) * r }));
             const bonds = labels.map((_, i) => [i, (i + 1) % n, (opt.orders && opt.orders[i]) || 1]);
-            (opt.subs || []).forEach(([i, t, dist = 44]) => {
-                nodes.push({ t, x: cx + Math.cos(ang(i)) * (r + dist), y: cy - Math.sin(ang(i)) * (r + dist) });
+            // angOff は 外へ 出す 向きの ずらし（同じ 炭素に 2つ つける ときに つかう）
+            (opt.subs || []).forEach(([i, t, dist = 44, angOff = 0]) => {
+                const a = ang(i) + angOff * Math.PI / 180;
+                nodes.push({ t, x: cx + Math.cos(a) * (r + dist), y: cy - Math.sin(a) * (r + dist) });
                 bonds.push([i, nodes.length - 1, 1]);
             });
             return { nodes, bonds };
@@ -560,7 +567,7 @@
         }
 
         /* ================= 化学式の 計算 ================= */
-        const MASS = { C: 12.0, H: 1.0, O: 16.0, N: 14.0, S: 32.1, F: 19.0, Cl: 35.5, Br: 79.9, I: 126.9, P: 31.0 };
+        const MASS = { C: 12.0, H: 1.0, O: 16.0, N: 14.0, S: 32.1, F: 19.0, Cl: 35.5, Br: 79.9, I: 126.9, P: 31.0, Na: 23.0 };
         const SUBD = '₀₁₂₃₄₅₆₇₈₉';
         const plainFormula = f => String(f).replace(/[₀-₉]/g, d => SUBD.indexOf(d));
         // 化学式の 文字から げんしの 数を かぞえる（かっこにも たいおう）
@@ -1052,6 +1059,93 @@
                   m.bonds.push([6, 7, 1], [7, 8, 1], [7, 9, 1]);
                   return m;
               })()),
+            C('tnt', 'トリニトロトルエン', 'とりにとろとるえん', 'C₇H₅N₃O₆', ['aromatic'],
+              'トルエンに ニトロ基（NO₂）が 3つ ついた もの。「TNT」の なまえで 有名。NO₂ の 中に 酸素を もって いる ので、空気が なくても いっきに もえる。だから ばくはつする。',
+              '⚠️ 火薬。工事の 発破（はっぱ）や 研究で、しかくを もった 大人だけが あつかう',
+              benz([[1, 'CH3'], [0, 'NO2'], [2, 'NO2'], [4, 'NO2']]), { group: 'NO₂（ニトロ基）×3' }),
+            C('nitroglycerin', 'ニトログリセリン', 'にとろぐりせりん', 'C₃H₅N₃O₉', ['ester'],
+              'グリセリンの OH 3つが ぜんぶ 硝酸（しょうさん）エステルに かわった もの。酸素を たくさん もつ ので、ちょっとの しょうげきで ばくはつする。',
+              '⚠️ ダイナマイトの もと。うすめた ものは 心ぞうの くすりにも なる（けっかんを ひろげる）',
+              ch(['CH2', 'CH', 'CH2'], { subs: [[0, 'ONO2', 150], [1, 'ONO2', 270], [2, 'ONO2', 30]] })),
+            C('acetaminophen', 'アセトアミノフェン', 'あせとあみのふぇん', 'C₈H₉NO₂', ['aromatic', 'amine'],
+              'ベンゼン環に OH と、NHCOCH₃（アミド）が ついた もの。子どもにも つかえる ねつさましの くすり。',
+              'ねつさまし・いたみどめの くすり（カロナールなど）',
+              benz([[0, 'NHCOCH3'], [3, 'OH']])),
+            C('limonene', 'リモネン', 'りもねん', 'C₁₀H₁₆', ['unsat'],
+              '輪の 中に 二重結合、外にも 二重結合の えだ。オレンジや レモンの かわの かおりの 本たい。',
+              'オレンジの かわの かおり、そうじの ようざい（あぶらを とかす）',
+              ringMol(['C', 'CH', 'CH2', 'CH', 'CH2', 'CH2'],
+                      { r: 46, orders: [2, 1, 1, 1, 1, 1], subs: [[0, 'CH3'], [3, 'C3H5']] })),
+            C('menthol', 'メントール', 'めんとーる', 'C₁₀H₂₀O', ['alcohol'],
+              'シクロヘキサンの 輪に OH・CH₃・C₃H₇。すずしく 感じる のは、つめたさを かんじる センサーを 直接 おす から。',
+              'ハッカ・ミント、シップ、のどあめ、はみがき',
+              ringMol(['CH', 'CH', 'CH2', 'CH2', 'CH', 'CH2'],
+                      { r: 48, subs: [[0, 'OH'], [1, 'C3H7'], [4, 'CH3']] })),
+            C('fructose', '果糖', 'かとう', 'C₆H₁₂O₆', ['sugar'],
+              'ブドウ糖と 同じ C₆H₁₂O₆ なのに 五角形の 輪。同じ 化学式で かたちが ちがう 異性体。さとうの 中で いちばん あまい。',
+              'くだもの、はちみつ、ジュースの あまみ',
+              ringMol(['O', 'C', 'CH', 'CH', 'CH'],
+                      { r: 40, start: 126,
+                        subs: [[1, 'CH2OH', 48, 0], [1, 'OH', 42, -56], [2, 'OH'], [3, 'OH'], [4, 'CH2OH']] })),
+            C('msg', 'グルタミン酸ナトリウム', 'ぐるたみんさんなとりうむ', 'C₅H₈NO₄Na', ['amine'],
+              'グルタミン酸の COOH の ひとつが ナトリウムに かわった もの。水に とけやすく なって「うま味」を かんじやすい。',
+              'うま味ちょうみりょう（味の素）、スープの もと',
+              ch(['COOH', 'CH', 'CH2', 'CH2', 'COONa'], { subs: [[1, 'NH2', 90]] })),
+            C('cysteine', 'システイン', 'しすていん', 'C₃H₇NO₂S', ['amine'],
+              'いおう（SH）を もつ アミノ酸。SH どうしが つながったり はなれたり する ので、かみの かたちが 変わる。',
+              'かみ・つめの たんぱくしつ、パーマの しくみ、たまねぎの におい',
+              ch(['SH', 'CH2', 'CH', 'COOH'], { subs: [[2, 'NH2', 270]] })),
+            C('serine', 'セリン', 'せりん', 'C₃H₇NO₃', ['amine'],
+              'OH を もつ アミノ酸。からだの 中で いろいろな ものに つくりかえられる。',
+              'だいず・にゅうせいひんの たんぱくしつ、ほしつざい',
+              ch(['OH', 'CH2', 'CH', 'COOH'], { subs: [[2, 'NH2', 270]] })),
+            C('aspartic', 'アスパラギン酸', 'あすぱらぎんさん', 'C₄H₇NO₄', ['amine', 'acid'],
+              'COOH を 2つ もつ アミノ酸。アスパラガスから 見つかった ので この なまえ。',
+              'アスパラガス、さとうきび、スポーツドリンク',
+              ch(['COOH', 'CH2', 'CH', 'COOH'], { subs: [[2, 'NH2', 270]] })),
+            C('valine', 'バリン', 'ばりん', 'C₅H₁₁NO₂', ['amine'],
+              'えだ分かれした かたちの アミノ酸。からだで 作れない ので 食べものから とる（必須アミノ酸）。',
+              'にく・たまご・牛にゅうの たんぱくしつ、BCAAの ひとつ',
+              ch(['CH', 'CH', 'COOH'], { subs: [[0, 'CH3', 150], [0, 'CH3', 210], [1, 'NH2', 270]] })),
+            C('acrylonitrile', 'アクリロニトリル', 'あくりろにとりる', 'C₃H₃N', ['unsat'],
+              '二重結合と CN（シアノ基）を もつ。つなげると あたたかい せんいに なる。',
+              'アクリルの 毛糸・セーターの 原料',
+              ch(['CH2', 'CH'], { orders: [2], subs: [[1, 'CN', 300]] }), { group: 'CN（シアノ基）' }),
+            C('pan', 'ポリアクリロニトリル', 'ぽりあくりろにとりる', 'C₃H₃N', ['polymer'],
+              'アクリロニトリルが つながった もの。ウールに にた あたたかさに なる。',
+              'アクリルの セーター・毛布、カーボンせんいの 原料',
+              ch(['CH2', 'CH'], { subs: [[1, 'CN', 300]] }), { repeat: 'アクリロニトリル' }),
+            C('vinylacetate', '酢酸ビニル', 'さくさんびにる', 'C₄H₆O₂', ['ester', 'unsat'],
+              '二重結合と エステルを もつ。つなげると 木工用ボンドに なる。',
+              '木工用ボンド・のりの 原料、ガムの ベース',
+              ch(['CH2', 'CH', 'Oe', 'CO', 'CH3'], { orders: [2, 1, 1, 1] })),
+            C('pvac', 'ポリ酢酸ビニル', 'ぽりさくさんびにる', 'C₄H₆O₂', ['polymer', 'ester'],
+              '酢酸ビニルが つながった もの。水に まざった 白い えきで、かわくと とうめいに なる。',
+              '木工用ボンド、チューインガムの ベース',
+              ch(['CH2', 'CH'], { subs: [[1, 'OCOCH3', 300]] }), { repeat: '酢酸ビニル' }),
+            C('pla', 'ポリ乳酸', 'ぽりにゅうさん', 'C₃H₄O₂', ['polymer', 'ester'],
+              '乳酸が エステルで つながった もの。とうもろこしから 作れて、土の 中の きんが 分解して くれる。',
+              '土に かえる ストロー・食器・ふくろ',
+              ch(['Oe', 'CH', 'CO'], { subs: [[1, 'CH3', 270]] }), { repeat: '乳酸' }),
+            C('cellulose', 'セルロース', 'せるろーす', 'C₆H₁₀O₅', ['polymer', 'sugar'],
+              'ブドウ糖が つながった もの。つなぎ目の 向きが デンプンと ぎゃく なので、人は 分解できない（食物せんいに なる）。',
+              '紙、木、わたの せんい、野さいの すじ',
+              ringMol(['O', 'CH', 'CH', 'CH', 'CH', 'CH'],
+                      { r: 46, subs: [[1, 'CH2OH'], [2, 'OH'], [3, 'OH'], [5, 'Oe']] }), { repeat: 'ブドウ糖' }),
+            C('starch', 'デンプン', 'でんぷん', 'C₆H₁₀O₅', ['polymer', 'sugar'],
+              'セルロースと まったく 同じ くりかえしの 形。ちがうのは つなぎ目の 向き だけ。それだけで、人は こちらを 分解できる。',
+              'ごはん、パン、じゃがいも、かたくりこ',
+              ringMol(['O', 'CH', 'CH', 'CH', 'CH', 'CH'],
+                      { r: 46, subs: [[1, 'CH2OH'], [2, 'OH'], [3, 'OH'], [5, 'Oe']] }), { repeat: 'ブドウ糖' }),
+            C('melamine', 'メラミン', 'めらみん', 'C₃H₆N₆', ['amine'],
+              '炭素と 窒素が 1つおきに ならんだ 六角形に、NH₂ が 3つ。とても かたくて 熱に つよい 食器に なる。',
+              'メラミン食器、ホワイトボード、スポンジ',
+              ringMol(['N', 'C', 'N', 'C', 'N', 'C'],
+                      { r: 44, orders: [2, 1, 2, 1, 2, 1], subs: [[1, 'NH2'], [3, 'NH2'], [5, 'NH2']] })),
+            C('hfc134a', 'HFC-134a', 'えいちえふしー134えー', 'C₂H₂F₄', ['halide'],
+              'フロンの 塩素を ぜんぶ フッ素に かえた もの。塩素が ない ので オゾン層を こわさない。',
+              'エアコン・車の クーラーの れいばい',
+              ch(['CF3', 'CH2'], { subs: [[1, 'F', 300]] })),
             C('ribose', 'リボース', 'りぼーす', 'C₅H₁₀O₅', ['sugar'],
               '炭素 4こと 酸素 1この 五角形の 輪。DNA や RNA の ほねぐみに なる 糖。',
               'RNA（いでんしの コピー）の 材料',
@@ -1257,9 +1351,11 @@
                 .join('');
             document.getElementById('modal-mw').innerText = formulaWeight(c.formula);
             document.getElementById('modal-mw-label').innerText = c.repeat ? 'くりかえし 1この 分子量' : '分子量';
+            // 化学の ならわし（ヒル式）どおり、C → H → のこりは アルファベット順に ならべる
+            const hill = Object.keys(counts).sort((a, x) =>
+                a === 'C' ? -1 : x === 'C' ? 1 : a === 'H' ? -1 : x === 'H' ? 1 : a.localeCompare(x));
             document.getElementById('modal-atoms').innerText =
-                ['C', 'H', 'O', 'N', 'S', 'F', 'Cl', 'Br'].filter(e => counts[e])
-                    .map(e => `${e} ${counts[e]}`).join(' ・ ');
+                hill.map(e => `${e} ${counts[e]}`).join(' ・ ');
             const rep = document.getElementById('modal-repeat-wrap');
             rep.classList.toggle('hidden', !c.repeat);
             if (c.repeat) document.getElementById('modal-repeat').innerText =
