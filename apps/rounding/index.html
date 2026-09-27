@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>がい数ラボ</title>
+    <meta name="description" content="四捨五入・「約」・以上・以下・未満を数直線で見て学ぶ。まん中より上か下かでころがる玉、位ごとの見かた、●と○でわかる以上と未満、切り上げと切り捨ての使い分け、「四捨五入して300になる数」のはんい、自動でつくる練習問題とクイズ。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums }
+        .bounce-hover { transition: transform .12s cubic-bezier(.175,.885,.32,1.275) }
+        .bounce-hover:active { transform: scale(.94) }
+        @keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.1) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275) }
+        @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+        .shake { animation: shake .3s ease-in-out }
+        svg text { font-family: inherit }
+        rt { font-size: .58em; font-weight: 700; color: #1d4ed8 }
+        input[type=range] { accent-color: #1d4ed8; width: 100% }
+        table { border-collapse: collapse }
+    </style>
+</head>
+<body class="bg-sky-50 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 text-white p-3 shadow-lg sticky top-0 z-30">
+        <div class="max-w-4xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">🎯</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">がい数ラボ</h1>
+                    <p class="text-xs text-sky-50 font-bold hidden sm:block">四捨五入・約・以上・以下・未満を 目で 見る</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[64px] z-20 bg-sky-50/95 backdrop-blur border-b border-sky-200">
+        <div class="max-w-4xl mx-auto flex gap-2 p-3 overflow-x-auto" id="tab-nav"></div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto w-full p-3 sm:p-5 flex-grow space-y-4">
+
+        <!-- ===== ① 四捨五入 ===== -->
+        <section id="tab-round" class="space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-sky-100">
+                <h2 class="font-black">🎯 四捨五入{ししゃごにゅう}は「近{ちか}い ほうに ころがす」</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1 leading-relaxed">
+                    数直線{すうちょくせん}の <b class="text-blue-700">まん中{なか}</b>が 山{やま}の てっぺん。
+                    玉{たま}は <b>近{ちか}い ほうへ ころがり落{お}ちる</b>。
+                    ちょうど まん中{なか}に のった とき だけ「<b class="text-orange-600">上{うえ}に あげる</b>」と 約束{やくそく}する。
+                    これが 四捨五入{ししゃごにゅう}。
+                </p>
+                <div class="flex flex-wrap items-center gap-2 mt-3">
+                    <span class="font-black text-sm whitespace-nowrap">どこまでの がい数に する？</span>
+                    <div id="rd-place" class="flex flex-wrap gap-1.5"></div>
+                </div>
+                <div class="flex items-center gap-3 mt-3">
+                    <span class="font-black text-sm whitespace-nowrap">数{かず}</span>
+                    <input type="range" id="rd-n" min="0" max="2000" step="1" value="234" oninput="rdDraw()">
+                    <span id="rd-n-v" class="num bg-blue-100 text-blue-800 font-black px-3 py-1 rounded-full text-sm whitespace-nowrap"></span>
+                </div>
+                <div id="rd-fig" class="mt-3"></div>
+                <div id="rd-res" class="mt-3"></div>
+                <div class="flex flex-wrap gap-1.5 mt-3" id="rd-quick"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-sky-100">
+                <h2 class="font-black">✋ 「4以下{いか}は 切{き}り捨{す}て、5以上{いじょう}は 切{き}り上{あ}げ」</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    見{み}る のは <b class="text-rose-600">1つ 下{した}の 位{くらい}</b>の 数字{すうじ} ただ 1つ だけ。
+                </p>
+                <div id="rd-rule" class="mt-3"></div>
+                <div id="rd-why" class="space-y-2 mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ② どの位まで ===== -->
+        <section id="tab-place" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-sky-100">
+                <h2 class="font-black">🔢 「どこまでの がい数」＝「どこを 見{み}るか」</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1 leading-relaxed">
+                    「百{ひゃく}の位{くらい}までの がい数{すう}に しなさい」と 言{い}われたら、
+                    見{み}る のは <b class="text-rose-600">その 1つ 下{した}（十{じゅう}の位{くらい}）</b>。
+                    そこを 四捨五入{ししゃごにゅう}して、<b>右{みぎ}は ぜんぶ 0</b>に する。
+                </p>
+                <div id="pl-nums" class="flex flex-wrap gap-1.5 mt-3"></div>
+                <div class="flex flex-wrap items-center gap-2 mt-3">
+                    <span class="font-black text-sm whitespace-nowrap">どこまで？</span>
+                    <div id="pl-place" class="flex flex-wrap gap-1.5"></div>
+                </div>
+                <div id="pl-fig" class="mt-3"></div>
+                <div id="pl-res" class="mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-sky-100">
+                <h2 class="font-black">🔝 「上{うえ}から 2けた」の がい数{すう}</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    左{ひだり}の 0でない 数字{すうじ}から 数{かぞ}えて 2つ 残{のこ}す、という いみ。
+                </p>
+                <div id="pl-top" class="mt-3"></div>
+                <div id="pl-top-why" class="space-y-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-sky-100">
+                <h2 class="font-black">⚠️ まちがえやすい ところ</h2>
+                <div id="pl-miss" class="space-y-2 mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ③ 以上・以下・未満 ===== -->
+        <section id="tab-range" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-sky-100">
+                <h2 class="font-black">⚖️ その 数{かず}は 入{はい}る？ 入{はい}らない？</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1 leading-relaxed">
+                    <b class="text-blue-700">● ぬりつぶし</b>は「その 数{かず}も 入{はい}る」、
+                    <b class="text-rose-600">○ 白{しろ}まる</b>は「その 数{かず}は 入{はい}らない」。
+                    この 2つの しるしで ぜんぶ わかる。
+                </p>
+                <div id="rg-kind" class="flex flex-wrap gap-1.5 mt-3"></div>
+                <div class="flex items-center gap-3 mt-3">
+                    <span class="font-black text-sm whitespace-nowrap">さかい目{め}の 数{かず}</span>
+                    <input type="range" id="rg-b" min="1" max="19" step="1" value="10" oninput="rgDraw()">
+                    <span id="rg-b-v" class="num bg-blue-100 text-blue-800 font-black px-3 py-1 rounded-full text-sm whitespace-nowrap"></span>
+                </div>
+                <div id="rg-fig" class="mt-3"></div>
+                <div id="rg-res" class="mt-3"></div>
+                <div id="rg-check" class="mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-sky-100">
+                <h2 class="font-black">📋 4つの 言{い}い方{かた}を まとめて くらべる</h2>
+                <div id="rg-table" class="mt-3 overflow-x-auto"></div>
+                <div id="rg-why" class="space-y-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-sky-100">
+                <h2 class="font-black">🎢 くらしの 中の 「以上{いじょう}・未満{みまん}」</h2>
+                <div id="rg-life" class="space-y-2 mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ④ 約・切り上げ・切り捨て ===== -->
+        <section id="tab-about" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-sky-100">
+                <h2 class="font-black">📏 「約{やく}」＝ぴったりでは ない、でも 役{やく}に 立{た}つ</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1 leading-relaxed">
+                    「約{やく}1万人{まんにん}」「およそ 20分{ぷん}」。
+                    <b class="text-blue-700">細{こま}かい ところを わざと 切{き}って</b>、
+                    大{おお}きさが パッと わかる ように した 数{かず}が <b>がい数{すう}</b>。
+                </p>
+                <div id="ab-why" class="space-y-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-sky-100">
+                <h2 class="font-black">🔀 3つの やり方{かた}を くらべる</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    同{おな}じ 数{かず}でも、<b>目的{もくてき}に よって</b> やり方{かた}が かわる。
+                </p>
+                <div class="flex items-center gap-3 mt-3">
+                    <span class="font-black text-sm whitespace-nowrap">数{かず}</span>
+                    <input type="range" id="ab-n" min="1" max="999" step="1" value="238" oninput="abDraw()">
+                    <span id="ab-n-v" class="num bg-blue-100 text-blue-800 font-black px-3 py-1 rounded-full text-sm whitespace-nowrap"></span>
+                </div>
+                <div id="ab-fig" class="mt-3"></div>
+                <div id="ab-cmp" class="mt-3"></div>
+                <div id="ab-use" class="space-y-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-sky-100">
+                <h2 class="font-black">🔎 四捨五入{ししゃごにゅう}して この 数{かず}に なるのは？</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1 leading-relaxed">
+                    ここで <b class="text-blue-700">四捨五入{ししゃごにゅう}</b>と
+                    <b class="text-blue-700">以上{いじょう}・未満{みまん}</b>が つながる。
+                    答{こた}えは いつも「<b>◯◯以上{いじょう} △△未満{みまん}</b>」の 形{かたち}に なる。
+                </p>
+                <div id="ab-target" class="flex flex-wrap gap-1.5 mt-3"></div>
+                <div id="ab-range" class="mt-3"></div>
+                <div id="ab-range-res" class="mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ⑤ れんしゅう ===== -->
+        <section id="tab-drill" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-sky-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">✏️ れんしゅう（じどうで つくる）</h2>
+                    <span id="dr-score" class="num bg-blue-100 text-blue-800 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newDrill()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <div id="dr-kinds" class="flex flex-wrap gap-2 mt-3"></div>
+                <p id="dr-q" class="font-black text-base sm:text-lg mt-3 leading-relaxed"></p>
+                <div id="dr-fig" class="mt-2"></div>
+                <div id="dr-choices" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3"></div>
+                <div id="dr-res" class="mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-sky-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">❓ ことばの クイズ</h2>
+                    <span id="qz-score" class="num bg-blue-100 text-blue-800 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newQuiz()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <div id="qz-fields" class="flex flex-wrap gap-2 mt-3"></div>
+                <p id="qz-q" class="font-black text-base sm:text-lg mt-3 leading-relaxed"></p>
+                <div id="qz-choices" class="grid gap-2 mt-3"></div>
+                <div id="qz-res" class="mt-3"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center text-xs text-slate-400 font-bold p-4">がい数ラボ © 2026</footer>
+
+<script>
+    /* ===================== きょうつう ===================== */
+    const rnd = n => Math.floor(Math.random() * n);
+    const pickOne = a => a[rnd(a.length)];
+    function shuffle(a) { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = rnd(i + 1); const t = b[i]; b[i] = b[j]; b[j] = t; } return b; }
+    function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    const plain = t => String(t).replace(/\{[^{}]*\}/g, '');
+    const nf = n => Math.round(n).toLocaleString('ja-JP');
+    const W = 560;
+    function svg(w, h, body) {
+        return `<svg viewBox="0 0 ${w} ${h}" class="w-full h-auto block mx-auto" style="max-width:${w}px" role="img">${body}</svg>`;
+    }
+    function resultBox(ok, title, body) {
+        return `<div class="pop ${ok ? 'bg-green-50 border-green-300' : 'bg-amber-50 border-amber-300'} border-2 rounded-2xl p-3">
+            <p class="font-black ${ok ? 'text-green-700' : 'text-amber-700'}">${title}</p>
+            <div class="font-bold text-sm mt-1 leading-relaxed">${body}</div></div>`;
+    }
+    const S = { quiz: [0, 0], drill: [0, 0] };
+    function scoreBox(id, s) { document.getElementById(id).innerText = `${s[0]} / ${s[1]}`; }
+    function markChoices(sel, isRight, picked, cls) {
+        document.querySelectorAll(sel).forEach((el, j) => {
+            el.className = `${isRight(j) ? 'bg-green-50 border-green-500' : (j === picked ? 'bg-red-50 border-red-400 shake' : 'bg-white border-slate-200 opacity-60')} border-2 ${cls}`;
+        });
+    }
+    const PAL = {
+        sky: ['bg-sky-50 border-sky-200', 'text-sky-800'],
+        blue: ['bg-blue-50 border-blue-200', 'text-blue-800'],
+        amber: ['bg-amber-50 border-amber-200', 'text-amber-800'],
+        rose: ['bg-rose-50 border-rose-200', 'text-rose-800'],
+        emerald: ['bg-emerald-50 border-emerald-200', 'text-emerald-800'],
+        violet: ['bg-violet-50 border-violet-200', 'text-violet-800']
+    };
+    function cards(id, list, col) {
+        const p = PAL[col || 'sky'];
+        document.getElementById(id).innerHTML = list.map(([t, d]) =>
+            `<div class="${p[0]} border-2 rounded-2xl p-3">
+                <p class="font-black ${p[1]} text-sm">${t}</p>
+                <p class="text-xs font-bold text-slate-600 mt-1 leading-relaxed">${d}</p></div>`).join('');
+    }
+
+    /* 漢字{よみ} を ルビに */
+    const RUBY_RE = /([一-鿿々]+)\{([^{}]+)\}/g;
+    function rubySkip(el) {
+        for (let n = el; n; n = n.parentNode) {
+            const tag = n.nodeType === 1 ? n.tagName.toLowerCase() : '';
+            if (tag === 'script' || tag === 'style' || tag === 'svg' || tag === 'ruby') return true;
+        }
+        return false;
+    }
+    function rubifyText(node) {
+        const t = node.nodeValue;
+        if (t.indexOf('{') < 0 || !node.parentNode || rubySkip(node.parentNode)) return;
+        RUBY_RE.lastIndex = 0;
+        if (!RUBY_RE.test(t)) return;
+        RUBY_RE.lastIndex = 0;
+        const frag = document.createDocumentFragment();
+        let last = 0, m;
+        while ((m = RUBY_RE.exec(t))) {
+            if (m.index > last) frag.appendChild(document.createTextNode(t.slice(last, m.index)));
+            const ruby = document.createElement('ruby');
+            ruby.appendChild(document.createTextNode(m[1]));
+            const rt = document.createElement('rt');
+            rt.textContent = m[2];
+            ruby.appendChild(rt);
+            frag.appendChild(ruby);
+            last = m.index + m[0].length;
+        }
+        if (last < t.length) frag.appendChild(document.createTextNode(t.slice(last)));
+        node.parentNode.replaceChild(frag, node);
+    }
+    function rubify(root) {
+        if (root.nodeType === 3) return rubifyText(root);
+        if (root.nodeType !== 1 || rubySkip(root)) return;
+        const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        const list = [];
+        while (w.nextNode()) if (w.currentNode.nodeValue.indexOf('{') >= 0) list.push(w.currentNode);
+        list.forEach(rubifyText);
+    }
+    new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(rubify)))
+        .observe(document.body, { childList: true, subtree: true });
+
+    const TABS = { round: '🎯 四捨五入', place: '🔢 どの位まで', range: '⚖️ 以上・以下・未満', about: '📏 約と 切り上げ', drill: '✏️ れんしゅう' };
+    let tab = 'round';
+    const ready = {};
+    function renderNav() {
+        document.getElementById('tab-nav').innerHTML = Object.entries(TABS).map(([k, label]) =>
+            `<button onclick="setTab('${k}')" data-tab="${k}" class="${tab === k ? 'bg-blue-700 text-white' : 'bg-white border-2 border-sky-200 text-slate-600'} font-black px-4 py-2 rounded-full text-sm whitespace-nowrap bounce-hover">${label}</button>`).join('');
+    }
+    function setTab(k) {
+        tab = k;
+        Object.keys(TABS).forEach(t => document.getElementById('tab-' + t).classList.toggle('hidden', t !== k));
+        renderNav();
+        if (!ready[k]) { ready[k] = true; if (BUILD[k]) BUILD[k](); }
+    }
+
+    /* ===================== 絵の 部品 ===================== */
+    function bg(h, fill, w) { return `<rect x="0" y="0" width="${w || W}" height="${h}" rx="14" fill="${fill || '#f0f9ff'}"/>`; }
+    function tx(x, y, t, size, col, anchor, weight) {
+        t = plain(t);                    /* SVGの 中に <ruby> は 置けない */
+        return `<text x="${x}" y="${y}" text-anchor="${anchor || 'middle'}" font-size="${size || 11}" font-weight="${weight || 900}" fill="${col || '#0f172a'}">${esc(t)}</text>`;
+    }
+    const twid = t => [...plain(t)].reduce((a, ch) => a + (ch.charCodeAt(0) < 128 ? 6 : 10), 0);
+    function arrow(x1, y1, x2, y2, col, w) {
+        const a = Math.atan2(y2 - y1, x2 - x1), L = 9;
+        return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="${w || 3}" stroke-linecap="round"/>
+                <polygon points="${x2},${y2} ${(x2 - Math.cos(a - .45) * L).toFixed(1)},${(y2 - Math.sin(a - .45) * L).toFixed(1)} ${(x2 - Math.cos(a + .45) * L).toFixed(1)},${(y2 - Math.sin(a + .45) * L).toFixed(1)}" fill="${col}"/>`;
+    }
+    /* 数直線。lo〜hi を x0〜x1 に わりあてる */
+    function axis(x0, x1, y, lo, hi, step, fmt) {
+        const px = v => x0 + (v - lo) / (hi - lo) * (x1 - x0);
+        let g = `<line x1="${x0 - 14}" y1="${y}" x2="${x1 + 14}" y2="${y}" stroke="#334155" stroke-width="2.5"/>`;
+        g += `<polygon points="${x1 + 20},${y} ${x1 + 10},${y - 5} ${x1 + 10},${y + 5}" fill="#334155"/>`;
+        for (let v = lo; v <= hi + 1e-9; v += step) {
+            const big = Math.abs(v - lo) < 1e-9 || Math.abs(v - hi) < 1e-9;
+            g += `<line x1="${px(v).toFixed(1)}" y1="${y - (big ? 12 : 7)}" x2="${px(v).toFixed(1)}" y2="${y + (big ? 12 : 7)}" stroke="#334155" stroke-width="${big ? 2.5 : 1.6}"/>`;
+            if (fmt) { const t = fmt(v); if (t) g += tx(px(v), y + 30, t, big ? 13 : 11, big ? '#0f172a' : '#64748b'); }
+        }
+        return { g, px };
+    }
+
+    /* =====================================================================
+       ① 四捨五入（数直線）
+       ===================================================================== */
+    const el = id => document.getElementById(id);
+    const RD_PLACES = [[10, '十{じゅう}の位{くらい}まで', '一{いち}の位{くらい}'],
+                       [100, '百{ひゃく}の位{くらい}まで', '十{じゅう}の位{くらい}'],
+                       [1000, '千{せん}の位{くらい}まで', '百{ひゃく}の位{くらい}']];
+    let rdP = 0;
+    function setRdP(i) { rdP = i; rdDraw(); }
+    function setRdN(n) { el('rd-n').value = n; rdDraw(); }
+    /* 四捨五入。p＝どの 位まで（10なら 十の位まで） */
+    function roundTo(n, p) {
+        const lo = Math.floor(n / p) * p, mid = lo + p / 2;
+        return n >= mid ? lo + p : lo;
+    }
+    const digitAt = (n, p) => Math.floor(n / (p / 10)) % 10;   // 見る 数字（1つ 下の 位）
+    function rdFig(n, p) {
+        const h = 250, X0 = 70, X1 = 490, Y = 150;
+        const lo = Math.floor(n / p) * p, hi = lo + p, mid = lo + p / 2;
+        const up = n >= mid, ans = up ? hi : lo;
+        const a = axis(X0, X1, Y, lo, hi, p / 10, v => (v === lo || v === hi) ? nf(v) : null);
+        let g = bg(h);
+        // 左半分＝下へ、右半分＝上へ
+        g += `<rect x="${a.px(lo).toFixed(1)}" y="${Y - 13}" width="${(a.px(mid) - a.px(lo)).toFixed(1)}" height="26" fill="#bfdbfe"/>`;
+        g += `<rect x="${a.px(mid).toFixed(1)}" y="${Y - 13}" width="${(a.px(hi) - a.px(mid)).toFixed(1)}" height="26" fill="#fed7aa"/>`;
+        g += a.g;
+        g += tx(a.px(lo), Y + 52, '← 小さい ほう', 10, '#1d4ed8');
+        g += tx(a.px(hi), Y + 52, '大きい ほう →', 10, '#c2410c');
+        // まん中
+        g += `<line x1="${a.px(mid).toFixed(1)}" y1="56" x2="${a.px(mid).toFixed(1)}" y2="${Y + 16}" stroke="#dc2626" stroke-width="2" stroke-dasharray="6 4"/>`;
+        g += tx(a.px(mid), 48, 'まん中 ' + nf(mid), 12, '#dc2626');
+        // どちらへ ころがるか
+        g += tx((a.px(lo) + a.px(mid)) / 2, 206, 'この はんいは ' + nf(lo) + ' へ', 11, '#1d4ed8');
+        g += tx((a.px(mid) + a.px(hi)) / 2, 206, 'この はんいは ' + nf(hi) + ' へ', 11, '#c2410c');
+        g += tx(280, 228, 'ちょうど まん中（' + nf(mid) + '）は 大きい ほうへ、と 決めて ある', 10, '#dc2626');
+        // 玉
+        const bx = a.px(n);
+        g += `<circle cx="${bx.toFixed(1)}" cy="112" r="13" fill="#facc15" stroke="#a16207" stroke-width="2.5"/>`;
+        g += tx(bx, 88, nf(n), 14, '#0f172a');
+        if (Math.abs(bx - a.px(ans)) > 8) g += arrow(bx, 128, a.px(ans), Y - 18, up ? '#ea580c' : '#2563eb', 2.5);
+        else g += arrow(bx, 128, bx, Y - 18, up ? '#ea580c' : '#2563eb', 2.5);
+        g += tx(280, 24, nf(lo) + ' と ' + nf(hi) + ' の どちらに 近い？', 13, '#0f172a');
+        return svg(W, h, g);
+    }
+    function rdDraw() {
+        const n = +el('rd-n').value, [p, pn, look] = RD_PLACES[rdP];
+        el('rd-n-v').innerText = nf(n);
+        el('rd-place').innerHTML = RD_PLACES.map(([q, name], i) =>
+            `<button onclick="setRdP(${i})" class="${rdP === i ? 'bg-blue-700 text-white' : 'bg-white border-2 border-sky-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs whitespace-nowrap bounce-hover">${name}</button>`).join('');
+        el('rd-fig').innerHTML = rdFig(n, p);
+        const ans = roundTo(n, p), d = digitAt(n, p), up = d >= 5;
+        el('rd-res').innerHTML =
+            `<div class="pop bg-gradient-to-br from-sky-50 to-blue-50 border-2 border-blue-300 rounded-3xl p-4">
+                <p class="num font-black text-xl sm:text-2xl text-center">${nf(n)} <span class="text-blue-700">→ 約{やく} ${nf(ans)}</span></p>
+                <p class="text-sm font-bold text-slate-600 mt-2 leading-relaxed text-center">
+                    ${pn}の がい数{すう}に するので、見{み}るのは <b class="text-rose-600">${look}の「${d}」</b>。<br>
+                    ${d} は <b>${up ? '5以上{いじょう} なので 切{き}り上{あ}げ' : '4以下{いか} なので 切{き}り捨{す}て'}</b>
+                    → <b class="num text-blue-700">${nf(ans)}</b>
+                </p>
+            </div>`;
+        el('rd-quick').innerHTML = [234, 235, 249, 250, 495, 1050, 1499, 1500].map(v =>
+            `<button onclick="setRdN(${v})" class="num ${n === v ? 'bg-blue-700 text-white' : 'bg-white border-2 border-sky-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${nf(v)}</button>`).join('');
+    }
+
+    function rdRuleFig() {
+        const h = 190;
+        let g = bg(h, '#f8fafc');
+        g += tx(280, 26, '見るのは 1つ 下の 位の 数字 だけ', 12, '#0f172a');
+        for (let d = 0; d <= 9; d++) {
+            const x = 40 + d * 49, up = d >= 5;
+            g += `<rect x="${x}" y="52" width="42" height="46" rx="8" fill="${up ? '#fed7aa' : '#bfdbfe'}" stroke="${up ? '#c2410c' : '#1d4ed8'}" stroke-width="2.5"/>`;
+            g += tx(x + 21, 84, String(d), 20, up ? '#7c2d12' : '#1e3a8a');
+            g += arrow(x + 21, 104, x + 21, up ? 122 : 122, up ? '#ea580c' : '#2563eb', 2);
+            g += tx(x + 21, 140, up ? '上へ' : '下へ', 11, up ? '#c2410c' : '#1d4ed8');
+        }
+        g += `<rect x="36" y="150" width="240" height="28" rx="8" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/>`;
+        g += tx(156, 169, '0〜4 は 切り捨て（四捨）', 12, '#1e3a8a');
+        g += `<rect x="284" y="150" width="240" height="28" rx="8" fill="#ffedd5" stroke="#c2410c" stroke-width="2"/>`;
+        g += tx(404, 169, '5〜9 は 切り上げ（五入）', 12, '#7c2d12');
+        return svg(W, h, g);
+    }
+    const RD_WHY = [
+        ['なぜ 5から 上{うえ}に あげるの？',
+         '0〜9の 10この 数字{すうじ}を 半分{はんぶん}ずつに 分{わ}けると、<b>0・1・2・3・4 の 5こ</b>と <b>5・6・7・8・9 の 5こ</b>。こう すると どちらの グループも 同{おな}じ 数{かず}で 公平{こうへい}。名前{なまえ}も「<b>四{し}捨{しゃ}</b>（4までは すてる）<b>五{ご}入{にゅう}</b>（5からは 入{い}れる）」そのまま。'],
+        ['見{み}るのは たった 1つの 数字{すうじ}',
+         '「十{じゅう}の位{くらい}までの がい数{すう}」なら <b>一{いち}の位{くらい}だけ</b>。その 先{さき}に どんな 数字{すうじ}が あっても 関係{かんけい}ない。249を 十{じゅう}の位{くらい}までに すると <b>250</b>（9を 見{み}て くり上{あ}げ）。'],
+        ['2回{かい} 四捨五入{ししゃごにゅう}しては いけない',
+         '249 を 百{ひゃく}の位{くらい}までに する とき、先{さき}に 250に して から 300に するのは <b>まちがい</b>。もとの 249の <b>十{じゅう}の位{くらい}「4」</b>を 見{み}て、答{こた}えは <b>200</b>。かならず <b>もとの 数{かず}から 1回{かい}だけ</b>。'],
+        ['答{こた}えには「約{やく}」を つける',
+         'がい数{すう}は ぴったりの 数{かず}では ない ので、「<b>約{やく}230</b>」「およそ 230」のように 書{か}く。ぴったりの 数{かず}と 区別{くべつ}する ための 大事{だいじ}な しるし。'],
+        ['0に なる ところも ちゃんと 書{か}く',
+         '1,050 を 千{せん}の位{くらい}までに すると <b>1,000</b>（百{ひゃく}の位{くらい}の 0を 見{み}て 切{き}り捨{す}て）。「1」だけ 書{か}いては だめで、<b>右{みぎ}の 位{くらい}は 0で うめる</b>。位{くらい}の 数{かず}が 変{か}わらない ように。']
+    ];
+
+    /* =====================================================================
+       ② どの位まで（位取りで 見る）
+       ===================================================================== */
+    const PLACE_NAMES = ['一{いち}', '十{じゅう}', '百{ひゃく}', '千{せん}', '万{まん}', '十万{じゅうまん}', '百万{ひゃくまん}'];
+    const PL_NUMS = [3486, 2750, 1050, 2449, 47391, 950];
+    let plN = 0, plP = 1;                               // plP＝10の 何乗の 位まで
+    function setPlN(i) { plN = i; plP = Math.min(plP, String(PL_NUMS[i]).length - 1); plDraw(); }
+    function setPlP(e) { plP = e; plDraw(); }
+    function plFig(n, p) {
+        const ans = roundTo(n, p);
+        const L = Math.max(String(n).length, String(ans).length);
+        const ds = String(n).padStart(L, ' ').split('');
+        const as = String(ans).padStart(L, ' ').split('');
+        const lookExp = Math.round(Math.log10(p)) - 1, keepExp = Math.round(Math.log10(p));
+        const bw = Math.min(54, 460 / L), gap = 6, total = L * bw + (L - 1) * gap, x0 = 280 - total / 2;
+        const h = 244;
+        let g = bg(h, '#f8fafc');
+        g += tx(280, 22, 'もとの 数', 11, '#64748b');
+        ds.forEach((d, i) => {
+            const exp = L - 1 - i, x = x0 + i * (bw + gap);
+            const look = exp === lookExp, keep = exp > lookExp;
+            const col = look ? '#dc2626' : keep ? '#1d4ed8' : '#94a3b8';
+            const fill = look ? '#fee2e2' : keep ? '#dbeafe' : '#f1f5f9';
+            if (d !== ' ') {
+                g += `<rect x="${x.toFixed(1)}" y="40" width="${bw.toFixed(1)}" height="50" rx="8" fill="${fill}" stroke="${col}" stroke-width="${look ? 3 : 2}"/>`;
+                g += tx(x + bw / 2, 76, d, 22, col);
+            }
+            g += tx(x + bw / 2, 32, PLACE_NAMES[exp], 10, d === ' ' ? '#cbd5e1' : '#475569');
+        });
+        // 見る ところ
+        const lx = x0 + (L - 1 - lookExp) * (bw + gap) + bw / 2;
+        g += arrow(lx, 126, lx, 96, '#dc2626', 2.5);
+        g += tx(lx, 144, '見るのは ここ', 11, '#dc2626');
+        g += tx(lx, 160, '（' + plain(PLACE_NAMES[lookExp]) + 'の位）', 10, '#dc2626');
+        // 答え
+        g += tx(280, 186, '四捨五入した 答え', 11, '#64748b');
+        as.forEach((d, i) => {
+            const exp = L - 1 - i, x = x0 + i * (bw + gap);
+            if (d === ' ') return;
+            const zero = exp < keepExp;
+            g += `<rect x="${x.toFixed(1)}" y="196" width="${bw.toFixed(1)}" height="42" rx="8" fill="${zero ? '#f1f5f9' : '#dcfce7'}" stroke="${zero ? '#94a3b8' : '#15803d'}" stroke-width="2"/>`;
+            g += tx(x + bw / 2, 226, d, 20, zero ? '#94a3b8' : '#166534');
+        });
+        return svg(W, h, g);
+    }
+    function plDraw() {
+        const n = PL_NUMS[plN], L = String(n).length;
+        const maxExp = L - 1;
+        if (plP > maxExp) plP = maxExp;
+        const p = Math.pow(10, plP), ans = roundTo(n, p), d = digitAt(n, p);
+        el('pl-nums').innerHTML = PL_NUMS.map((v, i) =>
+            `<button onclick="setPlN(${i})" class="num ${plN === i ? 'bg-blue-700 text-white' : 'bg-white border-2 border-sky-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-sm bounce-hover">${nf(v)}</button>`).join('');
+        el('pl-place').innerHTML = [1, 2, 3, 4].filter(e => e <= maxExp).map(e =>
+            `<button onclick="setPlP(${e})" class="${plP === e ? 'bg-blue-700 text-white' : 'bg-white border-2 border-sky-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs whitespace-nowrap bounce-hover">${PLACE_NAMES[e]}の位{くらい}まで</button>`).join('');
+        el('pl-fig').innerHTML = plFig(n, p);
+        el('pl-res').innerHTML =
+            `<div class="pop bg-gradient-to-br from-sky-50 to-blue-50 border-2 border-blue-300 rounded-3xl p-4">
+                <p class="num font-black text-xl sm:text-2xl text-center">${nf(n)} <span class="text-blue-700">→ 約{やく} ${nf(ans)}</span></p>
+                <p class="text-sm font-bold text-slate-600 mt-2 leading-relaxed text-center">
+                    <b>${PLACE_NAMES[plP]}の位{くらい}まで</b>の がい数{すう} ＝
+                    その 1つ 下{した}の <b class="text-rose-600">${PLACE_NAMES[plP - 1]}の位{くらい}「${d}」</b>を 四捨五入{ししゃごにゅう}。<br>
+                    ${d >= 5 ? `${d}は 5以上{いじょう} なので くり上{あ}げ` : `${d}は 4以下{いか} なので 切{き}り捨{す}て`}、
+                    <b>右{みぎ}の 位{くらい}は ぜんぶ 0</b> → <b class="num text-blue-700">${nf(ans)}</b>
+                </p>
+            </div>`;
+    }
+
+    function plTopFig() {
+        const n = 47391, h = 240;
+        const L = String(n).length, ds = String(n).split('');
+        const bw = 54, gap = 6, total = L * bw + (L - 1) * gap, x0 = 280 - total / 2;
+        let g = bg(h, '#f8fafc');
+        g += tx(280, 22, '47,391 を 上から 数えて みる', 12, '#0f172a');
+        ds.forEach((d, i) => {
+            g += `<rect x="${x0 + i * (bw + gap)}" y="44" width="${bw}" height="48" rx="8" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/>`;
+            g += tx(x0 + i * (bw + gap) + bw / 2, 78, d, 22, '#1e3a8a');
+            g += tx(x0 + i * (bw + gap) + bw / 2, 36, '上から' + (i + 1), 9, '#64748b');
+        });
+        // 上から1けた
+        g += `<rect x="24" y="108" width="248" height="60" rx="10" fill="#fff" stroke="#0891b2" stroke-width="2.5"/>`;
+        g += tx(148, 128, '上から 1けたの がい数', 11, '#0e7490');
+        g += tx(148, 152, '2けた目「7」を 四捨五入 → 50,000', 11, '#0f172a');
+        // 上から2けた
+        g += `<rect x="288" y="108" width="248" height="60" rx="10" fill="#fff" stroke="#7c3aed" stroke-width="2.5"/>`;
+        g += tx(412, 128, '上から 2けたの がい数', 11, '#6d28d9');
+        g += tx(412, 152, '3けた目「3」を 四捨五入 → 47,000', 11, '#0f172a');
+        g += tx(280, 196, '「上から◯けた」＝ 左の 0でない 数字から ◯こ 残す', 12, '#0f172a');
+        g += tx(280, 220, 'その つぎの けたを 四捨五入する、と おぼえる', 11, '#475569');
+        return svg(W, h, g);
+    }
+    const PL_TOP = [
+        ['どこから 数{かぞ}えるの？',
+         '<b>左{ひだり}の はしの 0でない 数字{すうじ}</b>から 数{かぞ}える。47,391 なら「4」が 上{うえ}から 1けた目{め}、「7」が 2けた目{め}。'],
+        ['「上{うえ}から2けた」なら 3けた目{め}を 見{み}る',
+         '残{のこ}したい のが 2けた なので、<b>その 次{つぎ}の 3けた目{め}</b>を 四捨五入{ししゃごにゅう}する。47,391 → <b>47,000</b>。'],
+        ['大{おお}きな 数{かず}で 便利{べんり}',
+         '人口{じんこう}や 面積{めんせき}の ように けたが 多{おお}い とき、「百万{ひゃくまん}の位{くらい}まで」と 言{い}うより「<b>上{うえ}から2けた</b>」の ほうが わかりやすい ことが 多{おお}い。']
+    ];
+    const PL_MISS = [
+        ['❌ 位{くらい}の 名前{なまえ}を まちがえる',
+         '「百{ひゃく}の位{くらい}までの がい数{すう}」で <b>百{ひゃく}の位{くらい}を 四捨五入{ししゃごにゅう}して しまう</b>のが いちばん 多{おお}い まちがい。見{み}るのは かならず <b>1つ 下{した}の 位{くらい}</b>。'],
+        ['❌ 2回{かい} 四捨五入{ししゃごにゅう}して しまう',
+         '2,449 を 千{せん}の位{くらい}までに する とき、2,450 → 2,500 → 3,000 と 順{じゅん}に 上{あ}げて いくのは <b>まちがい</b>。もとの 数{かず}の <b>百{ひゃく}の位{くらい}「4」</b>だけ を 見{み}て、答{こた}えは <b>2,000</b>。'],
+        ['❌ 0を 書{か}き忘{わす}れる',
+         '1,050 を 千{せん}の位{くらい}までに すると 1,000。「1」や「10」と 書{か}くと まったく ちがう 大{おお}きさに なって しまう。<b>位{くらい}の 数{かず}は 変{か}えない</b>。'],
+        ['❌ 「約{やく}」を つけ忘{わす}れる',
+         'テストでは「約{やく}」や「およそ」が ついて いない と まちがいに される ことが ある。<b>がい数{すう}の 答{こた}えには 約{やく}を つける</b>。'],
+        ['⭕ たしかめ方{かた}',
+         '答{こた}えと もとの 数{かず}を くらべて、<b>差{さ}が 半分{はんぶん}より 小{ちい}さい</b>か 見{み}る。2,750 → 3,000 なら 差{さ}は 250 で、千{せん}の 半分{はんぶん}（500）より 小{ちい}さい ので OK。']
+    ];
+
+    /* =====================================================================
+       ③ 以上・以下・未満
+       ===================================================================== */
+    /* [名前, しるし, さかいを ふくむ？, 向き, せつめい] */
+    const RG_KINDS = [
+        ['以上{いじょう}', '≧', true, 'right', 'さかいの 数{かず}も 入{はい}る。そこから 右{みぎ}（大{おお}きい ほう）ぜんぶ。'],
+        ['より大{おお}きい', '＞', false, 'right', 'さかいの 数{かず}は 入{はい}らない。「◯を こえる」「超{ちょう}」も 同{おな}じ いみ。'],
+        ['以下{いか}', '≦', true, 'left', 'さかいの 数{かず}も 入{はい}る。そこから 左{ひだり}（小{ちい}さい ほう）ぜんぶ。'],
+        ['未満{みまん}', '＜', false, 'left', '「まだ 満{み}たない」＝さかいの 数{かず}に とどいて いない。だから 入{はい}らない。'],
+        ['◯以上{いじょう} △未満{みまん}', '≦ x ＜', true, 'band', '2つ あわせた はんい。学校{がっこう}の 表{ひょう}や ねだんの 決{き}まりで いちばん よく 出{で}て くる。']
+    ];
+    let rgK = 0;
+    function setRgK(i) { rgK = i; rgDraw(); }
+    function rgIn(v, b, k, w) {                          // その数が はんいに 入るか
+        const [, , inc, dir] = RG_KINDS[k];
+        if (dir === 'right') return inc ? v >= b : v > b;
+        if (dir === 'left') return inc ? v <= b : v < b;
+        return v >= b && v < b + w;                      // band: b以上 b+w未満
+    }
+    function rgFig(b, k, w) {
+        const h = 200, X0 = 54, X1 = 502, Y = 116;
+        const [name, sign, inc, dir] = RG_KINDS[k];
+        const a = axis(X0, X1, Y, 0, 20, 1, v => v % 5 === 0 || v === b || (dir === 'band' && v === b + w) ? String(v) : null);
+        let g = bg(h, '#f8fafc');
+        // 入る はんいを ぬる
+        const col = '#60a5fa';
+        if (dir === 'right') g += `<rect x="${a.px(b).toFixed(1)}" y="${Y - 11}" width="${(X1 + 14 - a.px(b)).toFixed(1)}" height="22" fill="${col}" opacity="0.45"/>`;
+        if (dir === 'left') g += `<rect x="${(X0 - 14).toFixed(1)}" y="${Y - 11}" width="${(a.px(b) - X0 + 14).toFixed(1)}" height="22" fill="${col}" opacity="0.45"/>`;
+        if (dir === 'band') g += `<rect x="${a.px(b).toFixed(1)}" y="${Y - 11}" width="${(a.px(b + w) - a.px(b)).toFixed(1)}" height="22" fill="${col}" opacity="0.45"/>`;
+        g += a.g;
+        // さかいの しるし
+        const mark = (v, filled) => `<circle cx="${a.px(v).toFixed(1)}" cy="${Y}" r="9" fill="${filled ? '#1d4ed8' : '#ffffff'}" stroke="#1d4ed8" stroke-width="3"/>`;
+        g += mark(b, inc);
+        if (dir === 'band') g += mark(b + w, false);
+        // ふきだし
+        const lab = (v, t, c) => tx(Math.min(Math.max(a.px(v), 60), 500), 64, t, 11, c);
+        g += lab(b, inc ? '● この 数も 入る' : '○ この 数は 入らない', inc ? '#1d4ed8' : '#dc2626');
+        g += `<line x1="${a.px(b).toFixed(1)}" y1="72" x2="${a.px(b).toFixed(1)}" y2="${Y - 12}" stroke="${inc ? '#1d4ed8' : '#dc2626'}" stroke-width="1.6" stroke-dasharray="4 3"/>`;
+        if (dir === 'band') {
+            g += tx(Math.min(a.px(b + w) + 10, 500), 44, '○ ' + nf(b + w) + ' は 入らない', 11, '#dc2626', 'middle');
+            g += `<line x1="${a.px(b + w).toFixed(1)}" y1="52" x2="${a.px(b + w).toFixed(1)}" y2="${Y - 12}" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3"/>`;
+        }
+        if (dir !== 'band') {
+            const tip = dir === 'right' ? X1 + 26 : X0 - 26;
+            g += tx(dir === 'right' ? X1 - 40 : X0 + 40, Y + 54, dir === 'right' ? 'ずっと 大きい ほうへ →' : '← ずっと 小さい ほうへ', 10, '#1d4ed8');
+        }
+        g += tx(280, 24, '青い ところが「入る 数」', 12, '#1e3a8a');
+        g += tx(280, 188, '● ぬりつぶし＝入る　　○ 白まる＝入らない', 11, '#475569');
+        return svg(W, h, g);
+    }
+    function rgDraw() {
+        const b = +el('rg-b').value, w = 5;
+        const [name, sign, inc, dir, desc] = RG_KINDS[rgK];
+        el('rg-b-v').innerText = nf(b);
+        el('rg-kind').innerHTML = RG_KINDS.map(([n], i) =>
+            `<button onclick="setRgK(${i})" class="${rgK === i ? 'bg-blue-700 text-white' : 'bg-white border-2 border-sky-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs whitespace-nowrap bounce-hover">${n}</button>`).join('');
+        el('rg-fig').innerHTML = rgFig(b, rgK, w);
+        const title = dir === 'band' ? `${b}以上{いじょう} ${b + w}未満{みまん}` : `${b}${name}`;
+        el('rg-res').innerHTML =
+            `<div class="pop bg-gradient-to-br from-sky-50 to-blue-50 border-2 border-blue-300 rounded-3xl p-4">
+                <p class="font-black text-xl sm:text-2xl text-center">${title} <span class="text-blue-700">（${sign}）</span></p>
+                <p class="text-sm font-bold text-slate-600 mt-2 leading-relaxed text-center">${desc}</p>
+                <p class="text-sm font-black mt-2 text-center">
+                    さかいの <b class="num">${b}</b> は
+                    <b class="${inc ? 'text-blue-700' : 'text-rose-600'}">${inc ? '入る ⭕' : '入らない ❌'}</b>
+                    ${dir === 'band' ? `／ <b class="num">${b + w}</b> は <b class="text-rose-600">入らない ❌</b>` : ''}
+                </p>
+            </div>`;
+        const list = [];
+        for (let v = b - 2; v <= b + (dir === 'band' ? w + 1 : 2); v++) if (v >= 0 && v <= 20) list.push(v);
+        el('rg-check').innerHTML =
+            `<p class="font-black text-sm text-slate-500">この 数{かず}は 入{はい}る？</p>
+             <div class="flex flex-wrap gap-1.5 mt-2">${list.map(v => {
+                const ok = rgIn(v, b, rgK, w);
+                return `<span data-rgv="${v}" class="num ${ok ? 'bg-blue-100 border-blue-400 text-blue-800' : 'bg-rose-50 border-rose-300 text-rose-700'} border-2 rounded-2xl px-3 py-1.5 text-sm font-black">${v} ${ok ? '⭕' : '❌'}</span>`;
+             }).join('')}</div>`;
+    }
+    const RG_TABLE = [
+        ['以上{いじょう}', '≧', '⭕ 入{はい}る', '10, 11, 12, …', '10以上{いじょう}'],
+        ['より大{おお}きい・超{ちょう}', '＞', '❌ 入{はい}らない', '11, 12, …（10.1も）', '10より大{おお}きい'],
+        ['以下{いか}', '≦', '⭕ 入{はい}る', '…, 8, 9, 10', '10以下{いか}'],
+        ['未満{みまん}・より小{ちい}さい', '＜', '❌ 入{はい}らない', '…, 8, 9（9.9も）', '10未満{みまん}']
+    ];
+    const RG_WHY = [
+        ['「以{い}」が つくと その 数{かず}も なかま',
+         '<b>以上{いじょう}・以下{いか}</b>の「以{い}」は「<b>ここから</b>」という いみ。だから <b>さかいの 数{かず}を 入{い}れて</b>、そこから 上{うえ}／下{した}。10以上{いじょう}に 10は 入{はい}る。'],
+        ['「未満{みまん}」は「まだ 満{み}たない」',
+         '<b>未{み}</b>＝まだ、<b>満{まん}</b>＝いっぱいに なる。「まだ 10に なって いない」ので <b>10は 入{はい}らない</b>。9.9も 9も 入{はい}る。'],
+        ['「より大{おお}きい」と「以上{いじょう}」は ちがう',
+         '10<b>以上{いじょう}</b>は 10を ふくむ。10<b>より大{おお}きい</b>は 10を ふくまない。算数{さんすう}では ≧ と ＞ で 書{か}き分{わ}ける。'],
+        ['整数{せいすう}だけ なら 言{い}いかえられる ことも',
+         '整数{せいすう}だけを 考{かんが}える なら「10より大{おお}きい」＝「11以上{いじょう}」。でも <b>小数{しょうすう}が 入{はい}ると ちがう</b>（10.5は 前{まえ}には 入{はい}るが 後{あと}には 入{はい}らない）。だから ふだんは 言{い}いかえない ほうが 安全{あんぜん}。'],
+        ['「◯以上{いじょう} △未満{みまん}」が いちばん よく 出{で}る',
+         'はんいを きっちり 分{わ}ける とき、<b>すき間{ま}も 重{かさ}なりも 作{つく}らない</b>ため に この 形{かたち}を つかう。「0以上{いじょう}10未満{みまん}」「10以上{いじょう}20未満{みまん}」と ならべると、どの 数{かず}も かならず どこか 1つに 入{はい}る。']
+    ];
+    const RG_LIFE = [
+        ['🎢 「身長{しんちょう} 120cm以上{いじょう}の 方{かた}」',
+         'ちょうど 120cmの 人{ひと}は <b>乗{の}れる</b>。119.5cmは 乗{の}れない。安全{あんぜん}の ための きまり なので、はかって きっちり 決{き}める。'],
+        ['🚗 「高{たか}さ 2.1m未満{みまん}」の 駐車場{ちゅうしゃじょう}',
+         'ちょうど 2.1mの 車{くるま}は <b>入{はい}れない</b>。ぶつかると あぶない ので、ぎりぎりを ふくめない 言{い}い方{かた}に して ある。'],
+        ['📦 「3,000円{えん}以上{いじょう}で 送料{そうりょう}むりょう」',
+         'ちょうど 3,000円{えん}で <b>むりょうに なる</b>。2,999円{えん}だと ならない。あと 1円{えん}の ために もう 1つ 買{か}う 人{ひと}が 多{おお}い。'],
+        ['🎫 「12歳{さい}未満{みまん}は 保護者{ほごしゃ}と いっしょに」',
+         '12歳{さい}の 誕生日{たんじょうび}を むかえた 人{ひと}は <b>1人{ひとり}でも OK</b>。11歳{さい}364日{にち}は だめ。'],
+        ['🌡️ 天気予報{てんきよほう}の「夏日{なつび}」',
+         '最高気温{さいこうきおん}が <b>25度{ど}以上{いじょう}</b>の 日{ひ}。30度{ど}以上{いじょう}は 真夏日{まなつび}、35度{ど}以上{いじょう}は 猛暑日{もうしょび}。ぜんぶ「以上{いじょう}」で 決{き}まって いる。'],
+        ['🏫 「定員{ていいん} 20名{めい}まで」',
+         '「◯まで」は <b>以下{いか}</b>と 同{おな}じ いみ。20名{めい}は 入{はい}れる。21名{めい}は だめ。']
+    ];
+
+    /* =====================================================================
+       ④ 約・切り上げ・切り捨て・はんい
+       ===================================================================== */
+    const AB_WHY = [
+        ['なぜ わざと ぴったりに しないの？',
+         '「東京{とうきょう}ドームに 45,832人{にん}」より「<b>約{やく}4万6千人{まんろくせんにん}</b>」の ほうが 大{おお}きさが すぐ わかる。人{ひと}に 伝{つた}える とき、細{こま}かすぎる 数{かず}は かえって わかりにくい。'],
+        ['計算{けいさん}が とても 楽{らく}に なる',
+         '298 ＋ 403 を「約{やく}300 ＋ 約{やく}400 ＝ 約{やく}700」と 見当{けんとう}を つけられる。<b>答{こた}えが だいたい 合{あ}って いるか たしかめる</b>のに つかえる（見積{みつ}もり）。'],
+        ['ニュースの 数字{すうじ}は ほとんど がい数{すう}',
+         '人口{じんこう}・面積{めんせき}・売{う}れた 数{かず}。<b>「約{やく}」「およそ」「くらい」</b>が ついて いたら、それは がい数{すう}の しるし。'],
+        ['ぴったりが 必要{ひつよう}な ときも ある',
+         'お金{かね}の 計算{けいさん}、薬{くすり}の 量{りょう}、人数{にんずう}の 出欠{しゅっけつ}。<b>がい数{すう}に しては いけない 場面{ばめん}</b>も ある。どちらが 必要{ひつよう}か 考{かんが}えて えらぶ。']
+    ];
+    function abFig(n) {
+        const p = 100, h = 236, X0 = 70, X1 = 490, Y = 140;
+        const lo = Math.floor(n / p) * p, hi = lo + p, mid = lo + p / 2;
+        const ans = roundTo(n, p);
+        const a = axis(X0, X1, Y, lo, hi, 10, v => (v === lo || v === hi || v === mid) ? nf(v) : null);
+        let g = bg(h, '#f8fafc');
+        g += a.g;
+        g += `<line x1="${a.px(mid).toFixed(1)}" y1="${Y - 20}" x2="${a.px(mid).toFixed(1)}" y2="${Y + 14}" stroke="#dc2626" stroke-width="2" stroke-dasharray="5 4"/>`;
+        g += `<circle cx="${a.px(n).toFixed(1)}" cy="${Y}" r="9" fill="#facc15" stroke="#a16207" stroke-width="2.5"/>`;
+        g += tx(a.px(n), Y - 18, nf(n), 13, '#0f172a');
+        // 3つの やり方
+        const R = [['切り上げ', hi, '#dc2626', 60], ['四捨五入', ans, '#2563eb', 90], ['切り捨て', lo, '#16a34a', 120]];
+        R.forEach(([name, v, c, y]) => {
+            g += `<path d="M${a.px(n).toFixed(1)} ${y} L${a.px(v).toFixed(1)} ${y}" stroke="${c}" stroke-width="2.5" stroke-dasharray="4 3"/>`;
+            g += `<circle cx="${a.px(v).toFixed(1)}" cy="${y}" r="5" fill="${c}"/>`;
+            g += tx(a.px(n) + (a.px(v) > a.px(n) ? -8 : 8), y + 4, name, 10, c, a.px(v) > a.px(n) ? 'end' : 'start');
+        });
+        g += tx(280, 24, '同じ 数でも やり方で 行き先が ちがう', 12, '#0f172a');
+        g += tx(280, 208, '切り上げ＝いつも 大きい ほう　切り捨て＝いつも 小さい ほう', 11, '#475569');
+        g += tx(280, 226, '四捨五入＝近い ほう（まん中は 大きい ほう）', 11, '#475569');
+        return svg(W, h, g);
+    }
+    function abDraw() {
+        const n = +el('ab-n').value, p = 100;
+        el('ab-n-v').innerText = nf(n);
+        el('ab-fig').innerHTML = abFig(n);
+        const lo = Math.floor(n / p) * p, hi = lo + p, ans = roundTo(n, p);
+        el('ab-cmp').innerHTML =
+            `<div class="grid grid-cols-3 gap-2">
+                ${[['切{き}り上{あ}げ', hi, 'rose'], ['四捨五入{ししゃごにゅう}', ans, 'blue'], ['切{き}り捨{す}て', lo, 'emerald']].map(([t, v, c]) =>
+                    `<div class="${PAL[c][0]} border-2 rounded-2xl p-2 text-center">
+                        <p class="text-xs font-black ${PAL[c][1]}">${t}</p>
+                        <p class="num font-black text-lg">${nf(v)}</p></div>`).join('')}
+            </div>`;
+    }
+    const AB_USE = [
+        ['🚌 切{き}り上{あ}げ：足{た}りないと こまる もの',
+         '40人{にん}乗{の}りの バスで 125人{にん}が 行{い}く なら 125÷40＝3.1…。<b>3台{だい}では 5人{にん} 乗{の}れない</b>ので <b>4台{だい}</b>。ほかにも「箱{はこ}の 数{かず}」「必要{ひつよう}な 材料{ざいりょう}」など。'],
+        ['🍬 切{き}り捨{す}て：あまっても 使{つか}えない もの',
+         '100円{えん}で 30円{えん}の おかしは 100÷30＝3.3…。<b>3こ しか 買{か}えない</b>。「何{なん}人{にん}に 配{くば}れる？」「何{なん}回{かい} できる？」も 同{おな}じ。'],
+        ['📊 四捨五入{ししゃごにゅう}：だいたいの 大{おお}きさを 伝{つた}える',
+         '人数{にんずう}・きょり・ねだんなど、<b>いちばん 近{ちか}い きりの よい 数{かず}</b>に したい とき。ふだん「約{やく}◯◯」と いう ときは たいてい これ。'],
+        ['🤔 大事{だいじ}なのは「何{なに}の ための 数{かず}か」',
+         '同{おな}じ 3.1 でも、バスなら 4、おかしなら 3。<b>問題{もんだい}の 場面{ばめん}を 読{よ}んで えらぶ</b>のが いちばん 大事{だいじ}。「上{あ}げるの？ 下{さ}げるの？」を いつも 考{かんが}える。']
+    ];
+
+    const AB_TARGETS = [[30, 10], [300, 100], [500, 100], [1000, 1000], [5000, 1000], [2400, 100]];
+    let abT = 1;
+    function setAbT(i) { abT = i; abRange(); }
+    function abRangeFig(t, p) {
+        const h = 210, X0 = 60, X1 = 500, Y = 120;
+        const lo = t - p / 2, hi = t + p / 2;
+        const a = axis(X0, X1, Y, t - p, t + p, p / 10, v => (v === t - p || v === t + p || v === t || v === lo || v === hi) ? nf(v) : null);
+        let g = bg(h, '#f8fafc');
+        g += `<rect x="${a.px(lo).toFixed(1)}" y="${Y - 11}" width="${(a.px(hi) - a.px(lo)).toFixed(1)}" height="22" fill="#60a5fa" opacity="0.45"/>`;
+        g += a.g;
+        g += `<circle cx="${a.px(lo).toFixed(1)}" cy="${Y}" r="9" fill="#1d4ed8" stroke="#1d4ed8" stroke-width="3"/>`;
+        g += `<circle cx="${a.px(hi).toFixed(1)}" cy="${Y}" r="9" fill="#ffffff" stroke="#1d4ed8" stroke-width="3"/>`;
+        g += tx(a.px(lo), 62, '● ' + nf(lo) + ' は 入る', 11, '#1d4ed8');
+        g += tx(a.px(hi), 62, '○ ' + nf(hi) + ' は 入らない', 11, '#dc2626');
+        g += `<line x1="${a.px(lo).toFixed(1)}" y1="70" x2="${a.px(lo).toFixed(1)}" y2="${Y - 12}" stroke="#1d4ed8" stroke-width="1.6" stroke-dasharray="4 3"/>`;
+        g += `<line x1="${a.px(hi).toFixed(1)}" y1="70" x2="${a.px(hi).toFixed(1)}" y2="${Y - 12}" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3"/>`;
+        g += tx(a.px(t), Y - 26, '↓ ここに なる', 11, '#0f172a');
+        g += tx(280, 24, '四捨五入して ' + nf(t) + ' に なる 数の はんい', 12, '#0f172a');
+        g += tx(280, 196, 'この 青い ところの 数は ぜんぶ ' + nf(t) + ' に なる', 11, '#1e3a8a');
+        return svg(W, h, g);
+    }
+    function abRange() {
+        const [t, p] = AB_TARGETS[abT];
+        const lo = t - p / 2, hi = t + p / 2;
+        el('ab-target').innerHTML = AB_TARGETS.map(([v, q], i) =>
+            `<button onclick="setAbT(${i})" class="num ${abT === i ? 'bg-blue-700 text-white' : 'bg-white border-2 border-sky-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs whitespace-nowrap bounce-hover">${nf(v)}（${plain(PLACE_NAMES[Math.round(Math.log10(q))])}の位まで）</button>`).join('');
+        el('ab-range').innerHTML = abRangeFig(t, p);
+        el('ab-range-res').innerHTML =
+            `<div class="pop bg-gradient-to-br from-sky-50 to-blue-50 border-2 border-blue-300 rounded-3xl p-4">
+                <p class="font-black text-lg sm:text-xl text-center num">${nf(lo)} 以上{いじょう} ${nf(hi)} 未満{みまん}</p>
+                <p class="text-sm font-bold text-slate-600 mt-2 leading-relaxed">
+                    ・いちばん 小{ちい}さい 数{かず}は <b class="num">${nf(lo)}</b>（${nf(lo)}は ちょうど まん中{なか} なので 大{おお}きい ほうに 上{あ}がって ${nf(t)}に なる）<br>
+                    ・いちばん 大{おお}きい <b>整数{せいすう}</b>は <b class="num">${nf(hi - 1)}</b>（${nf(hi)}に なると ${nf(t + p)}に なって しまう）<br>
+                    ・だから 答{こた}えは <b>${nf(lo)}以上{いじょう} ${nf(hi)}未満{みまん}</b>。
+                    「${nf(hi)}以下{いか}」と 書{か}くと まちがい。
+                </p>
+            </div>`;
+    }
+
+    /* =====================================================================
+       ⑤ れんしゅう（じどう生成）
+       ===================================================================== */
+    const DR_KINDS = [['all', 'ぜんぶ'], ['round', '四捨五入{ししゃごにゅう}'], ['place', 'どの位{くらい}を 見{み}る'],
+                      ['range', '以上{いじょう}・未満{みまん}'], ['band', 'もとの 数{かず}の はんい']];
+    let drKind = 'all', drill = null;
+    function pick4(correct, cands) {
+        const out = [correct];
+        cands.forEach(c => { if (out.length < 4 && c !== null && c !== undefined && !out.includes(c)) out.push(c); });
+        return shuffle(out);
+    }
+    function genRound() {
+        const p = pickOne([10, 100, 1000]);
+        const n = rnd(p * 9) + p;
+        const a = roundTo(n, p), lo = Math.floor(n / p) * p;
+        const other = a === lo ? lo + p : lo;
+        const cands = [other, roundTo(n, p * 10), lo + p * 2, Math.max(0, lo - p), n];
+        return {
+            q: `<b class="num">${nf(n)}</b> を <b>${PLACE_NAMES[Math.round(Math.log10(p))]}の位{くらい}まで</b>の がい数{すう}に すると？`,
+            choices: pick4(a, cands).map(v => nf(v)), a: nf(a),
+            e: `見{み}るのは 1つ 下{した}の ${PLACE_NAMES[Math.round(Math.log10(p)) - 1]}の位{くらい}の「${digitAt(n, p)}」。
+                ${digitAt(n, p) >= 5 ? '5以上{いじょう} なので くり上{あ}げ' : '4以下{いか} なので 切{き}り捨{す}て'} → <b class="num">${nf(a)}</b>`,
+            fig: () => rdFig(n, p)
+        };
+    }
+    function genPlace() {
+        const e = rnd(3) + 1;                            // 十=1, 百=2, 千=3
+        const cands = [e, e + 1, Math.max(0, e - 2), e + 2].map(x => Math.min(x, 5));
+        return {
+            q: `<b>${PLACE_NAMES[e]}の位{くらい}まで</b>の がい数{すう}に する とき、四捨五入{ししゃごにゅう}する のは どの 位{くらい}？`,
+            choices: pick4(e - 1, cands).map(x => plain(PLACE_NAMES[x]) + 'の位'), a: plain(PLACE_NAMES[e - 1]) + 'の位',
+            e: `「${plain(PLACE_NAMES[e])}の位まで」なら、<b>その 1つ 下{した}の ${plain(PLACE_NAMES[e - 1])}の位</b>を 見{み}る。
+                同{おな}じ 位{くらい}を 四捨五入{ししゃごにゅう}して しまう のが いちばん 多{おお}い まちがい。`
+        };
+    }
+    function genRange() {
+        const b = rnd(10) + 5, w = 5;
+        const inside = b + rnd(w);
+        const cands = [b - 1, b + w, b + w + 2, Math.max(0, b - 3)];
+        return {
+            q: `<b class="num">${b}以上{いじょう} ${b + w}未満{みまん}</b> に 入{はい}る 数{かず}は どれ？`,
+            choices: pick4(inside, cands).map(v => String(v)), a: String(inside),
+            e: `${b}以上{いじょう}＝<b>${b}も 入{はい}る</b>。${b + w}未満{みまん}＝<b>${b + w}は 入{はい}らない</b>。
+                だから 入{はい}る 整数{せいすう}は ${b} 〜 ${b + w - 1}。`,
+            fig: () => rgFig(b, 4, w)
+        };
+    }
+    function genBand() {
+        const p = pickOne([10, 100, 1000]);
+        const t = (rnd(8) + 2) * p;
+        const A = `${nf(t - p / 2)}以上{いじょう} ${nf(t + p / 2)}未満{みまん}`;
+        const cands = [
+            `${nf(t - p / 2)}より大{おお}きく ${nf(t + p / 2)}以下{いか}`,
+            `${nf(t - p)}以上{いじょう} ${nf(t + p)}未満{みまん}`,
+            `${nf(t)}以上{いじょう} ${nf(t + p)}未満{みまん}`
+        ];
+        return {
+            q: `四捨五入{ししゃごにゅう}して <b class="num">${nf(t)}</b>（${PLACE_NAMES[Math.round(Math.log10(p))]}の位{くらい}まで）に なる 数{かず}の はんいは？`,
+            choices: pick4(A, cands), a: A,
+            e: `まん中{なか}の <b class="num">${nf(t - p / 2)}</b>は くり上{あ}がって ${nf(t)}に なる ので <b>入{はい}る</b>。
+                <b class="num">${nf(t + p / 2)}</b>は ${nf(t + p)}に なって しまう ので <b>入{はい}らない</b>。
+                だから「以上{いじょう}〜未満{みまん}」。`,
+            fig: () => abRangeFig(t, p)
+        };
+    }
+    const GEN = { round: genRound, place: genPlace, range: genRange, band: genBand };
+    function setDrKind(k) { drKind = k; newDrill(); }
+    function newDrill() {
+        const k = drKind === 'all' ? pickOne(Object.keys(GEN)) : drKind;
+        drill = GEN[k]();
+        drill.done = false;
+        el('dr-kinds').innerHTML = DR_KINDS.map(([kk, n]) =>
+            `<button onclick="setDrKind('${kk}')" class="${drKind === kk ? 'bg-blue-700 text-white' : 'bg-white border-2 border-sky-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs whitespace-nowrap bounce-hover">${n}</button>`).join('');
+        el('dr-q').innerHTML = drill.q;
+        el('dr-fig').innerHTML = '';                 // 絵は 答えた あとに 出す
+        const long = drill.choices.some(c => plain(c).length > 10);
+        el('dr-choices').className = `grid gap-2 mt-3 ${long ? 'sm:grid-cols-2' : 'grid-cols-2 sm:grid-cols-4'}`;
+        el('dr-choices').innerHTML = drill.choices.map((c, i) =>
+            `<button onclick="ansDrill(${i})" data-drc="${i}" class="bg-white border-2 border-slate-200 hover:border-blue-500 num font-black text-center px-3 py-3 rounded-2xl bounce-hover">${c}</button>`).join('');
+        el('dr-res').innerHTML = '';
+        scoreBox('dr-score', S.drill);
+    }
+    function ansDrill(i) {
+        if (!drill || drill.done) return;
+        drill.done = true;
+        const ok = drill.choices[i] === drill.a;
+        S.drill[1]++; if (ok) S.drill[0]++;
+        markChoices('[data-drc]', j => drill.choices[j] === drill.a, i, 'num font-black text-center px-3 py-3 rounded-2xl');
+        el('dr-fig').innerHTML = drill.fig ? drill.fig() : '';
+        el('dr-res').innerHTML = resultBox(ok, ok ? '⭕ せいかい！' : `❌ こたえは 「${drill.a}」`, drill.e);
+        scoreBox('dr-score', S.drill);
+    }
+
+    /* ===================== ことばの クイズ ===================== */
+    const QS = [
+        { f: 'ことば', q: '「10以上{いじょう}」に 10は 入{はい}る？', a: '入{はい}る', x: ['入{はい}らない', '場合{ばあい}に よる', '10だけ 入{はい}らない'], e: '「以{い}」が つく ことばは <b>さかいの 数{かず}も なかま</b>。10, 11, 12, … が 入{はい}る。' },
+        { f: 'ことば', q: '「10未満{みまん}」に 10は 入{はい}る？', a: '入{はい}らない', x: ['入{はい}る', '場合{ばあい}に よる', '10と 11が 入{はい}る'], e: '未満{みまん}＝「まだ 満{み}たない」。10に とどいて いない 数{かず} なので、9や 9.9までが 入{はい}る。' },
+        { f: 'ことば', q: '「10以下{いか}」に あてはまる 数{かず}は？', a: '10と、10より 小{ちい}さい 数{かず}', x: ['10より 小{ちい}さい 数{かず}だけ', '10より 大{おお}きい 数{かず}', '10だけ'], e: '以下{いか}も さかいの 数{かず}を ふくむ。数直線{すうちょくせん}では ●（ぬりつぶし）で 書{か}く。' },
+        { f: 'ことば', q: '数直線{すうちょくせん}の ○（白{しろ}まる）は 何{なに}を あらわす？', a: 'その 数{かず}は 入{はい}らない', x: ['その 数{かず}も 入{はい}る', 'わからない 数{かず}', '0の こと'], e: '● ぬりつぶし＝入{はい}る（以上{いじょう}・以下{いか}）、○ 白{しろ}まる＝入{はい}らない（未満{みまん}・より大{おお}きい）。' },
+        { f: 'ことば', q: '「12歳{さい}未満{みまん}は 保護者{ほごしゃ}と いっしょに」。12歳{さい}の 人{ひと}は？', a: '1人{ひとり}でも よい', x: ['保護者{ほごしゃ}が 必要{ひつよう}', '入場{にゅうじょう}できない', '11歳{さい}と 同{おな}じ'], e: '12歳{さい}未満{みまん}＝12歳{さい}に なって いない 人{ひと}。12歳{さい}の 誕生日{たんじょうび}を むかえたら この きまりの 外{そと}。' },
+        { f: 'ことば', q: '「身長{しんちょう}120cm以上{いじょう}で 乗{の}れます」。ちょうど 120cmの 人{ひと}は？', a: '乗{の}れる', x: ['乗{の}れない', '大人{おとな}と なら 乗{の}れる', '119cmでも 乗{の}れる'], e: '以上{いじょう}は さかいを ふくむ。ぴったり 120cmは OK。119.5cmは だめ。' },
+        { f: 'ことば', q: '「10より大{おお}きい」と「10以上{いじょう}」の ちがいは？', a: '10を ふくむ か どうか', x: ['まったく 同{おな}じ', '大{おお}きさの 向{む}きが ぎゃく', '小数{しょうすう}だけ ちがう'], e: '「より大{おお}きい」は 10を ふくまない（＞）。「以上{いじょう}」は ふくむ（≧）。' },
+        { f: 'ことば', q: '「定員{ていいん}20名{めい}まで」は どの 言{い}い方{かた}と 同{おな}じ？', a: '20名{めい}以下{いか}', x: ['20名{めい}未満{みまん}', '20名{めい}より多{おお}い', '20名{めい}以上{いじょう}'], e: '「◯まで」は その 数{かず}を ふくむ ので 以下{いか}。20名{めい}は 入{はい}れる。' },
+        { f: 'ことば', q: '「0以上{いじょう}10未満{みまん}」「10以上{いじょう}20未満{みまん}」と 分{わ}ける よさは？', a: 'どの 数{かず}も かならず どこか 1つに 入{はい}る', x: ['見{み}た目{め}が きれい', '計算{けいさん}が 速{はや}く なる', 'とくに ない'], e: 'すき間{ま}も 重{かさ}なりも できない。10は 下{した}の はんいに 入{はい}らず、上{うえ}の はんいに 1回{かい}だけ 入{はい}る。' },
+
+        { f: '四捨五入', q: '四捨五入{ししゃごにゅう}で 見{み}る 数字{すうじ}は いくつ？', a: '1つ（すぐ 下{した}の 位{くらい}だけ）', x: ['2つ', '右{みぎ}の ぜんぶ', '左{ひだり}の ぜんぶ'], e: 'その 先{さき}に どんな 数字{すうじ}が あっても 関係{かんけい}ない。249を 十{じゅう}の位{くらい}までに すると 250。' },
+        { f: '四捨五入', q: 'なぜ 5は 切{き}り上{あ}げる の？', a: '0〜9を 5こずつに 分{わ}けると 公平{こうへい}だから', x: ['5が 大{おお}きい 数{かず}だから', '昔{むかし}から 決{き}まって いる だけ', '切{き}り上{あ}げた ほうが 得{とく}だから'], e: '0・1・2・3・4 の 5こと、5・6・7・8・9 の 5こ。名前{なまえ}も「四{し}を 捨{す}て、五{ご}を 入{い}れる」そのまま。' },
+        { f: '四捨五入', q: '「百{ひゃく}の位{くらい}までの がい数{すう}」で 四捨五入{ししゃごにゅう}する 位{くらい}は？', a: '十{じゅう}の位{くらい}', x: ['百{ひゃく}の位{くらい}', '千{せん}の位{くらい}', '一{いち}の位{くらい}'], e: 'かならず <b>1つ 下{した}の 位{くらい}</b>。百{ひゃく}の位{くらい}までに したい なら 十{じゅう}の位{くらい}を 見{み}る。' },
+        { f: '四捨五入', q: '2,750 を 千{せん}の位{くらい}までの がい数{すう}に すると？', a: '3,000', x: ['2,000', '2,800', '2,700'], e: '見{み}るのは 百{ひゃく}の位{くらい}の「7」。5以上{いじょう} なので くり上{あ}げて 3,000。' },
+        { f: '四捨五入', q: '249 を 百{ひゃく}の位{くらい}までの がい数{すう}に すると？', a: '200', x: ['300', '250', '240'], e: '十{じゅう}の位{くらい}の「4」を 見{み}て 切{き}り捨{す}て。先{さき}に 250に してから 300に するのは <b>2回{かい} 四捨五入{ししゃごにゅう}する まちがい</b>。' },
+        { f: '四捨五入', q: '1,050 を 百{ひゃく}の位{くらい}までの がい数{すう}に すると？', a: '1,100', x: ['1,000', '1,500', '1,050'], e: '見{み}るのは 十{じゅう}の位{くらい}の「5」。5以上{いじょう} なので くり上{あ}げて <b>1,100</b>。※千{せん}の位{くらい}までなら 百{ひゃく}の位{くらい}の「0」を 見{み}る ので 1,000。' },
+        { f: '四捨五入', q: '47,391 を 上{うえ}から 2けたの がい数{すう}に すると？', a: '47,000', x: ['50,000', '47,400', '48,000'], e: '上{うえ}から 2けた（4と7）を 残{のこ}す ので、3けた目{め}の「3」を 四捨五入{ししゃごにゅう}。4以下{いか} なので 切{き}り捨{す}て。' },
+        { f: '四捨五入', q: 'がい数{すう}で 答{こた}える とき つける ことばは？', a: '約{やく}（およそ）', x: ['ちょうど', 'ぴったり', '合計{ごうけい}'], e: 'ぴったりの 数{かず}と 区別{くべつ}する ため。「約{やく}230人{にん}」「およそ 3万{まん}」のように 書{か}く。' },
+        { f: '四捨五入', q: '四捨五入{ししゃごにゅう}して 300に なる 数{かず}の はんいは？', a: '250以上{いじょう} 350未満{みまん}', x: ['250より大{おお}きく 350以下{いか}', '200以上{いじょう} 400未満{みまん}', '290以上{いじょう} 310未満{みまん}'], e: '250は くり上{あ}がって 300に なる ので 入{はい}る（●）。350は 400に なって しまう ので 入{はい}らない（○）。' },
+
+        { f: 'つかい方', q: '40人{にん}乗{の}りの バスで 125人{にん}が 行{い}く。バスは 何台{なんだい}？', a: '4台{だい}（切{き}り上{あ}げ）', x: ['3台{だい}（切{き}り捨{す}て）', '3台{だい}（四捨五入{ししゃごにゅう}）', '5台{だい}'], e: '125÷40＝3.1…。3台{だい}では 5人{にん}が 乗{の}れない。<b>足{た}りないと こまる もの は 切{き}り上{あ}げ</b>。' },
+        { f: 'つかい方', q: '100円{えん}で 30円{えん}の おかしは 何{なん}こ 買{か}える？', a: '3こ（切{き}り捨{す}て）', x: ['4こ（切{き}り上{あ}げ）', '3.3こ', '4こ（四捨五入{ししゃごにゅう}）'], e: '100÷30＝3.3…。10円{えん} あまっても 4こ目{め}は 買{か}えない。<b>あまっても 使{つか}えない もの は 切{き}り捨{す}て</b>。' },
+        { f: 'つかい方', q: '切{き}り上{あ}げは どんな 数{かず}に なる？', a: 'いつも 大{おお}きい ほう', x: ['いつも 小{ちい}さい ほう', '近{ちか}い ほう', 'まん中{なか}'], e: '1でも あまりが あれば 上{あ}げる。切{き}り捨{す}ては いつも 小{ちい}さい ほう、四捨五入{ししゃごにゅう}は 近{ちか}い ほう。' },
+        { f: 'つかい方', q: '298＋403 の 答{こた}えの 見当{けんとう}を つけるには？', a: '約{やく}300＋約{やく}400＝約{やく}700 と 考{かんが}える', x: ['計算{けいさん}しないと わからない', '298×403 を する', '一{いち}の位{くらい}だけ 足{た}す'], e: 'これを <b>見積{みつ}もり</b>と いう。答{こた}えが だいたい 合{あ}って いるか たしかめる のに つかう。' },
+        { f: 'つかい方', q: 'がい数{すう}に しては いけない のは どれ？', a: 'おつりの 計算{けいさん}', x: ['コンサートの 人数{にんずう}を 伝{つた}える', '町{まち}の 人口{じんこう}を くらべる', '旅行{りょこう}の きょりを 話{はな}す'], e: 'お金{かね}や 薬{くすり}の 量{りょう}など、<b>ぴったりが 必要{ひつよう}な 場面{ばめん}</b>も ある。目的{もくてき}で えらぶ。' },
+        { f: 'つかい方', q: 'ニュースの「約{やく}4万6千人{まんろくせんにん}」。これは？', a: 'がい数{すう}（ぴったりでは ない）', x: ['ぴったりの 人数{にんずう}', '数{かぞ}えまちがい', '予想{よそう}の 人数{にんずう}'], e: '「約{やく}」「およそ」「くらい」が ついて いたら がい数{すう}の しるし。もとは 45,832人{にん}の ような 数{かず}。' }
+    ];
+    let qz = null, qzField = 'all';
+    function newQuiz() {
+        const pool = qzField === 'all' ? QS : QS.filter(q => q.f === qzField);
+        const q = pool[rnd(pool.length)];
+        qz = { q, choices: shuffle([q.a].concat(q.x)), done: false };
+        const fields = ['all'].concat([...new Set(QS.map(x => x.f))]);
+        el('qz-fields').innerHTML = fields.map(f =>
+            `<button onclick="setField('${f}')" class="${qzField === f ? 'bg-blue-700 text-white' : 'bg-white border-2 border-sky-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${f === 'all' ? 'ぜんぶ ' + QS.length : plain(f) + ' ' + QS.filter(x => x.f === f).length}</button>`).join('');
+        el('qz-q').innerHTML = `<span class="text-xs font-black text-blue-700 bg-blue-100 px-2 py-1 rounded-lg mr-2">${esc(plain(q.f))}</span>${q.q}`;
+        el('qz-choices').innerHTML = qz.choices.map((c, i) =>
+            `<button onclick="ansQuiz(${i})" data-qzc="${i}" class="bg-white border-2 border-slate-200 hover:border-blue-500 font-bold text-left px-4 py-3 rounded-2xl bounce-hover">${c}</button>`).join('');
+        el('qz-res').innerHTML = '';
+        scoreBox('qz-score', S.quiz);
+    }
+    function setField(f) { qzField = f; newQuiz(); }
+    function ansQuiz(i) {
+        if (!qz || qz.done) return;
+        qz.done = true;
+        const ok = qz.choices[i] === qz.q.a;
+        S.quiz[1]++; if (ok) S.quiz[0]++;
+        markChoices('[data-qzc]', j => qz.choices[j] === qz.q.a, i, 'font-bold text-left px-4 py-3 rounded-2xl');
+        el('qz-res').innerHTML = resultBox(ok, ok ? '⭕ せいかい！' : `❌ こたえは 「${qz.q.a}」`, qz.q.e);
+        scoreBox('qz-score', S.quiz);
+    }
+
+    /* ===================== タブごとの 組み立て ===================== */
+    const BUILD = {
+        round: () => {
+            rdDraw();
+            el('rd-rule').innerHTML = rdRuleFig();
+            cards('rd-why', RD_WHY, 'blue');
+        },
+        place: () => {
+            plDraw();
+            el('pl-top').innerHTML = plTopFig();
+            cards('pl-top-why', PL_TOP, 'violet');
+            cards('pl-miss', PL_MISS, 'rose');
+        },
+        range: () => {
+            rgDraw();
+            el('rg-table').innerHTML =
+                `<table class="w-full text-xs font-bold" style="min-width:420px">
+                    <tr class="bg-blue-100 text-blue-800">
+                        <th class="p-2 text-left rounded-l-xl">ことば</th>
+                        <th class="p-2">しるし</th>
+                        <th class="p-2">さかいの 数{かず}</th>
+                        <th class="p-2 text-left rounded-r-xl">10の とき 入{はい}る 数{かず}</th></tr>
+                    ${RG_TABLE.map(([n, s, inc, ex], i) =>
+                        `<tr class="${i % 2 ? 'bg-sky-50' : ''}">
+                            <td class="p-2 align-top leading-relaxed"><b>${n}</b></td>
+                            <td class="p-2 align-top text-center text-base">${s}</td>
+                            <td class="p-2 align-top text-center leading-relaxed">${inc}</td>
+                            <td class="p-2 align-top num leading-relaxed">${ex}</td></tr>`).join('')}
+                </table>`;
+            cards('rg-why', RG_WHY, 'blue');
+            cards('rg-life', RG_LIFE, 'emerald');
+        },
+        about: () => {
+            cards('ab-why', AB_WHY, 'blue');
+            abDraw();
+            cards('ab-use', AB_USE, 'amber');
+            abRange();
+        },
+        drill: () => { newDrill(); newQuiz(); }
+    };
+
+    /* ===================== 起動 ===================== */
+    renderNav();
+    ready.round = true;
+    BUILD.round();
+    rubify(document.body);
+</script>
+</body>
+</html>
