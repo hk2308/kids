@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ナンプレ道場</title>
+    <meta name="description" content="4×4・6×6・9×9のナンプレ（数字パズル）。毎回あたらしい問題を自動でつくり、答えが1つだけになることを確かめてから出題。メモ・まちがいチェック・ヒント・タイム記録つき。ルールと解き方（消去法・1つしか入らないマス・ペア）を図で説明。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'M PLUS Rounded 1c', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .num { font-variant-numeric: tabular-nums }
+        .bounce-hover { transition: transform .12s cubic-bezier(.175,.885,.32,1.275) }
+        .bounce-hover:active { transform: scale(.94) }
+        @keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.1) } 100% { transform: scale(1); opacity: 1 } }
+        .pop { animation: pop .3s cubic-bezier(.175,.885,.32,1.275) }
+        @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-5px) } 75% { transform: translateX(5px) } }
+        .shake { animation: shake .3s ease-in-out }
+        @keyframes joy { 0% { transform: scale(.6) rotate(-8deg); opacity: 0 } 60% { transform: scale(1.08) rotate(3deg) } 100% { transform: scale(1) rotate(0); opacity: 1 } }
+        .joy { animation: joy .5s cubic-bezier(.175,.885,.32,1.275) }
+        rt { font-size: .58em; font-weight: 700; color: #4338ca }
+        /* ばん（グリッド） */
+        .board { display: grid; gap: 0; background: #1e293b; border: 3px solid #1e293b; border-radius: 10px; overflow: hidden; touch-action: manipulation; }
+        .cell { position: relative; aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center;
+                background: #fff; font-weight: 900; line-height: 1; border: 0; padding: 0; cursor: pointer; color: #1e293b; }
+        .cell.given { background: #f1f5f9; color: #0f172a }
+        .cell.user { color: #1d4ed8 }
+        .cell.wrong { color: #dc2626; background: #fef2f2 }
+        .cell.sel { outline: 3px solid #4338ca; outline-offset: -3px; z-index: 2 }
+        .cell.unit { background: #eef2ff }
+        .cell.same { background: #c7d2fe }
+        .cell.hl { background: #fef08a }
+        .cell.hl2 { background: #bbf7d0 }
+        .cell.given.unit { background: #e0e7ff }
+        .cell.given.same { background: #a5b4fc }
+        .notes { position: absolute; inset: 1px; display: grid; font-size: 9px; font-weight: 800; color: #64748b; }
+        .notes span { display: flex; align-items: center; justify-content: center }
+        .tiny .notes { font-size: 7px }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-gradient-to-r from-indigo-700 via-purple-700 to-fuchsia-600 text-white p-3 shadow-lg sticky top-0 z-30">
+        <div class="max-w-4xl mx-auto flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl sm:text-4xl">🔢</span>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide drop-shadow">ナンプレ道場</h1>
+                    <p class="text-xs text-indigo-50 font-bold hidden sm:block">たて・よこ・ブロックに 1つずつ</p>
+                </div>
+            </div>
+            <a href="../../" title="アプリいちらんへ" class="bg-white/20 hover:bg-white/30 backdrop-blur p-2 rounded-full border border-white/30 text-lg w-10 h-10 flex items-center justify-center">🏠</a>
+        </div>
+    </header>
+
+    <nav class="sticky top-[60px] sm:top-[64px] z-20 bg-slate-50/95 backdrop-blur border-b border-slate-200">
+        <div class="max-w-4xl mx-auto flex gap-2 p-3 overflow-x-auto" id="tab-nav"></div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto w-full p-3 sm:p-5 flex-grow space-y-4">
+
+        <!-- ===== ① あそぶ ===== -->
+        <section id="tab-play" class="space-y-4">
+            <div class="bg-white rounded-3xl p-3 sm:p-4 shadow-md border-2 border-indigo-100">
+                <div id="pl-size" class="flex flex-wrap gap-1.5"></div>
+                <div id="pl-lv" class="flex flex-wrap gap-1.5 mt-2"></div>
+                <div class="flex flex-wrap items-center gap-2 mt-3">
+                    <button onclick="newGame()" class="bg-indigo-700 text-white font-black px-4 py-2 rounded-full text-sm bounce-hover">🎲 新{あたら}しい 問題{もんだい}</button>
+                    <span id="pl-time" class="num bg-slate-100 text-slate-700 font-black px-3 py-1.5 rounded-full text-sm">0:00</span>
+                    <span id="pl-left" class="num bg-indigo-100 text-indigo-800 font-black px-3 py-1.5 rounded-full text-sm">あと 0</span>
+                    <span id="pl-best" class="num bg-amber-100 text-amber-800 font-black px-3 py-1.5 rounded-full text-xs"></span>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-3 sm:p-4 shadow-md border-2 border-indigo-100">
+                <div id="pl-board" class="mx-auto" style="max-width:min(92vw,460px)"></div>
+                <div id="pl-msg" class="mt-3"></div>
+                <div id="pl-pad" class="mt-3"></div>
+                <div class="flex flex-wrap gap-1.5 mt-3" id="pl-tools"></div>
+                <p class="text-xs font-bold text-slate-400 mt-3 leading-relaxed">
+                    マスを えらんで、下{した}の 数字{すうじ}を おす。パソコンなら <b>やじるしキー</b>で 動{うご}いて
+                    <b>1〜9</b>で 入力{にゅうりょく}、<b>Backspace</b>で 消{け}せる。
+                </p>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">🏅 じぶんの きろく（いちばん 速{はや}い タイム）</h2>
+                <div id="pl-rec" class="mt-3 overflow-x-auto"></div>
+                <p class="text-xs font-bold text-slate-400 mt-2">※ この ブラウザの 中{なか}だけに 記録{きろく}して いる（ほかの 人{ひと}には 見{み}えない）。</p>
+            </div>
+        </section>
+
+        <!-- ===== ② ルール ===== -->
+        <section id="tab-rule" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">📖 ルールは たった 3つ</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1 leading-relaxed">
+                    9×9の ばんに 1〜9の 数字{すうじ}を 入{い}れる。
+                    たて・よこ・太{ふと}い わくの 中{なか}（ブロック）の <b class="text-indigo-700">どこを 見{み}ても
+                    同{おな}じ 数字{すうじ}が 2つ ない</b>ように する。それだけ。
+                </p>
+                <div id="ru-fig" class="mt-3"></div>
+                <div id="ru-three" class="grid sm:grid-cols-3 gap-3 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">🔰 4×4から 始{はじ}めると わかりやすい</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1">
+                    小{ちい}さい ばんでも 考{かんが}え方{かた}は まったく 同{おな}じ。
+                </p>
+                <div id="ru-small" class="mt-3"></div>
+                <div id="ru-small-why" class="space-y-2 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">💡 知{し}って おくと よい こと</h2>
+                <div id="ru-tips" class="space-y-2 mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ===== ③ 解き方 ===== -->
+        <section id="tab-tech" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 class="font-black">💡 解{と}き方{かた}の じゅんばん</h2>
+                <p class="text-sm font-bold text-slate-500 mt-1 leading-relaxed">
+                    ナンプレは <b class="text-indigo-700">あてずっぽう なしで ぜんぶ 解{と}ける</b>ように 作{つく}られて いる。
+                    上{うえ}から 順{じゅん}に ためすと、たいていの 問題{もんだい}は 解{と}ける。
+                </p>
+                <div id="te-chips" class="flex flex-wrap gap-1.5 mt-3"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <h2 id="te-name" class="font-black text-lg"></h2>
+                <p id="te-lead" class="text-sm font-bold text-slate-500 mt-1 leading-relaxed"></p>
+                <div id="te-fig" class="mt-3 mx-auto" style="max-width:min(92vw,420px)"></div>
+                <div id="te-say" class="bg-indigo-50 border-2 border-indigo-200 rounded-2xl p-3 text-sm font-bold mt-3 leading-relaxed"></div>
+                <div id="te-body" class="space-y-2 mt-3"></div>
+                <div class="flex gap-2 mt-3">
+                    <button onclick="teMove(-1)" class="bg-white border-2 border-indigo-300 text-indigo-700 font-black px-4 py-2 rounded-full text-sm bounce-hover">◀ まえ</button>
+                    <button onclick="teAgain()" class="bg-white border-2 border-slate-200 text-slate-600 font-black px-4 py-2 rounded-full text-sm bounce-hover">🎲 べつの れい</button>
+                    <button onclick="teMove(1)" class="ml-auto bg-indigo-700 text-white font-black px-4 py-2 rounded-full text-sm bounce-hover">つぎ ▶</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== ④ クイズ ===== -->
+        <section id="tab-quiz" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-4 shadow-md border-2 border-indigo-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-black">❓ ナンプレクイズ</h2>
+                    <span id="qz-score" class="num bg-indigo-100 text-indigo-800 font-black px-3 py-1 rounded-full text-xs">0 / 0</span>
+                    <button onclick="newQuiz()" class="ml-auto bg-white border-2 border-slate-200 text-slate-600 font-black px-3 py-1.5 rounded-full text-xs bounce-hover">つぎの もんだい</button>
+                </div>
+                <div id="qz-fields" class="flex flex-wrap gap-2 mt-3"></div>
+                <p id="qz-q" class="font-black text-base sm:text-lg mt-3 leading-relaxed"></p>
+                <div id="qz-choices" class="grid gap-2 mt-3"></div>
+                <div id="qz-res" class="mt-3"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center text-xs text-slate-400 font-bold p-4">ナンプレ道場 © 2026</footer>
+
+<script>
+    /* ===================== きょうつう ===================== */
+    const el = id => document.getElementById(id);
+    const rnd = n => Math.floor(Math.random() * n);
+    const pickOne = a => a[rnd(a.length)];
+    function shuffle(a) { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = rnd(i + 1); const t = b[i]; b[i] = b[j]; b[j] = t; } return b; }
+    function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    const plain = t => String(t).replace(/\{[^{}]*\}/g, '');
+    const nf = n => Math.round(n).toLocaleString('ja-JP');
+    function resultBox(ok, title, body) {
+        return `<div class="pop ${ok ? 'bg-green-50 border-green-300' : 'bg-amber-50 border-amber-300'} border-2 rounded-2xl p-3">
+            <p class="font-black ${ok ? 'text-green-700' : 'text-amber-700'}">${title}</p>
+            <div class="font-bold text-sm mt-1 leading-relaxed">${body}</div></div>`;
+    }
+    const S = { quiz: [0, 0] };
+    function scoreBox(id, s) { el(id).innerText = `${s[0]} / ${s[1]}`; }
+    function markChoices(sel, isRight, picked, cls) {
+        document.querySelectorAll(sel).forEach((e2, j) => {
+            e2.className = `${isRight(j) ? 'bg-green-50 border-green-500' : (j === picked ? 'bg-red-50 border-red-400 shake' : 'bg-white border-slate-200 opacity-60')} border-2 ${cls}`;
+        });
+    }
+    const PAL = {
+        indigo: ['bg-indigo-50 border-indigo-200', 'text-indigo-800'],
+        violet: ['bg-violet-50 border-violet-200', 'text-violet-800'],
+        amber: ['bg-amber-50 border-amber-200', 'text-amber-800'],
+        rose: ['bg-rose-50 border-rose-200', 'text-rose-800'],
+        emerald: ['bg-emerald-50 border-emerald-200', 'text-emerald-800'],
+        sky: ['bg-sky-50 border-sky-200', 'text-sky-800']
+    };
+    function cards(id, list, col) {
+        const p = PAL[col || 'indigo'];
+        el(id).innerHTML = list.map(([t, d]) =>
+            `<div class="${p[0]} border-2 rounded-2xl p-3">
+                <p class="font-black ${p[1]} text-sm">${t}</p>
+                <p class="text-xs font-bold text-slate-600 mt-1 leading-relaxed">${d}</p></div>`).join('');
+    }
+
+    /* 漢字{よみ} を ルビに */
+    const RUBY_RE = /([一-鿿々]+)\{([^{}]+)\}/g;
+    function rubySkip(e2) {
+        for (let n = e2; n; n = n.parentNode) {
+            const tag = n.nodeType === 1 ? n.tagName.toLowerCase() : '';
+            if (tag === 'script' || tag === 'style' || tag === 'svg' || tag === 'ruby') return true;
+        }
+        return false;
+    }
+    function rubifyText(node) {
+        const t = node.nodeValue;
+        if (t.indexOf('{') < 0 || !node.parentNode || rubySkip(node.parentNode)) return;
+        RUBY_RE.lastIndex = 0;
+        if (!RUBY_RE.test(t)) return;
+        RUBY_RE.lastIndex = 0;
+        const frag = document.createDocumentFragment();
+        let last = 0, m;
+        while ((m = RUBY_RE.exec(t))) {
+            if (m.index > last) frag.appendChild(document.createTextNode(t.slice(last, m.index)));
+            const ruby = document.createElement('ruby');
+            ruby.appendChild(document.createTextNode(m[1]));
+            const rt = document.createElement('rt');
+            rt.textContent = m[2];
+            ruby.appendChild(rt);
+            frag.appendChild(ruby);
+            last = m.index + m[0].length;
+        }
+        if (last < t.length) frag.appendChild(document.createTextNode(t.slice(last)));
+        node.parentNode.replaceChild(frag, node);
+    }
+    function rubify(root) {
+        if (root.nodeType === 3) return rubifyText(root);
+        if (root.nodeType !== 1 || rubySkip(root)) return;
+        const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        const list = [];
+        while (w.nextNode()) if (w.currentNode.nodeValue.indexOf('{') >= 0) list.push(w.currentNode);
+        list.forEach(rubifyText);
+    }
+    new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(rubify)))
+        .observe(document.body, { childList: true, subtree: true });
+
+    const TABS = { play: '🎮 あそぶ', rule: '📖 ルール', tech: '💡 解き方', quiz: '❓ クイズ' };
+    let tab = 'play';
+    const ready = {};
+    function renderNav() {
+        el('tab-nav').innerHTML = Object.entries(TABS).map(([k, label]) =>
+            `<button onclick="setTab('${k}')" data-tab="${k}" class="${tab === k ? 'bg-indigo-700 text-white' : 'bg-white border-2 border-indigo-200 text-slate-600'} font-black px-4 py-2 rounded-full text-sm whitespace-nowrap bounce-hover">${label}</button>`).join('');
+    }
+    function setTab(k) {
+        tab = k;
+        Object.keys(TABS).forEach(t => el('tab-' + t).classList.toggle('hidden', t !== k));
+        renderNav();
+        if (!ready[k]) { ready[k] = true; if (BUILD[k]) BUILD[k](); }
+    }
+
+    /* =====================================================================
+       ナンプレの しくみ（ソルバーと 問題づくり）
+       ===================================================================== */
+    /* n＝1辺の マスの 数、bw×bh＝ブロックの 形 */
+    function mkSize(n, bw, bh) {
+        const box = new Int8Array(n * n), bpr = n / bw;
+        for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) box[r * n + c] = ((r / bh) | 0) * bpr + ((c / bw) | 0);
+        return { n, bw, bh, bpr, box, full: (1 << n) - 1, N: n * n };
+    }
+    const BITPOS = {};
+    for (let i = 0; i < 9; i++) BITPOS[1 << i] = i + 1;
+    const popcnt = m => { let c = 0; while (m) { m &= m - 1; c++; } return c; };
+    /* 使われて いる 数字の マスク */
+    function masks(cells, Z) {
+        const rows = new Int32Array(Z.n), cols = new Int32Array(Z.n), boxes = new Int32Array(Z.n);
+        for (let i = 0; i < Z.N; i++) {
+            const v = cells[i];
+            if (!v) continue;
+            const m = 1 << (v - 1);
+            rows[(i / Z.n) | 0] |= m; cols[i % Z.n] |= m; boxes[Z.box[i]] |= m;
+        }
+        return { rows, cols, boxes };
+    }
+    /* そのマスに 入れられる 数字（ビット） */
+    function candMask(cells, Z, i, M) {
+        const mm = M || masks(cells, Z);
+        return Z.full & ~(mm.rows[(i / Z.n) | 0] | mm.cols[i % Z.n] | mm.boxes[Z.box[i]]);
+    }
+    /* 答えの 数を かぞえる（limit で 打ち切る）／order を わたすと 1つ見つけて うめる */
+    function solve(cells, Z, limit, order) {
+        const { rows, cols, boxes } = masks(cells, Z);
+        let count = 0;
+        const rec = () => {
+            let best = -1, bestMask = 0, bestCnt = 99;
+            for (let i = 0; i < Z.N; i++) {
+                if (cells[i]) continue;
+                const mask = Z.full & ~(rows[(i / Z.n) | 0] | cols[i % Z.n] | boxes[Z.box[i]]);
+                const cnt = popcnt(mask);
+                if (cnt === 0) return false;
+                if (cnt < bestCnt) { bestCnt = cnt; best = i; bestMask = mask; if (cnt === 1) break; }
+            }
+            if (best < 0) { count++; return count >= limit; }
+            const r = (best / Z.n) | 0, c = best % Z.n, b = Z.box[best];
+            let bits = [];
+            let m = bestMask;
+            while (m) { const bit = m & -m; m ^= bit; bits.push(bit); }
+            if (order) bits = shuffle(bits);
+            for (const bit of bits) {
+                cells[best] = BITPOS[bit];
+                rows[r] |= bit; cols[c] |= bit; boxes[b] |= bit;
+                if (rec()) return true;
+                rows[r] &= ~bit; cols[c] &= ~bit; boxes[b] &= ~bit;
+                cells[best] = 0;
+            }
+            return false;
+        };
+        rec();
+        return count;
+    }
+    function fullGrid(Z) {
+        const cells = new Int8Array(Z.N);
+        solve(cells, Z, 1, true);
+        return cells;
+    }
+    /* 答えが 1つだけに なる ように マスを 消して いく */
+    function makePuzzle(Z, givens) {
+        const sol = fullGrid(Z);
+        const puz = Int8Array.from(sol);
+        let left = Z.N;
+        const work = new Int8Array(Z.N);
+        for (const i of shuffle([...Array(Z.N).keys()])) {
+            if (left <= givens) break;
+            const v = puz[i];
+            puz[i] = 0;
+            work.set(puz);
+            if (solve(work, Z, 2) === 1) left--; else puz[i] = v;
+        }
+        return { puz, sol, givens: left };
+    }
+    /* ===== 論理で 1マス 決める（解き方の 説明に つかう） ===== */
+    function findNakedSingle(cells, Z) {
+        const M = masks(cells, Z);
+        for (const i of shuffle([...Array(Z.N).keys()])) {
+            if (cells[i]) continue;
+            const mask = candMask(cells, Z, i, M);
+            if (popcnt(mask) === 1) return { i, v: BITPOS[mask] };
+        }
+        return null;
+    }
+    /* minC＝その マスの 候補が いくつ 以上 か（2に すると「①とは ちがう れい」に なる） */
+    function findHiddenSingle(cells, Z, minC) {
+        const M = masks(cells, Z);
+        const units = [];
+        for (let r = 0; r < Z.n; r++) units.push({ t: 'よこの れつ', cells: [...Array(Z.n).keys()].map(c => r * Z.n + c) });
+        for (let c = 0; c < Z.n; c++) units.push({ t: 'たての れつ', cells: [...Array(Z.n).keys()].map(r => r * Z.n + c) });
+        for (let b = 0; b < Z.n; b++) units.push({ t: 'ブロック', cells: [...Array(Z.N).keys()].filter(i => Z.box[i] === b) });
+        for (const u of shuffle(units)) {
+            for (let v = 1; v <= Z.n; v++) {
+                if (u.cells.some(i => cells[i] === v)) continue;
+                const spots = u.cells.filter(i => !cells[i] && (candMask(cells, Z, i, M) & (1 << (v - 1))));
+                if (spots.length === 1 && popcnt(candMask(cells, Z, spots[0], M)) >= (minC || 1))
+                    return { i: spots[0], v, unit: u };
+            }
+        }
+        return null;
+    }
+
+    /* =====================================================================
+       ① あそぶ
+       ===================================================================== */
+    const SIZE_DEFS = [['4×4', 4, 2, 2, '2×2の ブロック'], ['6×6', 6, 3, 2, '3×2の ブロック'], ['9×9', 9, 3, 3, '3×3の ブロック']];
+    const LV_DEFS = { 4: [['やさしい', 8], ['むずかしい', 6]],
+                      6: [['やさしい', 20], ['ふつう', 16], ['むずかしい', 13]],
+                      9: [['やさしい', 40], ['ふつう', 32], ['むずかしい', 26]] };
+    let szI = 2, lvI = 0, G = null, timer = null;
+    const bestKey = () => `sudoku-best-${SIZE_DEFS[szI][1]}-${lvI}`;
+    function getBest(k) { try { const v = localStorage.getItem(k); return v ? +v : null; } catch (e) { return null; } }
+    function setBest(k, v) { try { localStorage.setItem(k, String(v)); } catch (e) { } }
+    const mmss = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+
+    function setSize(i) { szI = i; lvI = Math.min(lvI, LV_DEFS[SIZE_DEFS[i][1]].length - 1); newGame(); }
+    function setLv(i) { lvI = i; newGame(); }
+
+    /* ばんの HTML。opt で 色づけや メモの 出し方を かえる */
+    function boardHTML(Z, cur, opt) {
+        const o = opt || {}, puz = o.puz || cur, notes = o.notes;
+        const fs = o.tiny ? 'clamp(11px,2.6vw,17px)' : (Z.n === 9 ? 'clamp(15px,4.2vw,26px)' : Z.n === 6 ? 'clamp(18px,6vw,32px)' : 'clamp(22px,8vw,38px)');
+        let g = `<div class="board ${o.tiny ? 'tiny' : ''}" style="grid-template-columns:repeat(${Z.n},1fr);font-size:${fs}">`;
+        for (let i = 0; i < Z.N; i++) {
+            const r = (i / Z.n) | 0, c = i % Z.n, v = cur[i];
+            const cls = ['cell'];
+            if (puz[i]) cls.push('given'); else if (v) cls.push('user');
+            if (o.showErr && v && o.sol && v !== o.sol[i]) cls.push('wrong');
+            if (o.hl && o.hl[i]) cls.push(o.hl[i]);
+            if (o.sel === i) cls.push('sel');
+            else if (o.sel >= 0 && o.sel < Z.N) {
+                const sr = (o.sel / Z.n) | 0, sc = o.sel % Z.n;
+                if (cur[o.sel] && v === cur[o.sel]) cls.push('same');
+                else if (r === sr || c === sc || Z.box[i] === Z.box[o.sel]) cls.push('unit');
+            }
+            const bd = [];
+            if (c < Z.n - 1) bd.push(`border-right:${(c + 1) % Z.bw === 0 ? 3 : 1}px solid ${(c + 1) % Z.bw === 0 ? '#1e293b' : '#cbd5e1'}`);
+            if (r < Z.n - 1) bd.push(`border-bottom:${(r + 1) % Z.bh === 0 ? 3 : 1}px solid ${(r + 1) % Z.bh === 0 ? '#1e293b' : '#cbd5e1'}`);
+            let inner = v ? String(v) : '';
+            if (!v && notes && notes[i]) {
+                let sp = '';
+                for (let k = 1; k <= Z.n; k++) sp += `<span>${(notes[i] >> (k - 1)) & 1 ? k : ''}</span>`;
+                inner = `<div class="notes" style="grid-template-columns:repeat(${Z.bw},1fr)">${sp}</div>`;
+            }
+            g += `<button class="${cls.join(' ')}" style="${bd.join(';')}" ${o.ro || o.tiny ? '' : `onclick="pick(${i})"`} data-i="${i}">${inner}</button>`;
+        }
+        return g + '</div>';
+    }
+
+    function newGame() {
+        const [, n, bw, bh] = SIZE_DEFS[szI];
+        const Z = mkSize(n, bw, bh);
+        const [lvName, givens] = LV_DEFS[n][lvI];
+        const made = makePuzzle(Z, givens);
+        G = { Z, puz: made.puz, sol: made.sol, cur: Int8Array.from(made.puz), notes: new Int32Array(Z.N),
+              sel: -1, note: false, showErr: true, t0: Date.now(), done: false, hist: [], hints: 0, givens: made.givens };
+        if (timer) clearInterval(timer);
+        timer = setInterval(tick, 500);
+        drawPlay();
+    }
+    function tick() {
+        if (!G || G.done) return;
+        el('pl-time').innerText = mmss((Date.now() - G.t0) / 1000);
+    }
+    function pick(i) {
+        if (!G) return;
+        G.sel = i;
+        drawPlay();
+    }
+    function snap() { G.hist.push({ cur: Int8Array.from(G.cur), notes: Int32Array.from(G.notes) }); if (G.hist.length > 200) G.hist.shift(); }
+    function put(v) {
+        if (!G || G.done || G.sel < 0 || G.puz[G.sel]) return;
+        const i = G.sel;
+        snap();
+        if (G.note && v > 0) {
+            G.notes[i] ^= 1 << (v - 1);
+            G.cur[i] = 0;
+        } else if (v === 0) {
+            G.cur[i] = 0; G.notes[i] = 0;
+        } else {
+            G.cur[i] = G.cur[i] === v ? 0 : v;
+            G.notes[i] = 0;
+            if (G.cur[i]) {                              // 同じ たて・よこ・ブロックの メモを 消す
+                const bit = 1 << (v - 1), r = (i / G.Z.n) | 0, c = i % G.Z.n;
+                for (let j = 0; j < G.Z.N; j++) {
+                    const jr = (j / G.Z.n) | 0, jc = j % G.Z.n;
+                    if (jr === r || jc === c || G.Z.box[j] === G.Z.box[i]) G.notes[j] &= ~bit;
+                }
+            }
+        }
+        checkDone();
+        drawPlay();
+    }
+    function undo() {
+        if (!G || !G.hist.length) return;
+        const h = G.hist.pop();
+        G.cur = h.cur; G.notes = h.notes; G.done = false;
+        drawPlay();
+    }
+    function hint() {
+        if (!G || G.done) return;
+        const empty = [...Array(G.Z.N).keys()].filter(i => !G.cur[i]);
+        const wrong = [...Array(G.Z.N).keys()].filter(i => G.cur[i] && G.cur[i] !== G.sol[i]);
+        snap();
+        if (wrong.length) {                              // まず まちがいを 消す
+            wrong.forEach(i => { G.cur[i] = 0; });
+            G.hints++;
+            el('pl-msg').innerHTML = resultBox(false, '🔍 まちがって いる ところを 消{け}したよ',
+                `${wrong.length}こ の 数字{すうじ}が 答{こた}えと ちがって いた。もう いちど 考{かんが}えて みよう。`);
+        } else if (empty.length) {
+            const i = pickOne(empty);
+            G.cur[i] = G.sol[i]; G.notes[i] = 0; G.sel = i; G.hints++;
+            el('pl-msg').innerHTML = resultBox(true, `💡 ヒント：ここは ${G.sol[i]}`,
+                'たて・よこ・ブロックを 見{み}て、なぜ そう なるか たしかめて みよう。');
+        }
+        checkDone();
+        drawPlay();
+    }
+    function autoNotes() {
+        if (!G || G.done) return;
+        snap();
+        for (let i = 0; i < G.Z.N; i++) G.notes[i] = G.cur[i] ? 0 : candMask(G.cur, G.Z, i);
+        drawPlay();
+    }
+    function reset() {
+        if (!G) return;
+        snap();
+        G.cur = Int8Array.from(G.puz); G.notes = new Int32Array(G.Z.N); G.done = false; G.sel = -1;
+        el('pl-msg').innerHTML = '';
+        drawPlay();
+    }
+    function toggleNote() { if (G) { G.note = !G.note; drawPlay(); } }
+    function toggleErr() { if (G) { G.showErr = !G.showErr; drawPlay(); } }
+    function checkDone() {
+        if (!G || G.done) return;
+        for (let i = 0; i < G.Z.N; i++) if (G.cur[i] !== G.sol[i]) return;
+        G.done = true;
+        if (timer) clearInterval(timer);
+        const sec = Math.floor((Date.now() - G.t0) / 1000);
+        const k = bestKey(), b = getBest(k);
+        const isBest = G.hints === 0 && (b === null || sec < b);
+        if (isBest) setBest(k, sec);
+        el('pl-msg').innerHTML =
+            `<div class="joy bg-gradient-to-br from-amber-100 to-yellow-100 border-2 border-amber-400 rounded-3xl p-4 text-center">
+                <p class="font-black text-xl">🎉 ぜんぶ うまった！</p>
+                <p class="num font-black text-lg mt-1">タイム ${mmss(sec)}</p>
+                <p class="text-sm font-bold text-slate-600 mt-1">
+                    ${SIZE_DEFS[szI][0]}・${LV_DEFS[SIZE_DEFS[szI][1]][lvI][0]}／ヒント ${G.hints}回{かい}
+                    ${isBest ? '<br><b class="text-amber-700">🏅 じぶんの さいこう記録{きろく}！</b>' : ''}
+                    ${G.hints > 0 ? '<br><span class="text-xs">※ ヒントを つかった ときは 記録{きろく}に のこらない</span>' : ''}
+                </p>
+            </div>`;
+    }
+    function drawPlay() {
+        const [szName, n] = SIZE_DEFS[szI];
+        el('pl-size').innerHTML = SIZE_DEFS.map(([nm, nn, , , note], i) =>
+            `<button onclick="setSize(${i})" class="${szI === i ? 'bg-indigo-700 text-white' : 'bg-white border-2 border-indigo-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs whitespace-nowrap bounce-hover">${nm}<span class="text-[10px] font-bold"> ${note}</span></button>`).join('');
+        el('pl-lv').innerHTML = LV_DEFS[n].map(([nm, gv], i) =>
+            `<button onclick="setLv(${i})" class="${lvI === i ? 'bg-fuchsia-700 text-white' : 'bg-white border-2 border-fuchsia-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs whitespace-nowrap bounce-hover">${nm}</button>`).join('');
+        if (!G) return;
+        el('pl-board').innerHTML = boardHTML(G.Z, G.cur, { puz: G.puz, sol: G.sol, sel: G.sel, notes: G.notes, showErr: G.showErr });
+        const left = [...Array(G.Z.N).keys()].filter(i => !G.cur[i]).length;
+        el('pl-left').innerText = `あと ${left}`;
+        el('pl-time').innerText = mmss(G.done ? Math.floor((Date.now() - G.t0) / 1000) : (Date.now() - G.t0) / 1000);
+        const b = getBest(bestKey());
+        el('pl-best').innerText = b === null ? 'きろく なし' : `さいこう ${mmss(b)}`;
+        // 数字パッド（あと 何こ 必要か つき）
+        let pad = '';
+        for (let v = 1; v <= G.Z.n; v++) {
+            const used = [...Array(G.Z.N).keys()].filter(i => G.cur[i] === v).length;
+            const rest = G.Z.n - used;
+            pad += `<button onclick="put(${v})" class="${rest <= 0 ? 'bg-slate-100 text-slate-300 border-slate-200' : 'bg-white border-indigo-300 text-indigo-800 hover:bg-indigo-50'} border-2 rounded-2xl py-2 font-black bounce-hover" style="font-size:clamp(17px,5vw,24px)">
+                ${v}<span class="block text-[10px] font-bold ${rest <= 0 ? 'text-slate-300' : 'text-slate-400'}">${rest <= 0 ? 'OK' : 'あと' + rest}</span></button>`;
+        }
+        pad += `<button onclick="put(0)" class="bg-white border-2 border-rose-300 text-rose-600 rounded-2xl py-2 font-black bounce-hover" style="font-size:clamp(15px,4vw,20px)">✕<span class="block text-[10px] font-bold text-slate-400">けす</span></button>`;
+        el('pl-pad').innerHTML = `<div class="grid gap-1.5" style="grid-template-columns:repeat(${G.Z.n + 1},1fr)">${pad}</div>`;
+        el('pl-tools').innerHTML = [
+            [`✏️ メモ ${G.note ? 'ON' : 'OFF'}`, 'toggleNote()', G.note ? 'bg-violet-700 text-white' : 'bg-white border-2 border-violet-300 text-violet-700'],
+            [`🔍 まちがい ${G.showErr ? 'ON' : 'OFF'}`, 'toggleErr()', G.showErr ? 'bg-rose-600 text-white' : 'bg-white border-2 border-rose-300 text-rose-600'],
+            ['↩️ 1つ もどす', 'undo()', 'bg-white border-2 border-slate-300 text-slate-600'],
+            ['💡 ヒント', 'hint()', 'bg-white border-2 border-amber-400 text-amber-700'],
+            ['🧮 メモを 自動{じどう}', 'autoNotes()', 'bg-white border-2 border-sky-300 text-sky-700'],
+            ['🗑️ やりなおす', 'reset()', 'bg-white border-2 border-slate-300 text-slate-600']
+        ].map(([t, fn, cls]) => `<button onclick="${fn}" class="${cls} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${t}</button>`).join('');
+        // きろくの 表
+        let rec = `<table class="w-full text-xs font-bold" style="min-width:320px">
+            <tr class="bg-indigo-100 text-indigo-800"><th class="p-2 text-left rounded-l-xl">大{おお}きさ</th>${['やさしい', 'ふつう', 'むずかしい'].map((x, i) => `<th class="p-2 ${i === 2 ? 'rounded-r-xl' : ''}">${x}</th>`).join('')}</tr>`;
+        SIZE_DEFS.forEach(([nm, nn], i) => {
+            rec += `<tr class="${i % 2 ? 'bg-slate-50' : ''}"><td class="p-2 font-black">${nm}</td>`;
+            [0, 1, 2].forEach(j => {
+                const lv = LV_DEFS[nn][j];
+                const v = lv ? getBest(`sudoku-best-${nn}-${j}`) : null;
+                rec += `<td class="p-2 text-center num ${v === null ? 'text-slate-300' : 'text-indigo-800'}">${lv ? (v === null ? '—' : mmss(v)) : ''}</td>`;
+            });
+            rec += '</tr>';
+        });
+        el('pl-rec').innerHTML = rec + '</table>';
+    }
+    /* キーボード */
+    window.addEventListener('keydown', e => {
+        if (tab !== 'play' || !G) return;
+        const n = G.Z.n;
+        if (e.key >= '1' && e.key <= String(n)) { put(+e.key); e.preventDefault(); return; }
+        if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') { put(0); e.preventDefault(); return; }
+        const d = { ArrowUp: -n, ArrowDown: n, ArrowLeft: -1, ArrowRight: 1 }[e.key];
+        if (d !== undefined) {
+            if (G.sel < 0) G.sel = 0;
+            else {
+                const r = (G.sel / n) | 0, c = G.sel % n;
+                if (d === -1 && c === 0) return; if (d === 1 && c === n - 1) return;
+                const t = G.sel + d;
+                if (t < 0 || t >= G.Z.N) return;
+                G.sel = t;
+            }
+            drawPlay();
+            e.preventDefault();
+        }
+        if (e.key === 'm' || e.key === 'M') toggleNote();
+    });
+
+    /* =====================================================================
+       ② ルール
+       ===================================================================== */
+    const RU_THREE = [
+        ['① よこの れつ（行{ぎょう}）', '横{よこ}1列{れつ} 9マスに <b>1〜9が 1つずつ</b>。同{おな}じ 数字{すうじ}が 2つ あったら まちがい。'],
+        ['② たての れつ（列{れつ}）', 'たて1列{れつ} 9マスにも <b>1〜9が 1つずつ</b>。'],
+        ['③ ブロック（太{ふと}い わく）', '太{ふと}い 線{せん}で 囲{かこ}まれた 3×3の 9マスにも <b>1〜9が 1つずつ</b>。']
+    ];
+    const RU_SMALL = [
+        ['4×4は ブロックが 2×2', '入{い}れる 数字{すうじ}は <b>1〜4</b>。たて・よこ・2×2の ブロックに 1つずつ。数{かず}が 少{すこ}ない ので 考{かんが}え方{かた}が すぐ わかる。'],
+        ['6×6は ブロックが 3×2', '入{い}れる 数字{すうじ}は <b>1〜6</b>。ブロックが 正方形{せいほうけい}じゃ なくても ルールは 同{おな}じ。'],
+        ['小{ちい}さい ばんで コツを つかむ', '「この マスに 入{はい}る 数字{すうじ}は 1つしか ない」を 見{み}つける 練習{れんしゅう}に なる。慣{な}れたら 9×9へ。']
+    ];
+    const RU_TIPS = [
+        ['🧮 計算{けいさん}は 1つも いらない',
+         'たし算{ざん}も かけ算{ざん}も つかわない。数字{すうじ}の かわりに <b>記号{きごう}や 動物{どうぶつ}の 絵{え}</b>でも できる。だから 世界{せかい}中{じゅう}の 人{ひと}が あそべる。'],
+        ['1️⃣ 答{こた}えは 1つだけ',
+         'ちゃんと 作{つく}られた 問題{もんだい}は <b>答{こた}えが かならず 1つ</b>。この ページの 問題{もんだい}も、出{だ}す 前{まえ}に コンピュータが「答{こた}えが 1つだけか」を たしかめて いる。'],
+        ['🔍 あてずっぽうは しない',
+         '「たぶん これ」で 入{い}れると、あとで ぜんぶ こわれる。<b>理由{りゆう}が 言{い}える マス</b>から うめる。これが いちばん 大事{だいじ}な コツ。'],
+        ['📛 名前{なまえ}の はなし',
+         '日本{にほん}では <b>ナンプレ</b>（ナンバープレース）と よばれる。「数独{すうどく}」は パズル会社{がいしゃ}ニコリの 登録商標{とうろくしょうひょう}で、海外{かいがい}では <b>Sudoku</b>という 名前{なまえ}で 広{ひろ}まった。'],
+        ['🔢 ヒントは 17個{こ}まで へらせる',
+         '9×9で 答{こた}えが 1つに なる ぎりぎりの ヒントの 数{かず}は <b>17個{こ}</b>。2012年{ねん}に コンピュータで「16個{こ}では ぜったいに 無理{むり}」と 証明{しょうめい}された。']
+    ];
+    function ruFig() {
+        const Z = mkSize(9, 3, 3);
+        const g = fullGrid(Z);
+        const mk = (hl, cap) => `<div class="flex-1" style="min-width:0">
+            ${boardHTML(Z, g, { puz: g, hl, tiny: true, ro: true })}
+            <p class="text-center text-xs font-black text-indigo-800 mt-1.5">${cap}</p></div>`;
+        const row = {}, col = {}, box = {};
+        for (let c = 0; c < 9; c++) row[3 * 9 + c] = 'hl';
+        for (let r = 0; r < 9; r++) col[r * 9 + 5] = 'hl';
+        for (let i = 0; i < 81; i++) if (Z.box[i] === 4) box[i] = 'hl';
+        return `<div class="flex gap-2 sm:gap-3">${mk(row, 'よこ（行）に 1〜9')}${mk(col, 'たて（列）に 1〜9')}${mk(box, 'ブロックに 1〜9')}</div>`;
+    }
+    function ruSmallFig() {
+        const Z = mkSize(4, 2, 2);
+        const m = makePuzzle(Z, 8);
+        return `<div class="flex gap-3 items-start">
+            <div class="flex-1" style="min-width:0">
+                ${boardHTML(Z, m.puz, { puz: m.puz, ro: true })}
+                <p class="text-center text-xs font-black text-slate-500 mt-1.5">もんだい（4×4）</p></div>
+            <div class="flex-1" style="min-width:0">
+                ${boardHTML(Z, m.sol, { puz: m.sol, ro: true })}
+                <p class="text-center text-xs font-black text-emerald-700 mt-1.5">こたえ</p></div>
+        </div>
+        <button onclick="goSmall()" class="w-full mt-3 bg-indigo-700 text-white font-black px-4 py-2.5 rounded-2xl text-sm bounce-hover">🎮 4×4で あそんで みる</button>`;
+    }
+    function goSmall() { szI = 0; lvI = 0; setTab('play'); newGame(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+
+    /* =====================================================================
+       ③ 解き方
+       ===================================================================== */
+    /* 実際に 問題を つくって、その テクニックが 使える ばめんを さがす */
+    function makeTechState(kind) {
+        for (let att = 0; att < 40; att++) {
+            const Z = mkSize(9, 3, 3);
+            const m = makePuzzle(Z, 40);
+            const cells = Int8Array.from(m.puz);
+            const steps = rnd(14);
+            for (let s = 0; s < steps; s++) {
+                const f = findNakedSingle(cells, Z);
+                if (!f) break;
+                cells[f.i] = f.v;
+            }
+            const found = kind === 'naked' ? findNakedSingle(cells, Z) : findHiddenSingle(cells, Z, 2);
+            if (found) return { Z, cells, puz: m.puz, found };
+        }
+        return null;
+    }
+    const digitsIn = (cells, idxs) => [...new Set(idxs.map(i => cells[i]).filter(v => v))].sort((a, b) => a - b);
+    function techNaked() {
+        const st = makeTechState('naked');
+        if (!st) return null;
+        const { Z, cells, found } = st, i = found.i, v = found.v;
+        const r = (i / 9) | 0, c = i % 9, b = Z.box[i];
+        const hl = {};
+        for (let j = 0; j < 81; j++) if ((j / 9 | 0) === r || j % 9 === c || Z.box[j] === b) hl[j] = 'hl2';
+        hl[i] = 'hl';
+        const notes = new Int32Array(81);
+        notes[i] = candMask(cells, Z, i);
+        const rowD = digitsIn(cells, [...Array(9).keys()].map(x => r * 9 + x));
+        const colD = digitsIn(cells, [...Array(9).keys()].map(x => x * 9 + c));
+        const boxD = digitsIn(cells, [...Array(81).keys()].filter(j => Z.box[j] === b));
+        const seen = [...new Set([...rowD, ...colD, ...boxD])].sort((a, b2) => a - b2);
+        return {
+            Z, cells, hl, notes,
+            say: `黄色{きいろ}の マス（よこ ${r + 1}行目{ぎょうめ}・たて ${c + 1}列目{れつめ}）を 見{み}て みよう。<br>
+                  ・よこの れつに <b>${rowD.join('・')}</b><br>
+                  ・たての れつに <b>${colD.join('・')}</b><br>
+                  ・同{おな}じ ブロックに <b>${boxD.join('・')}</b><br>
+                  ぜんぶ あわせると <b>${seen.join('・')}</b> の ${seen.length}個{こ}が つかえない。
+                  1〜9の うち のこるのは <b class="text-rose-600 text-base">${v}</b> だけ！`
+        };
+    }
+    function techHidden() {
+        const st = makeTechState('hidden');
+        if (!st) return null;
+        const { Z, cells, found } = st, i = found.i, v = found.v, u = found.unit;
+        const hl = {};
+        u.cells.forEach(j => hl[j] = 'hl2');
+        hl[i] = 'hl';
+        const notes = new Int32Array(81);
+        u.cells.forEach(j => { if (!cells[j]) notes[j] = candMask(cells, Z, j); });
+        const others = u.cells.filter(j => !cells[j] && j !== i).length;
+        return {
+            Z, cells, hl, notes,
+            say: `緑{みどり}の ${u.t}には まだ <b>${v}</b> が 入{はい}って いない。<br>
+                  この ${u.t}の 空{あ}いた ${others + 1}マスの うち、<b>${v}を 入{い}れられるのは 黄色{きいろ}の 1マスだけ</b>
+                  （ほかの マスは たて・よこ・ブロックの どこかに すでに ${v} が ある）。<br>
+                  だから ここは <b class="text-rose-600 text-base">${v}</b> に 決{き}まる。
+                  マスの 中{なか}の 小{ちい}さい 数字{すうじ}が「入{はい}れる 数字{すうじ}」の メモ。`
+        };
+    }
+    function techNotes() {
+        const Z = mkSize(9, 3, 3);
+        const m = makePuzzle(Z, 40);
+        const cells = Int8Array.from(m.puz);
+        for (let s = 0; s < 6; s++) { const f = findNakedSingle(cells, Z); if (!f) break; cells[f.i] = f.v; }
+        const notes = new Int32Array(81);
+        let one = -1;
+        for (let i = 0; i < 81; i++) {
+            if (cells[i]) continue;
+            notes[i] = candMask(cells, Z, i);
+            if (popcnt(notes[i]) === 1 && one < 0) one = i;
+        }
+        const hl = {};
+        if (one >= 0) hl[one] = 'hl';
+        return {
+            Z, cells, hl, notes,
+            say: `空{あ}いた マスぜんぶに「入{はい}れる 数字{すうじ}」を 小{ちい}さく 書{か}きこんだ もの。
+                  これを <b>メモ（候補{こうほ}）</b>と いう。<br>
+                  ${one >= 0 ? `黄色{きいろ}の マスは メモが <b>1つだけ</b>に なって いる。→ そこは その 数字{すうじ}に 決{き}まり！` : 'メモが 1つだけの マスが 見{み}つかったら、そこは 決{き}まり。'}<br>
+                  ゲームの 画面{がめん}の <b>「🧮 メモを 自動{じどう}」</b>ボタンで、これと 同{おな}じ ことが できる。`
+        };
+    }
+    /* ④ ペア：1つの れつ だけを とりだした 図 */
+    function rowFig(cells, notes, hl) {
+        let g = `<div class="board" style="grid-template-columns:repeat(9,1fr);font-size:clamp(15px,4.2vw,26px)">`;
+        for (let c = 0; c < 9; c++) {
+            const cls = ['cell'];
+            if (cells[c]) cls.push('given');
+            if (hl[c]) cls.push(hl[c]);
+            let inner = cells[c] ? String(cells[c]) : '';
+            if (!cells[c] && notes[c]) {
+                let sp = '';
+                for (let k = 1; k <= 9; k++) sp += `<span>${(notes[c] >> (k - 1)) & 1 ? k : ''}</span>`;
+                inner = `<div class="notes" style="grid-template-columns:repeat(3,1fr)">${sp}</div>`;
+            }
+            const bd = c < 8 ? `border-right:${(c + 1) % 3 === 0 ? 3 : 1}px solid ${(c + 1) % 3 === 0 ? '#1e293b' : '#cbd5e1'}` : '';
+            g += `<button class="${cls.join(' ')}" style="${bd};aspect-ratio:1/1">${inner}</button>`;
+        }
+        return g + '</div>';
+    }
+    const B = (...ds) => ds.reduce((a, d) => a | (1 << (d - 1)), 0);
+    function techPair() {
+        /* よこ1れつ：4,7,8,9 が もう 入って いて、のこりは 1,2,3,5,6 */
+        const cells = [0, 4, 0, 7, 0, 8, 0, 9, 0];
+        const notes = [B(2, 5), 0, B(1, 2, 3, 5, 6), 0, B(2, 5), 0, B(1, 3, 6), 0, B(1, 3, 6)];
+        const hl = { 0: 'hl', 4: 'hl', 2: 'hl2' };
+        return {
+            row: true, cells, notes, hl,
+            say: `よこ1れつ だけを とり出{だ}した 図{ず}。黄色{きいろ}の 2マスは メモが どちらも <b>2と5</b>。<br>
+                  この 2マスに <b>2と5が 1つずつ 入{はい}る</b>のは まちがいない（どちらが どちらかは まだ わからない）。<br>
+                  つまり <b>ほかの マスには 2も 5も 入{はい}れない</b>。
+                  だから 緑{みどり}の マスの メモから 2と5を 消{け}して、のこりは <b class="text-rose-600">1・3・6</b>。<br>
+                  （右{みぎ}の 2マスは たての れつの つごうで すでに 2・5が 消{き}えて いる）<br>
+                  これを <b>ペア（2国同盟{にこくどうめい}）</b>と いう。3マスに 3つの 数字{すうじ}なら トリオ。`
+        };
+    }
+    const TECHS = [
+        { e: '①', n: '見{み}える 数字{すうじ}を 消{け}して いく', make: techNaked,
+          lead: '1つの マスから「たて・よこ・ブロック」に ある 数字{すうじ}を ぜんぶ 消{け}すと、のこり 1つに なる ことが ある。これが いちばん 基本{きほん}。',
+          body: [['どこから さがす？', '<b>数字{すうじ}が たくさん 入{はい}って いる 行{ぎょう}・列{れつ}・ブロック</b>から 見{み}る。空{あ}きが 1つや 2つの ところは すぐ 決{き}まる。'],
+                 ['ゆびで かくして みる', 'たての れつと よこの れつを ゆびで たどると、見{み}える 数字{すうじ}が わかりやすく なる。']] },
+        { e: '②', n: 'その 数字{すうじ}が 入{はい}れる マスは 1つ', make: techHidden,
+          lead: 'マスから 考{かんが}えるのでは なく、<b>数字{すうじ}から</b> 考{かんが}える。「この ブロックで 7が 入{はい}れる マスは どこ？」と さがす。',
+          body: [['1〜9を 順{じゅん}に ためす', '1つの ブロック（または 行{ぎょう}・列{れつ}）を 決{き}めて、1から 9まで 順{じゅん}に「この 数字{すうじ}は どこに 入{はい}る？」と 考{かんが}える。'],
+                 ['①と ②は セットで つかう', '①で 見{み}つからなく なったら ②。②で 1つ うまると ①が また できる ように なる。これを くりかえす。']] },
+        { e: '③', n: 'メモ（候補{こうほ}）を 書{か}きこむ', make: techNotes,
+          lead: '空{あ}いた マスに「入{はい}れる 数字{すうじ}」を 小{ちい}さく 書{か}いて おく。頭{あたま}の 中{なか}だけで 考{かんが}えるより ずっと 楽{らく}。',
+          body: [['書{か}くと 見{み}えて くる', 'メモが <b>1つだけ</b>の マスは そこで 決{き}まり。メモを 書{か}くと ペア（④）なども 見{み}つけられる ように なる。'],
+                 ['決{き}まったら 消{け}す', '数字{すうじ}を 1つ 入{い}れたら、同{おな}じ たて・よこ・ブロックの メモから その 数字{すうじ}を 消{け}す。この アプリは 自動{じどう}で 消{け}して くれる。']] },
+        { e: '④', n: '2つの マスに 2つの 数字{すうじ}（ペア）', make: techPair,
+          lead: '同{おな}じ れつの 2マスの メモが、どちらも <b>同{おな}じ 2つの 数字{すうじ}</b>だけの とき。その 2つは この 2マスで 使{つか}いきる。',
+          body: [['なぜ そう 言{い}えるの？', 'その 2マスに 入{はい}る のは その 2つの 数字{すうじ}しか ない。れつには 1つずつしか 入{はい}らない ので、<b>ほかの マスは その 2つを あきらめる</b>しか ない。'],
+                 ['同{おな}じ 考{かんが}え方{かた}が ひろがる', '3マスに 3つの 数字{すうじ}なら トリオ、4つなら カルテット。人{ひと}が 使{つか}うのは ペアと トリオまでが ほとんど。']] },
+        { e: '⑤', n: 'つまった ときの チェックリスト', make: null,
+          lead: '手{て}が 止{と}まっても あてずっぽうは しない。つぎの 順{じゅん}に 見{み}なおすと、たいてい 見落{みお}としが 見{み}つかる。',
+          body: [['1. 空{あ}きが 少{すこ}ない れつ', '空{あ}きが 1〜2マスの 行{ぎょう}・列{れつ}・ブロックを もう いちど 見{み}る。'],
+                 ['2. 数字{すうじ}ごとに 1周{しゅう}', '1が まだ 入{はい}って いない ブロックは？ 2は？ …と <b>1から 9まで 順{じゅん}に</b> 見{み}て いく。'],
+                 ['3. メモを つけなおす', 'まちがった メモが 残{のこ}って いる ことが ある。「🧮 メモを 自動{じどう}」で 作{つく}りなおす。'],
+                 ['4. まちがい さがし', '同{おな}じ れつに 同{おな}じ 数字{すうじ}が ない か 見{み}る。「🔍 まちがい ON」に すると 教{おし}えて くれる。'],
+                 ['5. 少{すこ}し 休{やす}む', 'ふしぎな ことに、時間{じかん}を おいて 見{み}ると すぐ 見{み}つかる ことが 多{おお}い。']] }
+    ];
+    let teI = 0, teState = null;
+    function setTe(i) { teI = i; teAgain(); }
+    function teMove(d) { teI = (teI + d + TECHS.length) % TECHS.length; teAgain(); }
+    function teAgain() {
+        const t = TECHS[teI];
+        el('te-chips').innerHTML = TECHS.map((x, i) =>
+            `<button onclick="setTe(${i})" class="${teI === i ? 'bg-indigo-700 text-white' : 'bg-white border-2 border-indigo-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs whitespace-nowrap bounce-hover">${x.e} ${esc(plain(x.n))}</button>`).join('');
+        el('te-name').innerHTML = t.e + ' ' + t.n;
+        el('te-lead').innerHTML = t.lead;
+        teState = t.make ? t.make() : null;
+        if (!teState) {
+            el('te-fig').innerHTML = '';
+            el('te-say').innerHTML = t.make ? 'れいを 作{つく}れなかった。「べつの れい」を おして みて。' : '';
+            el('te-say').classList.toggle('hidden', !t.make);
+        } else {
+            el('te-say').classList.remove('hidden');
+            el('te-fig').innerHTML = teState.row
+                ? rowFig(teState.cells, teState.notes, teState.hl)
+                : boardHTML(teState.Z, teState.cells, { puz: teState.cells, hl: teState.hl, notes: teState.notes, ro: true });
+            el('te-say').innerHTML = '🔎 ' + teState.say;
+        }
+        cards('te-body', t.body, 'violet');
+    }
+
+    /* =====================================================================
+       ④ クイズ
+       ===================================================================== */
+    const QS = [
+        { f: 'ルール', q: '9×9の ナンプレで 1つの よこの れつに 入{はい}る 数字{すうじ}は？', a: '1〜9が 1つずつ', x: ['1〜9を 2つずつ', '好{す}きな 数字{すうじ}を 9こ', '1〜5だけ'], e: 'たて・よこ・ブロックの どこを 見{み}ても、同{おな}じ 数字{すうじ}が 2つ あっては いけない。' },
+        { f: 'ルール', q: '太{ふと}い わくで 囲{かこ}まれた 9マスの ことを 何{なに}と いう？', a: 'ブロック', x: ['れつ', 'マス', 'ヒント'], e: '3×3の ブロック。9×9の ばんには ブロックが 9つ ある。' },
+        { f: 'ルール', q: 'ナンプレで つかう 計算{けいさん}は？', a: '1つも つかわない', x: ['たし算{ざん}', 'かけ算{ざん}', 'わり算{ざん}'], e: '数字{すうじ}の かわりに 記号{きごう}や 動物{どうぶつ}の 絵{え}でも できる。だから 世界{せかい}中{じゅう}の 人{ひと}が あそべる。' },
+        { f: 'ルール', q: 'ちゃんと 作{つく}られた ナンプレの 答{こた}えは？', a: 'かならず 1つだけ', x: ['いくつも ある', '作{つく}った 人{ひと}しか 知{し}らない', '2つ ある'], e: '答{こた}えが 2つ 以上{いじょう} ある 問題{もんだい}は「問題{もんだい}として だめ」。だから 出題{しゅつだい}の 前{まえ}に 1つか どうかを たしかめる。' },
+        { f: 'ルール', q: '4×4の ナンプレで つかう 数字{すうじ}は？', a: '1〜4', x: ['1〜9', '1〜16', '1〜6'], e: '1辺{ぺん}の マスの 数{かず}と 同{おな}じ。6×6なら 1〜6、9×9なら 1〜9。' },
+        { f: 'ルール', q: '6×6の ナンプレの ブロックの 形{かたち}は？', a: '3×2（正方形{せいほうけい}じゃ ない）', x: ['3×3', '2×2', '6×1'], e: 'ブロックの マスの 数{かず}が 6に なれば よい ので、3×2に なる。ルールの 考{かんが}え方{かた}は 同{おな}じ。' },
+        { f: 'ルール', q: '同{おな}じ よこの れつに 同{おな}じ 数字{すうじ}が 2つ できたら？', a: 'どこかが まちがい', x: ['たまに OK', 'ブロックが ちがえば OK', 'そういう 問題{もんだい}も ある'], e: 'ナンプレでは ぜったいに だめ。まちがいを さがして 直{なお}す。' },
+
+        { f: '解き方', q: 'いちばん 基本{きほん}の 解{と}き方{かた}は？', a: 'たて・よこ・ブロックに ある 数字{すうじ}を 消{け}して いく', x: ['とりあえず 1を 入{い}れて みる', '数字{すうじ}を 足{た}して 45に する', 'まん中{なか}から うめる'], e: 'そのマスから 見{み}える 数字{すうじ}を ぜんぶ 消{け}すと、のこり 1つに なる ことが ある（消去法{しょうきょほう}）。' },
+        { f: '解き方', q: '「この ブロックで 7が 入{はい}れる マスは 1つだけ」。この とき？', a: 'その マスは 7に 決{き}まる', x: ['まだ わからない', '7は どこにも 入{はい}らない', 'あてずっぽうで 入{い}れる'], e: '数字{すうじ}の ほうから さがす やり方{かた}。マスから 考{かんが}える 方法{ほうほう}と セットで つかう。' },
+        { f: '解き方', q: '空{あ}いた マスに 小{ちい}さく 書{か}く「入{はい}れる 数字{すうじ}」を 何{なに}と いう？', a: 'メモ（候補{こうほ}）', x: ['ヒント', 'こたえ', 'ブロック'], e: 'メモが 1つだけに なった マスは そこで 決{き}まり。ペアなどの テクニックも 見{み}つけやすく なる。' },
+        { f: '解き方', q: '同{おな}じ れつの 2マスの メモが どちらも「2と5」だけ の とき？', a: 'その れつの ほかの マスには 2も 5も 入{はい}れない', x: ['2マスとも 2に なる', '2と5は もう つかえない', 'その れつは まちがい'], e: 'その 2マスで 2と5を 使{つか}いきる ので、ほかの マスは あきらめる。これを ペア（2国同盟{にこくどうめい}）と いう。' },
+        { f: '解き方', q: 'どこから 手{て}を つけると よい？', a: '数字{すうじ}が たくさん 入{はい}って いる れつ・ブロック', x: ['左上{ひだりうえ}の マスから 順{じゅん}に', '空{あ}きが いちばん 多{おお}い ところ', 'まん中{なか}の マス'], e: '空{あ}きが 1つや 2つの ところは すぐ 決{き}まる。うまると また 別{べつ}の ところが 決{き}まる。' },
+        { f: '解き方', q: '手{て}が 止{と}まった とき やっては いけない ことは？', a: 'あてずっぽうで 数字{すうじ}を 入{い}れる', x: ['数字{すうじ}ごとに 1〜9 見{み}なおす', 'メモを つけなおす', '少{すこ}し 休{やす}む'], e: '1つ まちがえると あとで ぜんぶ こわれる。<b>理由{りゆう}が 言{い}える マス</b>だけ うめる。' },
+        { f: '解き方', q: '数字{すうじ}を 1つ 入{い}れた あと する ことは？', a: '同{おな}じ たて・よこ・ブロックの メモから その 数字{すうじ}を 消{け}す', x: ['ぜんぶの メモを 消{け}す', '何{なに}も しない', 'もう いちど はじめから'], e: 'これを しないと 古{ふる}い メモに だまされる。この アプリは 自動{じどう}で 消{け}して くれる。' },
+        { f: '解き方', q: '9×9の 1つの れつの 数字{すうじ}を ぜんぶ 足{た}すと？', a: '45', x: ['36', '81', '問題{もんだい}に よって ちがう'], e: '1+2+…+9＝45。だから「この れつは あと 1マス、合計{ごうけい}が 38 なら 入{はい}るのは 7」と いう 使{つか}い方{かた}も できる。' },
+
+        { f: 'まめちしき', q: '日本{にほん}で この パズルは ふつう 何{なに}と よばれる？', a: 'ナンプレ（ナンバープレース）', x: ['マスメ', 'クロスワード', 'テトリス'], e: '「数独{すうどく}」は パズル会社{がいしゃ}ニコリの 登録商標{とうろくしょうひょう}。だから 多{おお}くの 本{ほん}や アプリは「ナンプレ」と 書{か}いて いる。' },
+        { f: 'まめちしき', q: '海外{かいがい}で 広{ひろ}まった ときの 名前{なまえ}は？', a: 'Sudoku（スドク）', x: ['Nanpure', 'Numberplace only', 'Kakuro'], e: '日本{にほん}の 雑誌{ざっし}の 名前{なまえ}が そのまま 世界{せかい}に 広{ひろ}がった。2000年{ねん}代{だい}に 大{おお}ブームに なった。' },
+        { f: 'まめちしき', q: '9×9で 答{こた}えが 1つに なる ぎりぎりの ヒントの 数{かず}は？', a: '17個{こ}', x: ['9個{こ}', '25個{こ}', '30個{こ}'], e: '2012年{ねん}に コンピュータを つかって「16個{こ}では ぜったいに できない」と 証明{しょうめい}された。' },
+        { f: 'まめちしき', q: 'ヒントの 数{かず}が 少{すこ}ない 問題{もんだい}は？', a: 'だいたい むずかしい', x: ['かならず やさしい', 'むずかしさと 関係{かんけい}ない', '答{こた}えが 2つに なる'], e: 'ただし ヒントの 数{かず}だけでは 決{き}まらない。<b>どの テクニックが 必要{ひつよう}か</b>で むずかしさが 変{か}わる。' },
+        { f: 'まめちしき', q: 'ナンプレが 頭{あたま}に よい と いわれる りゆうは？', a: '「理由{りゆう}を 考{かんが}えて 決{き}める」練習{れんしゅう}に なる', x: ['計算{けいさん}が 速{はや}く なる', '漢字{かんじ}を おぼえられる', '運{うん}が よく なる'], e: 'あてずっぽうを せず、根拠{こんきょ}を さがして 1つずつ 決{き}めて いく。これは 算数{さんすう}の 証明{しょうめい}や プログラミングと 同{おな}じ 考{かんが}え方{かた}。' }
+    ];
+    let qz = null, qzField = 'all';
+    function newQuiz() {
+        const pool = qzField === 'all' ? QS : QS.filter(q => q.f === qzField);
+        const q = pool[rnd(pool.length)];
+        qz = { q, choices: shuffle([q.a].concat(q.x)), done: false };
+        const fields = ['all'].concat([...new Set(QS.map(x => x.f))]);
+        el('qz-fields').innerHTML = fields.map(f =>
+            `<button onclick="setField('${f}')" class="${qzField === f ? 'bg-indigo-700 text-white' : 'bg-white border-2 border-indigo-200 text-slate-600'} font-black px-3 py-1.5 rounded-full text-xs bounce-hover">${f === 'all' ? 'ぜんぶ ' + QS.length : plain(f) + ' ' + QS.filter(x => x.f === f).length}</button>`).join('');
+        el('qz-q').innerHTML = `<span class="text-xs font-black text-indigo-700 bg-indigo-100 px-2 py-1 rounded-lg mr-2">${esc(plain(q.f))}</span>${q.q}`;
+        el('qz-choices').innerHTML = qz.choices.map((c, i) =>
+            `<button onclick="ansQuiz(${i})" data-qzc="${i}" class="bg-white border-2 border-slate-200 hover:border-indigo-500 font-bold text-left px-4 py-3 rounded-2xl bounce-hover">${c}</button>`).join('');
+        el('qz-res').innerHTML = '';
+        scoreBox('qz-score', S.quiz);
+    }
+    function setField(f) { qzField = f; newQuiz(); }
+    function ansQuiz(i) {
+        if (!qz || qz.done) return;
+        qz.done = true;
+        const ok = qz.choices[i] === qz.q.a;
+        S.quiz[1]++; if (ok) S.quiz[0]++;
+        markChoices('[data-qzc]', j => qz.choices[j] === qz.q.a, i, 'font-bold text-left px-4 py-3 rounded-2xl');
+        el('qz-res').innerHTML = resultBox(ok, ok ? '⭕ せいかい！' : `❌ こたえは 「${qz.q.a}」`, qz.q.e);
+        scoreBox('qz-score', S.quiz);
+    }
+
+    /* ===================== タブごとの 組み立て ===================== */
+    const BUILD = {
+        play: () => newGame(),
+        rule: () => {
+            el('ru-fig').innerHTML = ruFig();
+            cards('ru-three', RU_THREE, 'indigo');
+            el('ru-small').innerHTML = ruSmallFig();
+            cards('ru-small-why', RU_SMALL, 'sky');
+            cards('ru-tips', RU_TIPS, 'amber');
+        },
+        tech: () => teAgain(),
+        quiz: () => newQuiz()
+    };
+
+    /* ===================== 起動 ===================== */
+    renderNav();
+    ready.play = true;
+    BUILD.play();
+    rubify(document.body);
+</script>
+</body>
+</html>
